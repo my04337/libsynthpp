@@ -1,4 +1,4 @@
-#include <cstdio>
+#include <LSP/minimal.hpp>
 
 void dummy_func()
 {

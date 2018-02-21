@@ -1,8 +1,7 @@
-#include <LSP/LSP.hpp>
+#include <LSP/minimal.hpp>
 
 int main(int argc, char** argv)
 {
-	dummy_func();
 
 	return 0;
 }
