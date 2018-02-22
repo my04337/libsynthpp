@@ -4,6 +4,8 @@ add_library(
 	libsynthpp STATIC
 
 	Base/base.cpp
+
+	Signal/simple_signal.cpp
 )  
 target_include_directories(
              libsynthpp
