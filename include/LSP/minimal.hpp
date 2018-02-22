@@ -1,6 +1,6 @@
-#pragma once
+ï»¿#pragma once
 
-// minimal.hpp : Šî‘bƒ‰ƒCƒuƒ‰ƒŠ“™Å’áŒÀ‚Ìƒwƒbƒ_ƒtƒ@ƒCƒ‹, ƒ‰ƒCƒuƒ‰ƒŠŠJ”­ŽÒ—p
+// minimal.hpp : åŸºç¤Žãƒ©ã‚¤ãƒ–ãƒ©ãƒªç­‰æœ€ä½Žé™ã®ãƒ˜ãƒƒãƒ€ãƒ•ã‚¡ã‚¤ãƒ«, ãƒ©ã‚¤ãƒ–ãƒ©ãƒªé–‹ç™ºè€…ç”¨
 
 #include <LSP/Base/base.hpp>
-#include <LSP/Base/types.hpp>
+#include <LSP/Base/id.hpp>
