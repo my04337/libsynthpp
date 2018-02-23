@@ -1,4 +1,4 @@
-﻿#include <LSP/Base/base.hpp>
+﻿#include <LSP/Base/Base.hpp>
 
 std::string LSP::demangle(const std::type_info &v)
 {
