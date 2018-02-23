@@ -2,26 +2,42 @@
 
 using namespace LSP;
 
-Signal::Signal()
-{}
 
 Signal::Signal(size_t size) 
-	: mData(size)
-{}
+	: mData(nullptr)
+	, mSize(0)
+{
+	allocate(size);
+}
+
+Signal::~Signal()
+{
+	if (mData) {
+		delete[] mData;
+	}
+}
 
 float_t* Signal::data() 
 {
-	return &mData[0]; 
+	return mData; 
 }
 
 size_t Signal::size()const 
 {
-	return mData.size(); 
+	return mSize; 
+}
+
+void Signal::allocate(size_t size) 
+{
+	if (size > 0) {
+		mData = new float_t[size];
+		mSize = size;
+	}
 }
 
 // ---
 
-std::unique_ptr<ISignal> SignalSource::obtain(size_t sz)
+std::shared_ptr<ISignal> SignalSource::obtain(size_t sz)
 {
-	return std::make_unique<Signal>(sz);
+	return std::make_shared<Signal>(sz);
 }

@@ -24,8 +24,8 @@ class Signal final
 	: public ISignal 
 {
 public:
-	Signal();
 	explicit Signal(size_t size);
+	virtual ~Signal();
 
 	// データへのポインタを取得します
 	virtual float_t* data()override;
@@ -33,8 +33,12 @@ public:
 	// データ数を取得します。
 	virtual size_t size()const override;
 
+protected:
+	void allocate(size_t size);
+
 private:
-	std::vector<float_t> mData;
+	float_t* mData;
+	size_t mSize;
 };
 
 // ----------------------------------------------------------------------------
@@ -46,7 +50,7 @@ class ISignalSource
 public:
 	virtual ~ISignalSource() {}
 
-	virtual std::unique_ptr<ISignal> obtain(size_t sz) = 0;
+	virtual std::shared_ptr<ISignal> obtain(size_t sz) = 0;
 };
 
 /// 信号ソースの単純な実装
@@ -56,7 +60,7 @@ class SignalSource final
 public:
 	virtual ~SignalSource() {}
 
-	virtual std::unique_ptr<ISignal> obtain(size_t sz) override;
+	virtual std::shared_ptr<ISignal> obtain(size_t sz) override;
 };
 
 }
