@@ -7,13 +7,17 @@ Multiplatoform signal processing library &amp; MIDI synthesizer sample.
 https://ja.osdn.net/projects/libsynthpp/
 
 現時点で目指しているもの :  
-* 発言語 : C++11/14 
-* マルチプラットフォーム対応 (メインターゲットはWindows, Linux)
-* 音声バックエンド : OpenAL
-* CMakeプロジェクト
+* 開発言語 : C++11/14 
+* 対応プラットフォーム : Windows 7以降
+* 音声バックエンド : WASAPI
+* CMakeプロジェクト(Visual Studio 2017上で開発)
 * 簡潔で使いやすいAPI
 * 並列性が高く、レイテンシの少ない信号処理機構
 
 MIDIシンセサイザ(ライブラリの実装サンプル兼テストベッド)が目指しているもの :  
 * GM, GS, XGフォーマットへの対応
 * 32チャネル波形テーブル音源
+
+将来的に目指したいもの
+* マルチプラットフォーム対応 (メインターゲットはWindows, Linux)
+* 音声バックエンド : OpenAL
