@@ -3,7 +3,11 @@ cmake_minimum_required(VERSION 3.2)
 add_library(
 	libsynthpp STATIC
 
-	base/base.cpp
+	Base/Base.cpp
+
+	Signal/Signal.cpp
+
+	Util/BiquadraticFilter.cpp
 )  
 target_include_directories(
              libsynthpp
