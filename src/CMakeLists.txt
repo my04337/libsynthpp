@@ -6,6 +6,8 @@ add_library(
 	Base/Base.cpp
 
 	Signal/Signal.cpp
+
+	Util/BiquadraticFilter.cpp
 )  
 target_include_directories(
              libsynthpp

@@ -14,6 +14,9 @@ namespace LSP
 // 標準的な浮動小数点数型 : float32を使用
 using float_t = float; 
 
+// 円周率
+constexpr float_t PI = 3.14159265f;
+
 }
 
 // --- 基本的なクラス ---
