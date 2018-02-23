@@ -19,6 +19,26 @@ public:
 	virtual size_t size()const  = 0;
 };
 
+/// 信号型の単純な実装
+class Signal final
+	: public ISignal 
+{
+public:
+	Signal();
+	explicit Signal(size_t size);
+
+	// データへのポインタを取得します
+	virtual float_t* data()override;
+
+	// データ数を取得します。
+	virtual size_t size()const override;
+
+private:
+	std::vector<float_t> mData;
+};
+
+// ----------------------------------------------------------------------------
+
 /// 信号ソース
 class ISignalSource 
 	: non_copy_move
@@ -29,5 +49,14 @@ public:
 	virtual std::unique_ptr<ISignal> obtain(size_t sz) = 0;
 };
 
+/// 信号ソースの単純な実装
+class SignalSource final
+	: public ISignalSource 
+{
+public:
+	virtual ~SignalSource() {}
+
+	virtual std::unique_ptr<ISignal> obtain(size_t sz) override;
+};
 
 }

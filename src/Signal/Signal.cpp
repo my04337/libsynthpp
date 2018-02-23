@@ -1,4 +1,4 @@
-#include <LSP/Signal/simple_signal.hpp>
+#include <LSP/Signal/Signal.hpp>
 
 using namespace LSP;
 

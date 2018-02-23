@@ -3,9 +3,9 @@ cmake_minimum_required(VERSION 3.2)
 add_library(
 	libsynthpp STATIC
 
-	Base/base.cpp
+	Base/Base.cpp
 
-	Signal/simple_signal.cpp
+	Signal/Signal.cpp
 )  
 target_include_directories(
              libsynthpp
