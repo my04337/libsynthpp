@@ -1,12 +1,25 @@
 ﻿#pragma once
 
 // --- 基本的なヘッダ類 ---
+#include <list>
 #include <vector>
+#include <chrono>
 #include <limits>
 #include <memory>
 #include <atomic>
+#include <mutex>
+#include <algorithm>
+#include <functional>
 #include <typeinfo>
 #include <typeindex>
+
+// --- 基本的なマクロ類 ---
+#ifdef WIN32
+#define WIN32_LEAN_AND_MEAN 
+#define STRICT 
+#define NOMINMAX 
+#endif
+
 
 // --- 基本的な型 ---
 namespace LSP

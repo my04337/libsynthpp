@@ -5,6 +5,8 @@ add_library(
 
 	Base/Base.cpp
 	Base/Signal.cpp
+	
+	Debugging/Stacktrace.cpp
 
 	Util/BiquadraticFilter.cpp
 )  
