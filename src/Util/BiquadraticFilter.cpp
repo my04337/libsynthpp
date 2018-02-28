@@ -1,4 +1,5 @@
 ﻿#include <LSP/Util/BiquadraticFilter.hpp>
+#include <LSP/Base/Math.hpp>
 
 using namespace LSP;
 
@@ -40,7 +41,7 @@ float_t BiquadraticFilter::update(float_t x0)
 
 void BiquadraticFilter::setLopassParam(float_t sampleFreq, float_t cutOffFreq, float_t Q) 
 {
-	const float_t w0    = 2 * PI * cutOffFreq / sampleFreq;
+	const float_t w0    = 2 * PI<float_t> * cutOffFreq / sampleFreq;
 	const float_t sinw0 = sin(w0);
 	const float_t cosw0 = cos(w0);
 	const float_t alpha = 2 * sinw0 / Q;
@@ -55,7 +56,7 @@ void BiquadraticFilter::setLopassParam(float_t sampleFreq, float_t cutOffFreq, f
 
 void BiquadraticFilter::setHighpassParam(float_t sampleFreq,float_t cutOffFreq,float_t Q) 
 {
-	const float_t w0    = 2 * PI * cutOffFreq / sampleFreq;
+	const float_t w0    = 2 * PI<float_t> * cutOffFreq / sampleFreq;
 	const float_t sinw0 = sin(w0);
 	const float_t cosw0 = cos(w0);
 	const float_t alpha = 2 * sinw0 / Q;
@@ -70,7 +71,7 @@ void BiquadraticFilter::setHighpassParam(float_t sampleFreq,float_t cutOffFreq,f
 
 void BiquadraticFilter::setBandpass1Param(float_t sampleFreq, float_t centerFreq, float_t BW) 
 {
-	const float_t w0    = 2 * PI * centerFreq / sampleFreq;
+	const float_t w0    = 2 * PI<float_t> * centerFreq / sampleFreq;
 	const float_t sinw0 = sin(w0);
 	const float_t cosw0 = cos(w0);
 	const float_t alpha = 2 * sinw0 / BW;
@@ -85,7 +86,7 @@ void BiquadraticFilter::setBandpass1Param(float_t sampleFreq, float_t centerFreq
 
 void BiquadraticFilter::setBandpass2Param(float_t sampleFreq, float_t centerFreq, float_t BW) 
 {
-	const float_t w0    = 2 * PI * centerFreq / sampleFreq;
+	const float_t w0    = 2 * PI<float_t> * centerFreq / sampleFreq;
 	const float_t sinw0 = sin(w0);
 	const float_t cosw0 = cos(w0);
 	const float_t alpha = sinw0 * sinh(log(2.0f) * BW * w0 / sinw0);
@@ -100,7 +101,7 @@ void BiquadraticFilter::setBandpass2Param(float_t sampleFreq, float_t centerFreq
 
 void BiquadraticFilter::setBandstopParam(float_t sampleFreq,float_t centerFreq,float_t BW) 
 {
-	const float_t w0    = 2 * PI * centerFreq / sampleFreq;
+	const float_t w0    = 2 * PI<float_t> * centerFreq / sampleFreq;
 	const float_t sinw0 = sin(w0);
 	const float_t cosw0 = cos(w0);
 	const float_t alpha = sinw0 * sinh(log(2.0f) * BW * w0 / sinw0);
@@ -115,7 +116,7 @@ void BiquadraticFilter::setBandstopParam(float_t sampleFreq,float_t centerFreq,f
 
 void BiquadraticFilter::setAllpassParam(float_t sampleFreq,float_t cutOffFreq,float_t BW) 
 {
-	const float_t w0    = 2 * PI * cutOffFreq / sampleFreq;
+	const float_t w0    = 2 * PI<float_t> * cutOffFreq / sampleFreq;
 	const float_t sinw0 = sin(w0);
 	const float_t cosw0 = cos(w0);
 	const float_t alpha = sinw0 * sinh(log(2.0f) * BW * w0 / sinw0);
@@ -130,7 +131,7 @@ void BiquadraticFilter::setAllpassParam(float_t sampleFreq,float_t cutOffFreq,fl
 
 void BiquadraticFilter::setPeakingParam(float_t sampleFreq,float_t centerFreq,float_t BW,float_t gain) 
 {
-	const float_t w0    = 2 * PI * centerFreq / sampleFreq;
+	const float_t w0    = 2 * PI<float_t> * centerFreq / sampleFreq;
 	const float_t sinw0 = sin(w0);
 	const float_t cosw0 = cos(w0);
 	const float_t alpha = sinw0 * sinh(log(2.0f) * BW * w0 / sinw0);
@@ -146,7 +147,7 @@ void BiquadraticFilter::setPeakingParam(float_t sampleFreq,float_t centerFreq,fl
 
 void BiquadraticFilter::setLoshelfParam(float_t sampleFreq,float_t cutOffFreq,float_t S,float_t gain) 
 {
-	const float_t w0    = 2 * PI * cutOffFreq / sampleFreq;
+	const float_t w0    = 2 * PI<float_t> * cutOffFreq / sampleFreq;
 	const float_t sinw0 = sin(w0);
 	const float_t cosw0 = cos(w0);
 	const float_t A     = (float_t)sqrt(pow(10, gain / 20));
@@ -163,7 +164,7 @@ void BiquadraticFilter::setLoshelfParam(float_t sampleFreq,float_t cutOffFreq,fl
 
 void BiquadraticFilter::setHighshelfParam(float_t sampleFreq,float_t cutOffFreq,float_t S,float_t gain) 
 {
-	const float_t w0    = 2 * PI * cutOffFreq / sampleFreq;
+	const float_t w0    = 2 * PI<float_t> * cutOffFreq / sampleFreq;
 	const float_t sinw0 = sin(w0);
 	const float_t cosw0 = cos(w0);
 	const float_t A     = (float_t)sqrt(pow(10, gain / 20));

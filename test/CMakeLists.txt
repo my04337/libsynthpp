@@ -4,6 +4,8 @@ add_executable(
 	unit_test 
 	
 	main.cpp
+	test_base.cpp
+	test_util.cpp
 	)
 	
 target_link_libraries(unit_test libsynthpp)

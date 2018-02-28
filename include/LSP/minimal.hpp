@@ -4,4 +4,5 @@
 
 #include <LSP/Base/Base.hpp>
 #include <LSP/Base/Id.hpp>
+#include <LSP/Base/Math.hpp>
 #include <LSP/Base/Signal.hpp>
