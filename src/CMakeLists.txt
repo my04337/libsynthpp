@@ -4,7 +4,6 @@ add_library(
 	libsynthpp STATIC
 
 	Base/Base.cpp
-	Base/Signal.cpp
 
 	Util/BiquadraticFilter.cpp
 )  

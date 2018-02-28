@@ -5,62 +5,63 @@
 namespace LSP
 {
 
+// TODO いずれ信号型で固定長バッファからのアロケートを行いたい
+
+// 信号型であるか否か
+template <class T, typename = void>
+struct is_signal_type : std::false_type {};
+template <class T>
+struct is_signal_type<T, void_t<typename T::_signal_type_tag>> : std::true_type {};
+template<class T>
+constexpr bool is_signal_type_v = is_signal_type<T>::value;
+
+
+
+
 /// 信号型
-class ISignal 
-	: non_copy_move
-{
-public:
-	virtual ~ISignal() {}
-
-	// データへのポインタを取得します
-	virtual float_t* data() = 0;
-
-	// データ数を取得します。
-	virtual size_t size()const  = 0;
-};
-
-/// 信号型の単純な実装
+template<
+	typename sample_type,
+	class = std::enable_if_t<std::is_arithmetic_v<sample_type>>
+>
 class Signal final
-	: public ISignal 
+	: non_copy
 {
 public:
-	explicit Signal(size_t size);
-	virtual ~Signal();
+	using _signal_type_tag = void; // for SFINAE
+
+public:
+	explicit Signal(size_t size)
+		: mData(std::make_unique<sample_type[]>(size))
+		, mSize(size)
+	{}
+
+	~Signal() {}
 
 	// データへのポインタを取得します
-	virtual float_t* data()override;
+	sample_type* data()const noexcept { return mData.get(); }
 
 	// データ数を取得します。
-	virtual size_t size()const override;
-
-protected:
-	void allocate(size_t size);
-
+	size_t size()const noexcept { return mSize; }
+	
 private:
-	float_t* mData;
+	std::unique_ptr<sample_type[]> mData;
 	size_t mSize;
 };
 
 // ----------------------------------------------------------------------------
 
 /// 信号ソース
-class ISignalSource 
-	: non_copy_move
-{
-public:
-	virtual ~ISignalSource() {}
-
-	virtual std::shared_ptr<ISignal> obtain(size_t sz) = 0;
-};
-
-/// 信号ソースの単純な実装
+template<
+	typename signal_type,
+	class = std::enable_if_t<is_signal_type_v<signal_type>>
+>
 class SignalSource final
-	: public ISignalSource 
+	: non_copy_move 
 {
 public:
-	virtual ~SignalSource() {}
+	~SignalSource() {}
 
-	virtual std::shared_ptr<ISignal> obtain(size_t sz) override;
+	std::shared_ptr<signal_type> obtain(size_t sz) { return std::make_shared<signal_type>(sz); }
 };
 
 }
