@@ -255,18 +255,13 @@ void CppCallStack::printStackTrace(ostream_t& stream, const StackTrace& stacks, 
 		if(strstr(name, "std::_Func_") == name) continue;
 		if(strstr(name, "std::_Invoke_") == name) continue;
 		if(strstr(name, "std::_Invoker_") == name) continue;
-		if(strstr(name, "QtPrivate::Functor<") == name) continue;
-		if(strstr(name, "QtPrivate::FunctorCall<") == name) continue;
-		if(strstr(name, "QtPrivate::QFunctorSlotObject<") == name) continue;
 		// ログ出力関係も代わり映えがないため除外
-		if(strstr(name, "crs::Log::") == name) continue;
-		if(strstr(name, "crs::CppCallStack::") == name) continue;
+		if(strstr(name, "LSP::Log::") == name) continue;
+		if(strstr(name, "LSP::CppCallStack::") == name) continue;
 		// 処理系で予約されている名前も省略
 		if(name[0] == '_' && ('A' <= name[1] && name[1] <= 'Z')) continue;
 		// その他Win32Apiなどで頻出の名前も除外
 		if(strstr(name, "Rtl") == name) continue;
-		// QtのDLLについても除外する
-		if(d.moduleName.find(L"Qt5") == 0) continue;
 		// 不明なスタックトレースは除外(先頭部分のみ)
 		if(!hasMeaningfulStack && d.moduleName == L"???" && strcmp(name, "?")==0) {
 			continue;
