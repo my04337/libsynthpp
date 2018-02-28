@@ -9,14 +9,6 @@
 #include <typeindex>
 #include <type_traits>
 
-// --- 基本的な型 ---
-namespace LSP
-{
-// 標準的な浮動小数点数型 : float32を使用
-using float_t = float; 
-
-}
-
 // --- 基本的なクラス ---
 namespace LSP
 {
