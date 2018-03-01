@@ -3,6 +3,9 @@
 #include <LSP/Base/Base.hpp>
 #include <LSP/Base/String.hpp>
 
+#include <sstream>
+#include <iomanip>
+
 namespace LSP
 {
 

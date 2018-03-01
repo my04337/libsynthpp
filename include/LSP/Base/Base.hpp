@@ -20,6 +20,9 @@
 #define NOMINMAX 
 #endif
 
+// マクロ展開遅延
+#define DELAY_MACRO(...)  DELAY_MACRO_(__VA_ARGS__)
+#define DELAY_MACRO_(...) __VA_ARGS__
 
 // --- 基本的な型 ---
 namespace LSP

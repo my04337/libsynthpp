@@ -4,9 +4,11 @@ add_library(
 	libsynthpp STATIC
 
 	Base/Base.cpp
+	Base/String.cpp
 	Base/Signal.cpp
 	
-	Debugging/Stacktrace.cpp
+	Debugging/StackTrace.cpp
+	Debugging/Logging.cpp
 
 	Util/BiquadraticFilter.cpp
 )  
