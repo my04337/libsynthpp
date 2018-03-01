@@ -1,15 +1,31 @@
 ﻿#pragma once
 
 // --- 基本的なヘッダ類 ---
+#include <list>
 #include <vector>
+#include <chrono>
 #include <limits>
 #include <memory>
 #include <atomic>
+#include <mutex>
+#include <algorithm>
+#include <functional>
 #include <typeinfo>
 #include <typeindex>
 #include <type_traits>
 
-// --- 基本的なクラス ---
+// --- 基本的なマクロ類 ---
+#ifdef WIN32
+#define WIN32_LEAN_AND_MEAN 
+#define STRICT 
+#define NOMINMAX 
+#endif
+
+// マクロ展開遅延
+#define DELAY_MACRO(...)  DELAY_MACRO_(__VA_ARGS__)
+#define DELAY_MACRO_(...) __VA_ARGS__
+
+// --- 基本的な型 ---
 namespace LSP
 {
 // type_traits用テンプレート
