@@ -13,11 +13,11 @@
 // assertマクロ(記述しやすいようあえて小文字化)
 #define lsp_assert(expr) \
     if(!(expr)) { \
-        LSP::Log::f(LOGF(LSP_LOGUTIL_FILENAME << L":" << __LINE__ << L" - assert" << L"(" << DELAY_MACRO(u###expr) << L") failed."))); \
+        LSP::Log::f(LOGF(LSP_LOGUTIL_FILENAME << L":" << __LINE__ << L" - assert" << L"(" << DELAY_MACRO(u###expr) << L") failed.")); \
     }
 #define lsp_assert_desc(expr, ...) \
     if(!(expr)) { \
-        LSP::Log::f(LOGF(LSP_LOGUTIL_FILENAME << L":" << __LINE__ << L" - assert" << L"(" << DELAY_MACRO(u###expr) << L") failed [" << __VA_ARGS__ ; _ << L"]."))); \
+        LSP::Log::f(LOGF(LSP_LOGUTIL_FILENAME << L":" << __LINE__ << L" - assert" << L"(" << DELAY_MACRO(u###expr) << L") failed [" << __VA_ARGS__ ; _ << L"].")); \
     }
 
 // 開発時用デバッグログ(コミット前に除去すること)
