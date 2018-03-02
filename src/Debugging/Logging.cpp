@@ -225,7 +225,7 @@ void StdOutLogger::write(Log::time_point time, LogLevel level, const string_t& l
 			Log::printStackTrace(oss, *stacks);
 		}
 	}
-	std::wcout << oss.str() << std::flush; // ロガーの性質上、常にflushすべき
+	std::wcout << oss.str() << std::endl; // ロガーの性質上、常にflushすべき
 }
 
 

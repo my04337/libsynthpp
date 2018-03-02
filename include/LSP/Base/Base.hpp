@@ -3,6 +3,9 @@
 // --- 基本的なヘッダ類 ---
 #include <list>
 #include <vector>
+#include <deque>
+#include <unordered_set>
+#include <unordered_map>
 #include <chrono>
 #include <limits>
 #include <memory>

@@ -27,6 +27,7 @@ public:
 
 	// ---
 
+	Task() : mId(TaskId::issue()) {}
 	template<class F>
 	Task(F&& pred) : mId(TaskId::issue()) , mPred(std::forward<F>(pred)) {}
 

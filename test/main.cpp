@@ -1,5 +1,7 @@
 ﻿#include <LSP/minimal.hpp>
 #include <LSP/Debugging/Logging.hpp>
+#include <LSP/Threading/ThreadPool.hpp>
+#include <LSP/Threading/TaskDispatcher.hpp>
 
 using namespace LSP;
 
@@ -16,6 +18,12 @@ int main(int argc, char** argv)
 	Log::setLogLevel(LogLevel::Debug);
 
 	// ---
+
+	TaskDispatcher disp;
+	std::vector<Task> task (10);
+	disp.enqueue(task.begin(), task.end());
+	
+	_sleep(3000);
 
 	return 0;
 }
