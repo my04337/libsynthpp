@@ -6,8 +6,6 @@ add_library(
 	Base/Base.cpp
 	Base/String.cpp
 	
-	Threading/TaskSet.cpp
-
 	Debugging/StackTrace.cpp
 	Debugging/Logging.cpp
 )  

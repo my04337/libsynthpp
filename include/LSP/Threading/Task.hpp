@@ -12,39 +12,33 @@ using TaskId = issuable_id_base_t<_task_id_tag>;
 
 
 // タスク : 最小の作業単位(不可分)
-class ITask
+class Task final
 	: non_copy_move
 {
+	using Predicate = std::function<void()>;
+
 public:
-	ITask() : mId(TaskId::issue()) {}
-	virtual ~ITask() {}
+	// タスク簡易生成(継承不要)
+	template<class F>
+	static std::unique_ptr<Task> make(F&& pred)
+	{
+		return std::make_unique<FunctionalTask>(std::forward<F>(pred));
+	}
+
+	// ---
+
+	template<class F>
+	Task(F&& pred) : mId(TaskId::issue()) , mPred(std::forward<F>(pred)) {}
 
 	// タスクId取得
 	TaskId id()const noexcept { return mId; }
 
-	// タスク実行
-	virtual void run() = 0;
+	// タスク実行 (一回のみ可能)
+	void run() { if(mPred) { mPred(); mPred = nullptr; } }
 	void operator()() { run(); }
-
-private:
-	TaskId mId;
-};
-
-// タスク実装 : 汎用版 - ファンクタやラムダ式等に対応
-class Task
-	: public ITask
-{
-public:
-	using Predicate = std::function<void()>;
-
-public:
-	template<class F>
-	Task(F&& pred) : mPred(std::forward<F>(pred)) {}
 	
-	// タスク実行
-	virtual void run()override { mPred(); }
-
 private:
+	const TaskId mId;
 	Predicate mPred;
 };
 
