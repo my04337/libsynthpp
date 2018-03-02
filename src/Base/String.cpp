@@ -15,7 +15,7 @@ string_t strings::to_string(const std::string& str)
 
 
 	while (true) {
-		constexpr size_t buffLen = 4;
+		constexpr size_t buffLen = 64;
 		wchar_t buff[buffLen+1] = L"";
 
 		size_t result = mbsrtowcs(buff, &s, buffLen, &st);
