@@ -8,7 +8,7 @@
 // ログ用ユーティリティマクロ
 #define LOGF(expr) [&](ostringstream_t& _)->void { _ << expr; }
 #define LSP_LOGUTIL_FILENAME \
-	LSP::strings::replace_all(LSP::strings::to_string(__FILE__), '\\', u'/')
+	LSP::strings::file_macro_to_filename(__FILE__)
 
 // assertマクロ(記述しやすいようあえて小文字化)
 #define lsp_assert(expr) \

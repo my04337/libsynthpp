@@ -21,6 +21,8 @@ public:
 	static string_t to_string(const std::string& str);
 
 	static string_t replace_all(const string_t& str, char_t from, char_t to);
+
+	static string_t file_macro_to_filename(const char* filepath);
 };
 
 }
