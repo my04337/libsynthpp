@@ -8,16 +8,16 @@
 // ログ用ユーティリティマクロ
 #define LOGF(expr) [&](ostringstream_t& _)->void { _ << expr; }
 #define LSP_LOGUTIL_FILENAME \
-	LSP::strings::replace_all(LSP::strings::to_string(__FILE__), '\\', u'/')
+	LSP::strings::file_macro_to_filename(__FILE__)
 
 // assertマクロ(記述しやすいようあえて小文字化)
 #define lsp_assert(expr) \
     if(!(expr)) { \
-        LSP::Log::f(LOGF(LSP_LOGUTIL_FILENAME << L":" << __LINE__ << L" - assert" << L"(" << DELAY_MACRO(u###expr) << L") failed."))); \
+        LSP::Log::f(LOGF(LSP_LOGUTIL_FILENAME << L":" << __LINE__ << L" - assert" << L"(" << DELAY_MACRO(u###expr) << L") failed.")); \
     }
 #define lsp_assert_desc(expr, ...) \
     if(!(expr)) { \
-        LSP::Log::f(LOGF(LSP_LOGUTIL_FILENAME << L":" << __LINE__ << L" - assert" << L"(" << DELAY_MACRO(u###expr) << L") failed [" << __VA_ARGS__ ; _ << L"]."))); \
+        LSP::Log::f(LOGF(LSP_LOGUTIL_FILENAME << L":" << __LINE__ << L" - assert" << L"(" << DELAY_MACRO(u###expr) << L") failed [" << __VA_ARGS__ ; _ << L"].")); \
     }
 
 // 開発時用デバッグログ(コミット前に除去すること)

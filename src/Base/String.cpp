@@ -53,3 +53,13 @@ string_t strings::replace_all(const string_t& str_, char_t from, char_t to)
 	}
 	return str; // NRVO
 }
+string_t strings::file_macro_to_filename(const char* filepath)
+{
+	auto path = LSP::strings::to_string(__FILE__);
+	auto sep = path.find_last_of(L"\\/");
+	if (sep != string_t::npos) {
+		return path.substr(sep+1);
+	}else {
+		return path;
+	}
+}
