@@ -2,38 +2,52 @@
 
 #include <LSP/Base/Base.hpp>
 #include <LSP/Threading/Task.hpp>
+#include <LSP/Threading/EventSignal.hpp>
 
 namespace LSP
 {
 
 // タスクディスパッチャ : 各種タスクをワーカースレッドに配給する
-class TaskDispatcher
+class TaskDispatcher final
 {
 public:
-	// タスク登録 (注意 : 
+	TaskDispatcher();
+	~TaskDispatcher();
+
+	// タスク配給停止
+	void abort();
+
+	// タスク登録
 	template<class InputIterator>
-	void enqueue(InputIterator begin, InputIterator end, const std::vector<TaskId>& depends_first = {});
+	void enqueue(InputIterator begin, InputIterator end, const std::unordered_set<TaskId>& depends_first = {});
+	void enqueue(Task&& task, const std::unordered_set<TaskId>& depends = {});
 
-	void enqueue(Task&& task, const std::vector<TaskId>& depends = {});
+	// タスク取得
+	Task deque();
 
+	// タスク数を取得
+	size_t count()const noexcept;
 	
 private:
 
 private:
-	std::mutex mMutex;
-	std::unordered_map<TaskId, Task> mTasks;
+	mutable std::mutex mMutex;
+	EventSignal mStatusChangedEvent;
+	std::atomic_bool mAborted;
+
+	std::deque<Task> mTasks; // TODO 依存関係考慮
 };
 
 // ----------------------------------------------------------------------------
 
 template<class InputIterator>
-void TaskDispatcher::enqueue(InputIterator first, InputIterator last, const std::vector<TaskId>& depends_first)
+void TaskDispatcher::enqueue(InputIterator first, InputIterator last, const std::unordered_set<TaskId>& depends_first)
 {
 	auto iter = first;
 	if(iter == last) return;
 
 	// 最初のタスクを登録
-	std::vector<TaskId> depend {iter->id()};
+	std::unordered_set<TaskId> depend {iter->id()};
 	enqueue(std::move(*iter), depends_first); 
 	++iter;
 
@@ -41,7 +55,9 @@ void TaskDispatcher::enqueue(InputIterator first, InputIterator last, const std:
 	for (; iter != last; ++iter) {
 		TaskId id = iter->id();
 		enqueue(std::move(*iter), depend);
-		depend[0] = id;
+
+		depend.clear();
+		depend.insert(id);
 	}
 }
 

@@ -1,8 +1,9 @@
 ﻿#include <LSP/Threading/ThreadPool.hpp>
+#include <LSP/Threading/TaskDispatcher.hpp>
 
 using namespace LSP;
 
-ThreadPool::ThreadPool(Dispatcher& dispatcher, size_t thread_num)
+ThreadPool::ThreadPool(TaskDispatcher& dispatcher, size_t thread_num)
 	: mDispatcher(dispatcher)
 	, mAborted(false)
 {
@@ -35,5 +36,12 @@ ThreadPool::~ThreadPool()
 
 void ThreadPool::threadMain()
 {
+	while (true) {
+		if(mAborted) break;
 
+		auto task = mDispatcher.deque();
+		if(!task) continue;
+
+		task();
+	}
 }

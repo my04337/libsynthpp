@@ -20,10 +20,19 @@ int main(int argc, char** argv)
 	// ---
 
 	TaskDispatcher disp;
-	std::vector<Task> task (10);
-	disp.enqueue(task.begin(), task.end());
+	ThreadPool pool(disp, 4);
+
+	std::vector<Task> tasks;
+	for (size_t i = 0; i < 4; ++i) {
+		tasks.emplace_back(Task::make([i](){lsp_debug_log(string_t(1, 'a'+i)); _sleep(1000);}));
+	}
+	auto taskId0 = tasks[0].id();
+	disp.enqueue(std::move(tasks[0]));
+	disp.enqueue(std::move(tasks[1]));
+	disp.enqueue(std::move(tasks[2]));
+	disp.enqueue(std::move(tasks[3]), {taskId0});
 	
-	_sleep(3000);
+	while(disp.count() > 0) _sleep(100);
 
 	return 0;
 }
