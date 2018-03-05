@@ -11,54 +11,54 @@ namespace LSP
 class TaskDispatcher final
 {
 public:
-	TaskDispatcher();
+	TaskDispatcher(size_t thread_num = 0);
 	~TaskDispatcher();
 
 	// タスク配給停止
 	void abort();
 
 	// タスク登録
-	template<class InputIterator>
-	void enqueue(InputIterator begin, InputIterator end, const std::unordered_set<TaskId>& depends_first = {});
-	void enqueue(Task&& task, const std::unordered_set<TaskId>& depends = {});
+	void enqueue(std::unique_ptr<Task>&& task, const std::unordered_set<Task::Id>& depends = {});
 
-	// タスク取得
-	Task deque();
 
 	// タスク数を取得
 	size_t count()const noexcept;
 	
 private:
+	struct TaskInfo final
+		: non_copy
+	{
+		TaskInfo(const std::unordered_set<Task::Id>& depends, std::unique_ptr<Task>&& task) 
+			: id(task->id()), depends(depends), task(std::move(task))
+		{}
+
+		const Task::Id id;
+		std::unordered_set<Task::Id> depends;
+		std::unique_ptr<Task> task; //  実行中は空となる
+	};
+	// タスク取得
+	std::unique_ptr<Task> deque();
+
+	// タスク終了通知
+	void notifyComplete(Task::Id id);
+
+	// タスクの実行可能性チェック
+	bool _executable(const TaskInfo& info)const noexcept;
+
+	// ワーカースレッド メイン関数
+	void _threadMain();
 
 private:
 	mutable std::mutex mMutex;
 	EventSignal mStatusChangedEvent;
 	std::atomic_bool mAborted;
 
-	std::deque<Task> mTasks; // TODO 依存関係考慮
+	std::list<Task::Id> mWaitingQueue; // 実行前タスク一覧
+	std::unordered_map<Task::Id, TaskInfo> mTasks; // タスク一覧(実行中を含む)
+
+
+	std::unordered_map<std::thread::id, std::unique_ptr<std::thread>> mThreads;
 };
 
-// ----------------------------------------------------------------------------
-
-template<class InputIterator>
-void TaskDispatcher::enqueue(InputIterator first, InputIterator last, const std::unordered_set<TaskId>& depends_first)
-{
-	auto iter = first;
-	if(iter == last) return;
-
-	// 最初のタスクを登録
-	std::unordered_set<TaskId> depend {iter->id()};
-	enqueue(std::move(*iter), depends_first); 
-	++iter;
-
-	// 二個目以降のタスクを登録
-	for (; iter != last; ++iter) {
-		TaskId id = iter->id();
-		enqueue(std::move(*iter), depend);
-
-		depend.clear();
-		depend.insert(id);
-	}
-}
 
 }

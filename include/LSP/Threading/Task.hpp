@@ -6,43 +6,60 @@
 namespace LSP
 {
 
-// タスクId
-struct _task_id_tag {};
-using TaskId = issuable_id_base_t<_task_id_tag>;
-
-
 // タスク : 最小の作業単位(不可分)
-class Task final
+class Task
 	: non_copy
 {
-	using Predicate = std::function<void()>;
+public:
+	using Id = issuable_id_base_t<Task>;
+	using InterruptionFlag = std::atomic_bool;
 
 public:
 	// タスク簡易生成(継承不要)
 	template<class F>
-	static Task make(F&& pred) { return Task(std::forward<F>(pred)); }
+	static std::unique_ptr<Task> make(F&& predicate);
 
 	// ---
-
-	Task() : mId() {}
-	template<class F>
-	Task(F&& pred) : mId(TaskId::issue()) , mPred(std::forward<F>(pred)) {}
+	virtual ~Task() {}
 
 	// タスクId取得
-	TaskId id()const noexcept { return mId; }
-
-	// タスクが有効か否かを取得
-	bool empty()const noexcept{ return mId.empty(); }
-	operator bool()const noexcept { return !empty(); }
-
-	// タスク実行 (一回のみ可能)
-	void run() { if(mPred) { mPred(); mPred = nullptr; } }
-	void operator()() { run(); }
+	Id id()const noexcept { return mId; }
 	
+	// タスク実行
+	virtual void run() = 0;
+	
+protected:
+	Task() : mId(Id::issue()) {}
+
 private:
-	const TaskId mId;
+	const Id mId;
+};
+
+// ---
+
+// タスク : 簡単生成用
+class FunctionalTask final
+	: public Task
+{
+public:
+	using Predicate = std::function<void()>;
+
+public:
+	template<class F>
+	FunctionalTask(F&& pred) : mPred(std::forward<F>(pred)) {}
+
+
+	// タスク実行
+	virtual void run() { if(mPred) mPred(); }
+
+private:
 	Predicate mPred;
 };
+
+// ---
+
+template<class F>
+static std::unique_ptr<Task> Task::make(F&& pred) { return std::make_unique<FunctionalTask>(std::forward<F>(pred)); }
 
 }
 

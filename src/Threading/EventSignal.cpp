@@ -8,8 +8,9 @@ void EventSignal::dispose()
 	{
 		std::lock_guard<std::mutex> lock(mMutex);
 		mReady = true;
+		mDispose = true;
 	}
-	mCond.notify_one();
+	mCond.notify_all();
 }
 
 void EventSignal::set()

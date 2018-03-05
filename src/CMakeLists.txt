@@ -8,7 +8,6 @@ add_library(
 	
 	Threading/EventSignal.cpp
 	Threading/TaskDispatcher.cpp
-	Threading/ThreadPool.cpp
 
 	Debugging/StackTrace.cpp
 	Debugging/Logging.cpp
