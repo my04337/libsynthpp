@@ -20,13 +20,14 @@ constexpr bool is_signal_type_v = is_signal_type<T>::value;
 
 /// 信号型
 template<
-	typename sample_type,
-	class = std::enable_if_t<std::is_arithmetic_v<sample_type>>
+	typename sample_type_,
+	class = std::enable_if_t<std::is_arithmetic_v<sample_type_>>
 >
 class Signal final
 	: non_copy
 {
 public:
+	using sample_type = sample_type_;
 	using _signal_type_tag = void; // for SFINAE
 
 public:
