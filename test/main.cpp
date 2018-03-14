@@ -1,6 +1,10 @@
 ﻿#include <LSP/minimal.hpp>
 #include <LSP/Debugging/Logging.hpp>
-#include <LSP/Threading/TaskDispatcher.hpp>
+#include <LSP/Audio/WasapiOutput.hpp>
+
+#ifdef WIN32
+#include <objbase.h>
+#endif
 
 using namespace LSP;
 
@@ -10,6 +14,12 @@ void func() {
 
 int main(int argc, char** argv)
 {
+#ifdef WIN32
+	// COM初期化
+	CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+	auto fin_act_com = finally([]{CoUninitialize();});
+#endif
+
 	// ログ出力機構 セットアップ
 	StdOutLogger logger;
 	Log::addLogger(&logger);
@@ -18,6 +28,11 @@ int main(int argc, char** argv)
 
 	// ---
 
+	Windows::WasapiOutput wo;
+	wo.initialize(44100, 16, 2);
+	wo.start();
+	Sleep(1000);
+#if 0
 	TaskDispatcher disp(4);
 
 	std::vector<std::unique_ptr<Task>> tasks;
@@ -31,6 +46,7 @@ int main(int argc, char** argv)
 	disp.enqueue(std::move(tasks[3]), {taskId0});
 	
 	while(disp.count() > 0) _sleep(100);
+#endif
 
 	return 0;
 }

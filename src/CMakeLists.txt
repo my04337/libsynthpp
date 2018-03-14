@@ -11,6 +11,8 @@ add_library(
 
 	Debugging/StackTrace.cpp
 	Debugging/Logging.cpp
+	
+	Audio/WasapiOutput.cpp
 )  
 target_include_directories(
              libsynthpp
