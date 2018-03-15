@@ -5,6 +5,7 @@ add_library(
 
 	Base/Base.cpp
 	Base/String.cpp
+	Base/Signal.cpp
 	
 	Threading/EventSignal.cpp
 	Threading/TaskDispatcher.cpp

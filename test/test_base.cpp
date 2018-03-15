@@ -13,9 +13,7 @@ void uncalled_func()
 
 	LSP::Signal<float> signal_float(0);
 	LSP::Signal<double> signal_double(0);
-	LSP::Signal<long double> signal_long_double(0);
 	LSP::Signal<int32_t> signal_int32_t(0);
-	LSP::Signal<uint16_t> signal_uint16_t(0);
 	
 	static_assert(LSP::is_signal_type_v<LSP::Signal<float>> == true, "");
 	static_assert(LSP::is_signal_type_v<void> == false, "");
