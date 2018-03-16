@@ -7,7 +7,7 @@ Multiplatoform signal processing library &amp; MIDI synthesizer sample.
 https://ja.osdn.net/projects/libsynthpp/
 
 現時点で目指しているもの :  
-* 開発言語 : C++11/14 
+* 開発言語 : C++17
 * 対応プラットフォーム : Windows 7以降
 * 音声バックエンド : WASAPI
 * CMakeプロジェクト(Visual Studio 2017上で開発)
