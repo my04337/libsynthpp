@@ -28,10 +28,20 @@ int main(int argc, char** argv)
 
 	// ---
 
+	constexpr uint32_t sampleFreq = 44100;
+	Signal<float> sig_left(sampleFreq * 1);
+	Signal<float> sig_right(sampleFreq * 1);
+	for (uint32_t i = 0; i < sampleFreq; ++i) {
+		float p = i * 2.0f * PI<float> / sampleFreq; // 位相
+		sig_left.data()[i]  = sin(440.0f * p);
+		sig_right.data()[i] = sin(880.0f * p);
+	}
+
 	Windows::WasapiOutput wo;
-	wo.initialize(44100, 16, 2);
+	wo.initialize(sampleFreq, 16, 2);
 	wo.start();
-	Sleep(1000);
+	wo.write(sig_left, sig_right);
+	Sleep(10000);
 #if 0
 	TaskDispatcher disp(4);
 

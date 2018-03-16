@@ -155,6 +155,7 @@ bool WasapiOutput::initialize(uint32_t sampleFreq, uint32_t bitsPerSample, uint3
 		Log::e(LOGF(L"WasapiOutput : initialize - failed (_beginthreadex)"));
 		return false;
 	}
+	mAudioThreadHandle = hAudioThread;
 	SetThreadPriority(hAudioThread, THREAD_PRIORITY_HIGHEST);
 	ResumeThread(hAudioThread);
 
@@ -225,19 +226,10 @@ void WasapiOutput::playThreadMain()
 	// 各種定数群 (メンバ変数アクセスとするより高速にアクセス可能
 	const uint32_t sampleFreq = mSampleFreq;
 	const uint32_t bitsPerSample = mBitsPerSample;
+	const uint32_t bytesPerSample = mBitsPerSample / 8;
 	const uint32_t channels = mChannels;
 	const uint32_t unitFrameSize = mUnitFrameSize;
 
-	// MEMO : 実験用仮コード
-	uint32_t phase = 0; // 0 <= x < mSampleFreq(1秒)の範囲でループ
-	std::vector<int16_t> lwt, rwt;
-	lwt.resize(sampleFreq);
-	rwt.resize(sampleFreq);
-	for (uint32_t i = 0; i < sampleFreq; ++i) {
-		float p = i * 2.0f * PI<float> / sampleFreq; // 位相
-		lwt[i] = static_cast<int16_t>(sin(440.0f * p) * 16384);
-		rwt[i] = static_cast<int16_t>(sin(880.0f * p) * 16384);
-	}	
 
 	while (true) {
 		// 状態変化を待機
@@ -246,7 +238,8 @@ void WasapiOutput::playThreadMain()
 		if(waitResult == WAIT_TIMEOUT) continue;
 		if(mAbort) break;
 
-		// 今回出力可能なバッファサイズを取得
+		// 出力対象の決定
+		// - 今回出力可能なバッファサイズを取得
 		UINT32 maxFrameCount = 0;
 		if (!SUCCEEDED(hr = mAudioClient->GetBufferSize(&maxFrameCount))) {
 			Log::w(LOGF(L"WasapiOutput : playThread - failed (GetBufferSize)"));
@@ -259,33 +252,39 @@ void WasapiOutput::playThreadMain()
 		}
 		lsp_assert(maxFrameCount >= paddingFrameCount);
 		UINT32 availableFrameCount = maxFrameCount - paddingFrameCount;
-
-
-		// 出力するバッファサイズを決定
-		UINT32 writingFrameCount = availableFrameCount;
-		if(writingFrameCount == 0) {
-			// 出力対象が無ければ待機に戻る
+		if(availableFrameCount == 0) {
+			// no data
 			continue;
 		}
 
-		// 出力バッファのポインタを取得
+		// - 出力バッファのバッファサイズを取得
+		std::lock_guard<decltype(mAudioBufferMutex)> lock(mAudioBufferMutex);
+		UINT32 bufferedFrameCount = static_cast<UINT32>(mAudioBuffer.size() / channels);
+
+
+		// - 出力するバッファサイズを決定
+		UINT32 writingFrameCount = std::min(availableFrameCount, bufferedFrameCount);
+		if(writingFrameCount == 0) {
+			// no data
+			continue;
+		}
+
+		// 出力バッファへ書き出し
 		LPBYTE pBuffer = nullptr;
 		if (!SUCCEEDED(hr = pRenderClient->GetBuffer(writingFrameCount, &pBuffer))) {
 			Log::w(LOGF(L"WasapiOutput : playThread - failed (GetBuffer)"));
 			continue;
 		}
-
-		// バッファへ書き出し
 		for (UINT32 i = 0; i < writingFrameCount; ++i) {
-			// MEMO : 実験用仮コード
-			auto pFrame = reinterpret_cast<uint16_t*>(pBuffer + i*unitFrameSize);
-			pFrame[0] = lwt[phase];
-			pFrame[1] = rwt[phase];
-			++phase;
-			if(phase >= sampleFreq) phase = 0;
+			auto pFrame = reinterpret_cast<char*>(pBuffer + i*unitFrameSize);
+			for (size_t ch = 0; ch < channels; ++ch) {
+				int32_t s = mAudioBuffer.front();
+				mAudioBuffer.pop_front();
+				s >>= 32 - bitsPerSample; // 32bitで記録しているので、必要サイズに併せて切り詰める
+				// MEMO リトルエンディアン前提コード, 下位側から必要バイト分を転写
+				memcpy(pFrame + bytesPerSample * ch, &s, bytesPerSample); 
+			}
 		}
-		
-		// バッファ解放
 		hr = pRenderClient->ReleaseBuffer(writingFrameCount, 0);
 		Log::d(LOGF(L"WasapiOutput : playThread - wrote " << writingFrameCount << L" samples"));
 
