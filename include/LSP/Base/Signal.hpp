@@ -124,20 +124,5 @@ private:
 	size_t mSize;
 };
 
-// ----------------------------------------------------------------------------
-
-/// 信号ソース
-template<
-	typename signal_type,
-	class = std::enable_if_t<is_signal_type_v<signal_type>>
->
-class SignalSource final
-	: non_copy_move 
-{
-public:
-	~SignalSource() {}
-
-	std::shared_ptr<signal_type> obtain(size_t sz) { return std::make_shared<signal_type>(sz); }
-};
 
 }
