@@ -6,7 +6,7 @@
 
 
 // ログ用ユーティリティマクロ
-#define LOGF(expr) [&](ostringstream_t& _)->void { _ << expr; }
+#define LOGF(...) [&](ostringstream_t& _)->void { _ << __VA_ARGS__; }
 #define LSP_LOGUTIL_FILENAME \
 	LSP::strings::file_macro_to_filename(__FILE__)
 
