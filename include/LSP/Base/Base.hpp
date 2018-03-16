@@ -32,9 +32,6 @@
 // --- 基本的な型 ---
 namespace LSP
 {
-// type_traits用テンプレート
-template <typename... Ts> using void_t = void;
-
 
 /// コピー禁止,ムーブ可能型
 struct non_copy {

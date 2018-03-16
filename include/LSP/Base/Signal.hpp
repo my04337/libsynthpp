@@ -56,7 +56,7 @@ template<> struct sample_traits<double> {
 template <class T, class = void>
 struct is_sample_type : std::false_type {};
 template <class T>
-struct is_sample_type<T, void_t<typename sample_traits<T>::_sample_type_tag>> : std::true_type {};
+struct is_sample_type<T, std::void_t<typename sample_traits<T>::_sample_type_tag>> : std::true_type {};
 template<class T>
 constexpr bool is_sample_type_v = is_sample_type<T>::value;
 
@@ -73,7 +73,7 @@ struct SampleConverter
 		const auto in = static_cast<Tintermediate>(in_);
 		const auto raw_out = in * amp_rate;
 
-		if /*constexpr*/ (sample_traits<Tout>::need_clipping_on_normalize()) {
+		if constexpr (sample_traits<Tout>::need_clipping_on_normalize()) {
 			constexpr out_min = static_cast<Tintermediate>(sample_traits<Tout>::normalized_min());
 			constexpr out_max = static_cast<Tintermediate>(sample_traits<Tout>::normalized_max());
 			return static_cast<Tout>(std::max(out_min, std::min(raw_out, out_max)));
@@ -89,7 +89,7 @@ struct SampleConverter
 template <class T, typename = void>
 struct is_signal_type : std::false_type {};
 template <class T>
-struct is_signal_type<T, void_t<typename T::_signal_type_tag>> : std::true_type {};
+struct is_signal_type<T, std::void_t<typename T::_signal_type_tag>> : std::true_type {};
 template<class T>
 constexpr bool is_signal_type_v = is_signal_type<T>::value;
 
