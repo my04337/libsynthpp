@@ -13,6 +13,7 @@ add_library(
 	Debugging/StackTrace.cpp
 	Debugging/Logging.cpp
 	
+	Audio/WavFileOutput.cpp
 	Audio/WasapiOutput.cpp
 )  
 target_include_directories(

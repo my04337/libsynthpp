@@ -1,6 +1,6 @@
 ﻿#include <LSP/minimal.hpp>
 #include <LSP/Debugging/Logging.hpp>
-#include <LSP/Audio/WasapiOutput.hpp>
+#include <LSP/Audio/WavFileOutput.hpp>
 
 #ifdef WIN32
 #include <objbase.h>
@@ -37,11 +37,13 @@ int main(int argc, char** argv)
 		sig_right.data()[i] = sin(880.0f * p);
 	}
 
-	Windows::WasapiOutput wo;
-	wo.initialize(sampleFreq, 16, 2);
-	wo.start();
+	WavFileOutput wo;
+	wo.initialize(sampleFreq, 16, 2, L"a.wav");
 	wo.write(sig_left, sig_right);
-	Sleep(10000);
+	wo.finalize();
+
+	Log::flush();
+	Sleep(1000);
 #if 0
 	TaskDispatcher disp(4);
 
