@@ -203,6 +203,13 @@ bool WasapiOutput::stop()
 	return true;
 }
 
+// 再生待ちサンプル数を取得します
+size_t WasapiOutput::buffered_count()const noexcept
+{
+	std::lock_guard<decltype(mAudioBufferMutex)> lock(mAudioBufferMutex);
+	return mAudioBuffer.size() / mChannels;
+}
+
 // ----------------------------------------------------------------------------
 
 unsigned WasapiOutput::playThreadMainProxy(void* this_)
@@ -286,7 +293,7 @@ void WasapiOutput::playThreadMain()
 			}
 		}
 		hr = pRenderClient->ReleaseBuffer(writingFrameCount, 0);
-		Log::d(LOGF(L"WasapiOutput : playThread - wrote " << writingFrameCount << L" samples"));
+		Log::v(LOGF(L"WasapiOutput : playThread - wrote " << writingFrameCount << L" samples"));
 
 	}
 

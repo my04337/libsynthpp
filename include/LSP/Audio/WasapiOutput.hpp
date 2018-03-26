@@ -37,6 +37,9 @@ public:
 	// デバイスからの出力を停止します
 	bool stop();
 
+	// 再生待ちサンプル数を取得します
+	size_t buffered_count()const noexcept;
+
 	// 信号を書き込みます
 	template<typename signal_type, typename Tintermediate = double>
 	bool write(const Signal<signal_type>& ch1);
@@ -56,7 +59,7 @@ private:
 	HANDLE mAudioThreadHandle;
 	std::atomic_bool mAbort;
 
-	std::mutex mAudioBufferMutex;
+	mutable std::mutex mAudioBufferMutex;
 	std::deque<int32_t>  mAudioBuffer; // 簡単化のため、内部的にはint32で保持する
 
 	// --- valid時のみ有効 ---
