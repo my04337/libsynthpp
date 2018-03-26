@@ -14,37 +14,37 @@ template<typename sample_type> struct sample_traits {
 template<> struct sample_traits<int8_t> {
 	using _sample_type_tag = void; // for SFINAE
 	using sample_type = int8_t;
-	static constexpr sample_type abs_max()noexcept { return 0x7Fi8; }
-	static constexpr sample_type normalized_max()noexcept { return +abs_max(); }
-	static constexpr sample_type normalized_min()noexcept { return -abs_max(); }
+	static constexpr sample_type abs_max = 0x7Fi8;
+	static constexpr sample_type normalized_max = +abs_max;
+	static constexpr sample_type normalized_min = -abs_max;
 };
 template<> struct sample_traits<int16_t> {
 	using _sample_type_tag = void; // for SFINAE
 	using sample_type = int16_t;
-	static constexpr sample_type abs_max()noexcept { return 0x7FFFi16; }
-	static constexpr sample_type normalized_max()noexcept { return +abs_max(); }
-	static constexpr sample_type normalized_min()noexcept { return -abs_max(); }
+	static constexpr sample_type abs_max = 0x7FFFi16; 
+	static constexpr sample_type normalized_max = +abs_max;
+	static constexpr sample_type normalized_min = -abs_max;
 };
 template<> struct sample_traits<int32_t> {
 	using _sample_type_tag = void; // for SFINAE
 	using sample_type = int32_t;
-	static constexpr sample_type abs_max()noexcept { return 0x7FFFFFFFi32; }
-	static constexpr sample_type normalized_max()noexcept { return +abs_max(); }
-	static constexpr sample_type normalized_min()noexcept { return -abs_max(); }
+	static constexpr sample_type abs_max = 0x7FFFFFFFi32;
+	static constexpr sample_type normalized_max = +abs_max;
+	static constexpr sample_type normalized_min = -abs_max;
 };
 template<> struct sample_traits<float> {
 	using _sample_type_tag = void; // for SFINAE
 	using sample_type = float;
-	static constexpr sample_type abs_max() noexcept{ return 1.0f; }
-	static constexpr sample_type normalized_max()noexcept { return +abs_max(); }
-	static constexpr sample_type normalized_min()noexcept { return -abs_max(); }
+	static constexpr sample_type abs_max = 1.0f;
+	static constexpr sample_type normalized_max = +abs_max;
+	static constexpr sample_type normalized_min = -abs_max;
 };
 template<> struct sample_traits<double> {
 	using _sample_type_tag = void; // for SFINAE
 	using sample_type = double;
-	static constexpr sample_type abs_max()noexcept { return 1.0; }
-	static constexpr sample_type normalized_max()noexcept { return +abs_max(); }
-	static constexpr sample_type normalized_min()noexcept { return -abs_max(); }
+	static constexpr sample_type abs_max = 1.0;
+	static constexpr sample_type normalized_max = +abs_max;
+	static constexpr sample_type normalized_min = -abs_max;
 };
 
 // サンプル型であるか否か
@@ -83,8 +83,8 @@ struct SampleFormatConverter
 		} else {
 			// それ以外の型同士では変換が必要
 			// - 値域変換係数算出
-			constexpr auto in_abs_max = static_cast<Tintermediate>(sample_traits<Tin>::abs_max());
-			constexpr auto out_abs_max = static_cast<Tintermediate>(sample_traits<Tout>::abs_max());
+			constexpr auto in_abs_max = static_cast<Tintermediate>(sample_traits<Tin>::abs_max);
+			constexpr auto out_abs_max = static_cast<Tintermediate>(sample_traits<Tout>::abs_max);
 			constexpr auto amp_rate = out_abs_max / in_abs_max;
 		
 			const auto in = static_cast<Tintermediate>(in_);
@@ -94,8 +94,8 @@ struct SampleFormatConverter
 			if constexpr (std::is_floating_point_v<Tout>) {
 				return static_cast<Tout>(raw_out);
 			} else {
-				constexpr auto out_min = static_cast<Tintermediate>(sample_traits<Tout>::normalized_min());
-				constexpr auto out_max = static_cast<Tintermediate>(sample_traits<Tout>::normalized_max());
+				constexpr auto out_min = static_cast<Tintermediate>(sample_traits<Tout>::normalized_min);
+				constexpr auto out_max = static_cast<Tintermediate>(sample_traits<Tout>::normalized_max);
 				return static_cast<Tout>(std::max(out_min, std::min(raw_out, out_max)));
 			}
 		}
