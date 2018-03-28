@@ -6,26 +6,24 @@
 
 
 // ログ用ユーティリティマクロ
-#define LOGF(...) [&](ostringstream_t& _)->void { _ << __VA_ARGS__; }
-#define LSP_LOGUTIL_FILENAME \
-	LSP::strings::file_macro_to_filename(__FILE__)
+#define LOGF(...) [&](std::ostringstream& _)->void { _ << __VA_ARGS__; }
 
 // assertマクロ(記述しやすいようあえて小文字化)
 #define lsp_assert(expr) \
     if(!(expr)) { \
-        LSP::Log::f(LOGF(LSP_LOGUTIL_FILENAME << L":" << __LINE__ << L" - assert" << L"(" << DELAY_MACRO(u###expr) << L") failed.")); \
+        LSP::Log::f(LOGF(LSP::file_macro_to_filename(__FILE__) << ":" << __LINE__ << " - assert" << "(" << DELAY_MACRO(u###expr) << ") failed.")); \
     }
 #define lsp_assert_desc(expr, ...) \
     if(!(expr)) { \
-        LSP::Log::f(LOGF(LSP_LOGUTIL_FILENAME << L":" << __LINE__ << L" - assert" << L"(" << DELAY_MACRO(u###expr) << L") failed [" << __VA_ARGS__ ; _ << L"].")); \
+        LSP::Log::f(LOGF(LSP::file_macro_to_filename(__FILE__) << ":" << __LINE__ << " - assert" << "(" << DELAY_MACRO(u###expr) << ") failed " << __VA_ARGS__ ; _ << "].")); \
     }
 
 // 開発時用デバッグログ(コミット前に除去すること)
 #define lsp_debug_log(expr) \
-	LSP::Log::w(LOGF(LSP_LOGUTIL_FILENAME << L":" << __LINE__  << L" - " << expr));
+	LSP::Log::w(LOGF(LSP::file_macro_to_filename(__FILE__) << ":" << __LINE__  << " - " << expr));
 
 #define lsp_dump_stacktrace() \
-	lsp_debug_log(L""; LSP::Log::printStackTrace(_, LSP::Log::getStackTrace()));
+	lsp_debug_log(""; LSP::Log::printStackTrace(_, LSP::Log::getStackTrace()));
 
 
 namespace LSP
@@ -76,7 +74,7 @@ public:
 	// ログで使用する期間
 	using duration = clock::duration;
 	// ログ出力式
-	using Writer = std::function<void(ostringstream_t& o)>;
+	using Writer = std::function<void(std::ostringstream& o)>;
 	// スタックトレース
 	using StackTraceElement = CppCallStack::StackTraceElement;
 	using StackTrace = CppCallStack::StackTrace;
@@ -93,23 +91,24 @@ public:
 	static void removeLogger(ILogger* logger);
 
 	// ログ書き込み [例外送出禁止]
-	static void v(const string_t& text, bool isCritical=false)noexcept;
-	static void v(const Writer& writer, bool isCritical=false)noexcept;
+	
+	static void v(const std::string_view& text)noexcept;
+	static void v(const Writer& writer)noexcept;
 
-	static void d(const string_t& text, bool isCritical=false)noexcept;
-	static void d(const Writer& writer, bool isCritical=false)noexcept;
+	static void d(const std::string_view& text)noexcept;
+	static void d(const Writer& writer)noexcept;
 
-	static void i(const string_t& text, bool isCritical=false)noexcept;
-	static void i(const Writer& writer, bool isCritical=false)noexcept;
+	static void i(const std::string_view& text)noexcept;
+	static void i(const Writer& writer)noexcept;
 
-	static void w(const string_t& text, bool isCritical=false)noexcept;
-	static void w(const Writer& writer, bool isCritical=false)noexcept;
+	static void w(const std::string_view& text)noexcept;
+	static void w(const Writer& writer)noexcept;
 
-	static void e(const string_t& text, bool isCritical=false)noexcept;
-	static void e(const Writer& writer, bool isCritical=false)noexcept;
+	static void e(const std::string_view& text)noexcept;
+	static void e(const Writer& writer)noexcept;
 
 	[[noreturn]]
-	static void f(const string_t& text, const StackTrace* stacks=nullptr)noexcept;
+	static void f(const std::string_view& text, const StackTrace* stacks=nullptr)noexcept;
 	[[noreturn]]
 	static void f(const Writer& writer, const StackTrace* stacks=nullptr)noexcept;
 
@@ -120,11 +119,10 @@ public:
 	static void write(LogLevel level, const Writer& writer, const StackTrace* stacks=nullptr, bool isCritical=false)noexcept;
 
 	// 標準ログフォーマットで整形 [例外送出禁止]
-	static ostringstream_t& format_default(ostringstream_t& out, Log::time_point time, LogLevel level, const string_t& log, const Log::StackTrace* stacks)noexcept;
+	static std::ostringstream& format_default(std::ostringstream& out, Log::time_point time, LogLevel level, const std::string_view& log, const Log::StackTrace* stacks)noexcept;
 
-	// スタックトレースの取得/表示 [常用禁止 : 使用するとデバッグ情報が大量に読み込まれメインメモリを圧迫するため]
+	// スタックトレースの取得 [常用禁止 : 使用するとデバッグ情報が大量に読み込まれメインメモリを圧迫するため]
 	static StackTrace getStackTrace(size_t skipFrames=0)noexcept;
-	static void printStackTrace(ostringstream_t& stream, const StackTrace& st, size_t max_stack_num = std::numeric_limits<size_t>::max())noexcept;
 	
 private:
 	// 書き込みロック
@@ -150,7 +148,7 @@ public:
 	virtual bool isWritable(LogLevel level)const noexcept = 0;
 
 	// ログ書き込み (stacks!=null:スタックトレース出力)
-	virtual void write(Log::time_point time, LogLevel level, const string_t& log, const Log::StackTrace* stacks)noexcept = 0;
+	virtual void write(Log::time_point time, LogLevel level, const std::string_view& log, const Log::StackTrace* stacks)noexcept = 0;
 
 	// 書き込み済みログのフラッシュ
 	virtual void flush()noexcept = 0;
@@ -169,15 +167,12 @@ public:
 
 	// --- ILogger ---
 	// ログ書き込み (stacks!=null:スタックトレース出力)
-	virtual void write(Log::time_point time, LogLevel level, const string_t& log, const Log::StackTrace* stacks)noexcept override;
+	virtual void write(Log::time_point time, LogLevel level, const std::string_view& log, const Log::StackTrace* stacks)noexcept override;
 	virtual void flush()noexcept override;
 
 	virtual bool isWritable(LogLevel level)const noexcept override { return true; }
 	virtual bool canOutputCriticalLog()const noexcept override { return true; }
-
-	// ---
-	bool valid()const noexcept;
-
+	
 private:
 	bool mShowHeader;
 };

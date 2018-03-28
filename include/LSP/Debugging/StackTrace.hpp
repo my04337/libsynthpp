@@ -1,7 +1,6 @@
 ﻿#pragma once
 
 #include <LSP/Base/Base.hpp>
-#include <LSP/Base/String.hpp>
 
 #include <sstream>
 #include <iomanip>
@@ -25,7 +24,7 @@ struct CppCallStack
 	static void setStackBottom()noexcept;
 
 	// スタックトレースの出力 [例外送出禁止]
-	static void printStackTrace(ostream_t& stream, const StackTrace& st, size_t max_stack_num = std::numeric_limits<size_t>::max())noexcept;
+	static void printStackTrace(std::ostream& stream, const StackTrace& st, size_t max_stack_num = std::numeric_limits<size_t>::max())noexcept;
 };
 
 

@@ -1,6 +1,8 @@
 ﻿#pragma once
 
 // --- 基本的なヘッダ類 ---
+#include <string>
+#include <string_view>
 #include <list>
 #include <vector>
 #include <deque>
@@ -17,6 +19,14 @@
 #include <typeinfo>
 #include <typeindex>
 #include <type_traits>
+#include <filesystem>
+
+// C++17 関連パッチ
+#if _MSC_VER <= 1913 // 少なくともVisual Studio 2017 Update6以前はstd::filesystemは実験的実装
+namespace std::filesystem {
+	using namespace std::experimental::filesystem;
+}
+#endif
 
 // --- 基本的なマクロ類 ---
 #ifdef WIN32
@@ -53,7 +63,7 @@ struct non_copy_move {
 
 /// スコープ離脱時実行コード 補助クラス
 template<typename F>
-class _finally_action
+class [[nodiscard]] _finally_action
 	: non_copy
 {
 public:
@@ -80,5 +90,17 @@ _finally_action<F> finally(F&& f) { return {std::forward<F>(f)}; }
 std::string demangle(const std::type_info& type);
 std::string demangle(const std::type_index& type);
 std::string demangle(const char* mangled_name);
+
+// ファイルマクロ用 ファイル名
+constexpr std::string_view file_macro_to_filename(const char* filepath)
+{
+	std::string_view path(filepath);
+	auto sep = path.find_last_of("\\/");
+	if (sep != std::string_view::npos) {
+		return path.substr(sep+1);
+	}else {
+		return path;
+	}
+}
 
 }

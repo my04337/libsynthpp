@@ -4,7 +4,6 @@ add_library(
 	libsynthpp STATIC
 
 	Base/Base.cpp
-	Base/String.cpp
 	Base/Signal.cpp
 	
 	Threading/EventSignal.cpp

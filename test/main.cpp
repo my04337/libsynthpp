@@ -1,5 +1,6 @@
 ﻿#include <LSP/minimal.hpp>
 #include <LSP/Debugging/Logging.hpp>
+#include <LSP/Audio/WasapiOutput.hpp>
 #include <LSP/Audio/WavFileOutput.hpp>
 
 #ifdef WIN32
@@ -9,7 +10,7 @@
 using namespace LSP;
 
 void func() {
-	lsp_debug_log(L"");
+	lsp_debug_log("");
 }
 
 int main(int argc, char** argv)
@@ -29,36 +30,32 @@ int main(int argc, char** argv)
 	// ---
 
 	constexpr uint32_t sampleFreq = 44100;
-	Signal<float> sig_left(sampleFreq * 1);
-	Signal<float> sig_right(sampleFreq * 1);
-	for (uint32_t i = 0; i < sampleFreq; ++i) {
-		float p = i * 2.0f * PI<float> / sampleFreq; // 位相
-		sig_left.data()[i]  = sin(440.0f * p);
-		sig_right.data()[i] = sin(880.0f * p);
-	}
-
-	WavFileOutput wo;
-	wo.initialize(sampleFreq, 16, 2, L"a.wav");
-	wo.write(sig_left, sig_right);
-	wo.finalize();
-
-	Log::flush();
-	Sleep(1000);
-#if 0
-	TaskDispatcher disp(4);
-
-	std::vector<std::unique_ptr<Task>> tasks;
-	for (size_t i = 0; i < 4; ++i) {
-		tasks.emplace_back(Task::make([i](){lsp_debug_log(string_t(1, 'a'+i)); _sleep(1000);}));
-	}
-	auto taskId0 = tasks[0]->id();
-	disp.enqueue(std::move(tasks[0]));
-	disp.enqueue(std::move(tasks[1]));
-	disp.enqueue(std::move(tasks[2]));
-	disp.enqueue(std::move(tasks[3]), {taskId0});
+	constexpr uint32_t unitSampleCount = 4410;
+	Signal<float> sig_left(unitSampleCount);
+	Signal<float> sig_right(unitSampleCount);
+	int64_t time = 0;
 	
-	while(disp.count() > 0) _sleep(100);
-#endif
+	Windows::WasapiOutput wo;
+	if (!wo.initialize(sampleFreq, 16, 2)) {
+		return -1;
+	}
+	if(!wo.start()) {
+		return -1;
+	}
+	while(true) {
+		if (wo.buffered_count() < unitSampleCount) {
+			for (uint32_t i = 0; i < unitSampleCount; ++i) {
+				float p = (time % unitSampleCount) * 2.0f * PI<float> / sampleFreq; // 位相
+				sig_left.data()[i]  = sin(440.0f * p);
+				sig_right.data()[i] = sin(880.0f * p);
+				++time;
+			}
+			wo.write(sig_left, sig_right);
+			continue;
+		}
+		std::this_thread::sleep_for(std::chrono::milliseconds(10));
+	}
+
 
 	return 0;
 }

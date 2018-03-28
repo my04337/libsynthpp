@@ -1,7 +1,6 @@
 ﻿#pragma once
 
-#include <LSP/Base/Base.hpp>
-#include <LSP/Base/Signal.hpp>
+#include <LSP/minimal.hpp>
 #include <LSP/Debugging/Logging.hpp>
 
 #ifndef WIN32
@@ -26,15 +25,18 @@ public:
 	~WasapiOutput();
 
 	// 有効な状態か否かを取得します
+	[[nodiscard]]
 	bool valid() const noexcept;
 
 	// デバイスを初期化します
 	bool initialize(uint32_t sampleFreq, uint32_t bitsPerSample, uint32_t channels);
 
 	// デバイスからの出力を開始します
+	[[nodiscard]]
 	bool start();
 
 	// デバイスからの出力を停止します
+	[[nodiscard]]
 	bool stop();
 
 	// 再生待ちサンプル数を取得します
@@ -90,17 +92,17 @@ bool WasapiOutput::write(const Signal<signal_type>* sigs[], size_t num)
 	if(num == 0) return true;
 
 	if (!valid()) {
-		Log::e(LOGF(L"WasapiOutput : write - failed (invalid)"));
+		Log::e(LOGF("WasapiOutput : write - failed (invalid)"));
 		return false;
 	}
 	if (num != mChannels) {
-		Log::e(LOGF(L"WasapiOutput : write - failed (channel count is mismatch)"));
+		Log::e(LOGF("WasapiOutput : write - failed (channel count is mismatch)"));
 		return false;
 	}
 	const auto sz = sigs[0]->size();
 	for (size_t ch=1; ch< num; ++ch) {
 		if (sigs[ch]->size() != sz) {
-			Log::e(LOGF(L"WasapiOutput : write - failed (signal length is mismatch)"));
+			Log::e(LOGF("WasapiOutput : write - failed (signal length is mismatch)"));
 			return false;
 		}
 	}

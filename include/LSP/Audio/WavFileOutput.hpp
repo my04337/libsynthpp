@@ -1,10 +1,10 @@
 ﻿#pragma once
 
-#include <LSP/Base/Base.hpp>
-#include <LSP/Base/Signal.hpp>
-#include <LSP/Base/String.hpp>
+#include <LSP/minimal.hpp>
+#include <LSP/Debugging/Logging.hpp>
 
 #include <fstream>
+#include <filesystem>
 
 namespace LSP {
 
@@ -20,7 +20,7 @@ public:
 	bool valid() const noexcept;
 
 	// ファイルを初期化します
-	bool initialize(uint32_t sampleFreq, uint32_t bitsPerSample, uint32_t channels, const string_t& fileName);
+	bool initialize(uint32_t sampleFreq, uint32_t bitsPerSample, uint32_t channels, const std::filesystem::path& filePath);
 
 	// ファイルへの出力を終了します
 	bool finalize();
@@ -70,17 +70,17 @@ bool WavFileOutput::write(const Signal<signal_type>* sigs[], size_t num)
 	if(num == 0) return true;
 
 	if (!valid()) {
-		Log::e(LOGF(L"WasapiOutput : write - failed (invalid)"));
+		Log::e(LOGF("WasapiOutput : write - failed (invalid)"));
 		return false;
 	}
 	if (num != mChannels) {
-		Log::e(LOGF(L"WasapiOutput : write - failed (channel count is mismatch)"));
+		Log::e(LOGF("WasapiOutput : write - failed (channel count is mismatch)"));
 		return false;
 	}
 	const auto sz = sigs[0]->size();
 	for (size_t ch=1; ch< num; ++ch) {
 		if (sigs[ch]->size() != sz) {
-			Log::e(LOGF(L"WasapiOutput : write - failed (signal length is mismatch)"));
+			Log::e(LOGF("WasapiOutput : write - failed (signal length is mismatch)"));
 			return false;
 		}
 	}

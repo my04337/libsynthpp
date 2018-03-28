@@ -20,25 +20,25 @@ bool WavFileOutput::valid() const noexcept
 	return mFile.is_open() && !mFile.fail();
 }
 
-bool WavFileOutput::initialize(uint32_t sampleFreq, uint32_t bitsPerSample, uint32_t channels, const string_t& fileName)
+bool WavFileOutput::initialize(uint32_t sampleFreq, uint32_t bitsPerSample, uint32_t channels, const std::filesystem::path& filePath)
 {
 	if(valid()) {
-		Log::e(LOGF(L"WavFileOutput : initialize - failed (already initialized)"));
+		Log::e(LOGF("WavFileOutput : initialize - failed (already initialized)"));
 		return false;
 	}
 	if(channels < 1 || channels > 2) {
-		Log::e(LOGF(L"WavFileOutput : initialize - failed (invalid channel num)"));
+		Log::e(LOGF("WavFileOutput : initialize - failed (invalid channel num)"));
 		return false;
 	}
 	if(bitsPerSample != 16 && bitsPerSample != 32) {
-		Log::e(LOGF(L"WavFileOutput : initialize - failed (invalid bits per sampe)"));
+		Log::e(LOGF("WavFileOutput : initialize - failed (invalid bits per sampe)"));
 		return false;
 	}
 
 	std::ofstream fs;
-	fs.open(fileName, std::ostream::out | std::ostream::trunc | std::ostream::binary);
+	fs.open(filePath, std::ostream::out | std::ostream::trunc | std::ostream::binary);
 	if (!fs) {
-		Log::e(LOGF(L"WavFileOutput : initialize - failed (cannot open file)"));
+		Log::e(LOGF("WavFileOutput : initialize - failed (cannot open file)"));
 		return false;
 	}
 
@@ -77,12 +77,12 @@ bool WavFileOutput::initialize(uint32_t sampleFreq, uint32_t bitsPerSample, uint
 	// ---
 
 	if (!fs) {
-		Log::e(LOGF(L"WavFileOutput : initialize - failed (creating wav file header)"));
+		Log::e(LOGF("WavFileOutput : initialize - failed (creating wav file header)"));
 		return false;
 	}
 
 	// OK
-	Log::i(LOGF(L"WavFileOutput : initialized"));
+	Log::i(LOGF("WavFileOutput : initialized"));
 	mFile = std::move(fs);
 	mSampleFreq = sampleFreq;
 	mBitsPerSample = bitsPerSample;
@@ -96,11 +96,11 @@ bool WavFileOutput::initialize(uint32_t sampleFreq, uint32_t bitsPerSample, uint
 bool WavFileOutput::finalize()
 {
 	if(!mFile) {
-		Log::e(LOGF(L"WavFileOutput : finalize - failed (not initialized)"));
+		Log::e(LOGF("WavFileOutput : finalize - failed (not initialized)"));
 		return false;
 	}
 	if(!valid()) {
-		Log::e(LOGF(L"WavFileOutput : finalize - failed (not valid)"));
+		Log::e(LOGF("WavFileOutput : finalize - failed (not valid)"));
 		return false;
 	}
 
@@ -118,7 +118,7 @@ bool WavFileOutput::finalize()
 	write_binary(uint32_t(riff_size));
 
 	if(!valid()) {
-		Log::e(LOGF(L"WavFileOutput : finalize - failed (file size)"));
+		Log::e(LOGF("WavFileOutput : finalize - failed (file size)"));
 		return false;
 	}
 
@@ -136,7 +136,7 @@ bool WavFileOutput::write(const std::vector<int32_t>& frame)
 	lsp_assert(frame.size() == mChannels);
 
 	if(!valid()) {
-		Log::e(LOGF(L"WavFileOutput : write - failed (not valid)"));
+		Log::e(LOGF("WavFileOutput : write - failed (not valid)"));
 		return false;
 	}
 	

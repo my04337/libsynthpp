@@ -35,11 +35,11 @@ thread_local void* STACK_BOTTOM_ADDR = nullptr;
 struct ModuleInfo : non_copy
 {
 	struct Detail {
-		string_t moduleName = L"???";
+		std::filesystem::path modulePath = "???";
 		LPVOID baseOfDll    = NULL;
 		DWORD  sizeOfImage  = 0;
 		LPVOID entryPoint   = NULL;
-		string_t version    = L"";
+		std::string version = "";
 	};
 
 	static ModuleInfo gather() {
@@ -60,12 +60,7 @@ struct ModuleInfo : non_copy
 			// module name
 			WCHAR szModPath[MAX_PATH];
 			if(GetModuleFileNameExW(hProcess, hMods[i], szModPath, sizeof(szModPath)/sizeof(WCHAR))) {
-				WCHAR szModName[MAX_PATH];
-				if(GetFileTitleW(szModPath, szModName, sizeof(szModName)/sizeof(WCHAR)) == 0) {
-					info.moduleName = szModName;
-				} else {
-					info.moduleName = szModPath;
-				}
+				info.modulePath = szModPath;
 
 				// module version
 				DWORD cbBlock = GetFileVersionInfoSizeW(szModPath, 0);
@@ -78,8 +73,8 @@ struct ModuleInfo : non_copy
 							VS_FIXEDFILEINFO *pvfi = (VS_FIXEDFILEINFO *)pvBuf;
 							DWORD dwFileVerMS = pvfi->dwFileVersionMS;
 							DWORD dwFileVerLS = pvfi->dwFileVersionLS;
-							WCHAR buf[256];
-							swprintf_s(buf, sizeof(buf)/sizeof(WCHAR), L"%d.%d.%d.%d", HIWORD(dwFileVerMS), LOWORD(dwFileVerMS), HIWORD(dwFileVerLS), LOWORD(dwFileVerLS));
+							CHAR buf[256];
+							sprintf_s(buf, sizeof(buf)/sizeof(buf[0]), "%d.%d.%d.%d", HIWORD(dwFileVerMS), LOWORD(dwFileVerMS), HIWORD(dwFileVerLS), LOWORD(dwFileVerLS));
 							info.version = buf;
 
 						}
@@ -198,7 +193,7 @@ CppCallStack::StackTrace CppCallStack::getStackTraceSEH(void* hThread_, void* pC
 	} while (s.AddrReturn.Offset != 0);
 
 #else
-	crs_assert_desc(false, L"for win32 platform");
+	lsp_assert_desc(false, "for win32 platform");
 #endif
 	return stacks; // NRVO
 }
@@ -217,9 +212,9 @@ void CppCallStack::setStackBottom()noexcept
 	STACK_BOTTOM_ADDR = &dummy_variable;
 }
 
-void CppCallStack::printStackTrace(ostream_t& stream, const StackTrace& stacks, size_t max_stack_num)noexcept
+void CppCallStack::printStackTrace(std::ostream& stream, const StackTrace& stacks, size_t max_stack_num)noexcept
 {
-	stream << L"Stack Trace :" << std::ends;
+	stream << "Stack Trace :" << std::endl;
 	const auto stackNum = std::min(stacks.size(), max_stack_num);
 
 #if defined(WIN32)
@@ -263,7 +258,7 @@ void CppCallStack::printStackTrace(ostream_t& stream, const StackTrace& stacks, 
 		// その他Win32Apiなどで頻出の名前も除外
 		if(strstr(name, "Rtl") == name) continue;
 		// 不明なスタックトレースは除外(先頭部分のみ)
-		if(!hasMeaningfulStack && d.moduleName == L"???" && strcmp(name, "?")==0) {
+		if(!hasMeaningfulStack && d.modulePath.filename() ==  "???" && strcmp(name, "?")==0) {
 			continue;
 		}
 		hasMeaningfulStack = true;
@@ -278,21 +273,22 @@ void CppCallStack::printStackTrace(ostream_t& stream, const StackTrace& stacks, 
 		}
 
 		// num
-		stream << stackNum-i-1 << L" : ";
+		stream << stackNum-i-1 << " : ";
 
 		// name
 		stream << name;
-		stream << L" -- ";
+		stream << " -- ";
 
 		// line & module info
 		if(hasLineInfo) {
-			stream << line.FileName << L":" << line.LineNumber;
-			stream << L" (" << d.moduleName << L")";
+			std::filesystem::path srcFileName = line.FileName;
+			stream << srcFileName.filename() << ":" << line.LineNumber;
+			stream << " (" << d.modulePath.filename() << ")";
 		} else {
-			stream << d.moduleName;
+			stream << d.modulePath.filename();
 		}
 
-		stream << std::ends; // end
+		stream << std::endl; // end
 
 						// main関数以降は出力しない
 		if(strstr(name, "main") == name) break;
@@ -303,22 +299,22 @@ void CppCallStack::printStackTrace(ostream_t& stream, const StackTrace& stacks, 
 		Dl_info info;
 		if (dladdr(stacks[i], &info)) {
 			// num
-			stream << stackNum-i-1 << L" : ";
+			stream << stackNum-i-1 << " : ";
 
 			// name
 			stream << demangle(info.dli_sname);
-			stream << L" -- ";
+			stream << " -- ";
 
 			// line & module info
 			stream << QFileInfo(strings::from(info.dli_fname)).fileName() << u"+" << (size_t)info.dli_fbase;
 
-			stream << std::ends;
+			stream << std::endl;
 		} else {
-			stream << QString::fromLocal8Bit(syms[i]) << std::ends;
+			stream << QString::fromLocal8Bit(syms[i]) << std::endl;
 		}
 	}
 	free(syms);
 
 #endif
-	stream << L"Stack Trace End" << std::ends;
+	stream << "Stack Trace End" << std::endl;
 }
