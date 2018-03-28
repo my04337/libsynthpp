@@ -60,6 +60,10 @@ constexpr bool is_sample_type_v = is_sample_type<T>::value;
 template<typename Tin, typename Tout, typename Tintermediate=double>
 struct SampleFormatConverter
 {
+	constexpr Tout operator()(Tin in) noexcept {
+		return convert(in);
+	}
+
 	static constexpr Tout convert(Tin in_) noexcept {
 		// MEMO できるだけconstexprで解決し、実行時コストを純粋に変換処理のみとしたい。
 

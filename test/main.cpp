@@ -1,6 +1,9 @@
 ﻿#include <LSP/minimal.hpp>
 #include <LSP/Audio/WasapiOutput.hpp>
 #include <LSP/Audio/WavFileOutput.hpp>
+#include <LSP/Generator/SinOscillator.hpp>
+#include <LSP/Generator/NoiseGenerator.hpp>
+#include <LSP/Filter/BiquadraticFilter.hpp>
 
 #ifdef WIN32
 #include <objbase.h>
@@ -32,11 +35,17 @@ int main(int argc, char** argv)
 		return -1;
 	}
 
+	using sample_type = float;
+	using conv_from_float = SampleFormatConverter<float, sample_type>;
 	const uint32_t sampleFreq = wo.getDeviceSampleFreq();
-	const uint32_t bufferFrameCount = wo.getDeviceBufferFrameCount();
-		
-	Signal<float> sig_left(bufferFrameCount);
-	Signal<float> sig_right(bufferFrameCount);
+	const size_t bufferFrameCount = wo.getDeviceBufferFrameCount();
+
+	Generator::NoiseGenerator<sample_type, Generator::NoiseColor::White> noisegen1(sampleFreq);
+	Generator::NoiseGenerator<sample_type, Generator::NoiseColor::White> noisegen2(sampleFreq);
+	Filter::BiquadraticFilter<double> bqf2;
+	bqf2.setLopassParam(sampleFreq, 1000, 1);
+	Signal<sample_type> sig_left(bufferFrameCount);
+	Signal<sample_type> sig_right(bufferFrameCount);
 	int64_t time = 0;
 	
 	if(!wo.start()) {
@@ -46,8 +55,8 @@ int main(int argc, char** argv)
 		if (wo.getBufferedFrameCount() < bufferFrameCount) {
 			for (uint32_t i = 0; i < bufferFrameCount; ++i) {
 				float p = (time % sampleFreq) * 2.0f * PI<float> / sampleFreq; // 位相
-				sig_left.data()[i]  = sin(440.0f * p)/3 + sin(660.0f * p)/4;
-				sig_right.data()[i] = sin(880.0f * p)/2;
+				sig_left.data()[i]  = conv_from_float()( noisegen1.generate() );
+				sig_right.data()[i] = conv_from_float()( bqf2.update(noisegen2.generate()) );
 				++time;
 			}
 			wo.write(sig_left, sig_right);
