@@ -3,7 +3,7 @@
 #include <LSP/Base/Base.hpp>
 #include <LSP/Base/Math.hpp>
 
-namespace LSP {
+namespace LSP::Filter {
 
 // 双二次フィルタクラス
 //   参考URL : http://ufcpp.net/study/sp/digital_filter/biquad/

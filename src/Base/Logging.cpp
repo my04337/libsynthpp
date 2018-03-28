@@ -1,4 +1,4 @@
-﻿#include <LSP/Debugging/Logging.hpp>
+﻿#include <LSP/Base/Logging.hpp>
 #include <iostream>
 
 using namespace LSP;

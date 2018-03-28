@@ -1,5 +1,5 @@
 ﻿#include <LSP/minimal.hpp>
-#include <LSP/Util/BiquadraticFilter.hpp>
+#include <LSP/Filter/BiquadraticFilter.hpp>
 
 // テンプレート実体化チェック
 
@@ -15,11 +15,11 @@ void uncalled_func()
 	LSP::Signal<double> signal_double(0);
 	LSP::Signal<int32_t> signal_int32_t(0);
 	
-	LSP::BiquadraticFilter<float> bqf_float;
-	LSP::BiquadraticFilter<double> bqf_double;
-	LSP::BiquadraticFilter<long double> bqf_long_double;
+	LSP::Filter::BiquadraticFilter<float> bqf_float;
+	LSP::Filter::BiquadraticFilter<double> bqf_double;
+	LSP::Filter::BiquadraticFilter<long double> bqf_long_double;
 
-	LSP::BiquadraticFilter<float, double> bqf_float_and_double;
+	LSP::Filter::BiquadraticFilter<float, double> bqf_float_and_double;
 }
 
 }

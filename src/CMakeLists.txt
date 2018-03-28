@@ -5,12 +5,12 @@ add_library(
 
 	Base/Base.cpp
 	Base/Signal.cpp
+	Base/StackTrace.cpp
+	Base/Logging.cpp
 	
 	Threading/EventSignal.cpp
 	Threading/TaskDispatcher.cpp
 
-	Debugging/StackTrace.cpp
-	Debugging/Logging.cpp
 	
 	Audio/WavFileOutput.cpp
 	Audio/WasapiOutput.cpp

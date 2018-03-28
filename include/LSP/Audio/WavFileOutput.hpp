@@ -1,12 +1,11 @@
 ﻿#pragma once
 
 #include <LSP/minimal.hpp>
-#include <LSP/Debugging/Logging.hpp>
 
 #include <fstream>
 #include <filesystem>
 
-namespace LSP {
+namespace LSP::Audio {
 
 // WASAPI 出力
 class WavFileOutput final

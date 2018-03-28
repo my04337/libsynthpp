@@ -1,7 +1,7 @@
 ﻿#include <LSP/Audio/WavFileOutput.hpp>
-#include <LSP/Debugging/Logging.hpp>
 
 using namespace LSP;
+using namespace LSP::Audio;
 
 WavFileOutput::WavFileOutput()
 {

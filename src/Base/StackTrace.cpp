@@ -1,4 +1,4 @@
-﻿#include <LSP/Debugging/StackTrace.hpp>
+﻿#include <LSP/Base/StackTrace.hpp>
 
 #include <sstream>
 

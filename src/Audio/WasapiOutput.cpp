@@ -1,5 +1,4 @@
 ﻿#include <LSP/Audio/WasapiOutput.hpp>
-#include <LSP/Debugging/Logging.hpp>
 #include <LSP/Base/Math.hpp>
 
 #include <Mmdeviceapi.h>
@@ -8,7 +7,7 @@
 
 
 using namespace LSP;
-using namespace LSP::Windows;
+using namespace LSP::Audio;
 
 // 参考URL : https://charatsoft.sakura.ne.jp/develop/toaru2/index.php?did=7
 

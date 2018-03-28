@@ -1,5 +1,4 @@
 ﻿#include <LSP/minimal.hpp>
-#include <LSP/Debugging/Logging.hpp>
 #include <LSP/Audio/WasapiOutput.hpp>
 #include <LSP/Audio/WavFileOutput.hpp>
 
@@ -35,7 +34,7 @@ int main(int argc, char** argv)
 	Signal<float> sig_right(unitSampleCount);
 	int64_t time = 0;
 	
-	Windows::WasapiOutput wo;
+	Audio::WasapiOutput wo;
 	if (!wo.initialize(sampleFreq, 16, 2)) {
 		return -1;
 	}

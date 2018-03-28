@@ -1,7 +1,6 @@
 ﻿#pragma once
 
 #include <LSP/minimal.hpp>
-#include <LSP/Debugging/Logging.hpp>
 
 #ifndef WIN32
 #error unsupported platform
@@ -13,8 +12,7 @@
 
 struct IAudioClient;
 
-namespace LSP {
-namespace Windows {
+namespace LSP::Audio {
 
 // WASAPI 出力
 class WasapiOutput final
@@ -119,5 +117,4 @@ bool WasapiOutput::write(const Signal<signal_type>* sigs[], size_t num)
 	return true;
 }
 
-}
 }

@@ -2,7 +2,7 @@
 
 #include <LSP/Base/Base.hpp>
 #include <LSP/Base/Id.hpp>
-#include <LSP/Debugging/StackTrace.hpp>
+#include <LSP/Base/StackTrace.hpp>
 
 
 // ログ用ユーティリティマクロ
