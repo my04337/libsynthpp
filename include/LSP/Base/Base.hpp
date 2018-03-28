@@ -8,6 +8,8 @@
 #include <deque>
 #include <unordered_set>
 #include <unordered_map>
+#include <variant>
+#include <optional>
 #include <chrono>
 #include <limits>
 #include <memory>

@@ -27,26 +27,27 @@ int main(int argc, char** argv)
 	Log::setLogLevel(LogLevel::Debug);
 
 	// ---
-
-	constexpr uint32_t sampleFreq = 44100;
-	constexpr uint32_t unitSampleCount = 4410;
-	Signal<float> sig_left(unitSampleCount);
-	Signal<float> sig_right(unitSampleCount);
-	int64_t time = 0;
-	
 	Audio::WasapiOutput wo;
-	if (!wo.initialize(sampleFreq, 16, 2)) {
+	if (!wo.valid()) {
 		return -1;
 	}
+
+	const uint32_t sampleFreq = wo.getDeviceSampleFreq();
+	const uint32_t bufferFrameCount = wo.getDeviceBufferFrameCount();
+		
+	Signal<float> sig_left(bufferFrameCount);
+	Signal<float> sig_right(bufferFrameCount);
+	int64_t time = 0;
+	
 	if(!wo.start()) {
 		return -1;
 	}
 	while(true) {
-		if (wo.buffered_count() < unitSampleCount) {
-			for (uint32_t i = 0; i < unitSampleCount; ++i) {
-				float p = (time % unitSampleCount) * 2.0f * PI<float> / sampleFreq; // 位相
-				sig_left.data()[i]  = sin(440.0f * p);
-				sig_right.data()[i] = sin(880.0f * p);
+		if (wo.getBufferedFrameCount() < bufferFrameCount) {
+			for (uint32_t i = 0; i < bufferFrameCount; ++i) {
+				float p = (time % sampleFreq) * 2.0f * PI<float> / sampleFreq; // 位相
+				sig_left.data()[i]  = sin(440.0f * p)/3 + sin(660.0f * p)/4;
+				sig_right.data()[i] = sin(880.0f * p)/2;
 				++time;
 			}
 			wo.write(sig_left, sig_right);

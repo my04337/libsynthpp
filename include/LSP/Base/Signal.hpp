@@ -134,6 +134,7 @@ public:
 
 	// データ数を取得します。
 	size_t size()const noexcept { return mSize; }
+	size_t length()const noexcept { return mSize; }
 
 	// 異なる信号型に変換します
 	template<typename Tout, typename Tintermediate=double>

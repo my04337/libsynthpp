@@ -5,12 +5,16 @@
 #ifndef WIN32
 #error unsupported platform
 #endif
+#ifndef WIN32
+#error unsupported platform
+#endif
 
 #include <Windows.h>
+#include <Mmreg.h>
 #include <atlbase.h>
 #include <atlcom.h>
 
-struct IAudioClient;
+struct IAudioClient3;
 
 namespace LSP::Audio {
 
@@ -19,16 +23,24 @@ class WasapiOutput final
 	: non_copy_move
 {
 public:
+	enum class SampleFormat 
+	{
+		Unknown,
+		Int8,
+		Int16,
+		Int24,
+		Int32,
+		Float32,
+	};
+
+public:
 	WasapiOutput();
 	~WasapiOutput();
 
 	// 有効な状態か否かを取得します
 	[[nodiscard]]
 	bool valid() const noexcept;
-
-	// デバイスを初期化します
-	bool initialize(uint32_t sampleFreq, uint32_t bitsPerSample, uint32_t channels);
-
+	
 	// デバイスからの出力を開始します
 	[[nodiscard]]
 	bool start();
@@ -37,84 +49,122 @@ public:
 	[[nodiscard]]
 	bool stop();
 
+	// デバイスのサンプリング周波数を取得します
+	uint32_t getDeviceSampleFreq()const noexcept;
+
+	// デバイスのチャネル数を取得します
+	uint32_t getDeviceChannels()const noexcept;
+
+	// デバイスのサンプルフォーマットを取得します
+	SampleFormat getDeviceFormat()const noexcept;
+	std::string_view getDeviceFormatString()const noexcept;
+	static std::string_view getDeviceFormatString(SampleFormat format)noexcept;
+
+	// デバイスのバッファサイズを取得します
+	size_t getDeviceBufferFrameCount()const noexcept;
+
 	// 再生待ちサンプル数を取得します
-	size_t buffered_count()const noexcept;
+	size_t getBufferedFrameCount()const noexcept;
 
 	// 信号を書き込みます
 	template<typename signal_type, typename Tintermediate = double>
-	bool write(const Signal<signal_type>& ch1);
+	void write(const Signal<signal_type>& ch1);
 	template<typename signal_type, typename Tintermediate = double>
-	bool write(const Signal<signal_type>& ch1, const Signal<signal_type>& ch2);
+	void write(const Signal<signal_type>& ch1, const Signal<signal_type>& ch2);
 	template<typename signal_type, typename Tintermediate = double>
-	bool write(const Signal<signal_type>* sigs[], size_t num);
+	void write(const Signal<signal_type>* sigs[], size_t num);
 
 protected:
 	static unsigned __stdcall playThreadMainProxy(void*);
 	void playThreadMain();
 
+	static CComPtr<IAudioClient3> getDefaultAudioClient();
+	void initialize();
 
 private:
-	CComPtr<IAudioClient> mAudioClient;
+	CComPtr<IAudioClient3> mAudioClient;
 	HANDLE mAudioEvent;
 	HANDLE mAudioThreadHandle;
 	std::atomic_bool mAbort;
 
 	mutable std::mutex mAudioBufferMutex;
-	std::deque<int32_t>  mAudioBuffer; // 簡単化のため、内部的にはint32で保持する
+	std::deque<std::variant<int32_t, float>>  mAudioBuffer; // 簡単化のため、内部的には最大サイズで保持する
 
 	// --- valid時のみ有効 ---
-	uint32_t mSampleFreq;
-	uint32_t mBitsPerSample;
-	uint32_t mChannels;
-	uint32_t mUnitFrameSize;
+	WAVEFORMATEX* mWaveFormatEx; // TODO CoTaskMemFreeでの解放
+	uint32_t mAudioBufferFrameCount;
+	SampleFormat mSampleFormat;
 
 };
 
 // ---
 
+
 template<typename signal_type, typename Tintermediate>
-bool WasapiOutput::write(const Signal<signal_type>& ch1)
+void WasapiOutput::write(const Signal<signal_type>& ch1)
 {
-	return write<signal_type, Tintermediate>(&ch1, 1);
+	const Signal<signal_type>* sigs[] = {&ch1};
+	write<signal_type, Tintermediate>(sigs, 1);
 }
 template<typename signal_type, typename Tintermediate>
-bool WasapiOutput::write(const Signal<signal_type>& ch1, const Signal<signal_type>& ch2)
+void WasapiOutput::write(const Signal<signal_type>& ch1, const Signal<signal_type>& ch2)
 {
 	const Signal<signal_type>* sigs[] = {&ch1, &ch2};
-	return write<signal_type, Tintermediate>(sigs, 2);
+	write<signal_type, Tintermediate>(sigs, 2);
 }
 
 template<typename signal_type, typename Tintermediate>
-bool WasapiOutput::write(const Signal<signal_type>* sigs[], size_t num)
+void WasapiOutput::write(const Signal<signal_type>* signals[], size_t signal_num)
 {
-	if(num == 0) return true;
+	if(signal_num == 0) return;
 
 	if (!valid()) {
 		Log::e(LOGF("WasapiOutput : write - failed (invalid)"));
-		return false;
+		return;
 	}
-	if (num != mChannels) {
-		Log::e(LOGF("WasapiOutput : write - failed (channel count is mismatch)"));
-		return false;
+	
+	const auto signal_length = signals[0]->length();
+	for (size_t ch=1; ch<signal_num; ++ch) {
+		lsp_assert_desc(signals[ch]->size() == signal_length, "WasapiOutput : write - failed (signal length is mismatch)");
 	}
-	const auto sz = sigs[0]->size();
-	for (size_t ch=1; ch< num; ++ch) {
-		if (sigs[ch]->size() != sz) {
-			Log::e(LOGF("WasapiOutput : write - failed (signal length is mismatch)"));
-			return false;
-		}
-	}
+	if(signal_length == 0) return;
+	const auto channel_num = getDeviceChannels();
 
 	std::lock_guard<decltype(mAudioBufferMutex)> lock(mAudioBufferMutex);
 
-	for(size_t i=0; i<sz; ++i) {
-		for (size_t ch=0; ch< num; ++ch) {
-			auto s = SampleFormatConverter<signal_type, int32_t, Tintermediate>::convert(sigs[ch]->data()[i]);
-			mAudioBuffer.push_back(s);
+	auto safeGetSample = [&](size_t ch, size_t i)->signal_type {
+		if (ch < signal_num) {
+			return signals[ch]->data()[i];
+		} else {
+			return static_cast<signal_type>(0);
 		}
-	}
+	};
 
-	return true;
+	switch (mSampleFormat) {
+	case SampleFormat::Unknown:
+		lsp_assert(false);
+		break;
+	case SampleFormat::Int8:
+	case SampleFormat::Int16:
+	case SampleFormat::Int24:
+	case SampleFormat::Int32:
+		for(size_t i=0; i<signal_length; ++i) {
+			for (size_t ch=0; ch<channel_num; ++ch) {
+				auto s = SampleFormatConverter<signal_type, int32_t, Tintermediate>::convert(safeGetSample(ch, i));
+				mAudioBuffer.push_back(s);
+			}
+		}
+		break;
+	case SampleFormat::Float32:
+		for(size_t i=0; i<signal_length; ++i) {
+			for (size_t ch=0; ch<channel_num; ++ch) {
+				auto s = SampleFormatConverter<signal_type, float, Tintermediate>::convert(safeGetSample(ch, i));
+				mAudioBuffer.push_back(s);
+			}
+		}
+		break;
+	}
+	SetEvent(mAudioEvent);
 }
 
 }
