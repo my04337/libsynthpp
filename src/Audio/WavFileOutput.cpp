@@ -3,43 +3,22 @@
 using namespace LSP;
 using namespace LSP::Audio;
 
-WavFileOutput::WavFileOutput()
+WavFileOutput::WavFileOutput(uint32_t sampleFreq, uint32_t bitsPerSample, uint32_t channels, const std::filesystem::path& filePath)
 {
-
-}
-
-WavFileOutput::~WavFileOutput()
-{
-	if (valid()) {
-		finalize();
-	}
-}
-
-bool WavFileOutput::valid() const noexcept
-{
-	return mFile.is_open() && !mFile.fail();
-}
-
-bool WavFileOutput::initialize(uint32_t sampleFreq, uint32_t bitsPerSample, uint32_t channels, const std::filesystem::path& filePath)
-{
-	if(valid()) {
-		Log::e(LOGF("WavFileOutput : initialize - failed (already initialized)"));
-		return false;
-	}
 	if(channels < 1 || channels > 2) {
 		Log::e(LOGF("WavFileOutput : initialize - failed (invalid channel num)"));
-		return false;
+		return;
 	}
 	if(bitsPerSample != 16 && bitsPerSample != 32) {
 		Log::e(LOGF("WavFileOutput : initialize - failed (invalid bits per sampe)"));
-		return false;
+		return;
 	}
 
 	std::ofstream fs;
 	fs.open(filePath, std::ostream::out | std::ostream::trunc | std::ostream::binary);
 	if (!fs) {
 		Log::e(LOGF("WavFileOutput : initialize - failed (cannot open file)"));
-		return false;
+		return;
 	}
 
 	auto write_binary = [&fs](const auto v) {
@@ -48,7 +27,6 @@ bool WavFileOutput::initialize(uint32_t sampleFreq, uint32_t bitsPerSample, uint
 
 
 	// TODO リトルエンディアンのPC専用
-
 	const uint32_t bytesPerSample = bitsPerSample / 8;
 	const uint32_t blockSize = bytesPerSample * channels;
 	const uint32_t bytesPerSec = sampleFreq * blockSize;
@@ -78,7 +56,7 @@ bool WavFileOutput::initialize(uint32_t sampleFreq, uint32_t bitsPerSample, uint
 
 	if (!fs) {
 		Log::e(LOGF("WavFileOutput : initialize - failed (creating wav file header)"));
-		return false;
+		return;
 	}
 
 	// OK
@@ -90,18 +68,36 @@ bool WavFileOutput::initialize(uint32_t sampleFreq, uint32_t bitsPerSample, uint
 	mFilePos_RiffSize = riff_size_pos;
 	mFilePos_DataSize = data_size_pos;
 
-	return true;
 }
 
-bool WavFileOutput::finalize()
+WavFileOutput::~WavFileOutput()
 {
+	close();
+}
+
+bool WavFileOutput::fail() const noexcept
+{
+	return !mFile.fail();
+}
+
+bool WavFileOutput::bad() const noexcept
+{
+	return mFile.bad();
+}
+
+
+void WavFileOutput::close()noexcept
+{
+	// すでにファイルが閉じられている場合、何もする必要はない
+	if(!mFile.is_open()) return ;
+
+	// このメソッドから帰る場合、どのような場合でもファイルを閉じる
+	auto fin_act_close_file = finally([this]{ mFile.close(); });
+
+	// ---
 	if(!mFile) {
-		Log::e(LOGF("WavFileOutput : finalize - failed (not initialized)"));
-		return false;
-	}
-	if(!valid()) {
 		Log::e(LOGF("WavFileOutput : finalize - failed (not valid)"));
-		return false;
+		return;
 	}
 
 	auto write_binary = [this](const auto v) {
@@ -117,17 +113,15 @@ bool WavFileOutput::finalize()
 	mFile.seekp(mFilePos_RiffSize);
 	write_binary(uint32_t(riff_size));
 
-	if(!valid()) {
+	if(!mFile) {
 		Log::e(LOGF("WavFileOutput : finalize - failed (file size)"));
-		return false;
+		return;
 	}
 
 	mFile.close();
-
-	return true;
 }
 
-bool WavFileOutput::write(const std::vector<int32_t>& frame)
+void WavFileOutput::write(const std::vector<int32_t>& frame)
 {
 	const auto channels = mChannels; // for optimize
 	const auto bitsPerSample = mBitsPerSample; 
@@ -135,9 +129,9 @@ bool WavFileOutput::write(const std::vector<int32_t>& frame)
 
 	lsp_assert(frame.size() == mChannels);
 
-	if(!valid()) {
+	if(!mFile) {
 		Log::e(LOGF("WavFileOutput : write - failed (not valid)"));
-		return false;
+		return;
 	}
 	
 
@@ -147,6 +141,4 @@ bool WavFileOutput::write(const std::vector<int32_t>& frame)
 									// MEMO リトルエンディアン前提コード, 下位側から必要バイト分を転写
 		mFile.write(reinterpret_cast<const char*>(&s), bytesPerSample);
 	}
-
-	return true;
 }
