@@ -55,7 +55,7 @@ public:
 		const auto y1 = y[idx1], y2 = y[idx2];
 		
 		// MEMO 計算式の由来はAudio-EQ-Cookbook Eq4式を参照のこと
-		parameter_type y0 = (b0*x0 +b1*x1 +b2*x2 -a1*y[idx1] -a2*y[idx2])/a0;
+		parameter_type y0 = (b0*x0 +b1*x1 +b2*x2 -a1*y1 -a2*y2)/a0;
 
 		// 内部ステート更新
 		x[idx2] = x0;
@@ -73,7 +73,7 @@ public:
 		const parameter_type w0    = 2 * PI<parameter_type> * cutOffFreq / sampleFreq;
 		const parameter_type sinw0 = sin(w0);
 		const parameter_type cosw0 = cos(w0);
-		const parameter_type alpha = 2 * sinw0 / Q;
+		const parameter_type alpha = sinw0 / (2 * Q);
 
 		b0 = (1 - cosw0) / 2;
 		b1 = 1 - cosw0;
@@ -89,7 +89,7 @@ public:
 		const parameter_type w0    = 2 * PI<parameter_type> * cutOffFreq / sampleFreq;
 		const parameter_type sinw0 = sin(w0);
 		const parameter_type cosw0 = cos(w0);
-		const parameter_type alpha = 2 * sinw0 / Q;
+		const parameter_type alpha = sinw0 / (2 * Q);
 
 		b0 = (1 + cosw0) / 2;
 		b1 = -(1 + cosw0);
