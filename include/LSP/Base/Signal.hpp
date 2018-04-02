@@ -110,6 +110,28 @@ struct SampleFormatConverter
 		}
 	}
 };
+// サンプルノーマライズ
+template<typename T>
+struct SampleNormalizer
+{
+	constexpr T operator()(T in) noexcept {
+		return normalize(in);
+	}
+
+	static constexpr T normalize(T in) noexcept {
+		// MEMO できるだけconstexprで解決し、実行時コストを純粋に変換処理のみとしたい。
+
+		constexpr auto normalized_min = sample_traits<T>::normalized_min;
+		constexpr auto normalized_max = sample_traits<T>::normalized_max;
+
+		return std::max(normalized_min, std::min(in, normalized_max));
+	}
+	static void normalize(T* arr, size_t sz) noexcept {
+		for (size_t i = 0; i < sz; ++i) {
+			arr[i] = normalize(arr[i]);
+		}
+	}
+};
 
 // ---
 

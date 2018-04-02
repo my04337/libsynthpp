@@ -41,3 +41,10 @@ static_assert(SampleFormatConverter<int8_t,  double>::convert(-0x7F) == -1.0,  "
 
 static_assert(SampleFormatConverter<double,  int8_t>::convert(+1.0) == +0x7F,  "SampleFormatConverter failed");
 static_assert(SampleFormatConverter<double,  int8_t>::convert(-1.0) == -0x7F,  "SampleFormatConverter failed");
+
+static_assert(SampleNormalizer<double>::normalize(+2.0) == +1.0,  "SampleNormalizer failed");
+static_assert(SampleNormalizer<double>::normalize(-2.0) == -1.0,  "SampleNormalizer failed");
+
+static_assert(SampleNormalizer<int8_t>::normalize(+0x7F) == +0x7F,  "SampleNormalizer failed");
+static_assert(SampleNormalizer<int8_t>::normalize(-0x7F) == -0x7F,  "SampleNormalizer failed");
+static_assert(SampleNormalizer<int8_t>::normalize(-0x80) == -0x7F,  "SampleNormalizer failed");
