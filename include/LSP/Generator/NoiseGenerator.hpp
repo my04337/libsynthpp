@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 #include <LSP/Base/Base.hpp>
 #include <LSP/Base/Signal.hpp>
@@ -11,10 +11,11 @@ namespace LSP::Generator {
 
 enum class NoiseColor
 {
-	White,		// ƒzƒƒCƒgƒmƒCƒY : ˆê—l•ª•z
+	White,		// ãƒ›ãƒ¯ã‚¤ãƒˆãƒã‚¤ã‚º : ä¸€æ§˜åˆ†å¸ƒ
+	Brown,		// ãƒ–ãƒ©ã‚¦ãƒ³ãƒã‚¤ã‚º : 1/f2 , -6db/Oct, ãƒ›ãƒ¯ã‚¤ãƒˆãƒã‚¤ã‚ºã®ç©åˆ†
 };
 
-// ƒmƒCƒYƒWƒFƒlƒŒ[ƒ^
+// ãƒã‚¤ã‚ºã‚¸ã‚§ãƒãƒ¬ãƒ¼ã‚¿
 template<
 	typename sample_type,
 	NoiseColor noise_color,
@@ -32,14 +33,22 @@ public:
 	{
 		if constexpr(noise_color == NoiseColor::White) {
 			// do-nothing
+		} else if constexpr(noise_color == NoiseColor::Brown) {
+			mParams = std::make_tuple<double>(0);
 		}
 	}
 	
 	sample_type generate() 
 	{
 		using conv = SampleFormatConverter<double, sample_type>;
+		using norm = SampleNormalizer<sample_type>;
 		if constexpr(noise_color == NoiseColor::White) {
 			return conv()(mUniDist(mRandomEngine));
+		} else if constexpr(noise_color == NoiseColor::Brown) {
+			auto& v = std::get<double>(std::get<BrownNoiseParams>(mParams));
+			auto delta = mUniDist(mRandomEngine)/100;
+			v = norm()(v + delta);
+			return v;
 		} else {
 			return static_cast<sample_type>(0);
 		}
@@ -57,10 +66,11 @@ public:
 
 private:
 	using WhiteNoiseParams = std::tuple<>;
+	using BrownNoiseParams = std::tuple<double>;
 
 	std::mt19937 mRandomEngine;
 	std::uniform_real_distribution<double> mUniDist;
-	std::variant<WhiteNoiseParams> mParams;
+	std::variant<WhiteNoiseParams, BrownNoiseParams> mParams;
 
 	const uint32_t mSampleFreq;
 };
