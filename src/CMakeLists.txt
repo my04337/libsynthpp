@@ -10,10 +10,12 @@ add_library(
 	
 	Threading/EventSignal.cpp
 	Threading/TaskDispatcher.cpp
-
-	
+		
 	Audio/WavFileOutput.cpp
 	Audio/WasapiOutput.cpp
+	
+	Stream/Message.cpp
+	Stream/MessageQueue.cpp
 )  
 target_include_directories(
              libsynthpp
