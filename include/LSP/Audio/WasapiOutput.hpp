@@ -67,12 +67,8 @@ public:
 	size_t getBufferedFrameCount()const noexcept;
 
 	// 信号を書き込みます
-	template<typename signal_type, typename Tintermediate = double>
-	void write(const Signal<signal_type>& ch1);
-	template<typename signal_type, typename Tintermediate = double>
-	void write(const Signal<signal_type>& ch1, const Signal<signal_type>& ch2);
-	template<typename signal_type, typename Tintermediate = double>
-	void write(const Signal<signal_type>* sigs[], size_t num);
+	template<typename sample_type, typename Tintermediate = double>
+	void write(const Signal<sample_type>& sig);
 
 protected:
 	static unsigned __stdcall playThreadMainProxy(void*);
@@ -99,44 +95,29 @@ private:
 
 // ---
 
+template<typename sample_type, typename Tintermediate>
+void WasapiOutput::write(const Signal<sample_type>& signal)
+{
+	const auto signal_channels = signal.channels();
+	const auto signal_length = signal.length();
 
-template<typename signal_type, typename Tintermediate>
-void WasapiOutput::write(const Signal<signal_type>& ch1)
-{
-	const Signal<signal_type>* sigs[] = {&ch1};
-	write<signal_type, Tintermediate>(sigs, 1);
-}
-template<typename signal_type, typename Tintermediate>
-void WasapiOutput::write(const Signal<signal_type>& ch1, const Signal<signal_type>& ch2)
-{
-	const Signal<signal_type>* sigs[] = {&ch1, &ch2};
-	write<signal_type, Tintermediate>(sigs, 2);
-}
-
-template<typename signal_type, typename Tintermediate>
-void WasapiOutput::write(const Signal<signal_type>* signals[], size_t signal_num)
-{
-	if(signal_num == 0) return;
+	if(signal_channels == 0) return;
+	if(signal_length == 0) return;
 
 	if (!valid()) {
 		Log::e(LOGF("WasapiOutput : write - failed (invalid)"));
 		return;
 	}
 	
-	const auto signal_length = signals[0]->length();
-	for (size_t ch=1; ch<signal_num; ++ch) {
-		lsp_assert_desc(signals[ch]->size() == signal_length, "WasapiOutput : write - failed (signal length is mismatch)");
-	}
-	if(signal_length == 0) return;
-	const auto channel_num = getDeviceChannels();
+	const auto device_channels = getDeviceChannels();
 
 	std::lock_guard<decltype(mAudioBufferMutex)> lock(mAudioBufferMutex);
 
-	auto safeGetSample = [&](size_t ch, size_t i)->signal_type {
-		if (ch < signal_num) {
-			return signals[ch]->data()[i];
+	auto safeGetSample = [&](size_t ch, size_t i)->sample_type {
+		if (ch < signal_channels) {
+			return signal.data(ch)[i];
 		} else {
-			return static_cast<signal_type>(0);
+			return static_cast<sample_type>(0);
 		}
 	};
 
@@ -149,16 +130,16 @@ void WasapiOutput::write(const Signal<signal_type>* signals[], size_t signal_num
 	case SampleFormat::Int24:
 	case SampleFormat::Int32:
 		for(size_t i=0; i<signal_length; ++i) {
-			for (size_t ch=0; ch<channel_num; ++ch) {
-				auto s = SampleFormatConverter<signal_type, int32_t, Tintermediate>::convert(safeGetSample(ch, i));
+			for (size_t ch=0; ch<device_channels; ++ch) {
+				auto s = SampleFormatConverter<sample_type, int32_t, Tintermediate>::convert(safeGetSample(ch, i));
 				mAudioBuffer.push_back(s);
 			}
 		}
 		break;
 	case SampleFormat::Float32:
 		for(size_t i=0; i<signal_length; ++i) {
-			for (size_t ch=0; ch<channel_num; ++ch) {
-				auto s = SampleFormatConverter<signal_type, float, Tintermediate>::convert(safeGetSample(ch, i));
+			for (size_t ch=0; ch<device_channels; ++ch) {
+				auto s = SampleFormatConverter<sample_type, float, Tintermediate>::convert(safeGetSample(ch, i));
 				mAudioBuffer.push_back(s);
 			}
 		}

@@ -77,7 +77,7 @@ WavFileOutput::~WavFileOutput()
 
 bool WavFileOutput::fail() const noexcept
 {
-	return !mFile.fail();
+	return mFile.fail();
 }
 
 bool WavFileOutput::bad() const noexcept

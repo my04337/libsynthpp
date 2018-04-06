@@ -41,11 +41,8 @@ int main(int argc, char** argv)
 	const size_t bufferFrameCount = wo.getDeviceBufferFrameCount();
 
 	Generator::NoiseGenerator<sample_type, Generator::NoiseColor::White> noisegen1(sampleFreq);
-	Generator::NoiseGenerator<sample_type, Generator::NoiseColor::White> noisegen2(sampleFreq);
-	Filter::BiquadraticFilter<double> bqf2;
-	bqf2.setLopassParam(sampleFreq, 1000, 1);
-	Signal<sample_type> sig_left(bufferFrameCount);
-	Signal<sample_type> sig_right(bufferFrameCount);
+	Generator::NoiseGenerator<sample_type, Generator::NoiseColor::Brown> noisegen2(sampleFreq);
+	Signal<sample_type> sig(2, bufferFrameCount);
 	int64_t time = 0;
 	
 	if(!wo.start()) {
@@ -55,11 +52,11 @@ int main(int argc, char** argv)
 		if (wo.getBufferedFrameCount() < bufferFrameCount) {
 			for (uint32_t i = 0; i < bufferFrameCount; ++i) {
 				float p = (time % sampleFreq) * 2.0f * PI<float> / sampleFreq; // 位相
-				sig_left.data()[i]  = conv_from_float()( noisegen1.generate() );
-				sig_right.data()[i] = conv_from_float()( bqf2.update(noisegen2.generate()) );
+				sig.data(0)[i]  = conv_from_float()( noisegen1.generate() );
+				sig.data(1)[i]  = conv_from_float()( noisegen2.generate() );
 				++time;
 			}
-			wo.write(sig_left, sig_right);
+			wo.write(sig);
 			continue;
 		}
 		std::this_thread::sleep_for(std::chrono::milliseconds(10));

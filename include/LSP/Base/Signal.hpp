@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include <LSP/Base/Base.hpp>
+#include <LSP/Base/Logging.hpp>
 
 namespace LSP
 {
@@ -145,36 +146,39 @@ class Signal final
 {
 public:
 	using sample_type = sample_type_;
-	using _signal_type_tag = void; // for SFINAE
 
 public:
-	explicit Signal(size_t size)
-		: mData(std::make_unique<sample_type[]>(size))
-		, mSize(size)
-	{}
+	Signal(size_t size)
+		: Signal(1, size)
+	{
+	}
+	Signal(size_t channels, size_t size)
+		: mSize(size)
+	{
+		for (size_t ch = 0; ch < channels; ++ch) {
+			mData.emplace_back(std::make_unique<sample_type[]>(size));
+		}
+	}
 
 	~Signal() {}
 
+	Signal(Signal&&)noexcept = default;
+	Signal& operator=(Signal&&)noexcept = default;
+	
+	// チャネル数を取得します
+	size_t channels()const noexcept { return mData.size(); }
+
 	// データへのポインタを取得します
-	sample_type* data()const noexcept { return mData.get(); }
+	sample_type* data()const noexcept { return mData[0]; }
+	sample_type* data(size_t ch)const noexcept { return mData[ch].get(); }
 
 	// データ数を取得します。
 	size_t size()const noexcept { return mSize; }
-	size_t length()const noexcept { return mSize; }
-
-	// 異なる信号型に変換します
-	template<typename Tout, typename Tintermediate=double>
-	std::shared_ptr<Signal<Tout>> cast() const {
-		using Tin = sample_type;
-		auto out = std::make_shared<Signal<Tout>>(size());
-		SampleFormatConverter<Tin, Tout, Tintermediate>::convert(out->data(), data(), size());
-		return out; // NRVO
-	}
-	
+	size_t length()const noexcept { return mSize; }	
 	
 private:
-	std::unique_ptr<sample_type[]> mData;
-	size_t mSize;
+	const size_t mSize;
+	std::vector<std::unique_ptr<sample_type[]>> mData;
 };
 
 

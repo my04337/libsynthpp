@@ -24,12 +24,8 @@ public:
 	bool bad() const noexcept;
 
 	// 信号を書き込みます
-	template<typename signal_type, typename Tintermediate = double>
-	void write(const Signal<signal_type>& ch1);
-	template<typename signal_type, typename Tintermediate = double>
-	void write(const Signal<signal_type>& ch1, const Signal<signal_type>& ch2);
-	template<typename signal_type, typename Tintermediate = double>
-	void write(const Signal<signal_type>* sigs[], size_t num);
+	template<typename sample_type, typename Tintermediate = double>
+	void write(const Signal<sample_type>& sig);
 
 protected:
 	void write(const std::vector<int32_t>& frame);
@@ -49,42 +45,27 @@ private:
 
 // ---
 
-template<typename signal_type, typename Tintermediate>
-void WavFileOutput::write(const Signal<signal_type>& ch1)
+template<typename sample_type, typename Tintermediate>
+void WavFileOutput::write(const Signal<sample_type>& sig)
 {
-	const Signal<signal_type>* sigs[] = {&ch1};
-	write<signal_type, Tintermediate>(sigs, 1);
-}
-template<typename signal_type, typename Tintermediate>
-void WavFileOutput::write(const Signal<signal_type>& ch1, const Signal<signal_type>& ch2)
-{
-	const Signal<signal_type>* sigs[] = {&ch1, &ch2};
-	write<signal_type, Tintermediate>(sigs, 2);
-}
+	const auto signal_channels = sig.channels();
+	const auto signal_length = sig.length();
 
-template<typename signal_type, typename Tintermediate>
-void WavFileOutput::write(const Signal<signal_type>* sigs[], size_t num)
-{
-	if(num == 0) return;
+	if(signal_channels == 0) return;
+	if(signal_length == 0) return;
 
 	if (fail()) {
 		Log::e(LOGF("WasapiOutput : write - failed (invalid)"));
 		return;
 	}
-	lsp_assert_desc(num == mChannels, "WasapiOutput : write - failed (channel count is mismatch)");
-
-	const auto sz = sigs[0]->size();
-	for (size_t ch=1; ch< num; ++ch) {
-		lsp_assert_desc(sigs[ch]->size() == sz, "WasapiOutput : write - failed (signal length is mismatch)");
-	}
-	if(sz == 0) return;
-
+	lsp_assert_desc(signal_channels == mChannels, "WasapiOutput : write - failed (channel count is mismatch)");
+	
 	std::vector<int32_t> frame;
-	frame.resize(num);
+	frame.resize(signal_channels);
 
-	for(size_t i=0; i<sz; ++i) {
-		for (size_t ch=0; ch< num; ++ch) {
-			auto s = SampleFormatConverter<signal_type, int32_t, Tintermediate>::convert(sigs[ch]->data()[i]);
+	for(size_t i=0; i<signal_length; ++i) {
+		for (size_t ch=0; ch< signal_channels; ++ch) {
+			auto s = SampleFormatConverter<sample_type, int32_t, Tintermediate>::convert(sig.data(ch)[i]);
 			frame[ch] = s;
 		}
 		write(frame);
