@@ -41,14 +41,14 @@ public:
 	sample_type generate() 
 	{
 		using conv = SampleFormatConverter<double, sample_type>;
-		using norm = SampleNormalizer<sample_type>;
+		using norm_double = SampleNormalizer<double>;
 		if constexpr(noise_color == NoiseColor::White) {
 			return conv()(mUniDist(mRandomEngine));
 		} else if constexpr(noise_color == NoiseColor::Brown) {
 			auto& v = std::get<double>(std::get<BrownNoiseParams>(mParams));
 			auto delta = mUniDist(mRandomEngine)/100;
-			v = norm()(v + delta);
-			return v;
+			v = norm_double()(v + delta);
+			return conv()(v);
 		} else {
 			return static_cast<sample_type>(0);
 		}
