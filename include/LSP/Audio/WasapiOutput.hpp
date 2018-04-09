@@ -67,7 +67,7 @@ public:
 	size_t getBufferedFrameCount()const noexcept;
 
 	// 信号を書き込みます
-	template<typename sample_type, typename Tintermediate = double>
+	template<typename sample_type>
 	void write(const Signal<sample_type>& sig);
 
 protected:
@@ -95,7 +95,7 @@ private:
 
 // ---
 
-template<typename sample_type, typename Tintermediate>
+template<typename sample_type>
 void WasapiOutput::write(const Signal<sample_type>& signal)
 {
 	const auto signal_channels = signal.channels();
@@ -131,7 +131,7 @@ void WasapiOutput::write(const Signal<sample_type>& signal)
 	case SampleFormat::Int32:
 		for(size_t i=0; i<signal_length; ++i) {
 			for (size_t ch=0; ch<device_channels; ++ch) {
-				auto s = SampleFormatConverter<sample_type, int32_t, Tintermediate>::convert(safeGetSample(ch, i));
+				auto s = Filter::Requantizer<sample_type, int32_t>()(safeGetSample(ch, i));
 				mAudioBuffer.push_back(s);
 			}
 		}
@@ -139,7 +139,7 @@ void WasapiOutput::write(const Signal<sample_type>& signal)
 	case SampleFormat::Float32:
 		for(size_t i=0; i<signal_length; ++i) {
 			for (size_t ch=0; ch<device_channels; ++ch) {
-				auto s = SampleFormatConverter<sample_type, float, Tintermediate>::convert(safeGetSample(ch, i));
+				auto s = Filter::Requantizer<sample_type, float>()(safeGetSample(ch, i));
 				mAudioBuffer.push_back(s);
 			}
 		}

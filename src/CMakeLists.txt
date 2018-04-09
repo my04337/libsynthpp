@@ -4,7 +4,6 @@ add_library(
 	libsynthpp STATIC
 
 	Base/Base.cpp
-	Base/Signal.cpp
 	Base/StackTrace.cpp
 	Base/Logging.cpp
 	
@@ -16,6 +15,8 @@ add_library(
 	
 	Stream/Message.cpp
 	Stream/MessageQueue.cpp
+
+	static_test.cpp
 )  
 target_include_directories(
              libsynthpp

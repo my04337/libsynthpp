@@ -4,6 +4,7 @@
 #include <LSP/Generator/SinOscillator.hpp>
 #include <LSP/Generator/NoiseGenerator.hpp>
 #include <LSP/Filter/BiquadraticFilter.hpp>
+#include <LSP/Filter/Requantizer.hpp>
 
 #ifdef WIN32
 #include <objbase.h>
@@ -36,7 +37,7 @@ int main(int argc, char** argv)
 	}
 
 	using sample_type = float;
-	using conv_from_float = SampleFormatConverter<float, sample_type>;
+	using requantize_from_float = Filter::Requantizer<float, sample_type>;
 	const uint32_t sampleFreq = wo.getDeviceSampleFreq();
 	const size_t bufferFrameCount = wo.getDeviceBufferFrameCount();
 
@@ -52,8 +53,8 @@ int main(int argc, char** argv)
 		if (wo.getBufferedFrameCount() < bufferFrameCount) {
 			for (uint32_t i = 0; i < bufferFrameCount; ++i) {
 				float p = (time % sampleFreq) * 2.0f * PI<float> / sampleFreq; // 位相
-				sig.data(0)[i]  = conv_from_float()( noisegen1.generate() );
-				sig.data(1)[i]  = conv_from_float()( noisegen2.generate() );
+				sig.data(0)[i]  = requantize_from_float()( noisegen1.generate() );
+				sig.data(1)[i]  = requantize_from_float()( noisegen2.generate() );
 				++time;
 			}
 			wo.write(sig);

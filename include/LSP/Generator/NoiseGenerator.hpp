@@ -3,6 +3,7 @@
 #include <LSP/Base/Base.hpp>
 #include <LSP/Base/Signal.hpp>
 #include <LSP/Base/Math.hpp>
+#include <LSP/Filter/Normalizer.hpp>
 
 #include <random>
 
@@ -40,15 +41,15 @@ public:
 	
 	sample_type generate() 
 	{
-		using conv = SampleFormatConverter<double, sample_type>;
-		using norm_double = SampleNormalizer<double>;
+		using requantize = Filter::Requantizer<double, sample_type>;
+		using norm_double = Filter::Normalizer<double>;
 		if constexpr(noise_color == NoiseColor::White) {
-			return conv()(mUniDist(mRandomEngine));
+			return requantize()(mUniDist(mRandomEngine));
 		} else if constexpr(noise_color == NoiseColor::Brown) {
 			auto& v = std::get<double>(std::get<BrownNoiseParams>(mParams));
 			auto delta = mUniDist(mRandomEngine)/100;
 			v = norm_double()(v + delta);
-			return conv()(v);
+			return requantize()(v);
 		} else {
 			return static_cast<sample_type>(0);
 		}

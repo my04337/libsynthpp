@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include <LSP/minimal.hpp>
+#include <LSP/Filter/Requantizer.hpp>
 
 #include <fstream>
 #include <filesystem>
@@ -24,7 +25,7 @@ public:
 	bool bad() const noexcept;
 
 	// 信号を書き込みます
-	template<typename sample_type, typename Tintermediate = double>
+	template<typename sample_type>
 	void write(const Signal<sample_type>& sig);
 
 protected:
@@ -45,7 +46,7 @@ private:
 
 // ---
 
-template<typename sample_type, typename Tintermediate>
+template<typename sample_type>
 void WavFileOutput::write(const Signal<sample_type>& sig)
 {
 	const auto signal_channels = sig.channels();
@@ -65,7 +66,7 @@ void WavFileOutput::write(const Signal<sample_type>& sig)
 
 	for(size_t i=0; i<signal_length; ++i) {
 		for (size_t ch=0; ch< signal_channels; ++ch) {
-			auto s = SampleFormatConverter<sample_type, int32_t, Tintermediate>::convert(sig.data(ch)[i]);
+			auto s = Filter::Requantizer<sample_type, int32_t>()(sig.data(ch)[i]);
 			frame[ch] = s;
 		}
 		write(frame);
