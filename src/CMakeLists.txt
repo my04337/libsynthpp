@@ -6,15 +6,13 @@ add_library(
 	Base/Base.cpp
 	Base/StackTrace.cpp
 	Base/Logging.cpp
+	Base/Message.cpp
 	
 	Threading/EventSignal.cpp
 	Threading/TaskDispatcher.cpp
 		
 	Audio/WavFileOutput.cpp
 	Audio/WasapiOutput.cpp
-	
-	Stream/Message.cpp
-	Stream/MessageQueue.cpp
 
 	static_test.cpp
 )  

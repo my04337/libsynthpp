@@ -46,7 +46,6 @@ namespace std::filesystem {
 // --- 基本的な型 ---
 namespace LSP
 {
-
 /// コピー禁止,ムーブ可能型
 struct non_copy {
 	constexpr non_copy() = default;

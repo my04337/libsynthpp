@@ -1,9 +1,9 @@
 ﻿#pragma once
 
-#include <LSP/Stream/StreamBase.hpp>
+#include <LSP/Base/Base.hpp>
 #include <LSP/Base/Id.hpp>
 
-namespace LSP::Stream
+namespace LSP
 {
 
 // 制御メッセージ
@@ -17,7 +17,7 @@ public:
 
 public:
 	Message();
-	Message(position_t pos, OpType op, std::any&& param={});
+	Message(int64_t pos, OpType op, std::any&& param={});
 
 	Message(Message&&)noexcept = default;
 	Message& operator=(Message&&) = default;
@@ -26,7 +26,7 @@ public:
 	bool operator>(const Message& rhs)const noexcept;
 	
 	// 適用時刻
-	position_t position()const noexcept;
+	int64_t position()const noexcept;
 
 	// 制御命令種別 (受信先により解釈が異なります)
 	OpType op()const noexcept;
@@ -36,9 +36,28 @@ public:
 	      std::any& Message::param()noexcept;
     
 private:
-	position_t mPosition;
+	int64_t mPosition;
 	OpType mOp;
 	std::any mParam;
+};
+
+
+// 制御メッセージ キュー
+class MessageQueue final
+	: non_copy
+{
+public:
+
+	// メッセージをキューイングします
+	void push(Message&& msg);
+
+	// キューイングされたメッセージを取得します (ただし時刻がuntilより前のものに限る)
+	std::optional<Message> pop();
+	std::optional<Message> pop(int64_t until = std::numeric_limits<int64_t>::max());
+
+private:
+	mutable std::mutex mQueueMutex;
+	std::deque<Message> mQueue;
 };
 
 }
