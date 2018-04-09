@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 #include <LSP/Base/Base.hpp>
 #include <LSP/Base/Signal.hpp>
@@ -6,12 +6,10 @@
 
 namespace LSP::Generator {
 
-// ³Œ·”gƒWƒFƒlƒŒ[ƒ^
+// æ­£å¼¦æ³¢ã‚¸ã‚§ãƒãƒ¬ãƒ¼ã‚¿
 template<
 	typename sample_type,
-	class = std::enable_if_t<
-	std::is_arithmetic_v<sample_type>
-	>
+	class = std::enable_if_t<is_sample_type_v<sample_type>>
 >
 class SinOscillator final
 {
@@ -54,7 +52,7 @@ private:
 	const uint32_t mSampleFreq;
 	float mOscillationFreq;
 	double mPhase;
-	double mSamplePerPhase; // 1ƒTƒ“ƒvƒ‹“–‚½‚è‚ÌˆÊ‘ŠŠp(rad)
+	double mSamplePerPhase; // 1ã‚µãƒ³ãƒ—ãƒ«å½“ãŸã‚Šã®ä½ç›¸è§’(rad)
 
 };
 

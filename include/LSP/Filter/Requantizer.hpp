@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 #include <LSP/Base/Base.hpp>
 #include <LSP/Base/Signal.hpp>
@@ -7,39 +7,43 @@
 namespace LSP::Filter
 {
 
-// Ä—Êq‰» : ƒTƒ“ƒvƒ‹‚ÌƒtƒH[ƒ}ƒbƒg‚ğ•ÏX
-template<typename Tin, typename Tout>
+// å†é‡å­åŒ– : ã‚µãƒ³ãƒ—ãƒ«ã®ãƒ•ã‚©ãƒ¼ãƒãƒƒãƒˆã‚’å¤‰æ›´
+template<
+	typename Tin,
+	typename Tout,
+	class = std::enable_if_t<is_sample_type_v<Tin> && is_sample_type_v<Tout>>
+>
 struct Requantizer
 {
 	constexpr Tout operator()(Tin in) const noexcept 
 	{
-		// MEMO ‚Å‚«‚é‚¾‚¯constexpr‚Å‰ğŒˆ‚µAÀsƒRƒXƒg‚ğƒˆ‚É•ÏŠ·ˆ—‚Ì‚İ‚Æ‚µ‚½‚¢B
+		// MEMO ã§ãã‚‹ã ã‘constexprã§è§£æ±ºã—ã€å®Ÿè¡Œæ™‚ã‚³ã‚¹ãƒˆã‚’ç´”ç²‹ã«å¤‰æ›å‡¦ç†ã®ã¿ã¨ã—ãŸã„ã€‚
 
 		if constexpr (std::is_same_v<Tin, Tout>) {
-			// “ü—Í‚Æo—Í‚ÌŒ^‚ª“¯ˆê‚Å‚ ‚ê‚Î•ÏŠ·•s—v
+			// å…¥åŠ›ã¨å‡ºåŠ›ã®å‹ãŒåŒä¸€ã§ã‚ã‚Œã°å¤‰æ›ä¸è¦
 			return in;
 		} else if constexpr (std::is_floating_point_v<Tin> && std::is_floating_point_v<Tout>) {
-			// •‚“®¬”“_”“¯m‚Í’lˆæ•ÏŠ·‰Â”\, ƒNƒŠƒbƒsƒ“ƒO•s—v
+			// æµ®å‹•å°æ•°ç‚¹æ•°åŒå£«ã¯å€¤åŸŸå¤‰æ›å¯èƒ½, ã‚¯ãƒªãƒƒãƒ”ãƒ³ã‚°ä¸è¦
 			return static_cast<Tout>(in);
 		} else if constexpr (std::is_integral_v<Tin> && std::is_integral_v<Tout>) {
-			// ®”“¯m‚ÍƒVƒtƒg‰‰Z‚Ì‚İ‚Å’lˆæ•ÏŠ·‰Â”\, ƒNƒŠƒbƒsƒ“ƒO•s—v
+			// æ•´æ•°åŒå£«ã¯ã‚·ãƒ•ãƒˆæ¼”ç®—ã®ã¿ã§å€¤åŸŸå¤‰æ›å¯èƒ½, ã‚¯ãƒªãƒƒãƒ”ãƒ³ã‚°ä¸è¦
 			constexpr size_t in_bits = sizeof(Tin) * 8;
 			constexpr size_t out_bits = sizeof(Tout) * 8;
 			if constexpr (in_bits > out_bits) {
-				// ƒiƒ[ƒCƒ“ƒO•ÏŠ·(‰EƒVƒtƒg)
+				// ãƒŠãƒ­ãƒ¼ã‚¤ãƒ³ã‚°å¤‰æ›(å³ã‚·ãƒ•ãƒˆ)
 				return static_cast<Tout>(in >> (in_bits - out_bits));
 			} else {
-				// ƒƒCƒhƒjƒ“ƒO•ÏŠ·(¶ƒVƒtƒg)
+				// ãƒ¯ã‚¤ãƒ‰ãƒ‹ãƒ³ã‚°å¤‰æ›(å·¦ã‚·ãƒ•ãƒˆ)
 				return static_cast<Tout>(in) << (out_bits - in_bits);
 			}
 		} else if constexpr (std::is_floating_point_v<Tin> && std::is_integral_v<Tout>) {
-			// •‚“®¬”“_”¨®” : ƒm[ƒ}ƒ‰ƒCƒY‚µ‚Ä‚©‚ç‘•
+			// æµ®å‹•å°æ•°ç‚¹æ•°â†’æ•´æ•° : ãƒãƒ¼ãƒãƒ©ã‚¤ã‚ºã—ã¦ã‹ã‚‰å¢—å¹…
 			return static_cast<Tout>(Filter::Normalizer<Tin>()(in) * sample_traits<Tout>::abs_max);
 		} else if constexpr (std::is_integral_v<Tin> && std::is_floating_point_v<Tout>) {
-			// ®”¨•‚“®¬”“_” : Å‘åU‚ê•‚ÅŠ„‚é‚¾‚¯
+			// æ•´æ•°â†’æµ®å‹•å°æ•°ç‚¹æ•° : æœ€å¤§æŒ¯ã‚Œå¹…ã§å‰²ã‚‹ã ã‘
 			return static_cast<Tout>(in) / sample_traits<Tin>::abs_max;
 		} else {
-			// •ÏŠ·–¢‘Î‰
+			// å¤‰æ›æœªå¯¾å¿œ
 			static_assert(false, "Unsupported type.");
 		}
 	}

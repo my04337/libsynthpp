@@ -12,7 +12,7 @@ template<
 	typename sample_type,
 	typename parameter_type = sample_type,
 	class = std::enable_if_t<
-		std::is_arithmetic_v<sample_type> && std::is_arithmetic_v<parameter_type>
+		is_floating_point_sample_type_v<sample_type> && is_floating_point_sample_type_v<parameter_type>
 	>
 >
 class BiquadraticFilter

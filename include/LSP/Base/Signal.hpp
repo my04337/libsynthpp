@@ -56,6 +56,20 @@ struct is_sample_type<T, std::void_t<typename sample_traits<T>::_sample_type_tag
 template<class T>
 constexpr bool is_sample_type_v = is_sample_type<T>::value;
 
+template <class T, class = void>
+struct is_integral_sample_type : std::false_type {};
+template <class T>
+struct is_integral_sample_type<T, std::enable_if_t<is_sample_type_v<T> && std::is_integral_v<T>>> : std::true_type {};
+template<class T>
+constexpr bool is_integral_sample_type_v = is_integral_sample_type<T>::value;
+
+template <class T, class = void>
+struct is_floating_point_sample_type : std::false_type {};
+template <class T>
+struct is_floating_point_sample_type<T, std::enable_if_t<is_sample_type_v<T> && std::is_floating_point_v<T>>> : std::true_type {};
+template<class T>
+constexpr bool is_floating_point_sample_type_v = is_floating_point_sample_type<T>::value;
+
 // ---
 
 /// 信号型

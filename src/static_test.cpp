@@ -1,13 +1,21 @@
+#include <LSP/Base/Math.hpp>
 #include <LSP/Base/Signal.hpp>
 #include <LSP/Filter/Requantizer.hpp>
 #include <LSP/Filter/Normalizer.hpp>
+#include <LSP/Filter/BiquadraticFilter.hpp>
 #include <LSP/Audio/WavFileOutput.hpp>
 
 using namespace LSP;
 
 // ############################################################################
-// ### Base/Signal 
+// ### Base/Math
+static_assert(PI<int32_t>     != 0,  "PI<> failed");
+static_assert(PI<float>       != 0,  "PI<>failed");
+static_assert(PI<double>      != 0,  "PI<> failed");
+static_assert(PI<long double> != 0,  "PI<> failed");
 
+// ############################################################################
+// ### Base/Signal 
 static_assert(is_sample_type_v<int8_t>,  "is_sample_type_v failed");
 static_assert(is_sample_type_v<int16_t>, "is_sample_type_v failed");
 static_assert(is_sample_type_v<int32_t>, "is_sample_type_v failed");
@@ -16,6 +24,21 @@ static_assert(is_sample_type_v<double>,  "is_sample_type_v failed");
 
 static_assert(!is_sample_type_v<uint32_t>,    "is_sample_type_v failed");
 static_assert(!is_sample_type_v<long double>, "is_sample_type_v failed");
+
+static_assert( is_integral_sample_type_v<int32_t>, "is_integral_sample_type_v failed");
+static_assert(!is_integral_sample_type_v<double>,  "is_integral_sample_type_v failed");
+
+static_assert(!is_floating_point_sample_type_v<int32_t>, "is_floating_point_sample_type_v failed");
+static_assert( is_floating_point_sample_type_v<double>,  "is_floating_point_sample_type_v failed");
+namespace 
+{
+[[maybe_unused]]
+void unused_function_b_sig() {
+	LSP::Signal<float> signal_float(0);
+	LSP::Signal<double> signal_double(0);
+	LSP::Signal<int32_t> signal_int32_t(0);
+}
+}
 
 // ############################################################################
 // ### Filter/Requantizer
@@ -60,13 +83,24 @@ static_assert(Filter::Normalizer<int8_t>()(+0x7F) == +0x7F,  "Filter::Normalizer
 static_assert(Filter::Normalizer<int8_t>()(-0x7F) == -0x7F,  "Filter::Normalizer failed");
 static_assert(Filter::Normalizer<int8_t>()(-0x80) == -0x7F,  "Filter::Normalizer failed");
 
-
 // ############################################################################
-// ### Base/Signal 
+// ### Filter/BiquadraticFilter
 namespace 
 {
 [[maybe_unused]]
-void unused_function() {
+void unused_function_f_bq() {
+	Filter::BiquadraticFilter<float> bqf_float;
+	Filter::BiquadraticFilter<double> bqf_double;
+}
+}
+
+
+// ############################################################################
+// ### Audio::WavFileOutput
+namespace 
+{
+[[maybe_unused]]
+void unused_function_a_wfo() {
 	Audio::WavFileOutput out(44100, 16, 2, "");
 	out.write(Signal<int8_t>(128));
 	out.write(Signal<int32_t>(128));

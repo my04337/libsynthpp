@@ -20,9 +20,7 @@ enum class NoiseColor
 template<
 	typename sample_type,
 	NoiseColor noise_color,
-	class = std::enable_if_t<
-	std::is_arithmetic_v<sample_type>
-	>
+	class = std::enable_if_t<is_sample_type_v<sample_type>>
 >
 class NoiseGenerator final
 {
