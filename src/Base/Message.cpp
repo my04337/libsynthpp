@@ -4,10 +4,10 @@ using namespace LSP;
 
 Message::Message()
 	: mPosition(0)
-	, mOp(Nop)
+	, mOp(0)
 {
 }
-Message::Message(int64_t pos, OpType op, std::any&& param)
+Message::Message(int64_t pos, uint32_t op, std::any&& param)
 	: mPosition(pos)
 	, mOp(op)
 	, mParam(std::move(param))
@@ -22,7 +22,7 @@ bool Message::operator>(const Message& rhs)const noexcept
 	return mPosition > rhs.mPosition;
 }
 
-Message::OpType Message::op()const noexcept 
+uint32_t Message::op()const noexcept 
 {
 	return mOp; 
 }

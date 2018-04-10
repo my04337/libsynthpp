@@ -11,13 +11,8 @@ class Message final
 	: non_copy
 {
 public:
-	// メッセージ種別
-	using OpType = uint32_t;
-	static constexpr OpType Nop = 0x00000000; // [reserved] 何もしない制御メッセージ
-
-public:
 	Message();
-	Message(int64_t pos, OpType op, std::any&& param={});
+	Message(int64_t pos, uint32_t op, std::any&& param={});
 
 	Message(Message&&)noexcept = default;
 	Message& operator=(Message&&) = default;
@@ -29,7 +24,7 @@ public:
 	int64_t position()const noexcept;
 
 	// 制御命令種別 (受信先により解釈が異なります)
-	OpType op()const noexcept;
+	uint32_t op()const noexcept;
 
 	// 制御パラメータ(受信先と制御命令種別により解釈が異なります)
 	const std::any& Message::param()const noexcept;
@@ -37,7 +32,7 @@ public:
     
 private:
 	int64_t mPosition;
-	OpType mOp;
+	uint32_t mOp;
 	std::any mParam;
 };
 
@@ -52,7 +47,6 @@ public:
 	void push(Message&& msg);
 
 	// キューイングされたメッセージを取得します (ただし時刻がuntilより前のものに限る)
-	std::optional<Message> pop();
 	std::optional<Message> pop(int64_t until = std::numeric_limits<int64_t>::max());
 
 private:
