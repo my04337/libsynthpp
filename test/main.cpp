@@ -1,20 +1,14 @@
 ﻿#include <LSP/minimal.hpp>
-#include <LSP/Audio/WasapiOutput.hpp>
-#include <LSP/Audio/WavFileOutput.hpp>
-#include <LSP/Generator/SinOscillator.hpp>
-#include <LSP/Generator/NoiseGenerator.hpp>
-#include <LSP/Filter/BiquadraticFilter.hpp>
-#include <LSP/Filter/Requantizer.hpp>
+#include "case/test_base.hpp"
+#include "case/test_wasapi.hpp"
+
+#include <iostream>
 
 #ifdef WIN32
 #include <objbase.h>
 #endif
 
 using namespace LSP;
-
-void func() {
-	lsp_debug_log("");
-}
 
 int main(int argc, char** argv)
 {
@@ -30,39 +24,48 @@ int main(int argc, char** argv)
 	auto fin_act_logger = finally([&]{ Log::removeLogger(&logger); });
 	Log::setLogLevel(LogLevel::Debug);
 
-	// ---
-	Audio::WasapiOutput wo;
-	if (!wo.valid()) {
-		return -1;
-	}
-
-	using sample_type = float;
-	using requantize_from_float = Filter::Requantizer<float, sample_type>;
-	const uint32_t sampleFreq = wo.getDeviceSampleFreq();
-	const size_t bufferFrameCount = wo.getDeviceBufferFrameCount();
-
-	Generator::NoiseGenerator<sample_type, Generator::NoiseColor::White> noisegen1(sampleFreq);
-	Generator::NoiseGenerator<sample_type, Generator::NoiseColor::Brown> noisegen2(sampleFreq);
-	Signal<sample_type> sig(2, bufferFrameCount);
-	int64_t time = 0;
+	// テスト登録
+	std::vector<std::unique_ptr<Test::ITest>> tests;
 	
-	if(!wo.start()) {
-		return -1;
-	}
-	while(true) {
-		if (wo.getBufferedFrameCount() < bufferFrameCount) {
-			for (uint32_t i = 0; i < bufferFrameCount; ++i) {
-				float p = (time % sampleFreq) * 2.0f * PI<float> / sampleFreq; // 位相
-				sig.data(0)[i]  = requantize_from_float()( noisegen1.generate() );
-				sig.data(1)[i]  = requantize_from_float()( noisegen2.generate() );
-				++time;
-			}
-			wo.write(sig);
-			continue;
-		}
-		std::this_thread::sleep_for(std::chrono::milliseconds(10));
-	}
+	tests.emplace_back(std::make_unique<Test::BaseTest>());
+	tests.emplace_back(std::make_unique<Test::WasapiTest>());
 
+	// テスト実行
+
+	//exec
+	while(true){
+		std::cout << "---Select Test---" << std::endl;
+		std::cout << "* all : exec all tests." << std::endl;
+		for(auto& test : tests){
+			std::cout << "* " << test->command() << " : " << test->description() << std::endl;
+		} 
+		std::cout << "* q : quit test" << std::endl << std::endl;
+
+		char buf[256] = "\0";
+		bool executed = false;
+		while(true){
+			std::cout << ":";
+			if(!gets_s(buf, sizeof(buf)-1) || strlen(buf))
+				break;
+		}
+		std::string_view cmd(buf);
+
+		if(cmd == "q") {
+			break;
+		}
+
+		for(auto& test : tests) {
+			if(cmd == "all" || cmd == test->command()) {
+				test->exec();
+				executed = true;
+			}
+		}
+		if(!executed) {
+			std::cout << std::endl << "Error : command \"" << cmd << "\" is not found." << std::endl;
+		} else {
+			std::cout << std::endl << "finished." << std::endl << std::endl;
+		}
+	}
 
 	return 0;
 }
