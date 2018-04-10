@@ -68,7 +68,7 @@ public:
 
 	// 信号を書き込みます
 	template<typename sample_type>
-	void write(const Signal<sample_type>& sig);
+	void write(const sample_type* data, uint32_t channels, size_t frames);
 
 protected:
 	static unsigned __stdcall playThreadMainProxy(void*);
@@ -96,13 +96,10 @@ private:
 // ---
 
 template<typename sample_type>
-void WasapiOutput::write(const Signal<sample_type>& signal)
+void WasapiOutput::write(const sample_type* data, uint32_t signal_channels, size_t signal_frames)
 {
-	const auto signal_channels = signal.channels();
-	const auto signal_length = signal.length();
-
 	if(signal_channels == 0) return;
-	if(signal_length == 0) return;
+	if(signal_frames == 0) return;
 
 	if (!valid()) {
 		Log::e(LOGF("WasapiOutput : write - failed (invalid)"));
@@ -115,7 +112,7 @@ void WasapiOutput::write(const Signal<sample_type>& signal)
 
 	auto safeGetSample = [&](size_t ch, size_t i)->sample_type {
 		if (ch < signal_channels) {
-			return signal.data(ch)[i];
+			return data[signal_channels * i + ch];
 		} else {
 			return static_cast<sample_type>(0);
 		}
@@ -129,7 +126,7 @@ void WasapiOutput::write(const Signal<sample_type>& signal)
 	case SampleFormat::Int16:
 	case SampleFormat::Int24:
 	case SampleFormat::Int32:
-		for(size_t i=0; i<signal_length; ++i) {
+		for(size_t i=0; i<signal_frames; ++i) {
 			for (size_t ch=0; ch<device_channels; ++ch) {
 				auto s = Filter::Requantizer<sample_type, int32_t>()(safeGetSample(ch, i));
 				mAudioBuffer.push_back(s);
@@ -137,7 +134,7 @@ void WasapiOutput::write(const Signal<sample_type>& signal)
 		}
 		break;
 	case SampleFormat::Float32:
-		for(size_t i=0; i<signal_length; ++i) {
+		for(size_t i=0; i<signal_frames; ++i) {
 			for (size_t ch=0; ch<device_channels; ++ch) {
 				auto s = Filter::Requantizer<sample_type, float>()(safeGetSample(ch, i));
 				mAudioBuffer.push_back(s);

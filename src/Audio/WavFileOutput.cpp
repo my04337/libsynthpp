@@ -120,25 +120,3 @@ void WavFileOutput::close()noexcept
 
 	mFile.close();
 }
-
-void WavFileOutput::write(const std::vector<int32_t>& frame)
-{
-	const auto channels = mChannels; // for optimize
-	const auto bitsPerSample = mBitsPerSample; 
-	const auto bytesPerSample = bitsPerSample/8;
-
-	lsp_assert(frame.size() == mChannels);
-
-	if(!mFile) {
-		Log::e(LOGF("WavFileOutput : write - failed (not valid)"));
-		return;
-	}
-	
-
-	for (size_t ch = 0; ch < channels; ++ch) {
-		int32_t s = frame[ch];
-		s >>= 32 - bitsPerSample; // 32bitで記録しているので、必要サイズに併せて切り詰める
-									// MEMO リトルエンディアン前提コード, 下位側から必要バイト分を転写
-		mFile.write(reinterpret_cast<const char*>(&s), bytesPerSample);
-	}
-}

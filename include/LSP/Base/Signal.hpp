@@ -72,50 +72,94 @@ constexpr bool is_floating_point_sample_type_v = is_floating_point_sample_type<T
 
 // ---
 
-/// 信号型
-template<
-	typename sample_type_,
-	class = std::enable_if_t<is_sample_type_v<sample_type_>>
->
-class Signal final
-	: non_copy
+// 信号用メモリプール
+template<class memory_resource_type = std::pmr::synchronized_pool_resource>
+class SignalPool final
+	: non_copy_move
 {
 public:
-	using sample_type = sample_type_;
+	template<typename signal_type>
+	class Holder final
+		: non_copy
+	{
+		friend class SignalPool<memory_resource_type>;
+	public:
+		~Holder() {
+			dispose();
+		}
+		Holder(Holder&& d)noexcept
+			: mMem(d.mMem)
+			, mData(d.mData)
+			, mAlign(d.mAlign)
+			, mFrames(d.mFrames)
+			, mChannels(d.mChannels)
+		{
+			d.mData = nullptr;
+		}
+		Holder& operator=(Holder&& d)noexcept
+		{
+			dispose();
+			mMem = d.mMem;
+			mData = d.mData;
+			mAlign = d.mAlign;
+			mFrames = d.mFrames;
+			mChannels = d.mChannels;
+
+			d.mData = nullptr;
+
+			return *this;
+		}
+
+		void dispose() {
+			if (mData) {
+				mMem->deallocate(mData, mFrames*mChannels*sizeof(signal_type), mAlign);
+				mData = nullptr;
+			}
+		}
+
+		// チャネル数を取得します
+		uint32_t channels()const noexcept { return mChannels; }
+
+		// フレーム数を取得します
+		size_t frames()const noexcept { return mFrames; }
+
+		// 各フレームの先頭ポインタを取得します
+		signal_type* frame(size_t frame_index)const noexcept { return mData + mChannels * frame_index; }
+
+		// 全データへのポインタを取得します
+		signal_type* data()const noexcept { return mData; }
+		
+	protected:
+		Holder(memory_resource_type* mem, signal_type* data, uint32_t channels, size_t frames, size_t align) 
+			: mMem(mem), mData(data), mAlign(align), mFrames(frames), mChannels(channels) {}
+
+	private:
+		memory_resource_type* mMem;
+		signal_type* mData;
+		const size_t mAlign;
+		const size_t mFrames;
+		const uint32_t mChannels;
+	};
+	template<typename signal_type>
+	friend class Holder;
 
 public:
-	Signal(size_t size)
-		: Signal(1, size)
-	{
-	}
-	Signal(size_t channels, size_t size)
-		: mSize(size)
-	{
-		for (size_t ch = 0; ch < channels; ++ch) {
-			mData.emplace_back(std::make_unique<sample_type[]>(size));
-		}
+	template<class... Args>
+	SignalPool(Args... args) : mMem(std::forward<Args>(args)...) {}
+
+	template<typename signal_type, class = std::enable_if_t<is_sample_type_v<signal_type>>>
+	Holder<signal_type> allocate(size_t frames) {
+		return allocate<signal_type>(1, frames);
 	}
 
-	~Signal() {}
+	template<typename signal_type, class = std::enable_if_t<is_sample_type_v<signal_type>>>
+	Holder<signal_type> allocate(uint32_t channels, size_t frames) {
+		auto data = reinterpret_cast<signal_type*>(mMem.allocate(channels * frames * sizeof(signal_type), alignof(signal_type)));
+		return Holder<signal_type>(&mMem, data, channels, frames, alignof(signal_type));
+	}
 
-	Signal(Signal&&)noexcept = default;
-	Signal& operator=(Signal&&)noexcept = default;
-	
-	// チャネル数を取得します
-	size_t channels()const noexcept { return mData.size(); }
-
-	// データへのポインタを取得します
-	sample_type* data()const noexcept { return mData[0]; }
-	sample_type* data(size_t ch)const noexcept { return mData[ch].get(); }
-
-	// データ数を取得します。
-	size_t size()const noexcept { return mSize; }
-	size_t length()const noexcept { return mSize; }	
-	
 private:
-	const size_t mSize;
-	std::vector<std::unique_ptr<sample_type[]>> mData;
+	memory_resource_type mMem; 
 };
-
 
 }

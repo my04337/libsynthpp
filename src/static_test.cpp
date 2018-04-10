@@ -30,15 +30,6 @@ static_assert(!is_integral_sample_type_v<double>,  "is_integral_sample_type_v fa
 
 static_assert(!is_floating_point_sample_type_v<int32_t>, "is_floating_point_sample_type_v failed");
 static_assert( is_floating_point_sample_type_v<double>,  "is_floating_point_sample_type_v failed");
-namespace 
-{
-[[maybe_unused]]
-void unused_function_b_sig() {
-	LSP::Signal<float> signal_float(0);
-	LSP::Signal<double> signal_double(0);
-	LSP::Signal<int32_t> signal_int32_t(0);
-}
-}
 
 // ############################################################################
 // ### Filter/Requantizer
@@ -102,9 +93,9 @@ namespace
 [[maybe_unused]]
 void unused_function_a_wfo() {
 	Audio::WavFileOutput out(44100, 16, 2, "");
-	out.write(Signal<int8_t>(128));
-	out.write(Signal<int32_t>(128));
-	out.write(Signal<float>(2, 128));
-	out.write(Signal<double>(2, 128));
+	out.write<int8_t>(nullptr, 1, 0);
+	out.write<int32_t>(nullptr, 2, 0);
+	out.write<float>(nullptr, 1, 100);
+	out.write<double>(nullptr, 2, 200);
 }
 }

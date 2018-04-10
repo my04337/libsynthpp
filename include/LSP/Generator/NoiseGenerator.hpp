@@ -53,16 +53,6 @@ public:
 		}
 	}
 
-	Signal<sample_type> generate(size_t sz) 
-	{
-		Signal<sample_type> sig(sz);
-		auto data = sig.data();
-
-		for(size_t i=0; i<sz; ++i) data[i] = generate();
-
-		return sig; // NRVO
-	}
-
 private:
 	using WhiteNoiseParams = std::tuple<>;
 	using BrownNoiseParams = std::tuple<double>;

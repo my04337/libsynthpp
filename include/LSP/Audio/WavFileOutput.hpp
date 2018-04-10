@@ -26,11 +26,8 @@ public:
 
 	// 信号を書き込みます
 	template<typename sample_type>
-	void write(const Signal<sample_type>& sig);
-
-protected:
-	void write(const std::vector<int32_t>& frame);
-
+	void write(const sample_type* data, uint32_t channels, size_t frames);
+	
 
 private:
 	// --- valid時のみ有効 ---
@@ -47,29 +44,33 @@ private:
 // ---
 
 template<typename sample_type>
-void WavFileOutput::write(const Signal<sample_type>& sig)
+void WavFileOutput::write(const sample_type* data, uint32_t signal_channels, size_t signal_frames)
 {
-	const auto signal_channels = sig.channels();
-	const auto signal_length = sig.length();
-
 	if(signal_channels == 0) return;
-	if(signal_length == 0) return;
+	if(signal_frames == 0) return;
 
 	if (fail()) {
 		Log::e(LOGF("WasapiOutput : write - failed (invalid)"));
 		return;
 	}
 	lsp_assert_desc(signal_channels == mChannels, "WasapiOutput : write - failed (channel count is mismatch)");
-	
-	std::vector<int32_t> frame;
-	frame.resize(signal_channels);
 
-	for(size_t i=0; i<signal_length; ++i) {
+	const auto bitsPerSample = mBitsPerSample; 
+	const auto bytesPerSample = bitsPerSample/8;
+	
+	for(size_t i=0; i<signal_frames; ++i) {
+		auto in_frame = data + signal_channels * i;
 		for (size_t ch=0; ch< signal_channels; ++ch) {
-			auto s = Filter::Requantizer<sample_type, int32_t>()(sig.data(ch)[i]);
-			frame[ch] = s;
+			// 32bit整数型に変換
+			auto s = Filter::Requantizer<sample_type, int32_t>()(in_frame[ch]);
+
+			// 32bitで記録しているので、必要サイズに併せて切り詰める
+			// MEMO リトルエンディアン前提コード, 下位側から必要バイト分を転写
+			s >>= 32 - bitsPerSample; 
+
+			// ファイルへ書き込み
+			mFile.write(reinterpret_cast<const char*>(&s), bytesPerSample);
 		}
-		write(frame);
 	}
 }
 

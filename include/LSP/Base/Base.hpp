@@ -18,6 +18,7 @@
 #include <atomic>
 #include <mutex>
 #include <condition_variable>
+#include <memory_resource>
 #include <algorithm>
 #include <functional>
 #include <typeinfo>
