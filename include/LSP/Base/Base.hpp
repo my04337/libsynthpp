@@ -107,4 +107,36 @@ constexpr std::string_view file_macro_to_filename(const char* filepath)
 	}
 }
 
+// std::pmr_memory_holder メモリ管理簡単化機構
+template<class T>
+class _memory_resource_deleter final
+{
+public:
+	_memory_resource_deleter(std::pmr::memory_resource* mem, size_t size, size_t align)
+		: _mem(mem), _size(size), _align(align)
+	{}
+
+	void operator()(T* data) {
+		if(data) _mem->deallocate(data, _size, _align);
+	}
+
+private:
+	std::pmr::memory_resource* _mem;
+	size_t _size;
+	size_t _align;
+};
+
+template<class T>
+std::unique_ptr<T[], _memory_resource_deleter<T>> allocate_memory(std::pmr::memory_resource* mem, size_t length, size_t align = alignof(T)) 
+{
+	size_t size = length * sizeof(T);
+	auto data = reinterpret_cast<T*>(mem->allocate(size, align));
+	return std::unique_ptr<T[], _memory_resource_deleter<T>>(data, _memory_resource_deleter<T>(mem, size, align));
+}
+template<class T>
+std::unique_ptr<T[], _memory_resource_deleter<T>> allocate_memory(std::pmr::memory_resource& mem, size_t length, size_t align = alignof(T)) 
+{
+	return allocate_memory<T>(&mem, length, align);
+}
+
 }
