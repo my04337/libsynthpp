@@ -27,7 +27,7 @@ void Test::WasapiTest::exec()
 
 		Generator::NoiseGenerator<sample_type, Generator::NoiseColor::White> noisegen1(sampleFreq);
 		Generator::NoiseGenerator<sample_type, Generator::NoiseColor::Brown> noisegen2(sampleFreq);
-		SignalPool<> sig_pool;
+		SignalPool sig_pool;
 		int64_t time = 0;
 
 		if(!wo.start()) {

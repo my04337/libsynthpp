@@ -73,93 +73,69 @@ constexpr bool is_floating_point_sample_type_v = is_floating_point_sample_type<T
 // ---
 
 // 信号用メモリプール
-template<class memory_resource_type = std::pmr::synchronized_pool_resource>
 class SignalPool final
 	: non_copy_move
 {
 public:
+	// 信号用メモリ 保持クラス
 	template<typename signal_type>
-	class Holder final
-		: non_copy
-	{
-		friend class SignalPool<memory_resource_type>;
-	public:
-		~Holder() {
-			dispose();
-		}
-		Holder(Holder&& d)noexcept
-			: mMem(d.mMem)
-			, mData(d.mData)
-			, mAlign(d.mAlign)
-			, mFrames(d.mFrames)
-			, mChannels(d.mChannels)
-		{
-			d.mData = nullptr;
-		}
-		Holder& operator=(Holder&& d)noexcept
-		{
-			dispose();
-			mMem = d.mMem;
-			mData = d.mData;
-			mAlign = d.mAlign;
-			mFrames = d.mFrames;
-			mChannels = d.mChannels;
-
-			d.mData = nullptr;
-
-			return *this;
-		}
-
-		void dispose() {
-			if (mData) {
-				mMem->deallocate(mData, mFrames*mChannels*sizeof(signal_type), mAlign);
-				mData = nullptr;
-			}
-		}
-
-		// チャネル数を取得します
-		uint32_t channels()const noexcept { return mChannels; }
-
-		// フレーム数を取得します
-		size_t frames()const noexcept { return mFrames; }
-
-		// 各フレームの先頭ポインタを取得します
-		signal_type* frame(size_t frame_index)const noexcept { return mData + mChannels * frame_index; }
-
-		// 全データへのポインタを取得します
-		signal_type* data()const noexcept { return mData; }
-		
-	protected:
-		Holder(memory_resource_type* mem, signal_type* data, uint32_t channels, size_t frames, size_t align) 
-			: mMem(mem), mData(data), mAlign(align), mFrames(frames), mChannels(channels) {}
-
-	private:
-		memory_resource_type* mMem;
-		signal_type* mData;
-		const size_t mAlign;
-		const size_t mFrames;
-		const uint32_t mChannels;
-	};
-	template<typename signal_type>
-	friend class Holder;
+	class SignalHolder;
 
 public:
-	template<class... Args>
-	SignalPool(Args... args) : mMem(std::forward<Args>(args)...) {}
+	SignalPool() {}
+	SignalPool(std::pmr::memory_resource* upstream) : mMem(upstream) {}
+	SignalPool(const std::pmr::pool_options& opts) : mMem(opts) {}
+	SignalPool(const std::pmr::pool_options& opts, std::pmr::memory_resource* upstream) : mMem(opts, upstream) {}
 
+
+	// 信号用メモリを確保します(1チャネル用)
 	template<typename signal_type, class = std::enable_if_t<is_sample_type_v<signal_type>>>
-	Holder<signal_type> allocate(size_t frames) {
+	SignalHolder<signal_type> allocate(size_t frames) {
 		return allocate<signal_type>(1, frames);
 	}
 
+	// 信号用メモリを確保します(任意チャネル用)
 	template<typename signal_type, class = std::enable_if_t<is_sample_type_v<signal_type>>>
-	Holder<signal_type> allocate(uint32_t channels, size_t frames) {
-		auto data = reinterpret_cast<signal_type*>(mMem.allocate(channels * frames * sizeof(signal_type), alignof(signal_type)));
-		return Holder<signal_type>(&mMem, data, channels, frames, alignof(signal_type));
+	SignalHolder<signal_type> allocate(uint32_t channels, size_t frames) {
+		auto data = allocate_memory<signal_type>(mMem, channels*frames);
+		return SignalHolder<signal_type>(std::move(data), channels, frames);
 	}
 
 private:
-	memory_resource_type mMem; 
+	std::pmr::synchronized_pool_resource mMem; 
+};
+
+// ---
+
+template<typename signal_type>
+class SignalPool::SignalHolder final
+	: non_copy
+{
+	friend class SignalPool;
+public:
+	SignalHolder(SignalHolder&& d)noexcept = default;
+	SignalHolder& operator=(SignalHolder&& d)noexcept = default;
+
+	// チャネル数を取得します
+	uint32_t channels()const noexcept { return mChannels; }
+
+	// フレーム数を取得します
+	size_t frames()const noexcept { return mFrames; }
+
+	// 各フレームの先頭ポインタを取得します
+	signal_type* frame(size_t frame_index)const noexcept { return mData.get() + mChannels * frame_index; }
+
+	// 全データへのポインタを取得します
+	signal_type* data()const noexcept { return mData.get(); }
+
+protected:
+	SignalHolder(std::unique_ptr<signal_type[], _memory_resource_deleter<signal_type>>&& data, uint32_t channels, size_t frames) 
+		: mData(std::move(data)), mChannels(channels), mFrames(frames) {}
+
+private:
+	std::unique_ptr<signal_type[], _memory_resource_deleter<signal_type>> mData;
+	uint32_t mChannels;
+	size_t mFrames;
 };
 
 }
