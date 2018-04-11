@@ -26,7 +26,7 @@ public:
 
 	// 信号を書き込みます
 	template<typename sample_type>
-	void write(const sample_type* data, uint32_t channels, size_t frames);
+	void write(const Signal<sample_type>& sig);
 	
 
 private:
@@ -44,8 +44,11 @@ private:
 // ---
 
 template<typename sample_type>
-void WavFileOutput::write(const sample_type* data, uint32_t signal_channels, size_t signal_frames)
+void WavFileOutput::write(const Signal<sample_type>& sig)
 {
+	const auto signal_channels = sig.channels();
+	const auto signal_frames = sig.frames();
+
 	if(signal_channels == 0) return;
 	if(signal_frames == 0) return;
 
@@ -59,7 +62,7 @@ void WavFileOutput::write(const sample_type* data, uint32_t signal_channels, siz
 	const auto bytesPerSample = bitsPerSample/8;
 	
 	for(size_t i=0; i<signal_frames; ++i) {
-		auto in_frame = data + signal_channels * i;
+		auto in_frame = sig.frame(i);
 		for (size_t ch=0; ch< signal_channels; ++ch) {
 			// 32bit整数型に変換
 			auto s = Filter::Requantizer<sample_type, int32_t>()(in_frame[ch]);

@@ -93,9 +93,9 @@ namespace
 [[maybe_unused]]
 void unused_function_a_wfo() {
 	Audio::WavFileOutput out(44100, 16, 2, "");
-	out.write<int8_t>(nullptr, 1, 0);
-	out.write<int32_t>(nullptr, 2, 0);
-	out.write<float>(nullptr, 1, 100);
-	out.write<double>(nullptr, 2, 200);
+	out.write(Signal<int8_t>());
+	out.write(Signal<int32_t>());
+	out.write(Signal<float>());
+	out.write(Signal<double>());
 }
 }

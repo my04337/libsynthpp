@@ -27,7 +27,7 @@ void Test::WasapiTest::exec()
 
 		Generator::NoiseGenerator<sample_type, Generator::NoiseColor::White> noisegen1(sampleFreq);
 		Generator::NoiseGenerator<sample_type, Generator::NoiseColor::Brown> noisegen2(sampleFreq);
-		SignalPool sig_pool;
+		std::pmr::unsynchronized_pool_resource mem;
 		int64_t time = 0;
 
 		if(!wo.start()) {
@@ -36,7 +36,7 @@ void Test::WasapiTest::exec()
 		}
 		while(true) {
 			if (wo.getBufferedFrameCount() < bufferFrameCount) {
-				auto sig = sig_pool.allocate<sample_type>(2, bufferFrameCount);
+				auto sig = Signal<sample_type>::allocate(&mem, 2, bufferFrameCount);
 				for (uint32_t i = 0; i < bufferFrameCount; ++i) {
 					float p = (time % sampleFreq) * 2.0f * PI<float> / sampleFreq; // 位相
 					auto frame = sig.frame(i);
@@ -45,7 +45,7 @@ void Test::WasapiTest::exec()
 					++time;
 					if(time >= maxFrameCount) break;
 				}
-				wo.write(sig.data(), sig.channels(), sig.frames());
+				wo.write(sig);
 				continue;
 			}
 			if(time >= maxFrameCount) break;

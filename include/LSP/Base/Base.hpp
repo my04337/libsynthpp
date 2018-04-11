@@ -112,6 +112,9 @@ template<class T>
 class _memory_resource_deleter final
 {
 public:
+	_memory_resource_deleter()
+		: _mem(nullptr), _size(0), _align(0)
+	{}
 	_memory_resource_deleter(std::pmr::memory_resource* mem, size_t size, size_t align)
 		: _mem(mem), _size(size), _align(align)
 	{}
@@ -127,16 +130,11 @@ private:
 };
 
 template<class T>
-std::unique_ptr<T[], _memory_resource_deleter<T>> allocate_memory(std::pmr::memory_resource* mem, size_t length, size_t align = alignof(T)) 
+std::unique_ptr<T[], _memory_resource_deleter<T>> 
+allocate_memory(std::pmr::memory_resource* mem, size_t length, size_t align = alignof(T)) 
 {
 	size_t size = length * sizeof(T);
 	auto data = reinterpret_cast<T*>(mem->allocate(size, align));
 	return std::unique_ptr<T[], _memory_resource_deleter<T>>(data, _memory_resource_deleter<T>(mem, size, align));
 }
-template<class T>
-std::unique_ptr<T[], _memory_resource_deleter<T>> allocate_memory(std::pmr::memory_resource& mem, size_t length, size_t align = alignof(T)) 
-{
-	return allocate_memory<T>(&mem, length, align);
-}
-
 }

@@ -6,8 +6,6 @@
 namespace LSP
 {
 
-// TODO いずれ信号型で固定長バッファからのアロケートを行いたい
-
 /// サンプル型情報 
 template<typename sample_type> struct sample_traits {
 	// MEMO abs(min) == abs(max)が成り立つようにすること
@@ -72,49 +70,31 @@ constexpr bool is_floating_point_sample_type_v = is_floating_point_sample_type<T
 
 // ---
 
-// 信号用メモリプール
-class SignalPool final
-	: non_copy_move
-{
-public:
-	// 信号用メモリ 保持クラス
-	template<typename signal_type>
-	class SignalHolder;
-
-public:
-	SignalPool() {}
-	SignalPool(std::pmr::memory_resource* upstream) : mMem(upstream) {}
-	SignalPool(const std::pmr::pool_options& opts) : mMem(opts) {}
-	SignalPool(const std::pmr::pool_options& opts, std::pmr::memory_resource* upstream) : mMem(opts, upstream) {}
-
-
-	// 信号用メモリを確保します(1チャネル用)
-	template<typename signal_type, class = std::enable_if_t<is_sample_type_v<signal_type>>>
-	SignalHolder<signal_type> allocate(size_t frames) {
-		return allocate<signal_type>(1, frames);
-	}
-
-	// 信号用メモリを確保します(任意チャネル用)
-	template<typename signal_type, class = std::enable_if_t<is_sample_type_v<signal_type>>>
-	SignalHolder<signal_type> allocate(uint32_t channels, size_t frames) {
-		auto data = allocate_memory<signal_type>(mMem, channels*frames);
-		return SignalHolder<signal_type>(std::move(data), channels, frames);
-	}
-
-private:
-	std::pmr::synchronized_pool_resource mMem; 
-};
-
-// ---
-
+// 信号型
 template<typename signal_type>
-class SignalPool::SignalHolder final
+class Signal final
 	: non_copy
 {
-	friend class SignalPool;
 public:
-	SignalHolder(SignalHolder&& d)noexcept = default;
-	SignalHolder& operator=(SignalHolder&& d)noexcept = default;
+	// 信号用メモリを確保します(1チャネル用)
+	static Signal allocate(size_t frames) {
+		return allocate(std::pmr::get_default_resource(), 1, frames);
+	}
+	static Signal allocate(uint32_t channels, size_t frames) {
+		return allocate(std::pmr::get_default_resource(), channels, frames);
+	}
+	static Signal allocate(std::pmr::memory_resource* mem, size_t frames) {
+		return allocate<signal_type>(mem, 1, frames);
+	}
+	static Signal allocate(std::pmr::memory_resource* mem, uint32_t channels, size_t frames) {
+		auto data = allocate_memory<signal_type>(mem, channels*frames);
+		return Signal(std::move(data), channels, frames);
+	}
+
+	Signal() : mData(), mChannels(1), mFrames(0) {}
+
+	Signal(Signal&& d)noexcept = default;
+	Signal& operator=(Signal&& d)noexcept = default;
 
 	// チャネル数を取得します
 	uint32_t channels()const noexcept { return mChannels; }
@@ -129,7 +109,7 @@ public:
 	signal_type* data()const noexcept { return mData.get(); }
 
 protected:
-	SignalHolder(std::unique_ptr<signal_type[], _memory_resource_deleter<signal_type>>&& data, uint32_t channels, size_t frames) 
+	Signal(std::unique_ptr<signal_type[], _memory_resource_deleter<signal_type>>&& data, uint32_t channels, size_t frames) 
 		: mData(std::move(data)), mChannels(channels), mFrames(frames) {}
 
 private:

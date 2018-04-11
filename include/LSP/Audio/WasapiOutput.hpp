@@ -68,7 +68,7 @@ public:
 
 	// 信号を書き込みます
 	template<typename sample_type>
-	void write(const sample_type* data, uint32_t channels, size_t frames);
+	void write(const Signal<sample_type>& sig);
 
 protected:
 	static unsigned __stdcall playThreadMainProxy(void*);
@@ -96,8 +96,11 @@ private:
 // ---
 
 template<typename sample_type>
-void WasapiOutput::write(const sample_type* data, uint32_t signal_channels, size_t signal_frames)
+void WasapiOutput::write(const Signal<sample_type>& sig)
 {
+	const auto signal_channels = sig.channels();
+	const auto signal_frames = sig.frames();
+
 	if(signal_channels == 0) return;
 	if(signal_frames == 0) return;
 
@@ -111,8 +114,9 @@ void WasapiOutput::write(const sample_type* data, uint32_t signal_channels, size
 	std::lock_guard<decltype(mAudioBufferMutex)> lock(mAudioBufferMutex);
 
 	auto safeGetSample = [&](size_t ch, size_t i)->sample_type {
+		auto frame = sig.frame(i);
 		if (ch < signal_channels) {
-			return data[signal_channels * i + ch];
+			return frame[ch];
 		} else {
 			return static_cast<sample_type>(0);
 		}
