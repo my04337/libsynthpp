@@ -75,8 +75,8 @@ public:
 	_finally_action(F f) : f(std::move(f)), valid(true) {}
 	~_finally_action() { action(); }
 
-	_finally_action(_finally_action&& d) : f(std::move(d.f)), valid(true) { d.valid=false; };
-	_finally_action& operator=(_finally_action&& d) { reset(); f = std::move(d.f); valid=d.valid; d.valid=false; return *this;}
+	_finally_action(_finally_action&& d)noexcept : f(std::move(d.f)), valid(true) { d.valid=false; };
+	_finally_action& operator=(_finally_action&& d)noexcept { reset(); f = std::move(d.f); valid=d.valid; d.valid=false; return *this;}
 
 	void action()noexcept { if(valid) f(); reset(); }
 	void reset()noexcept { valid = false; }
