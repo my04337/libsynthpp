@@ -1,6 +1,7 @@
 ﻿#include <LSP/minimal.hpp>
 #include "case/test_base.hpp"
 #include "case/test_wasapi.hpp"
+#include "case/test_smf.hpp"
 
 #include <iostream>
 
@@ -29,6 +30,7 @@ int main(int argc, char** argv)
 	
 	tests.emplace_back(std::make_unique<Test::BaseTest>());
 	tests.emplace_back(std::make_unique<Test::WasapiTest>());
+	tests.emplace_back(std::make_unique<Test::MidiSmfTest>());
 
 	// テスト実行
 
