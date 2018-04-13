@@ -13,6 +13,8 @@ add_library(
 		
 	Audio/WavFileOutput.cpp
 	Audio/WasapiOutput.cpp
+	
+	MIDI/SMF/Parser.cpp
 
 	static_test.cpp
 )  
