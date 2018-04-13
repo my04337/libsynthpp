@@ -21,7 +21,7 @@ struct Normalizer final
 		constexpr auto normalized_min = sample_traits<sample_type>::normalized_min;
 		constexpr auto normalized_max = sample_traits<sample_type>::normalized_max;
 
-		return std::max(normalized_min, std::min(in, normalized_max));
+		return std::clamp(in, normalized_min, normalized_max);
 	}
 };
 
