@@ -8,13 +8,15 @@ add_library(
 	Base/Logging.cpp
 	Base/Message.cpp
 	
+	Threading/Thread.cpp
 	Threading/EventSignal.cpp
 	Threading/TaskDispatcher.cpp
 		
 	Audio/WavFileOutput.cpp
 	Audio/WasapiOutput.cpp
 	
-	MIDI/SMF/Parser.cpp
+	MIDI/Messages/Messages.cpp
+	MIDI/SMF/Player.cpp
 
 	static_test.cpp
 )  

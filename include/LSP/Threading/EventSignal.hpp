@@ -2,7 +2,7 @@
 
 #include <LSP/Base/Base.hpp>
 
-namespace LSP
+namespace LSP::Threading
 {
 
 /// 通知イベント(Win32API イベントオブジェクト風クラス)

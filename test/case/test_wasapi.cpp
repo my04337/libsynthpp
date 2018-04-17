@@ -23,7 +23,7 @@ void Test::WasapiTest::exec()
 		using requantize_from_float = Filter::Requantizer<float, sample_type>;
 		const uint32_t sampleFreq = wo.getDeviceSampleFreq();
 		const size_t bufferFrameCount = wo.getDeviceBufferFrameCount();
-		const int64_t maxFrameCount = sampleFreq * 3; // 3秒
+		const int64_t maxFrameCount = sampleFreq * 0.5; // 3秒
 
 		Generator::NoiseGenerator<sample_type, Generator::NoiseColor::White> noisegen1(sampleFreq);
 		Generator::NoiseGenerator<sample_type, Generator::NoiseColor::Brown> noisegen2(sampleFreq);

@@ -4,7 +4,7 @@
 #include <LSP/Threading/Task.hpp>
 #include <LSP/Threading/EventSignal.hpp>
 
-namespace LSP
+namespace LSP::Threading
 {
 
 // タスクディスパッチャ : 各種タスクをワーカースレッドに配給する

@@ -2,7 +2,7 @@
 
 #include <LSP/Base/Logging.hpp>
 
-using namespace LSP;
+using namespace LSP::Threading;
 
 TaskDispatcher::TaskDispatcher(size_t thread_num)
 	: mAborted(false)

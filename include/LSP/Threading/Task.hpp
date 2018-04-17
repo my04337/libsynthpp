@@ -3,7 +3,7 @@
 #include <LSP/Base/Base.hpp>
 #include <LSP/Base/Id.hpp>
 
-namespace LSP
+namespace LSP::Threading
 {
 
 // タスク : 最小の作業単位(不可分)
