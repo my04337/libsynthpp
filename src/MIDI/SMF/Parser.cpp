@@ -1,12 +1,9 @@
-﻿#include <LSP/MIDI/SMF/Player.hpp>
+﻿#include <LSP/MIDI/SMF/Parser.hpp>
 #include <LSP/MIDI/Message.hpp>
 #include <LSP/MIDI/Messages/BasicMessage.hpp>
 #include <LSP/MIDI/Messages/ExtraMessage.hpp>
 #include <LSP/MIDI/Messages/SysExMessage.hpp>
 #include <LSP/MIDI/Messages/MetaEvents.hpp>
-#include <LSP/Threading/Thread.hpp>
-#include <LSP/Threading/EventSignal.hpp>
-#include <LSP/Base/Logging.hpp>
 #include <LSP/Base/Logging.hpp>
 
 #include <array>
@@ -80,70 +77,30 @@ std::optional<uint32_t> read_variable(std::istream& s)
 }
 
 
-Player::Player(Sequencer& seq)
-	: mSeq(seq)
-	, mPlayThreadAbortFlag(false)
+std::pair<Header, Body> Parser::parse(const std::filesystem::path& path)
 {
-}
-
-Player::~Player()
-{
-	stop();
-}
-
-void Player::start()
-{
-	stop();
-	mPlayThreadAbortFlag = false;
-
-	Threading::EventSignal sig;
-	mPlayThread = std::thread([this, &sig]
-	{
-		auto messages = mMessages; // copy
-		sig.set();
-		playThreadMain(messages);
-		mPlayThreadAbortFlag = true;
-	});
-	Threading::setThreadPriority(mPlayThread, Threading::Priority::AboveNormal);
-	sig.wait();
-}
-
-void Player::stop() 
-{
-	if(mPlayThread.joinable()) {
-		mPlayThreadAbortFlag = true;
-		mPlayThread.join();
-	}
-}
-bool Player::isPlaying()const
-{
-	return !mPlayThreadAbortFlag;
-}
-
-void Player::open(const std::filesystem::path& path)
-{
-	mMessages.clear();
 
 	std::ifstream s(path, std::ios::binary);
 
 	if(s.fail()) {
 		throw decoding_exception("invalid input");
 	}
+	Parser parser(s);
 
 	// ヘッダ解析
 	Header header;
-	stageHeader(s, header);
+	parser.stageHeader(header);
 
 	// トラックチャンク
 	std::vector<std::pair<uint64_t, std::unique_ptr<Message>>> raw_messages;
 	for (uint16_t i = 0; i < header.trackNum; ++i) {
-		stageTrack(s, raw_messages);
+		parser.stageTrack(raw_messages);
 	}
 	// 時系列順にソート
 	std::stable_sort(raw_messages.begin(), raw_messages.end(), [](const auto& lhs, const auto& rhs) { return lhs.first < rhs.first;});
 
 	// 実時間に変換(マイクロ秒単位)
-	std::vector<std::pair<std::chrono::microseconds, std::shared_ptr<const Message>>> messages;
+	Body body;
 	std::chrono::microseconds pos(0); // 曲先頭からの相対時間
 	std::chrono::microseconds time_per_tick(0); // 1tickあたりの時間
 	
@@ -162,16 +119,17 @@ void Player::open(const std::filesystem::path& path)
 
 		} else {
 			// その他のメッセージは実行時に処理対象とする
-			messages.emplace_back(pos, std::move(msg));
+			body.emplace_back(pos, std::move(msg));
 		}
 		prev_tick = tick;
 	}
 
 	// OK
-	mMessages = std::move(messages);
+	s.close();
+	return std::make_pair<Header, Body>(std::move(header), std::move(body));
 }
 
-void Player::stageHeader(std::istream& s, Header& header)
+void Parser::stageHeader(Header& header)
 {
 	auto require = [](const auto& optional_value) {
 		if(!optional_value.has_value()) {
@@ -213,7 +171,7 @@ void Player::stageHeader(std::istream& s, Header& header)
 	header.trackNum = track_num;
 	header.ticksPerQuarterNote = ticks_per_quarter_note;
 }
-void Player::stageTrack(std::istream& s, std::vector<std::pair<uint64_t, std::unique_ptr<Message>>>& messages)
+void Parser::stageTrack(std::vector<std::pair<uint64_t, std::unique_ptr<Message>>>& messages)
 {
 	// 参考資料 : 
 	//   https://www.cs.cmu.edu/~music/cmsip/readings/Standard-MIDI-file-format-updated.pdf
@@ -382,36 +340,4 @@ void Player::stageTrack(std::istream& s, std::vector<std::pair<uint64_t, std::un
 	s.seekg(next_chunk_pos);
 
 	// --- 
-}
-void Player::playThreadMain(const std::vector<std::pair<std::chrono::microseconds, std::shared_ptr<const Message>>>& messages)
-{
-	using clock = std::chrono::steady_clock;
-	auto start_time = clock::now();
-	auto next_message_iter = messages.cbegin();
-
-	while (true) {
-		if(mPlayThreadAbortFlag) break;
-
-		// 処理時間が現在より手前のメッセージを処理する
-		clock::time_point next_message_time;
-		while (next_message_iter != messages.cend()) {
-			auto now_time = clock::now(); // 処理中にも現在時間は変わる
-			auto msg_time = start_time + next_message_iter->first;
-			auto& msg = next_message_iter->second;
-
-			if (msg_time >= now_time) {
-				next_message_time = msg_time;
-				break;
-			}
-
-			msg->play(mSeq);
-			++next_message_iter;
-		}
-
-		// 処理すべきメッセージが無くなった場合、停止
-		if(next_message_iter == messages.cend()) break;
-
-		// 次のメッセージまで待機
-		std::this_thread::sleep_until(next_message_time);
-	}
 }

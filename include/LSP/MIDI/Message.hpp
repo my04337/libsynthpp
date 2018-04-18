@@ -2,9 +2,10 @@
 
 #include <LSP/Base/Base.hpp>
 
+namespace LSP::MIDI::Synthesizer { class ToneGenerator; }
+
 namespace LSP::MIDI
 {
-class Sequencer;
 
 /// MIDIメッセージ  抽象クラス
 class Message
@@ -13,7 +14,7 @@ public:
 	virtual ~Message() {}
 
 	// メッセージを処理します
-	virtual void play(Sequencer& seq)const = 0;
+	virtual void play(Synthesizer::ToneGenerator& gen)const = 0;
 };
 
 }

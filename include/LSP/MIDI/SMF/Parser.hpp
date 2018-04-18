@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include <LSP/Base/Base.hpp>
+#include <LSP/MIDI/Message.hpp>
 
 namespace LSP::MIDI::SMF
 {
@@ -23,11 +24,31 @@ struct Header
 	uint16_t ticksPerQuarterNote;
 };
 
+using Body = std::vector<std::pair<std::chrono::microseconds, std::shared_ptr<const Message>>>;
+
 // SMF解析エラー
 class decoding_exception 
 	: public std::runtime_error 
 {
 	using runtime_error::runtime_error;
+};
+
+
+// SMFファイル パーサ
+class Parser
+	: non_copy_move
+{
+public:
+	static std::pair<Header, Body> parse(const std::filesystem::path& path); // throws decoding_exception
+
+protected:
+	Parser(std::istream& s) : s(s) {}
+
+	void stageHeader(Header& header);
+	void stageTrack(std::vector<std::pair<uint64_t, std::unique_ptr<Message>>>& messages);
+
+private:
+	std::istream& s;
 };
 
 }

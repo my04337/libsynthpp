@@ -25,7 +25,7 @@ public:
 	{}
 
 	virtual uint8_t channel()const noexcept final { return mChannel; } 
-	virtual void play(Sequencer& seq)const override;
+	virtual void play(Synthesizer::ToneGenerator& gen)const override;
 
 private:
 	uint8_t mChannel;
@@ -43,7 +43,7 @@ public:
 	{}
 
 	virtual uint8_t channel()const noexcept final { return mChannel; } 
-	virtual void play(Sequencer& seq)const override;
+	virtual void play(Synthesizer::ToneGenerator& gen)const override;
 
 private:
 	uint8_t mChannel;
@@ -61,7 +61,7 @@ public:
 	{}
 
 	virtual uint8_t channel()const noexcept final { return mChannel; } 
-	virtual void play(Sequencer& seq)const override {} // TODO 未実装
+	virtual void play(Synthesizer::ToneGenerator& gen)const override {} // TODO 未実装
 
 private:
 	uint8_t mChannel;
@@ -79,7 +79,7 @@ public:
 	{}
 
 	virtual uint8_t channel()const noexcept final { return mChannel; } 
-	virtual void play(Sequencer& seq)const override;
+	virtual void play(Synthesizer::ToneGenerator& gen)const override;
 
 private:
 	uint8_t mChannel;
@@ -97,7 +97,7 @@ public:
 	{}
 
 	virtual uint8_t channel()const noexcept final { return mChannel; } 
-	virtual void play(Sequencer& seq)const override;
+	virtual void play(Synthesizer::ToneGenerator& gen)const override;
 
 private:
 	uint8_t mChannel;
@@ -114,7 +114,7 @@ public:
 	{}
 
 	virtual uint8_t channel()const noexcept final { return mChannel; } 
-	virtual void play(Sequencer& seq)const override {} // TODO 未実装
+	virtual void play(Synthesizer::ToneGenerator& gen)const override {} // TODO 未実装
 
 private:
 	uint8_t mChannel;
@@ -131,7 +131,7 @@ public:
 	{}
 
 	virtual uint8_t channel()const noexcept final { return mChannel; } 
-	virtual void play(Sequencer& seq)const override;
+	virtual void play(Synthesizer::ToneGenerator& gen)const override;
 
 private:
 	uint8_t mChannel;

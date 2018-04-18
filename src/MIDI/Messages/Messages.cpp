@@ -3,40 +3,40 @@
 #include <LSP/MIDI/Messages/MetaEvents.hpp>
 #include <LSP/MIDI/Messages/SysExMessage.hpp>
 
-#include <LSP/MIDI/Sequencer.hpp>
+#include <LSP/MIDI/Synthesizer/ToneGenerator.hpp>
 
 using namespace LSP;
 using namespace LSP::MIDI;
 using namespace LSP::MIDI::Messages;
 
-void NoteOn::play(Sequencer& seq)const
+void NoteOn::play(Synthesizer::ToneGenerator& gen)const
 {
-	seq.noteOn(mChannel, mNoteNo, mVelocity);
+	gen.noteOn(mChannel, mNoteNo, mVelocity);
 }
 
-void NoteOff::play(Sequencer& seq)const
+void NoteOff::play(Synthesizer::ToneGenerator& gen)const
 {
-	seq.noteOff(mChannel, mNoteNo, mVelocity);
+	gen.noteOff(mChannel, mNoteNo, mVelocity);
 }
 
-void ControlChange::play(Sequencer& seq)const
+void ControlChange::play(Synthesizer::ToneGenerator& gen)const
 {
-	seq.controlChange(mChannel, mCtrlNo, mValue);
+	gen.controlChange(mChannel, mCtrlNo, mValue);
 }
 
-void ProgramChange::play(Sequencer& seq)const
+void ProgramChange::play(Synthesizer::ToneGenerator& gen)const
 {
-	seq.programChange(mChannel, mProgNo);
+	gen.programChange(mChannel, mProgNo);
 }
 
-void PitchBend::play(Sequencer& seq)const
+void PitchBend::play(Synthesizer::ToneGenerator& gen)const
 {
-	seq.pitchBend(mChannel, mPitch);
+	gen.pitchBend(mChannel, mPitch);
 }
 
-void SysExMessage::play(Sequencer& seq)const
+void SysExMessage::play(Synthesizer::ToneGenerator& gen)const
 {
-	seq.sysExMessage(&mData[0], mData.size());
+	gen.sysExMessage(&mData[0], mData.size());
 }
 
 

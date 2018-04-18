@@ -1,7 +1,6 @@
 #include "test_smf.hpp"
 
-#include <LSP/MIDI/SMF/Player.hpp>
-#include <LSP/MIDI/Sequencer.hpp>
+#include <LSP/MIDI/SMF/Parser.hpp>
 
 using namespace LSP;
 
@@ -11,9 +10,8 @@ void Test::MidiSmfTest::exec()
 
 	for (auto file : {"files/Sample0.mid", "files/brambles_vsc3.mid"}) {
 		Log::d(LOGF("Testing : MIDI::SMF - parsing file " << file));
-		MIDI::NullSequencer seq;
-		MIDI::SMF::Player player(seq);
-		[&]()noexcept{player.open(file);}();
+		[&]()noexcept{MIDI::SMF::Parser::parse(file).second;}();
+
 	}
 
 	Log::d("Testing : MIDI::SMF - End");
