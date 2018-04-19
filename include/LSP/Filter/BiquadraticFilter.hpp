@@ -2,6 +2,7 @@
 
 #include <LSP/Base/Base.hpp>
 #include <LSP/Base/Math.hpp>
+#include <LSP/Filter/Requantizer.hpp>
 
 namespace LSP::Filter {
 
@@ -12,7 +13,7 @@ template<
 	typename sample_type,
 	typename parameter_type = sample_type,
 	class = std::enable_if_t<
-		is_floating_point_sample_type_v<sample_type> && is_floating_point_sample_type_v<parameter_type>
+		is_sample_type_v<sample_type> && is_floating_point_sample_type_v<parameter_type>
 	>
 >
 class BiquadraticFilter
@@ -51,6 +52,8 @@ public:
 	// 出力更新
 	sample_type update(float_t x0) noexcept
 	{
+		using conv = Requantizer<parameter_type, sample_type>;
+
 		const auto x1 = x[idx1], x2 = x[idx2];
 		const auto y1 = y[idx1], y2 = y[idx2];
 		
@@ -63,7 +66,7 @@ public:
 		idx1 ^= 0x01;
 		idx2 ^= 0x01;
 
-		return static_cast<parameter_type>(y0);
+		return conv()(y0);
 	}
 
 
