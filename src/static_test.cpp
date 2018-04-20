@@ -3,6 +3,7 @@
 #include <LSP/Filter/Requantizer.hpp>
 #include <LSP/Filter/Normalizer.hpp>
 #include <LSP/Filter/BiquadraticFilter.hpp>
+#include <LSP/Filter/EnvelopeGenerator.hpp>
 #include <LSP/Audio/WavFileOutput.hpp>
 
 using namespace LSP;
@@ -74,6 +75,20 @@ static_assert(Filter::Normalizer<int8_t>()(+0x7F) == +0x7F,  "Filter::Normalizer
 static_assert(Filter::Normalizer<int8_t>()(-0x7F) == -0x7F,  "Filter::Normalizer failed");
 static_assert(Filter::Normalizer<int8_t>()(-0x80) == -0x7F,  "Filter::Normalizer failed");
 
+// ############################################################################
+// ### Filter/EnvelopeGenerator
+namespace 
+{
+[[maybe_unused]]
+void unused_function_f_eg() {
+	Filter::EnvelopeGenerator<float> eg_float;
+	Filter::EnvelopeGenerator<double> eg_double;
+	eg_float.noteOn(1, 0, 0, 0, 0);
+	eg_float.update();
+	eg_double.noteOff();
+	eg_double.update();
+}
+}
 // ############################################################################
 // ### Filter/BiquadraticFilter
 namespace 
