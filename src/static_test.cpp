@@ -83,10 +83,14 @@ namespace
 void unused_function_f_eg() {
 	Filter::EnvelopeGenerator<float> eg_float;
 	Filter::EnvelopeGenerator<double> eg_double;
+	Filter::EnvelopeGenerator<double, Filter::EnvelopeCurveType::Exp> eg_double_log(3);
 	eg_float.noteOn(1, 0, 0, 0, 0);
 	eg_float.update();
 	eg_double.noteOff();
 	eg_double.update();
+	eg_double_log.noteOn(1, 0, 0, 0, 0);
+	eg_double_log.noteOff();
+	eg_double_log.update();
 }
 }
 // ############################################################################

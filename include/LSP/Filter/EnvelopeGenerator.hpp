@@ -6,7 +6,11 @@
 namespace LSP::Filter
 {
 
-// TODO エンベロープの変化を線形以外に対応したい(RC回路のステップ応答のようなイメージ)
+enum class EnvelopeCurveType
+{
+	Linear,
+	Exp,
+};
 
 enum class EnvelopeState
 {
@@ -21,13 +25,22 @@ enum class EnvelopeState
 // AHDSFRエンベロープジェネレータ
 template<
 	typename parameter_type,
+	EnvelopeCurveType curve_type = EnvelopeCurveType::Linear,
 	class = std::enable_if_t<is_floating_point_sample_type_v<parameter_type>>
 >
 class EnvelopeGenerator final
 {
 public:
-	EnvelopeGenerator()
+	template<class... Args>
+	EnvelopeGenerator(Args... args)
 	{
+		if constexpr (curve_type == EnvelopeCurveType::Linear) {
+			mParams = LinearEnvelopeParams(std::forward<Args>(args)...);
+		} else if constexpr (curve_type == EnvelopeCurveType::Exp) {
+			mParams = ExpEnvelopeParams(std::forward<Args>(args)...);
+		} else {
+			static_assert(false_v<Args>);
+		}
 		reset();
 	}
 	// パラメータおよび状態を初期化します
@@ -52,7 +65,7 @@ public:
 		parameter_type hold_time,     // sec
 		parameter_type decay_time,    // sec
 		parameter_type sustain_level, // level
-		parameter_type fade_slope,    // level/sec
+		parameter_type fade_slope,    // Linear : level/sec, Exp : dB(SPL)/sec
 		parameter_type release_time   // sec)
 	)
 	{
@@ -80,9 +93,32 @@ public:
 	parameter_type envelope()const
 	{
 		auto easing = [this](uint64_t max)->parameter_type { 
-			// 線形補間
-			auto p = parameter_type(mTime) / parameter_type(max);
-			return mBeginLevel * (1-p) + mEndLevel * p;
+			if constexpr(curve_type == EnvelopeCurveType::Linear) {
+				// 線形補間
+				auto p = parameter_type(mTime) / parameter_type(max);
+				return mBeginLevel * (1-p) + mEndLevel * p;
+			} else if constexpr(curve_type == EnvelopeCurveType::Exp) {
+				// Exp : RL回路ステップ応答型
+				auto& param = std::get<ExpEnvelopeParams>(mParams);
+				auto p = parameter_type(mTime) / parameter_type(max);
+				auto v = (1 - std::exp(- p * param.n)) / param.level_at_n;
+				return mBeginLevel + (mEndLevel - mBeginLevel) * v;
+			} else {
+				// unknown type
+				return mBeginLevel;
+			}
+		};
+		auto easing_slope = [this]()->parameter_type { 
+			if constexpr(curve_type == EnvelopeCurveType::Linear) {
+				// Linear : level/sec
+				return std::max<parameter_type>(0, mBeginLevel + mFadeSlope * mTime);
+			} else if constexpr(curve_type == EnvelopeCurveType::Exp) {
+				// Exp : db(SPL)/sec
+				return static_cast<parameter_type>(mBeginLevel * std::pow(10, mFadeSlope/20 * mTime));
+			} else {
+				// unknown type
+				return mBeginLevel;
+			}
 		};
 
 		switch (mState) {
@@ -95,7 +131,7 @@ public:
 		case EnvelopeState::Release: 
 			return easing(mReleaseTime);
 		case EnvelopeState::Fade:
-			return std::max<parameter_type>(0, mBeginLevel + mFadeSlope * mTime);
+			return easing_slope();
 		case EnvelopeState::Free:
 			return 0;// 止音中
 		}
@@ -208,8 +244,21 @@ protected:
 		mEndLevel = 0;
 	}
 	
+private:
+	struct LinearEnvelopeParams {
+		// empoty
+	};
+	struct ExpEnvelopeParams {
+		ExpEnvelopeParams(parameter_type n)
+			: n(n)
+			, level_at_n(static_cast<parameter_type>(1 - std::exp(-n)))
+		{}
+		parameter_type n; // 時定数τ=1[秒]としたときの変化期間[秒]
+		parameter_type level_at_n; // n秒地点でのレベル
+	};
 
 private:	
+	std::variant<LinearEnvelopeParams, ExpEnvelopeParams> mParams;
 	EnvelopeState mState;			// 現在の状態
 	uint64_t mTime;					// 現在の時刻(ノートオン/ノートオフからの)
 	parameter_type mBeginLevel;		
@@ -219,7 +268,7 @@ private:
 	uint64_t mHoldTime;			// sample
 	uint64_t mDecayTime;		// sample
 	parameter_type mSustainLevel;	// level (0 <= x <= 1)
-	parameter_type mFadeSlope;		// level/sample : 減衰率のため負の値
+	parameter_type mFadeSlope;		// Linear : level/sample, Exp : dB(SPL)/sample
 
 	uint64_t mReleaseTime;		// sample
 
