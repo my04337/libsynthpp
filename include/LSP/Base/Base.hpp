@@ -65,6 +65,10 @@ struct non_copy_move {
 	non_copy_move& operator=(non_copy_move&&)noexcept = delete;
 };
 
+// テンプレート補助 : どのような値を受け取ってもfalseを表す値
+template<typename ...>
+constexpr bool false_v = false;
+
 /// スコープ離脱時実行コード 補助クラス
 template<typename F>
 class [[nodiscard]] _finally_action
