@@ -6,11 +6,6 @@
 namespace LSP::Filter
 {
 
-enum class EnvelopeCurveType
-{
-	Linear,
-	Exp,
-};
 
 enum class EnvelopeState
 {
@@ -25,48 +20,80 @@ enum class EnvelopeState
 // AHDSFRエンベロープジェネレータ
 template<
 	typename parameter_type,
-	EnvelopeCurveType curve_type = EnvelopeCurveType::Linear,
 	class = std::enable_if_t<is_floating_point_sample_type_v<parameter_type>>
 >
 class EnvelopeGenerator final
 {
 public:
-	template<class... Args>
-	EnvelopeGenerator(Args... args)
+	// エンベロープ カーブ形状
+	enum class Shape
 	{
-		if constexpr (curve_type == EnvelopeCurveType::Linear) {
-			mParams = LinearEnvelopeParams(std::forward<Args>(args)...);
-		} else if constexpr (curve_type == EnvelopeCurveType::Exp) {
-			mParams = ExpEnvelopeParams(std::forward<Args>(args)...);
-		} else {
-			static_assert(false_v<Args>);
+		Linear,	// 線形な変化 : 管楽器など向け
+		Exp,	// 指数的変化 : 打楽器など向け
+	};
+	// エンベロープ カーブパラメータ
+	struct Curve
+	{
+		Curve() 
+			: shape(Shape::Linear)
+		{}
+		Curve(parameter_type exp_param_n)
+			: shape(Shape::Exp)
+		{
+			this->exp_param_n = exp_param_n;
+			this->exp_param_level_at_n = static_cast<parameter_type>(1 - std::exp(-exp_param_n));
 		}
+
+		constexpr operator Shape()const noexcept { return shape; }
+
+		Shape shape;	
+		parameter_type exp_param_n;				// Exp : 時定数τ=1[秒]としたときの変化期間[秒]
+		parameter_type exp_param_level_at_n;	// Exp : n[秒]地点でのレベル
+	};
+	constexpr static Curve LinearCurve()noexcept 
+	{
+		return {}; 
+	}
+	static Curve ExpCurve(parameter_type n)noexcept 
+	{ 
+		Curve c;
+		c.shape = Shape::Exp;
+		c.exp_param_n = n;
+		c.exp_param_level_at_n = static_cast<parameter_type>(1 - std::exp(-n));
+		return c;
+	}
+
+
+public:
+	EnvelopeGenerator()
+	{
 		reset();
 	}
-	// パラメータおよび状態を初期化します
+	// 状態を初期化します
 	void reset() {
 		switchToFree();
 	}
 
 	// ノートオン (Attackへ遷移)
 	void noteOn(
-		parameter_type sampleFreq,   // Hz
-		parameter_type attack_time,  // sec
-		parameter_type decay_time,	 // sec
-		parameter_type sustain_level,// level (0 <= x <= 1)
-		parameter_type release_time  // sec
+		parameter_type sampleFreq,      // Hz
+		parameter_type attack_time,		// sec
+		parameter_type decay_time,		// sec
+		parameter_type sustain_level,	// level (0 <= x <= 1)
+		parameter_type release_time		// sec
 	)
 	{ 
-		noteOn(sampleFreq, attack_time, 0, decay_time, sustain_level, 0, release_time);
+		noteOn(sampleFreq, {}, attack_time, 0, decay_time, sustain_level, 0, release_time);
 	}
 	void noteOn(
-		parameter_type sampleFreq,    // Hz
-		parameter_type attack_time,   // sec
-		parameter_type hold_time,     // sec
-		parameter_type decay_time,    // sec
-		parameter_type sustain_level, // level
-		parameter_type fade_slope,    // Linear : level/sec, Exp : dB(SPL)/sec
-		parameter_type release_time   // sec)
+		parameter_type sampleFreq,		// Hz
+		Curve curve,					
+		parameter_type attack_time,		// sec
+		parameter_type hold_time,		// sec
+		parameter_type decay_time,		// sec
+		parameter_type sustain_level,	// level
+		parameter_type fade_slope,		// Linear : level/sec, Exp : dB(SPL)/sec
+		parameter_type release_time		// sec)
 	)
 	{
 		// 各種パラメータの範囲調整 & サンプル単位に変換 
@@ -77,6 +104,8 @@ public:
 
 		mSustainLevel = std::clamp<parameter_type>(sustain_level, 0, 1);
 		mFadeSlope    = std::min<parameter_type>(fade_slope, 0) / sampleFreq; // 減衰率なので負の値
+
+		mCurve = curve;
 
 		// アタックへ遷移
 		switchToAttack();
@@ -93,31 +122,30 @@ public:
 	parameter_type envelope()const
 	{
 		auto easing = [this](uint64_t max)->parameter_type { 
-			if constexpr(curve_type == EnvelopeCurveType::Linear) {
+			const auto p = parameter_type(mTime) / parameter_type(max);
+
+			switch(mCurve) {
+			case Shape::Linear: 
 				// 線形補間
-				auto p = parameter_type(mTime) / parameter_type(max);
 				return mBeginLevel * (1-p) + mEndLevel * p;
-			} else if constexpr(curve_type == EnvelopeCurveType::Exp) {
+			case Shape::Exp: {
 				// Exp : RL回路ステップ応答型
-				auto& param = std::get<ExpEnvelopeParams>(mParams);
-				auto p = parameter_type(mTime) / parameter_type(max);
-				auto v = (1 - std::exp(- p * param.n)) / param.level_at_n;
+				const parameter_type n = mCurve.exp_param_n;
+				const parameter_type level_at_n = mCurve.exp_param_level_at_n;
+				auto v = (1 - std::exp(- p * n)) / level_at_n;
 				return mBeginLevel + (mEndLevel - mBeginLevel) * v;
-			} else {
-				// unknown type
-				return mBeginLevel;
+			}
 			}
 		};
 		auto easing_slope = [this]()->parameter_type { 
-			if constexpr(curve_type == EnvelopeCurveType::Linear) {
+			switch(mCurve) {
+			case Shape::Linear: 
 				// Linear : level/sec
 				return std::max<parameter_type>(0, mBeginLevel + mFadeSlope * mTime);
-			} else if constexpr(curve_type == EnvelopeCurveType::Exp) {
+			case Shape::Exp: {
 				// Exp : db(SPL)/sec
 				return static_cast<parameter_type>(mBeginLevel * std::pow(10, mFadeSlope/20 * mTime));
-			} else {
-				// unknown type
-				return mBeginLevel;
+			}
 			}
 		};
 
@@ -244,34 +272,20 @@ protected:
 		mEndLevel = 0;
 	}
 	
-private:
-	struct LinearEnvelopeParams {
-		// empoty
-	};
-	struct ExpEnvelopeParams {
-		ExpEnvelopeParams(parameter_type n)
-			: n(n)
-			, level_at_n(static_cast<parameter_type>(1 - std::exp(-n)))
-		{}
-		parameter_type n; // 時定数τ=1[秒]としたときの変化期間[秒]
-		parameter_type level_at_n; // n秒地点でのレベル
-	};
 
 private:	
-	std::variant<LinearEnvelopeParams, ExpEnvelopeParams> mParams;
 	EnvelopeState mState;			// 現在の状態
 	uint64_t mTime;					// 現在の時刻(ノートオン/ノートオフからの)
+	Curve mCurve;
 	parameter_type mBeginLevel;		
 	parameter_type mEndLevel;		
 
-	uint64_t mAttackTime;		// sample
-	uint64_t mHoldTime;			// sample
-	uint64_t mDecayTime;		// sample
+	uint64_t mAttackTime;			// sample
+	uint64_t mHoldTime;				// sample
+	uint64_t mDecayTime;			// sample
 	parameter_type mSustainLevel;	// level (0 <= x <= 1)
 	parameter_type mFadeSlope;		// Linear : level/sample, Exp : dB(SPL)/sample
-
-	uint64_t mReleaseTime;		// sample
-
+	uint64_t mReleaseTime;			// sample
 };
 
 

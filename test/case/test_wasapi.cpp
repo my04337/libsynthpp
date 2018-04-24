@@ -40,7 +40,7 @@ void Test::WasapiTest::exec()
 				auto sig = Signal<sample_type>::allocate(&mem, 2, bufferFrameCount);
 				for (uint32_t i = 0; i < bufferFrameCount; ++i) {
 					if (time == sampleFreq*0.2) {
-						eg.noteOn(sampleFreq, 0.2, 0.1, 0.05, 0.6, -0.5, 0.3);
+						eg.noteOn(sampleFreq, {}, 0.2, 0.1, 0.05, 0.6, -0.5, 0.3);
 					}
 					else if (time == sampleFreq * 0.8) {
 						eg.noteOff();
