@@ -3,6 +3,7 @@
 #include <LSP/Base/Base.hpp>
 #include <LSP/Base/Signal.hpp>
 #include <LSP/Base/Math.hpp>
+#include <LSP/Filter/Requantizer.hpp>
 
 namespace LSP::Generator {
 
@@ -34,8 +35,10 @@ public:
 	sample_type generate() 
 	{
 		auto s = std::sin(mPhase);
+		using requantize = Filter::Requantizer<decltype(s), sample_type>;
+
 		mPhase = std::fmod(mPhase + mSamplePerPhase, 2.0 * PI<double>);
-		return SampleFormatConverter<decltype(s), sample_type>::convert(s);
+		return requantize()(s);
 	}
 
 	Signal<sample_type> generate(size_t sz) 
