@@ -74,18 +74,18 @@ public:
 		switchToFree();
 	}
 
-	// ノートオン (Attackへ遷移)
-	void noteOn(
+	// エンベロープ形状パラメータを指定します
+	void setParam(
 		parameter_type sampleFreq,      // Hz
 		parameter_type attack_time,		// sec
 		parameter_type decay_time,		// sec
 		parameter_type sustain_level,	// level (0 <= x <= 1)
 		parameter_type release_time		// sec
 	)
-	{ 
-		noteOn(sampleFreq, {}, attack_time, 0, decay_time, sustain_level, 0, release_time);
+	{
+		setParam(sampleFreq, {}, attack_time, 0, decay_time, sustain_level, 0, release_time);
 	}
-	void noteOn(
+	void setParam(
 		parameter_type sampleFreq,		// Hz
 		Curve curve,					
 		parameter_type attack_time,		// sec
@@ -106,15 +106,17 @@ public:
 		mFadeSlope    = std::min<parameter_type>(fade_slope, 0) / sampleFreq; // 減衰率なので負の値
 
 		mCurve = curve;
+	}
 
-		// アタックへ遷移
+	// ノートオン (Attackへ遷移)
+	void noteOn()
+	{
 		switchToAttack();
 	}
 
 	// ノートオフ (Releaseへ遷移)
 	void noteOff()
 	{
-		// リリースへ遷移
 		switchToRelease(envelope());
 	}
 
@@ -136,6 +138,7 @@ public:
 				return mBeginLevel + (mEndLevel - mBeginLevel) * v;
 			}
 			}
+			lsp_assert_desc(false, "invalid shape");
 		};
 		auto easing_slope = [this]()->parameter_type { 
 			switch(mCurve) {
@@ -147,6 +150,7 @@ public:
 				return static_cast<parameter_type>(mBeginLevel * std::pow(10, mFadeSlope/20 * mTime));
 			}
 			}
+			lsp_assert_desc(false, "invalid shape");
 		};
 
 		switch (mState) {
@@ -227,6 +231,11 @@ public:
 		return v;
 	}
 
+	// エンベロープジェネレータが動作中か否か
+	bool isBusy()const noexcept 
+	{
+		return mState != EnvelopeState::Free;
+	}
 
 protected:
 	void switchToAttack() 

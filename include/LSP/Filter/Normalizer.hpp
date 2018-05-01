@@ -7,12 +7,12 @@ namespace LSP::Filter
 {
 
 // ノーマライザ : 値域を信号の標準的な幅に狭める
-template<
-	typename sample_type,
-	class = std::enable_if_t<is_sample_type_v<sample_type>>
->
 struct Normalizer final
 {
+	template<
+		typename sample_type,
+		class = std::enable_if_t<is_sample_type_v<sample_type>>
+	>
 	constexpr sample_type operator()(sample_type in) const noexcept 
 	{
 		// MEMO できるだけconstexprで解決し、実行時コストを純粋に変換処理のみとしたい。

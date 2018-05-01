@@ -50,9 +50,12 @@ public:
 
 
 	// 出力更新
-	sample_type update(float_t x0) noexcept
+	sample_type update(sample_type x0_) noexcept
 	{
-		using conv = Requantizer<parameter_type, sample_type>;
+		constexpr auto to_sample_type = Filter::Requantizer<sample_type>();
+		constexpr auto to_param_type = Filter::Requantizer<parameter_type>();
+
+		const auto x0 = to_param_type(x0_);
 
 		const auto x1 = x[idx1], x2 = x[idx2];
 		const auto y1 = y[idx1], y2 = y[idx2];
@@ -66,7 +69,7 @@ public:
 		idx1 ^= 0x01;
 		idx2 ^= 0x01;
 
-		return conv()(y0);
+		return to_sample_type(y0);
 	}
 
 
@@ -85,6 +88,10 @@ public:
 		a1 = -2 * cosw0;
 		a2 = 1 - alpha;
 	}
+	static BiquadraticFilter MakeLopass(parameter_type sampleFreq, parameter_type cutOffFreq, parameter_type Q)
+	{
+		BiquadraticFilter bqf; bqf.setLopassParam(sampleFreq, cutOffFreq, Q); return bqf;
+	}
 
 	// パラメータ設定 : ハイパスフィルタ
 	void setHighpassParam(parameter_type sampleFreq, parameter_type cutOffFreq, parameter_type Q)
@@ -100,6 +107,10 @@ public:
 		a0 = 1 + alpha;
 		a1 = -2 * cosw0;
 		a2 = 1 - alpha;
+	}
+	static BiquadraticFilter MakeHighpass(parameter_type sampleFreq, parameter_type cutOffFreq, parameter_type Q)
+	{
+		BiquadraticFilter bqf; bqf.setHighpassParam(sampleFreq, cutOffFreq, Q); return bqf;
 	}
 
 	// パラメータ設定 : バンドパス1

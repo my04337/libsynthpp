@@ -9,12 +9,17 @@ namespace LSP::Filter
 
 // 再量子化 : サンプルのフォーマットを変更
 template<
-	typename Tin,
 	typename Tout,
-	class = std::enable_if_t<is_sample_type_v<Tin> && is_sample_type_v<Tout>>
+	class = std::enable_if_t<is_sample_type_v<Tout>>
 >
 struct Requantizer
 {
+	constexpr Requantizer() {}
+
+	template<
+		typename Tin,
+		class = std::enable_if_t<is_sample_type_v<Tin>>
+	>
 	constexpr Tout operator()(Tin in) const noexcept 
 	{
 		// MEMO できるだけconstexprで解決し、実行時コストを純粋に変換処理のみとしたい。
@@ -38,7 +43,7 @@ struct Requantizer
 			}
 		} else if constexpr (std::is_floating_point_v<Tin> && std::is_integral_v<Tout>) {
 			// 浮動小数点数→整数 : ノーマライズしてから増幅
-			return static_cast<Tout>(Filter::Normalizer<Tin>()(in) * sample_traits<Tout>::abs_max);
+			return static_cast<Tout>(Filter::Normalizer()(in) * sample_traits<Tout>::abs_max);
 		} else if constexpr (std::is_integral_v<Tin> && std::is_floating_point_v<Tout>) {
 			// 整数→浮動小数点数 : 最大振れ幅で割るだけ
 			return static_cast<Tout>(in) / sample_traits<Tin>::abs_max;
