@@ -92,7 +92,7 @@ public:
 		parameter_type hold_time,		// sec
 		parameter_type decay_time,		// sec
 		parameter_type sustain_level,	// level
-		parameter_type fade_slope,		// Linear : level/sec, Exp : dB(SPL)/sec
+		parameter_type fade_slope,		// Linear : level/sec, Exp : dBFS/sec
 		parameter_type release_time		// sec)
 	)
 	{
@@ -146,7 +146,7 @@ public:
 				// Linear : level/sec
 				return std::max<parameter_type>(0, mBeginLevel + mFadeSlope * mTime);
 			case Shape::Exp: {
-				// Exp : db(SPL)/sec
+				// Exp : dBFS/sec
 				return static_cast<parameter_type>(mBeginLevel * std::pow(10, mFadeSlope/20 * mTime));
 			}
 			}
@@ -293,7 +293,7 @@ private:
 	uint64_t mHoldTime;				// sample
 	uint64_t mDecayTime;			// sample
 	parameter_type mSustainLevel;	// level (0 <= x <= 1)
-	parameter_type mFadeSlope;		// Linear : level/sample, Exp : dB(SPL)/sample
+	parameter_type mFadeSlope;		// Linear : level/sample, Exp : dBFS/sample
 	uint64_t mReleaseTime;			// sample
 };
 
