@@ -1,6 +1,7 @@
 ﻿#include <LSP/minimal.hpp>
 #include "case/test_base.hpp"
 #include "case/test_wasapi.hpp"
+#include "case/test_sdl.hpp"
 #include "case/test_smf.hpp"
 
 #include <iostream>
@@ -8,6 +9,8 @@
 #ifdef WIN32
 #include <objbase.h>
 #endif
+
+#include <sdl.h>
 
 using namespace LSP;
 
@@ -18,6 +21,10 @@ int main(int argc, char** argv)
 	CoInitializeEx(nullptr, COINIT_MULTITHREADED);
 	auto fin_act_com = finally([]{CoUninitialize();});
 #endif
+
+	// SDL(Audio)初期化
+	SDL_Init(SDL_INIT_AUDIO);
+	auto fin_act_sdl = finally([]{SDL_Quit();});
 
 	// ログ出力機構 セットアップ
 	StdOutLogger logger;
@@ -30,6 +37,7 @@ int main(int argc, char** argv)
 	
 	tests.emplace_back(std::make_unique<Test::BaseTest>());
 	tests.emplace_back(std::make_unique<Test::WasapiTest>());
+	tests.emplace_back(std::make_unique<Test::SDLTest>());
 	tests.emplace_back(std::make_unique<Test::MidiSmfTest>());
 
 	// テスト実行

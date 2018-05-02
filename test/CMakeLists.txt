@@ -5,6 +5,7 @@ add_executable(
 	
 	main.cpp
 	case/test_base.cpp
+	case/test_sdl.cpp
 	case/test_wasapi.cpp
 	case/test_smf.cpp
 	)
@@ -12,4 +13,4 @@ add_executable(
 # file(INSTALL ${CMAKE_CURRENT_SOURCE_DIR}/files DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
 	
-target_link_libraries(testsuite libsynthpp)
+target_link_libraries(testsuite libsynthpp SDL2-static SDL2main)

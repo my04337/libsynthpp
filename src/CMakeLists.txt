@@ -14,6 +14,7 @@ add_library(
 		
 	Audio/WavFileOutput.cpp
 	Audio/WasapiOutput.cpp
+	Audio/SDLOutput.cpp
 	
 	MIDI/Messages/Messages.cpp
 	MIDI/SMF/Parser.cpp
@@ -24,4 +25,5 @@ add_library(
 target_include_directories(
              libsynthpp
              PUBLIC  ../include
+             PUBLIC  ${SDL2_INCLUDE_DIRS}
             )
