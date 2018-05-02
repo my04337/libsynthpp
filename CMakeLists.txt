@@ -19,3 +19,4 @@ set(SDL2_INCLUDE_DIRS "${SDL2_SOURCE_DIR}/include")
 
 add_subdirectory(src)
 add_subdirectory(test)
+add_subdirectory(luath)
