@@ -1,4 +1,0 @@
-[submodule "third_party/sdl"]
-	path = third_party/sdl
-	url = https://github.com/spurious/SDL-mirror.git
-	branch = release-2.0.8
