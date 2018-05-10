@@ -43,5 +43,5 @@ int Application::exec()
 			break;
 		}
 	}
-
+	return 0;
 }

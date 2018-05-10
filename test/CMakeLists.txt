@@ -11,6 +11,10 @@ add_executable(
 	)
 
 # file(INSTALL ${CMAKE_CURRENT_SOURCE_DIR}/files DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-
 	
-target_link_libraries(testsuite libsynthpp SDL2-static SDL2main)
+target_link_libraries(testsuite libsynthpp SDL2main)
+
+get_property(TESTSUITE_BINARY_DIR TARGET testsuite PROPERTY BINARY_DIR )
+add_custom_command(TARGET testsuite POST_BUILD
+    COMMAND robocopy /NFL /NDL /NJH /NJS /nc /ns /np  "${SDL2_LIB_DIRS}" "${TESTSUITE_BINARY_DIR}" SDL2.dll SDL2.dll 2> NUL & %COMSPEC% /C exit 0
+)

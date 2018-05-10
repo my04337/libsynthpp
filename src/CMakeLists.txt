@@ -22,8 +22,11 @@ add_library(
 
 	static_test.cpp
 )  
+
 target_include_directories(
              libsynthpp
              PUBLIC  ../include
-             PUBLIC  ${SDL2_INCLUDE_DIRS}
             )
+			
+target_link_libraries(libsynthpp SDL2.lib)
+add_dependencies(libsynthpp SDL2)
