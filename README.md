@@ -21,3 +21,6 @@ MIDIシンセサイザ(ライブラリの実装サンプル兼テストベッド
 将来的に目指したいもの
 * マルチプラットフォーム対応 (メインターゲットはWindows, Linux)
 * 音声バックエンド : OpenAL
+
+
+Portions of this software are copyright © 2013 The FreeType Project (www.freetype.org).  All rights reserved.
