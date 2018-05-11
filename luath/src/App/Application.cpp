@@ -1,7 +1,8 @@
-#include <Luath/App/Application.hpp>
+ï»¿#include <Luath/App/Application.hpp>
 #include <Luath/Window/MainWindow.hpp>
 
 #include <SDL.h>
+#include <SDL_ttf.h>
 
 using namespace LSP;
 using namespace Luath;
@@ -18,21 +19,26 @@ Application& Application::instance()
 
 int Application::exec()
 {
-	// SDL ‰Šú‰»
+	// SDL åˆæœŸåŒ–
 	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-		Log::e(LOGF("Main : could not initialize sdl2 :" << SDL_GetError()));
+		Log::e(LOGF("Main : could not initialize SDL :" << SDL_GetError()));
 		return 1;
 	}
 	auto fin_act_sdl = finally([]{SDL_Quit();});
+	if (TTF_Init() < 0) {
+		Log::e(LOGF("Main : could not initialize SDL_ttf :" << TTF_GetError()));
+		return 1;
+	}
+	auto fin_act_sdl_ttf = finally([]{TTF_Quit();});
 
 
-	// ƒEƒBƒ“ƒhƒE¶¬
+	// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ç”Ÿæˆ
 	Luath::Window::MainWindow main_window;
 	if (!main_window.initialize()) {
 		return 1;
 	}
 
-	// ƒƒbƒZ[ƒWƒ‹[ƒv ŠJn
+	// ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ãƒ«ãƒ¼ãƒ— é–‹å§‹
 	bool done = false;
 	SDL_Event ev;
 	while (!done && SDL_WaitEvent(&ev))
