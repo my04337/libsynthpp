@@ -51,7 +51,7 @@ Log::StackTrace Log::getStackTrace(size_t skipFrames)noexcept
 
 
 #define LSP_IMPL_LOG_FUNC(level) \
-    void Log::level(const std::string_view& text)noexcept \
+    void Log::level(std::string_view text)noexcept \
     { write(LogLevel::level, LOGF(text), nullptr);} \
     void Log::level(const Writer& writer)noexcept \
     { write(LogLevel::level, writer, nullptr);}
@@ -61,7 +61,7 @@ LSP_IMPL_LOG_FUNC(d)
 LSP_IMPL_LOG_FUNC(i)
 LSP_IMPL_LOG_FUNC(w)
 LSP_IMPL_LOG_FUNC(e)
-[[noreturn]] void Log::f(const std::string_view& text, const StackTrace* stacks)noexcept
+[[noreturn]] void Log::f(std::string_view text, const StackTrace* stacks)noexcept
 { write(LogLevel::f, LOGF(text), stacks, true); /*到達しないはず*/ std::terminate(); }
 [[noreturn]] void Log::f(const Writer& writer, const StackTrace* stacks)noexcept
 { write(LogLevel::f, writer, stacks, true); /*到達しないはず*/ std::terminate();}
@@ -138,7 +138,7 @@ void Log::flush()noexcept
 	}
 }
 
-std::ostringstream& Log::format_default(std::ostringstream& stream, Log::time_point time, LogLevel level, const std::string_view& log, const Log::StackTrace* stacks)noexcept
+std::ostringstream& Log::format_default(std::ostringstream& stream, Log::time_point time, LogLevel level, std::string_view log, const Log::StackTrace* stacks)noexcept
 {
 	const std::thread::id thid = std::this_thread::get_id();
 
@@ -204,7 +204,7 @@ StdOutLogger::~StdOutLogger()
 	flush();
 }
 
-void StdOutLogger::write(Log::time_point time, LogLevel level, const std::string_view& log, const Log::StackTrace* stacks)noexcept
+void StdOutLogger::write(Log::time_point time, LogLevel level, std::string_view log, const Log::StackTrace* stacks)noexcept
 {
 	std::ostringstream oss;
 	if(mShowHeader) {
