@@ -1,0 +1,19 @@
+cmake_minimum_required(VERSION 3.2)
+
+set(DEPEND_LIB_ROOT ${PROJECT_BINARY_DIR}/Depends)
+set(UmeFont_PREFIX_PATH ${DEPEND_LIB_ROOT}/UmeFont)
+set(UmeFont_ROOT_PATH ${UmeFont_PREFIX_PATH}/files)
+
+include(ExternalProject)
+ExternalProject_Add(
+	UmeFont
+	
+	URL https://ja.osdn.net/projects/ume-font/downloads/22212/umefont_670.7z/
+	URL_HASH SHA1=c0f1a0e079ef43dd4ca7756853a0b5fa43e39b2d
+	PREFIX ${UmeFont_PREFIX_PATH}
+	SOURCE_DIR   ${UmeFont_ROOT_PATH}
+	CONFIGURE_COMMAND  ""
+	BUILD_COMMAND ""
+	INSTALL_COMMAND ""
+	TEST_COMMAND ""
+)

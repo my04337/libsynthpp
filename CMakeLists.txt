@@ -14,6 +14,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Gy /Gw")
 
 include(CMakeLists-SDL.txt)
 include(CMakeLists-SDL_ttf.txt)
+include(CMakeLists-UmeFont.txt)
 
 # ---
 
