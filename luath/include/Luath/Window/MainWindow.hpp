@@ -1,11 +1,12 @@
 #pragma once
 
 #include <Luath/Base/Base.hpp>
+#include <LSP/Threading/EventSignal.hpp>
 
 namespace Luath::Window
 {
 
-class MainWindow
+class MainWindow final
 	: non_copy_move
 {
 public:
@@ -14,12 +15,16 @@ public:
 
 	bool initialize();
 
-	bool valid() const noexcept { return mWindow != nullptr; }
-	operator bool()const noexcept { return valid(); }
+protected:
+	void drawingThreadMain();
 
 private:
 	SDL_Window* mWindow = nullptr;
 
+	// •`‰æƒXƒŒƒbƒh
+	std::thread mDrawingThread;
+	std::mutex mDrawingMutex;
+	std::atomic_bool mDrawingThreadAborted;
 };
 
 }

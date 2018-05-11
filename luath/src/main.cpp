@@ -14,5 +14,5 @@ int main(int argc, char** argv)
 	Log::setLogLevel(LogLevel::Debug);
 	
 	// スタート
-	return Luath::Application::instance().exec();
+	return Luath::Application::instance().exec(argc, argv);
 }

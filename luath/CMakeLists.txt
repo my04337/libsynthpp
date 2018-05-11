@@ -4,7 +4,12 @@ add_executable(
 	luath WIN32 
 	
 	src/main.cpp
+	
+	src/Base/Base.cpp
+
 	src/App/Application.cpp
+	src/App/FontCache.cpp
+
 	src/Window/MainWindow.cpp
 	)
 	

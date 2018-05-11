@@ -1,14 +1,28 @@
 ﻿#include <Luath/App/Application.hpp>
+#include <Luath/App/FontCache.hpp>
 #include <Luath/Window/MainWindow.hpp>
-
-#include <SDL.h>
-#include <SDL_ttf.h>
 
 using namespace LSP;
 using namespace Luath;
 
 Application::Application()
 {
+	// SDL 初期化
+	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+		Log::f(LOGF("Main : could not initialize SDL :" << SDL_GetError()));
+	}
+	if (TTF_Init() < 0) {
+		Log::f(LOGF("Main : could not initialize SDL_ttf :" << TTF_GetError()));
+	}
+
+	// 各種サービス初期化
+	mFontCache = std::make_unique<FontCache>();
+}
+Application::~Application()
+{
+	mFontCache.reset();
+	TTF_Quit();
+	SDL_Quit();
 }
 
 Application& Application::instance()
@@ -17,20 +31,8 @@ Application& Application::instance()
 	return app;
 }
 
-int Application::exec()
+int Application::exec(int argc, char** argv)
 {
-	// SDL 初期化
-	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-		Log::e(LOGF("Main : could not initialize SDL :" << SDL_GetError()));
-		return 1;
-	}
-	auto fin_act_sdl = finally([]{SDL_Quit();});
-	if (TTF_Init() < 0) {
-		Log::e(LOGF("Main : could not initialize SDL_ttf :" << TTF_GetError()));
-		return 1;
-	}
-	auto fin_act_sdl_ttf = finally([]{TTF_Quit();});
-
 
 	// ウィンドウ生成
 	Luath::Window::MainWindow main_window;
@@ -50,4 +52,10 @@ int Application::exec()
 		}
 	}
 	return 0;
+}
+
+FontCache& Application::fontCache()noexcept
+{
+	lsp_assert(mFontCache != nullptr);
+	return *mFontCache;
 }
