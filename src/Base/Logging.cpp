@@ -1,6 +1,10 @@
 ﻿#include <LSP/Base/Logging.hpp>
 #include <iostream>
 
+#ifdef WIN32
+#include <Windows.h>
+#endif
+
 using namespace LSP;
 
 static Log::time_point sLogStartTime = Log::clock::now();
@@ -180,7 +184,7 @@ std::ostringstream& Log::format_default(std::ostringstream& stream, Log::time_po
 	// スタックトレース
 	if(
 		stacks
-#ifdef Q_OS_WIN
+#ifdef WIN32
 		&& !IsDebuggerPresent() // デバッガ(CDB)がアタッチされていないときのみ有効 (低速なため)
 #endif
 		)
@@ -230,3 +234,45 @@ void StdOutLogger::flush()noexcept
 	std::cout.flush();
 }
 
+
+// ---
+#ifdef WIN32
+Win32::OutputDebugStringLogger::OutputDebugStringLogger(bool showHeader)
+	: mShowHeader(showHeader)
+{
+
+}
+
+Win32::OutputDebugStringLogger::~OutputDebugStringLogger()
+{
+	flush();
+}
+
+void Win32::OutputDebugStringLogger::write(Log::time_point time, LogLevel level, std::string_view log, const Log::StackTrace* stacks)noexcept
+{
+	std::ostringstream oss;
+	if(mShowHeader) {
+		Log::format_default(oss, time, level, log, stacks) << std::ends;
+	} else {
+		oss << log << std::ends;
+		if(
+			stacks
+#ifdef Q_OS_WIN
+			&& !IsDebuggerPresent() // デバッガ(CDB)がアタッチされていないときのみ有効 (低速なため)
+#endif
+			)
+		{
+			CppCallStack::printStackTrace(oss, *stacks);
+		}
+	}
+	OutputDebugString(oss.str().c_str());
+	OutputDebugString(TEXT("\r\n"));
+}
+
+
+void Win32::OutputDebugStringLogger::flush()noexcept
+{
+	// do-nothing
+}
+
+#endif

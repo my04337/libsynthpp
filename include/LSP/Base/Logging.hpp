@@ -177,4 +177,29 @@ private:
 	bool mShowHeader;
 };
 
+#ifdef WIN32
+namespace Win32
+{
+/// ロガー : OutputDebugString用
+class OutputDebugStringLogger final
+	: public ILogger
+{
+public:
+	OutputDebugStringLogger(bool showHeader=true);
+	virtual ~OutputDebugStringLogger();
+
+	// --- ILogger ---
+	// ログ書き込み (stacks!=null:スタックトレース出力)
+	virtual void write(Log::time_point time, LogLevel level, std::string_view log, const Log::StackTrace* stacks)noexcept override;
+	virtual void flush()noexcept override;
+
+	virtual bool isWritable(LogLevel level)const noexcept override { return true; }
+	virtual bool canOutputCriticalLog()const noexcept override { return true; }
+
+private:
+	bool mShowHeader;
+};
+}
+#endif
+
 }
