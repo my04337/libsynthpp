@@ -8,7 +8,7 @@ using namespace LSP;
 int main(int argc, char** argv)
 {
 	// ログ出力機構 セットアップ
-	StdOutLogger logger;
+	Win32::OutputDebugStringLogger logger;
 	Log::addLogger(&logger);
 	auto fin_act_logger = finally([&]{ Log::removeLogger(&logger); });
 	Log::setLogLevel(LogLevel::Debug);
