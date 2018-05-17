@@ -11,6 +11,8 @@ add_executable(
 	src/App/FontCache.cpp
 
 	src/Window/MainWindow.cpp
+
+	src/Widget/OscilloScope.cpp
 	)
 	
 	

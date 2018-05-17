@@ -4,14 +4,14 @@
 using namespace LSP;
 using namespace Luath;
 
-TexturedText::TexturedText()noexcept
+Text::Text()noexcept
 {
 }
-TexturedText::TexturedText(TexturedText&& d)noexcept
+Text::Text(Text&& d)noexcept
 {
 	*this = std::move(d);
 }
-TexturedText& TexturedText::operator=(TexturedText&& d)noexcept
+Text& Text::operator=(Text&& d)noexcept
 {
 	if(&d == this) return *this;
 
@@ -24,24 +24,27 @@ TexturedText& TexturedText::operator=(TexturedText&& d)noexcept
 	d.mHeight = 0;
 	return *this;
 }
-TexturedText::~TexturedText()
+Text::~Text()
 {
 	dispose();
 }
 
-TexturedText::TexturedText(SDL_Renderer* renderer, TTF_Font* font, const char* textU8, SDL_Color color)
+Text Text::make(SDL_Renderer* renderer, TTF_Font* font, const char* textU8, SDL_Color color)
 {
+	lsp_assert(renderer != nullptr);
 	lsp_assert(font != nullptr);
 	
 	auto surface = TTF_RenderUTF8_Blended(font, textU8, color);
-	if(!surface) return;
+	if(!surface) return {};
 	auto fin_act_free_surface = finally([&]{SDL_FreeSurface(surface);});
 
-	mTexture = SDL_CreateTextureFromSurface(renderer, surface);
-	mWidth = surface->w;
-	mHeight = surface->h;
+	Text text;
+	text.mTexture = SDL_CreateTextureFromSurface(renderer, surface);
+	text.mWidth = surface->w;
+	text.mHeight = surface->h;
+	return text; // NRVO
 }
-void TexturedText::dispose()
+void Text::dispose()
 {
 	if (mTexture) {
 		SDL_DestroyTexture(mTexture);

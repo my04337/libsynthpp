@@ -22,16 +22,19 @@ class FontCache;
 
 
 // 文字列描画ユーティリティクラス
-class TexturedText 
+class Text 
 	: non_copy
 {
 public:
-	TexturedText()noexcept;
-	TexturedText(SDL_Renderer* renderer, TTF_Font* font, const char* textU8, SDL_Color color);
-	~TexturedText();
+	static Text make(SDL_Renderer* renderer, TTF_Font* font, const char* textU8, SDL_Color color = SDL_Color{0,0,0,255});
 
-	TexturedText(TexturedText&&)noexcept;
-	TexturedText& operator=(TexturedText&&)noexcept;
+	Text()noexcept;
+	~Text();
+
+	Text(Text&&)noexcept;
+	Text& operator=(Text&&)noexcept;
+
+	void dispose();
 
 	operator SDL_Texture*()const noexcept { return mTexture; }
 	
@@ -39,8 +42,6 @@ public:
 	int height()const noexcept { return mHeight; }
 
 	SDL_Rect rect(int x, int y) { return {x, y, mWidth, mHeight}; }
-
-	void dispose();
 
 private:
 	SDL_Texture* mTexture = nullptr;

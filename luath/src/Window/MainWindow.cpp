@@ -71,7 +71,7 @@ void MainWindow::drawingThreadMain()
 
 	// FPS計算,表示用
 	size_t frames = 0;
-	TexturedText text_drawing_laod_average;
+	Text text_drawing_laod_average;
 	std::array<std::chrono::microseconds, FRAMES_PER_SECOND/4> drawing_time_history = {};
 	size_t drawing_time_index = drawing_time_history.size();
 
@@ -92,12 +92,12 @@ void MainWindow::drawingThreadMain()
 		SDL_RenderClear(renderer);
 
 		// 描画情報
-		TexturedText text_frames(renderer, default_font, FORMAT_STRING(u8"描画フレーム数 : " << frames).c_str(), COLOR_BLACK);
+		auto text_frames = Text::make(renderer, default_font, FORMAT_STRING(u8"描画フレーム数 : " << frames).c_str(), COLOR_BLACK);
 		SDL_RenderCopy(renderer, text_frames, nullptr, &text_frames.rect(0, 0));
 		if (drawing_time_index == drawing_time_history.size()) {
 			auto average_time = std::accumulate(drawing_time_history.cbegin(), drawing_time_history.cend(), std::chrono::microseconds(0)) / drawing_time_history.size();
 			auto load_average = (int)(100.0*average_time.count()/FRAME_INTERVAL.count());
-			text_drawing_laod_average = TexturedText(renderer, default_font, FORMAT_STRING(u8"描画負荷 : " << std::setfill('0') << std::right << std::setw(3) << load_average << u8"[%]").c_str(), COLOR_BLACK);
+			text_drawing_laod_average = Text::make(renderer, default_font, FORMAT_STRING(u8"描画負荷 : " << std::setfill('0') << std::right << std::setw(3) << load_average << u8"[%]").c_str(), COLOR_BLACK);
 			drawing_time_index = 0;
 		}		
 		SDL_RenderCopy(renderer, text_drawing_laod_average, nullptr, &text_drawing_laod_average.rect(0, 15));
