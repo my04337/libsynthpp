@@ -8,7 +8,7 @@ using namespace Luath;
 Application::Application()
 {
 	// SDL 初期化
-	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0) {
 		Log::f(LOGF("Main : could not initialize SDL :" << SDL_GetError()));
 	}
 	if (TTF_Init() < 0) {
