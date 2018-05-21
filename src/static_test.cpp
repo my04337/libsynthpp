@@ -8,7 +8,6 @@
 #include <LSP/MIDI/SMF/Parser.hpp>
 #include <LSP/MIDI/SMF/Sequencer.hpp>
 #include <LSP/MIDI/Synthesizer/ToneGenerator.hpp>
-#include <LSP/MIDI/Synthesizer/Tones/SimpleTone.hpp>
 #include <LSP/Audio/WavFileOutput.hpp>
 
 using namespace LSP;
@@ -95,6 +94,7 @@ void unused_function_f_eg() {
 	eg_double.update();
 }
 }
+
 // ############################################################################
 // ### Filter/BiquadraticFilter
 namespace 
@@ -103,18 +103,6 @@ namespace
 void unused_function_f_bq() {
 	Filter::BiquadraticFilter<float> bqf_float;
 	Filter::BiquadraticFilter<double> bqf_double;
-}
-}
-
-// ############################################################################
-// ### MIDI/Synthesizer/Tone
-namespace 
-{
-[[maybe_unused]]
-void unused_function_m_s_t() {
-	MIDI::Synthesizer::SimpleSinTone<int32_t, float> tone_int32({44100}, {}, {});
-	MIDI::Synthesizer::SimpleSinTone<float> tone_float({44100}, {}, {});
-	MIDI::Synthesizer::SimpleSinTone<double> tone_double({44100}, {}, {});
 }
 }
 
