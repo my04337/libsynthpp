@@ -10,6 +10,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zc:rvalueCast /Zc:strictStrings /Zc:inl
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Gy /Gw")
 
+set(LSP_SAMPLE_MIDI_PATH "${CMAKE_CURRENT_LIST_DIR}/test/files")
+
 # ---
 
 include(CMakeLists-SDL.txt)

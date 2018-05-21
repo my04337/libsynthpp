@@ -1,6 +1,7 @@
 ﻿#include <Luath/Window/MainWindow.hpp>
 #include <Luath/App/Application.hpp>
 #include <Luath/App/FontCache.hpp>
+#include <LSP/MIDI/SMF/Parser.hpp>
 
 #include <SDL_ttf.h>
 #include <array>
@@ -12,11 +13,15 @@ using namespace Luath::Window;
 
 MainWindow::MainWindow()
 	: mDrawingThreadAborted(false)
+	, mSequencer(mToneGenerator)
 {
 }
 
 MainWindow::~MainWindow()
 {
+	// シーケンサ停止
+	mSequencer.stop();
+
 	// 描画スレッド停止
 	mDrawingThreadAborted = true;
 	if (mDrawingThread.joinable()) {
@@ -46,10 +51,17 @@ bool MainWindow::initialize()
 	}
 	auto fail_act_destroy = finally([&]{SDL_DestroyWindow(window);});
 
+	// シーケンサセットアップ
+	auto midi_path = std::filesystem::current_path();
+	midi_path.append("assets/midi/Sample0.mid"); // 試験用MIDIファイル
+	auto parsed = MIDI::SMF::Parser::parse(midi_path);
+	mSequencer.load(std::move(parsed.second));
+
 	// OK
 	mWindow = window;
 	fail_act_destroy.reset();
 	mDrawingThread = std::thread([this]{drawingThreadMain();});
+	mSequencer.start();
 	return true;
 }
 void MainWindow::drawingThreadMain()
