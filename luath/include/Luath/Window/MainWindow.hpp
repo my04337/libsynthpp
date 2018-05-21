@@ -1,8 +1,8 @@
 ﻿#pragma once
 
 #include <Luath/Base/Base.hpp>
+#include <Luath/Syntesizer/ToneGenerator.hpp>
 #include <LSP/MIDI/SMF/Sequencer.hpp>
-#include <LSP/MIDI/Synthesizer/ToneGenerator.hpp>
 #include <LSP/Threading/EventSignal.hpp>
 
 namespace Luath::Window
@@ -29,7 +29,7 @@ private:
 	std::atomic_bool mDrawingThreadAborted;
 
 	// シーケンサ
-	LSP::MIDI::Synthesizer::ToneGenerator mToneGenerator;
+	Luath::Synthesizer::LuathToneGenerator mToneGenerator;
 	LSP::MIDI::SMF::Sequencer mSequencer;
 };
 
