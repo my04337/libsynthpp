@@ -105,6 +105,16 @@ uint32_t SDLOutput::getDeviceChannels()const noexcept
 	return static_cast<uint32_t>(mAudioSpec->channels);
 }
 
+SDLOutput::SampleFormat SDLOutput::getDeviceFormat()const noexcept
+{
+	lsp_assert(valid());
+	return mSampleFormat;
+}
+std::string_view SDLOutput::getDeviceFormatString()const noexcept
+{
+	lsp_assert(valid());
+	return getDeviceFormatString(mSampleFormat);
+}
 std::string_view SDLOutput::getDeviceFormatString(SampleFormat format)noexcept
 {
 	switch (format) {
