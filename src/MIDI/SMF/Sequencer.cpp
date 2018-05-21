@@ -11,6 +11,7 @@ using namespace LSP::MIDI::SMF;
 //  http://eternalwindows.jp/winmm/midi/midi00.html
 //  https://www.g200kg.com/jp/docs/dic/midi.html
 //  https://www.cs.cmu.edu/~music/cmsip/readings/Standard-MIDI-file-format-updated.pdf
+//   http://lib.roland.co.jp/support/jp/manuals/res/1810481/SC-8850_j8.pdf
 
 namespace 
 {
