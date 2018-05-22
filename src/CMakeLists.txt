@@ -19,6 +19,7 @@ add_library(
 	MIDI/Messages/Messages.cpp
 	MIDI/SMF/Parser.cpp
 	MIDI/SMF/Sequencer.cpp
+	MIDI/Synthesizer/ToneMapper.cpp
 
 	static_test.cpp
 )  
