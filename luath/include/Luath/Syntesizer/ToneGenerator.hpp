@@ -1,12 +1,14 @@
 ﻿#pragma once
 
 #include <Luath/Base/Base.hpp>
+#include <LSP/MIDI/Synthesizer/ToneMapper.hpp>
 #include <LSP/MIDI/Synthesizer/ToneGenerator.hpp>
 
 #include <array>
 
 namespace Luath::Synthesizer
 {
+using ToneId = LSP::MIDI::Synthesizer::ToneId;
 
 class LuathToneGenerator
 	: public LSP::MIDI::Synthesizer::ToneGenerator
@@ -25,6 +27,14 @@ public:
 	LuathToneGenerator(SystemType defaultSystemType = SystemType::GS);
 	~LuathToneGenerator();
 
+	// ノートオン
+	virtual void noteOn(uint8_t ch, uint8_t noteNo, uint8_t vel)override;
+
+	// ノートオフ
+	virtual void noteOff(uint8_t ch, uint8_t noteNo, uint8_t vel)override;
+
+	// コントロールチェンジ
+	virtual void controlChange(uint8_t ch, uint8_t ctrlNo, uint8_t value)override;
 
 	// システムエクスクルーシブ
 	virtual void sysExMessage(const uint8_t* data, size_t len)override;
@@ -33,15 +43,39 @@ protected:
 	void reset(SystemType type);
 
 private:
+	std::mutex mMutex;
 	SystemType mSystemType;
 
 	// all channel parameters
 
 	// per channel parameters
+
 	struct PerChannelParams 
 	{
 		void reset(SystemType type);
+		void resetPNState();
+		void onToneStateChanged(ToneId toneNo, uint32_t noteNo, uint8_t vel);
 		// ---
+
+		// チャネル番号(実行時に動的にセット)
+		uint8_t ch;
+
+		// 発音状態管理
+		LSP::MIDI::Synthesizer::ToneMapper toneMapper;
+
+		// コントロールチェンジ
+		uint8_t ccPrevCtrlNo;
+		uint8_t ccPrevValue;
+		float ccPan;		// CC:10 - パン [-1.0(左), +1.0(右)]
+		float ccExpression;	// CC:11 - エクスプレッション [0.0, +1.0]
+
+		// RPN/NRPN State
+		std::optional<uint8_t> ccRPN_MSB;
+		std::optional<uint8_t> ccRPN_LSB;
+		std::optional<uint8_t> ccNRPN_MSB;
+		std::optional<uint8_t> ccNRPN_LSB;
+		std::optional<uint8_t> ccDE_MSB;
+		std::optional<uint8_t> ccDE_LSB;
 
 		// RPN
 		int16_t rpnPitchBendSensitibity;
