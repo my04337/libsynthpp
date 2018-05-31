@@ -1,4 +1,5 @@
 ﻿#include <LSP/Threading/Thread.hpp>
+#include <LSP/Base/Logging.hpp>
 
 #ifdef WIN32
 #include <Windows.h>
@@ -9,9 +10,14 @@ using namespace LSP::Threading;
 
 void LSP::Threading::setThreadPriority(std::thread& th, Priority p)
 {
+	if(p == Priority::Inherited) return; // do-nothing
+
 #if defined(WIN32)
 	int nPriority = THREAD_PRIORITY_NORMAL;
 	switch (p) {
+	case Priority::Inherited:
+		lsp_assert(false);
+		break;
 	case Priority::Lowest:	
 		nPriority = THREAD_PRIORITY_LOWEST;
 		break;

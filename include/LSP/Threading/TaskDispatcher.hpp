@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include <LSP/Base/Base.hpp>
+#include <LSP/Threading/Thread.hpp>
 #include <LSP/Threading/Task.hpp>
 #include <LSP/Threading/EventSignal.hpp>
 
@@ -11,7 +12,7 @@ namespace LSP::Threading
 class TaskDispatcher final
 {
 public:
-	TaskDispatcher(size_t thread_num = 0);
+	TaskDispatcher(size_t thread_num = 0, Priority priority = Priority::Inherited);
 	~TaskDispatcher();
 
 	// タスク配給停止

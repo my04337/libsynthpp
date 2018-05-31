@@ -4,7 +4,7 @@
 
 using namespace LSP::Threading;
 
-TaskDispatcher::TaskDispatcher(size_t thread_num)
+TaskDispatcher::TaskDispatcher(size_t thread_num,  Priority priority)
 	: mAborted(false)
 {
 	// スレッド数が指定されなかった場合、自動的にスレッド数を決める
@@ -19,6 +19,7 @@ TaskDispatcher::TaskDispatcher(size_t thread_num)
 	for(size_t i=0; i<thread_num; ++i) {
 		auto th = std::make_unique<std::thread>([this]{_threadMain();});
 		auto thId = th->get_id();
+		setThreadPriority(*th, priority);
 		mThreads.emplace(thId, std::move(th));
 	}
 }

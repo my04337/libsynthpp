@@ -9,6 +9,8 @@ namespace LSP::Threading
 // スレッドの優先度
 enum class Priority
 {
+	Inherited, // default:do-nothing
+
 	Lowest,
 	BelowNormal,
 	Normal,
