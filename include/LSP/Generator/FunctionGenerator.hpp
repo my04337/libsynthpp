@@ -33,9 +33,8 @@ template<
 class FunctionGenerator final
 {
 public:
-	FunctionGenerator(uint32_t sampleFreq)
-		: mSampleFreq(sampleFreq)
-		, mType(WaveFormType::Ground)
+	FunctionGenerator()
+		: mType(WaveFormType::Ground)
 		, mPhase(0)
 		, mDutyRate(0)
 		, mSamplePerPhase(0)
@@ -49,32 +48,32 @@ public:
 		mType = WaveFormType::Ground;
 		mSamplePerPhase = 0;
 	}
-	void setSinWave(parameter_type freq)noexcept 
+	void setSinWave(uint32_t sampleFreq, parameter_type freq)noexcept 
 	{
 		auto freq_ = std::abs(freq);  // 負の位相はこの実装では対応不可
 		mType = WaveFormType::Sin;
-		mSamplePerPhase = 2.0f * PI<parameter_type> * (freq_ / mSampleFreq);
+		mSamplePerPhase = 2.0f * PI<parameter_type> * (freq_ / sampleFreq);
 		mPhase = 0;
 	}
-	void setSawWave(parameter_type freq)noexcept 
+	void setSawWave(uint32_t sampleFreq, parameter_type freq)noexcept 
 	{
 		auto freq_ = std::abs(freq);  // 負の位相はこの実装では対応不可
 		mType = WaveFormType::Saw;
-		mSamplePerPhase = 2.0f * PI<parameter_type> * (freq_ / mSampleFreq);
+		mSamplePerPhase = 2.0f * PI<parameter_type> * (freq_ / sampleFreq);
 		mPhase = 0;
 	}
-	void setTriangleWave(parameter_type freq)noexcept 
+	void setTriangleWave(uint32_t sampleFreq, parameter_type freq)noexcept 
 	{
 		auto freq_ = std::abs(freq);  // 負の位相はこの実装では対応不可
 		mType = WaveFormType::Triangle;
-		mSamplePerPhase = 2.0f * PI<parameter_type> * (freq_ / mSampleFreq);
+		mSamplePerPhase = 2.0f * PI<parameter_type> * (freq_ / sampleFreq);
 		mPhase = 0;
 	}
-	void setSquareWave(parameter_type freq, parameter_type duty=PI<parameter_type>)noexcept 
+	void setSquareWave(uint32_t sampleFreq, parameter_type freq, parameter_type duty=PI<parameter_type>)noexcept 
 	{
 		auto freq_ = std::abs(freq);  // 負の位相はこの実装では対応不可
 		mType = WaveFormType::Square;
-		mSamplePerPhase = 2.0f * PI<parameter_type> * (freq_ / mSampleFreq);
+		mSamplePerPhase = 2.0f * PI<parameter_type> * (freq_ / sampleFreq);
 		mDutyRate = duty;
 		mPhase = 0;
 	}
@@ -144,18 +143,7 @@ public:
 		return s;
 	}
 
-	Signal<sample_type> generate(size_t sz) 
-	{
-		Signal<sample_type> sig(sz);
-		auto data = sig.data();
-
-		for(size_t i=0; i<sz; ++i) data[i] = generate();
-
-		return sig; // NRVO
-	}
-
 private:
-	const uint32_t mSampleFreq;
 	WaveFormType mType;
 	parameter_type mPhase; // 現在の位相
 	parameter_type mDutyRate;	// デューティー比

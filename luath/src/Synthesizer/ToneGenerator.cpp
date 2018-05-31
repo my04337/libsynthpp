@@ -3,26 +3,21 @@
 using namespace LSP;
 using namespace Luath::Synthesizer;
 
-LuathToneGenerator::LuathToneGenerator(SystemType defaultSystemType)
+LuathToneGenerator::LuathToneGenerator(uint32_t sampleFreq, SystemType defaultSystemType)
 {
 	reset(defaultSystemType);
 
 	uint8_t ch = 0;
 	for (auto& params : mPerChannelParams) {
+		params.sampleFreq = sampleFreq;
 		params.ch = ch++;
-		params.toneMapper.setCallback(
-			[&params](ToneId toneNo, uint32_t noteNo, uint8_t vel) 
-		{ 
-			params.onToneStateChanged(toneNo, noteNo, vel);
-		});
 	}
 }
 LuathToneGenerator::~LuathToneGenerator()
 {
-	for (auto& params : mPerChannelParams) {
-		params.toneMapper.setCallback(nullptr);
-	}
 }
+// ---
+
 // 各種パラメータ類 リセット
 void LuathToneGenerator::reset(SystemType type)
 {
@@ -32,10 +27,12 @@ void LuathToneGenerator::reset(SystemType type)
 		params.reset(type);
 	}
 }
+float update();
 // チャネル毎パラメータ類 リセット
 void LuathToneGenerator::PerChannelParams::reset(SystemType type)
 {
-	toneMapper.reset();
+	_toneMapper.reset();
+	_tones.clear();
 
 	ccPan = 0.0f;
 	ccExpression = 1.0;
@@ -46,10 +43,13 @@ void LuathToneGenerator::PerChannelParams::reset(SystemType type)
 	rpnNull = false;
 	rpnPitchBendSensitibity = 2;
 
-	resetPNState();
+	resetParameterNumberState();
+
+	pcId = 0; // Acoustic Piano
+	updateProgram();
 }
 
-void LuathToneGenerator::PerChannelParams::resetPNState()
+void LuathToneGenerator::PerChannelParams::resetParameterNumberState()
 {
 	ccRPN_MSB.reset();
 	ccRPN_LSB.reset();
@@ -58,18 +58,94 @@ void LuathToneGenerator::PerChannelParams::resetPNState()
 	ccDE_MSB.reset();
 	ccDE_LSB.reset();
 }
-void LuathToneGenerator::PerChannelParams::onToneStateChanged(ToneId toneNo, uint32_t noteNo, uint8_t vel)
+void LuathToneGenerator::PerChannelParams::noteOn(uint32_t noteNo, uint8_t vel)
 {
-	if(vel > 0) {
-		LSP::Log::d(LOGF("NoteOn  : "<< (int)ch << " - " << (int)noteNo << " (id:" << toneNo.id() << ")"));
-	} else {
-		LSP::Log::d(LOGF("NoteOff : "<< (int)ch << " - " << (int)noteNo << " (id:" << toneNo.id() << ")"));
+	auto kvp = _toneMapper.noteOn(noteNo);
+	tone_noteOff(kvp.second);
+	tone_noteOn(kvp.first, noteNo, vel);
+}
+void LuathToneGenerator::PerChannelParams::noteOff(uint32_t noteNo)
+{
+	auto releasedTone = _toneMapper.noteOff(noteNo);
+	tone_noteOff(releasedTone);
+}
+void LuathToneGenerator::PerChannelParams::holdOn()
+{
+	_toneMapper.holdOn();
+}
+void LuathToneGenerator::PerChannelParams::holdOff()
+{
+	auto releasedTones = _toneMapper.holdOff();
+	for (auto& toneId : releasedTones) {
+		tone_noteOff(toneId);
 	}
+}
+std::pair<float,float> LuathToneGenerator::PerChannelParams::update()
+{
+	// オシレータからの出力はモノラル
+	float v = 0;
+	for (auto& kvp : _tones) {
+		v += kvp.second->update();
+	}
+	
+	// ステレオ化
+	float lch = v * ccPan;
+	float rch = v * (1.0f-ccPan);
 
+	return {lch, rch};
+}
+void LuathToneGenerator::PerChannelParams::updateProgram()
+{
+	static const LSP::Filter::EnvelopeGenerator<float>::Curve curveExp3(3.0f);
+	switch (pcId) {
+	case 0:	// Acoustic Piano
+	default:
+		pcEG.setParam((float)sampleFreq, curveExp3, 0.1f, 0.0f, 0.2f, 0.25f, -10.0f, 0.05f);
+		break;
+	}
+}
+void LuathToneGenerator::PerChannelParams::tone_noteOn(ToneId id, uint32_t noteNo, uint8_t vel)
+{
+	float toneVolume = (vel / 127.0f);
+	float freq = 440*log2((noteNo-69)/12.0f);
+
+	KeyboardTone::FunctionGenerator fg;
+	fg.setSinWave(sampleFreq, freq);
+	auto tone = std::make_unique<KeyboardTone>(fg, pcEG, toneVolume);
+	_tones.emplace(id, std::move(tone));
+}
+void LuathToneGenerator::PerChannelParams::tone_noteOff(ToneId id)
+{
+	auto found = _tones.find(id);
+	if(found == _tones.end()) return;
+	Tone& tone = *found->second;
+
+	tone.envolopeGenerator().noteOff();
 }
 
 // ---
 
+
+LSP::Signal<float> LuathToneGenerator::generate(size_t len)
+{
+	std::lock_guard lock(mMutex);
+
+	auto sig = LSP::Signal<float>::allocate(&mMem, 2, len);
+	for (size_t i = 0; i < len; ++i) {
+		float lch = 0, rch=0;
+		for (auto& params : mPerChannelParams) {
+			auto v = params.update();
+			lch += v.first;
+			rch += v.second;
+		}
+		auto frame = sig.frame(i);
+		frame[0] = lch;
+		frame[1] = rch;
+	}
+	return sig;
+}
+
+// ---
 // ノートオン
 void LuathToneGenerator::noteOn(uint8_t ch, uint8_t noteNo, uint8_t vel)
 {
@@ -77,14 +153,7 @@ void LuathToneGenerator::noteOn(uint8_t ch, uint8_t noteNo, uint8_t vel)
 	if(ch >= mPerChannelParams.size()) return;
 	auto& params = mPerChannelParams[ch];
 
-	if(vel > 0) {
-		// ノートオン
-		auto ToneId = params.toneMapper.noteOn(noteNo, vel);
-	} else {
-		// vel=0:ノートオフと見なす(MIDIの慣習)
-		params.toneMapper.noteOff(noteNo);
-	}
-
+	params.noteOn(noteNo, vel);
 }
 
 // ノートオフ
@@ -96,7 +165,7 @@ void LuathToneGenerator::noteOff(uint8_t ch, uint8_t noteNo, uint8_t vel)
 	if(ch >= mPerChannelParams.size()) return;
 	auto& params = mPerChannelParams[ch];
 
-	params.toneMapper.noteOff(noteNo);
+	params.noteOff(noteNo);
 }
 
 // コントロールチェンジ
@@ -111,17 +180,16 @@ void LuathToneGenerator::controlChange(uint8_t ch, uint8_t ctrlNo, uint8_t value
 	if(ch >= mPerChannelParams.size()) return;
 	auto& params = mPerChannelParams[ch];
 	
-	bool hold_RPN_NRPN_state = false;
 	bool apply_RPN_NRPN_state = false;
 
 	switch (ctrlNo) {
 	case 6: // Data Entry(MSB)
 		params.ccDE_MSB = value;
-		hold_RPN_NRPN_state = true;
+		params.ccDE_LSB.reset();
 		apply_RPN_NRPN_state = true; // MSBのみでよいものはこのタイミングで適用する
 		break;
 	case 10: // Pan(パン)
-		params.ccPan = (value / 127.0f)-0.5f;
+		params.ccPan = (value / 127.0f);
 		break;
 	case 11: // Expression(エクスプレッション)
 		params.ccExpression = (value / 127.0f);
@@ -132,34 +200,30 @@ void LuathToneGenerator::controlChange(uint8_t ch, uint8_t ctrlNo, uint8_t value
 		break;
 	case 64: // Hold1(ホールド1:ダンパーペダル)
 		if(value < 0x64) {
-			params.toneMapper.holdOff();
+			params.holdOff();
 		} else {
-			params.toneMapper.holdOn();
+			params.holdOn();
 		}
 		break;
 	case 98: // NRPN(LSB)
 		params.ccNRPN_LSB = value;
-		hold_RPN_NRPN_state = false;
 		break;
 	case 99: // NRPN(MSB)
-		params.resetPNState();
+		params.resetParameterNumberState();
 		params.ccNRPN_MSB = value;
 		break;
 	case 100: // RPN(LSB)
 		params.ccRPN_LSB = value;
-		hold_RPN_NRPN_state = false;
 		break;
 	case 101: // RPN(MSB)
-		params.resetPNState();
+		params.resetParameterNumberState();
 		params.ccRPN_MSB = value;
-		hold_RPN_NRPN_state = false;
 		break;
 	}
 
 	// RPN/NRPNの受付が禁止されている場合、適用しない
 	if (params.rpnNull) {
 		apply_RPN_NRPN_state = false;
-		hold_RPN_NRPN_state = false;
 	}
 
 	// RPN/NRPN 適用
@@ -167,13 +231,7 @@ void LuathToneGenerator::controlChange(uint8_t ch, uint8_t ctrlNo, uint8_t value
 		if (params.ccRPN_MSB == 0 && params.ccRPN_MSB == 0 && params.ccDE_MSB.has_value()) {
 			// ピッチベンドセンシティビティ: MSBのみ使用
 			params.rpnPitchBendSensitibity = params.ccDE_MSB.value();
-			hold_RPN_NRPN_state = false;
 		}
-	}
-
-	// RPN/NRPN リセット
-	if (!hold_RPN_NRPN_state) {
-		params.resetPNState();
 	}
 
 	params.ccPrevCtrlNo = ctrlNo;

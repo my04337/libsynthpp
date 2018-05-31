@@ -11,7 +11,8 @@ add_executable(
 	src/App/FontCache.cpp
 
 	src/Window/MainWindow.cpp
-
+	
+	src/Synthesizer/Tones.cpp
 	src/Synthesizer/ToneGenerator.cpp
 
 	src/Widget/OscilloScope.cpp

@@ -19,6 +19,7 @@ public:
 
 protected:
 	void drawingThreadMain();
+	void playingThreadMain();
 
 private:
 	SDL_Window* mWindow = nullptr;
@@ -27,6 +28,11 @@ private:
 	std::thread mDrawingThread;
 	std::mutex mDrawingMutex;
 	std::atomic_bool mDrawingThreadAborted;
+
+	// 演奏スレッド
+	std::thread mPlayingThread;
+	std::mutex mPlayingMutex;
+	std::atomic_bool mPlayingThreadAborted;
 
 	// シーケンサ
 	Luath::Synthesizer::LuathToneGenerator mToneGenerator;

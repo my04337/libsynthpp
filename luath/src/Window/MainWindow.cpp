@@ -11,8 +11,13 @@ using namespace LSP;
 using namespace Luath;
 using namespace Luath::Window;
 
+static constexpr uint32_t SAMPLE_FREQ = 44100;
+
+
 MainWindow::MainWindow()
 	: mDrawingThreadAborted(false)
+	, mPlayingThreadAborted(false)
+	, mToneGenerator(SAMPLE_FREQ)
 	, mSequencer(mToneGenerator)
 {
 }
@@ -21,6 +26,12 @@ MainWindow::~MainWindow()
 {
 	// シーケンサ停止
 	mSequencer.stop();
+
+	// 演奏スレッド停止
+	mPlayingThreadAborted = true;
+	if (mPlayingThread.joinable()) {
+		mPlayingThread.join();
+	}
 
 	// 描画スレッド停止
 	mDrawingThreadAborted = true;
@@ -61,8 +72,34 @@ bool MainWindow::initialize()
 	mWindow = window;
 	fail_act_destroy.reset();
 	mDrawingThread = std::thread([this]{drawingThreadMain();});
+	mPlayingThread = std::thread([this]{playingThreadMain();});
 	mSequencer.start();
 	return true;
+}
+void MainWindow::playingThreadMain()
+{
+	using clock = std::chrono::steady_clock;
+	constexpr int FRAMES_PER_SECOND = 60;
+	constexpr std::chrono::microseconds FRAME_INTERVAL(1'000'000/FRAMES_PER_SECOND);
+	auto& app = Application::instance();
+
+	constexpr SDL_Color COLOR_BLACK{0x00, 0x00, 0x00, 0xFF};
+	
+	// 描画ループ開始
+	clock::time_point prev_wake_up_time = clock::now() - FRAME_INTERVAL;
+	while (true) {
+		auto next_wake_up_time = prev_wake_up_time;
+		while(next_wake_up_time < clock::now()) next_wake_up_time += FRAME_INTERVAL;
+		std::this_thread::sleep_until(next_wake_up_time);
+		prev_wake_up_time = next_wake_up_time;
+
+		if(mPlayingThreadAborted) break;
+		// 演奏開始
+		std::lock_guard lock(mPlayingMutex);
+
+
+		// 演奏終了
+	}
 }
 void MainWindow::drawingThreadMain()
 {

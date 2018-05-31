@@ -5,80 +5,78 @@ using namespace LSP;
 using LSP::MIDI::Synthesizer::ToneId;
 using LSP::MIDI::Synthesizer::ToneMapper;
 
-
-void ToneMapper::setCallback(Callback callback) 
+size_t ToneMapper::count()const noexcept
 {
-	mCallback = std::move(callback); 
+	std::lock_guard lock(mMutex);
+
+	return mTones.size();
 }
 
 void ToneMapper::reset()
 {
+	std::lock_guard lock(mMutex);
+
 	mTones.clear();
 	mHold = false;
 }
-size_t ToneMapper::count()const noexcept
-{
-	return mTones.size();
-}
 
-ToneId ToneMapper::noteOn(uint32_t noteNo, uint8_t vel)
+std::pair</*on*/ToneId, /*off*/ToneId> ToneMapper::noteOn(uint32_t noteNo)
 {
+	std::lock_guard lock(mMutex);
+	std::pair</*on*/ToneId, /*off*/ToneId> ret;
+
 	// MEMO : 同じノート番号は同時に発音不可
-	_noteOff(noteNo);
-	return _noteOn(noteNo, vel);
+	ret.second = _noteOff(noteNo);
+	ret.first = _noteOn(noteNo);
+	return ret;
 }
-void ToneMapper::noteOff(uint32_t noteNo, bool force)
+ToneId ToneMapper::noteOff(uint32_t noteNo, bool force)
 {
+	std::lock_guard lock(mMutex);
+	
 	if (!mHold || force) {
-		_noteOff(noteNo);
+		return _noteOff(noteNo);
 	} else {
-		_setHold(noteNo);
+		auto found = mTones.find(noteNo);
+		if(found != mTones.end()) {
+			found->second.holding = true;
+		}
+		return {};
 	}
 }
 void ToneMapper::holdOn()
 {
+	std::lock_guard lock(mMutex);
+
 	mHold = true;
 }
-void ToneMapper::holdOff()
+std::vector</*off*/ToneId> ToneMapper::holdOff()
 {
-	_resetHold();
-}
-ToneId ToneMapper::_noteOn(uint32_t noteNo, uint8_t vel)
-{
-	lsp_assert(vel > 0);
-	auto id = ToneId::issue();
-	mTones[noteNo] = NoteInfo{id, false};
-	if(mCallback) mCallback(id, noteNo, vel);
-	return id;
-}
-void ToneMapper::_noteOff(uint32_t noteNo)
-{
-	auto found = mTones.find(noteNo);
-	if(found == mTones.end()) return;
-	_noteOff(found);
-}
-ToneMapper::ToneMap::iterator ToneMapper::_noteOff(ToneMapper::ToneMap::iterator iter)
-{
-	auto noteNo = iter->first;
-	auto id = iter->second.toneId;
-	auto retIter = mTones.erase(iter);
-	if(mCallback) mCallback(id, noteNo, 0);
-	return retIter;
-}
-void ToneMapper::_setHold(uint32_t noteNo)
-{
-	auto found = mTones.find(noteNo);
-	if(found == mTones.end()) return;
+	std::lock_guard lock(mMutex);
+	std::vector</*off*/ToneId> ret;
 
-	found->second.holding = true;
-}
-void ToneMapper::_resetHold()
-{
 	for (auto iter = mTones.begin(); iter != mTones.end();) {
 		if (iter->second.holding) {
-			iter = _noteOff(iter);
+			ret.push_back(iter->second.toneId);
+			iter = mTones.erase(iter);
 		} else {
 			++iter;
 		}
 	}
+	return ret; // NRVO;
+}
+ToneId ToneMapper::_noteOn(uint32_t noteNo)
+{
+	auto id = ToneId::issue();
+	mTones[noteNo] = NoteInfo{id, false};
+	return id;
+}
+ToneId ToneMapper::_noteOff(uint32_t noteNo)
+{
+	auto found = mTones.find(noteNo);
+	if(found == mTones.end()) return {};
+
+	auto ret = found->second.toneId;
+	mTones.erase(found);
+	return ret;
 }
