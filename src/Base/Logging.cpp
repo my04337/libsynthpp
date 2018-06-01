@@ -7,7 +7,7 @@
 
 using namespace LSP;
 
-static Log::time_point sLogStartTime = Log::clock::now();
+static clock::time_point sLogStartTime = clock::now();
 
 std::recursive_mutex Log::sMutex;
 LogLevel Log::sLogLevel = LogLevel::Silent;
@@ -93,7 +93,7 @@ void Log::write(LogLevel level, const Writer& writer, const StackTrace* stacks, 
 	if(!hasLogger) return;
 
 	// ログ時刻生成
-	auto time = Log::clock::now();
+	auto time = clock::now();
 
 	// ログ生成
 	std::ostringstream oss;
@@ -142,7 +142,7 @@ void Log::flush()noexcept
 	}
 }
 
-std::ostringstream& Log::format_default(std::ostringstream& stream, Log::time_point time, LogLevel level, std::string_view log, const Log::StackTrace* stacks)noexcept
+std::ostringstream& Log::format_default(std::ostringstream& stream, clock::time_point time, LogLevel level, std::string_view log, const Log::StackTrace* stacks)noexcept
 {
 	const std::thread::id thid = std::this_thread::get_id();
 
@@ -208,7 +208,7 @@ StdOutLogger::~StdOutLogger()
 	flush();
 }
 
-void StdOutLogger::write(Log::time_point time, LogLevel level, std::string_view log, const Log::StackTrace* stacks)noexcept
+void StdOutLogger::write(clock::time_point time, LogLevel level, std::string_view log, const Log::StackTrace* stacks)noexcept
 {
 	std::ostringstream oss;
 	if(mShowHeader) {
@@ -248,7 +248,7 @@ Win32::OutputDebugStringLogger::~OutputDebugStringLogger()
 	flush();
 }
 
-void Win32::OutputDebugStringLogger::write(Log::time_point time, LogLevel level, std::string_view log, const Log::StackTrace* stacks)noexcept
+void Win32::OutputDebugStringLogger::write(clock::time_point time, LogLevel level, std::string_view log, const Log::StackTrace* stacks)noexcept
 {
 	std::ostringstream oss;
 	if(mShowHeader) {

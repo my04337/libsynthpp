@@ -1,7 +1,7 @@
 ﻿#pragma once
 
 #include <Luath/Base/Base.hpp>
-#include <LSP/MIDI/Synthesizer/Tone.hpp>
+#include <LSP/MIDI/Controller.hpp>
 #include <LSP/Generator/FunctionGenerator.hpp>
 #include <LSP/Filter/EnvelopeGenerator.hpp>
 
@@ -10,7 +10,7 @@
 
 namespace Luath::Synthesizer
 {
-using ToneId = LSP::MIDI::Synthesizer::ToneId;
+using ToneId = LSP::MIDI::ToneId;
 
 // トーン(あるチャネルの1音) - 基底クラス
 class Tone
@@ -28,17 +28,17 @@ public:
 
 };
 
-// 鍵盤楽器型トーン
-class KeyboardTone
+// 単純なトーン実装
+class SimpleTone
 	: public Tone
 {
 public:
 	using FunctionGenerator = LSP::Generator::FunctionGenerator<float>;
 
 public:
-	KeyboardTone(const FunctionGenerator& fg, const LSP::Filter::EnvelopeGenerator<float>& channelEG, float toneVolume);
+	SimpleTone(const FunctionGenerator& fg, const LSP::Filter::EnvelopeGenerator<float>& eg, float toneVolume);
 
-	virtual ~KeyboardTone() {}
+	virtual ~SimpleTone() {}
 
 	virtual float update()override;
 	virtual EnvelopeGenerator& envolopeGenerator()override { return mEG; }

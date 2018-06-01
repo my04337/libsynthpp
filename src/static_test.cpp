@@ -5,9 +5,8 @@
 #include <LSP/Filter/BiquadraticFilter.hpp>
 #include <LSP/Filter/EnvelopeGenerator.hpp>
 #include <LSP/MIDI/Message.hpp>
-#include <LSP/MIDI/SMF/Parser.hpp>
-#include <LSP/MIDI/SMF/Sequencer.hpp>
-#include <LSP/MIDI/Synthesizer/ToneGenerator.hpp>
+#include <LSP/MIDI/Parser.hpp>
+#include <LSP/MIDI/Sequencer.hpp>
 #include <LSP/Audio/WavFileOutput.hpp>
 
 using namespace LSP;

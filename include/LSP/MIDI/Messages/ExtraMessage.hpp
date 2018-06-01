@@ -15,8 +15,6 @@ public:
 		: mSongPos(pos)
 	{}
 
-	virtual void play(Synthesizer::ToneGenerator& gen)const override {} // TODO 未実装
-
 private:
 	uint16_t mSongPos;
 };
@@ -30,8 +28,6 @@ public:
 		: mSongId(songId)
 	{}
 
-	virtual void play(Synthesizer::ToneGenerator& gen)const override {} // TODO 未実装
-
 private:
 	uint8_t mSongId;
 };
@@ -41,7 +37,6 @@ class TuneRequest
 	: public Message
 {
 public:
-	virtual void play(Synthesizer::ToneGenerator& gen)const override {} // TODO 未実装
 };
 
 /// タイミングクロック
@@ -49,7 +44,6 @@ class TimingClock
 	: public Message
 {
 public:
-	virtual void play(Synthesizer::ToneGenerator& gen)const override {} // TODO 未実装
 };
 
 /// スタート
@@ -57,7 +51,6 @@ class Start
 	: public Message
 {
 public:
-	virtual void play(Synthesizer::ToneGenerator& gen)const override {} // TODO 未実装
 };
 
 /// コンティニュー
@@ -65,7 +58,6 @@ class Continue
 	: public Message
 {
 public:
-	virtual void play(Synthesizer::ToneGenerator& gen)const override {} // TODO 未実装
 };
 
 /// ストップ
@@ -73,7 +65,6 @@ class Stop
 	: public Message
 {
 public:
-	virtual void play(Synthesizer::ToneGenerator& gen)const override {} // TODO 未実装
 };
 
 /// アクティブセンシング
@@ -81,7 +72,6 @@ class ActiveSensing
 	: public Message
 {
 public:
-	virtual void play(Synthesizer::ToneGenerator& gen)const override {} // TODO 未実装
 };
 
 

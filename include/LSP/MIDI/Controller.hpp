@@ -1,12 +1,16 @@
 ﻿#pragma once
 
 #include <LSP/Base/Base.hpp>
-#include <LSP/MIDI/Synthesizer/Tone.hpp>
+#include <LSP/Base/Id.hpp>
+#include <LSP/MIDI/Message.hpp>
 
-namespace LSP::MIDI::Synthesizer
+namespace LSP::MIDI
 {
+// トーン識別番号
+struct _tone_id_tag {};
+using ToneId = issuable_id_base_t<_tone_id_tag>;
 
-// ノートOn/Off情報から各トーンへマッピングする (スレッドセーフクラス)
+// ノートOn/Off情報から各トーンへマッピングする
 class ToneMapper
 	: non_copy
 {
@@ -25,7 +29,7 @@ public:
 	void holdOn();
 	// ダンパーペダル オフ
 	std::vector</*off*/ToneId> holdOff();
-	
+
 private:
 	struct NoteInfo {
 		ToneId toneId;			// トーンId
@@ -37,9 +41,24 @@ private:
 	ToneId _noteOff(uint32_t noteNo);
 
 private:
-	mutable std::mutex mMutex;
 	ToneMap mTones;
 	bool mHold=false; // ダンパーペダル 状態
 };
+
+
+// MIDIシンセサイザ コントローラ
+class Controller
+	: non_copy_move
+{
+public:
+	virtual ~Controller() {}
+
+	// MIDIメッセージ受信コールバック : メッセージ類は蓄積される
+	virtual void onMidiMessageReceived(clock::time_point msg_time, const std::shared_ptr<const Message>& msg) = 0;
+
+	// 指定時刻時点までに蓄積されたMIDIメッセージを解釈します
+	virtual void play(clock::time_point until) = 0;
+};
+
 
 }

@@ -1,11 +1,11 @@
-﻿#include <LSP/MIDI/SMF/Sequencer.hpp>
+﻿#include <LSP/MIDI/Sequencer.hpp>
+#include <LSP/MIDI/Controller.hpp>
 #include <LSP/Threading/Thread.hpp>
 #include <LSP/Threading/EventSignal.hpp>
 #include <LSP/Base/Logging.hpp>
 
 using namespace LSP;
 using namespace LSP::MIDI;
-using namespace LSP::MIDI::SMF;
 
 // 参考URL :
 //  http://eternalwindows.jp/winmm/midi/midi00.html
@@ -72,8 +72,8 @@ std::optional<uint32_t> read_variable(std::istream& s)
 }
 
 
-Sequencer::Sequencer(Synthesizer::ToneGenerator& gen)
-	: mToneGenerator(gen)
+Sequencer::Sequencer(Controller& controller)
+	: mController(controller)
 	, mPlayThreadAbortFlag(false)
 {
 }
@@ -119,7 +119,6 @@ bool Sequencer::isPlaying()const
 
 void Sequencer::playThreadMain(const Body& smfBody)
 {
-	using clock = std::chrono::steady_clock;
 	auto start_time = clock::now();
 	auto next_message_iter = smfBody.cbegin();
 
@@ -137,8 +136,7 @@ void Sequencer::playThreadMain(const Body& smfBody)
 				next_message_time = msg_time;
 				break;
 			}
-
-			msg->play(mToneGenerator);
+			mController.onMidiMessageReceived(msg_time,  msg);
 			++next_message_iter;
 		}
 

@@ -2,7 +2,7 @@
 
 #include <Luath/Base/Base.hpp>
 #include <Luath/Syntesizer/ToneGenerator.hpp>
-#include <LSP/MIDI/SMF/Sequencer.hpp>
+#include <LSP/MIDI/Sequencer.hpp>
 #include <LSP/Threading/EventSignal.hpp>
 
 namespace Luath::Window
@@ -35,8 +35,8 @@ private:
 	std::atomic_bool mPlayingThreadAborted;
 
 	// シーケンサ
-	Luath::Synthesizer::LuathToneGenerator mToneGenerator;
-	LSP::MIDI::SMF::Sequencer mSequencer;
+	Luath::Synthesizer::ToneGenerator mToneGenerator;
+	LSP::MIDI::Sequencer mSequencer;
 };
 
 }

@@ -12,7 +12,7 @@ add_executable(
 
 	src/Window/MainWindow.cpp
 	
-	src/Synthesizer/Tones.cpp
+	src/Synthesizer/Tone.cpp
 	src/Synthesizer/ToneGenerator.cpp
 
 	src/Widget/OscilloScope.cpp

@@ -1,18 +1,19 @@
 ﻿#pragma once
 
 #include <LSP/Base/Base.hpp>
-#include <LSP/MIDI/SMF/Parser.hpp>
+#include <LSP/MIDI/Parser.hpp>
 
 
-namespace LSP::MIDI::SMF
+namespace LSP::MIDI
 {
-
+class Controller;
 
 // SMFファイル シーケンサ
 class Sequencer
+	: non_copy_move
 {
 public:
-	Sequencer(Synthesizer::ToneGenerator& gen);
+	Sequencer(Controller& controller);
 	~Sequencer();
 
 	// SMFを開きます
@@ -32,7 +33,7 @@ private:
 	void playThreadMain(const Body& messages);
 
 private:
-	Synthesizer::ToneGenerator& mToneGenerator;
+	Controller& mController;
 	std::thread mPlayThread;
 	std::atomic_bool mPlayThreadAbortFlag;
 	Body mSmfBody;

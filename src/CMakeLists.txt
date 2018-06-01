@@ -16,10 +16,9 @@ add_library(
 	Audio/WasapiOutput.cpp
 	Audio/SDLOutput.cpp
 	
-	MIDI/Messages/Messages.cpp
-	MIDI/SMF/Parser.cpp
-	MIDI/SMF/Sequencer.cpp
-	MIDI/Synthesizer/ToneMapper.cpp
+	MIDI/Parser.cpp
+	MIDI/Sequencer.cpp
+	MIDI/Controller.cpp
 
 	static_test.cpp
 )  

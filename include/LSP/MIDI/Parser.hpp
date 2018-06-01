@@ -3,7 +3,7 @@
 #include <LSP/Base/Base.hpp>
 #include <LSP/MIDI/Message.hpp>
 
-namespace LSP::MIDI::SMF
+namespace LSP::MIDI
 {
 
 // SMFファイル 時間形式

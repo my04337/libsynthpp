@@ -6,15 +6,6 @@
 namespace LSP::MIDI::Messages
 {
 
-// チャネルボイスメッセージ : 特定チャネル向けメッセージ
-class ChannelVoiceMessage
-	: public Message
-{
-public:
-	// 対象チャネルを取得します
-	virtual uint8_t channel()const noexcept = 0;
-};
-
 /// ノートオン
 class NoteOn
 	: public ChannelVoiceMessage
@@ -24,8 +15,9 @@ public:
 		: mChannel(ch), mNoteNo(noteNo), mVelocity(vel)
 	{}
 
-	virtual uint8_t channel()const noexcept final { return mChannel; } 
-	virtual void play(Synthesizer::ToneGenerator& gen)const override;
+	uint8_t channel()const noexcept override final { return mChannel; } 
+	uint8_t noteNo()const noexcept { return mNoteNo; }
+	uint8_t velocity()const noexcept { return mVelocity; }
 
 private:
 	uint8_t mChannel;
@@ -42,8 +34,8 @@ public:
 		: mChannel(ch), mNoteNo(noteNo), mVelocity(vel)
 	{}
 
-	virtual uint8_t channel()const noexcept final { return mChannel; } 
-	virtual void play(Synthesizer::ToneGenerator& gen)const override;
+	uint8_t channel()const noexcept override final { return mChannel; } 
+	uint8_t noteNo()const noexcept { return mNoteNo; }
 
 private:
 	uint8_t mChannel;
@@ -60,8 +52,7 @@ public:
 		: mChannel(ch), mNoteNo(noteNo), mValue(value)
 	{}
 
-	virtual uint8_t channel()const noexcept final { return mChannel; } 
-	virtual void play(Synthesizer::ToneGenerator& gen)const override {} // TODO 未実装
+	uint8_t channel()const noexcept override final { return mChannel; } 
 
 private:
 	uint8_t mChannel;
@@ -78,8 +69,7 @@ public:
 		: mChannel(ch), mCtrlNo(ctrlNo), mValue(value)
 	{}
 
-	virtual uint8_t channel()const noexcept final { return mChannel; } 
-	virtual void play(Synthesizer::ToneGenerator& gen)const override;
+	uint8_t channel()const noexcept override final { return mChannel; } 
 
 private:
 	uint8_t mChannel;
@@ -96,8 +86,7 @@ public:
 		: mChannel(ch), mProgNo(progNo)
 	{}
 
-	virtual uint8_t channel()const noexcept final { return mChannel; } 
-	virtual void play(Synthesizer::ToneGenerator& gen)const override;
+	uint8_t channel()const noexcept override final { return mChannel; } 
 
 private:
 	uint8_t mChannel;
@@ -113,8 +102,7 @@ public:
 		: mChannel(ch), mValue(value)
 	{}
 
-	virtual uint8_t channel()const noexcept final { return mChannel; } 
-	virtual void play(Synthesizer::ToneGenerator& gen)const override {} // TODO 未実装
+	uint8_t channel()const noexcept override final { return mChannel; } 
 
 private:
 	uint8_t mChannel;
@@ -130,8 +118,7 @@ public:
 		: mChannel(ch), mPitch(pitch)
 	{}
 
-	virtual uint8_t channel()const noexcept final { return mChannel; } 
-	virtual void play(Synthesizer::ToneGenerator& gen)const override;
+	uint8_t channel()const noexcept override final { return mChannel; } 
 
 private:
 	uint8_t mChannel;

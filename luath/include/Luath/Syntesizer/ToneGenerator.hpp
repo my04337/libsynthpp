@@ -1,20 +1,16 @@
 ﻿#pragma once
 
 #include <Luath/Base/Base.hpp>
-#include <Luath/Syntesizer/Tones.hpp>
-#include <LSP/Generator/FunctionGenerator.hpp>
-#include <LSP/MIDI/Synthesizer/ToneMapper.hpp>
-#include <LSP/MIDI/Synthesizer/ToneGenerator.hpp>
+#include <Luath/Syntesizer/Tone.hpp>
+#include <LSP/MIDI/Controller.hpp>
+#include <LSP/MIDI/Message.hpp>
 
 #include <array>
 
 namespace Luath::Synthesizer
 {
-using ToneId = LSP::MIDI::Synthesizer::ToneId;
-
-class LuathToneGenerator
-	: public LSP::MIDI::Synthesizer::ToneGenerator
-	, non_copy_move
+class ToneGenerator
+	: public LSP::MIDI::Controller
 {
 public:
 	static constexpr uint8_t MAX_CHANNELS = 16;
@@ -26,30 +22,40 @@ public:
 	};
 
 public:
-	LuathToneGenerator(uint32_t sampleFreq, SystemType defaultSystemType = SystemType::GS);
-	~LuathToneGenerator();
+	ToneGenerator(uint32_t sampleFreq, SystemType defaultSystemType = SystemType::GS);
+	~ToneGenerator();
 
-	// ノートオン
-	virtual void noteOn(uint8_t ch, uint8_t noteNo, uint8_t vel)override;
 
-	// ノートオフ
-	virtual void noteOff(uint8_t ch, uint8_t noteNo, uint8_t vel)override;
+	// MIDIメッセージを受信した際にコールバックされます。
+	virtual void onMidiMessageReceived(clock::time_point received_time, const std::shared_ptr<const LSP::MIDI::Message>& msg)override;
 
-	// コントロールチェンジ
-	virtual void controlChange(uint8_t ch, uint8_t ctrlNo, uint8_t value)override;
+	// 指定時刻時点までに蓄積されたMIDIメッセージを解釈します
+	virtual void play(clock::time_point until)override;
 
-	// システムエクスクルーシブ
-	virtual void sysExMessage(const uint8_t* data, size_t len)override;
-
-	// ---
+	// MIDIメッセージを元に演奏した結果を返します
 	LSP::Signal<float> generate(size_t len);
 
 protected:
+	void dispatchMessage(const std::shared_ptr<const LSP::MIDI::Message>& msg);
 	void reset(SystemType type);
 
+	// ノートオン
+	void noteOn(clock::time_point played_time, uint8_t ch, uint8_t noteNo, uint8_t vel);
+
+	// ノートオフ
+	void noteOff(clock::time_point played_time, uint8_t ch, uint8_t noteNo, uint8_t vel);
+
+	// コントロールチェンジ
+	void controlChange(clock::time_point played_time, uint8_t ch, uint8_t ctrlNo, uint8_t value);
+
+	// システムエクスクルーシブ
+	void sysExMessage(clock::time_point played_time, const uint8_t* data, size_t len);
+
+
 private:
-	std::mutex mMutex;
+	std::recursive_mutex mMutex;
 	std::pmr::synchronized_pool_resource mMem;
+	std::deque<std::pair<clock::time_point, std::shared_ptr<const LSP::MIDI::Message>>> mMessageQueue;
 	SystemType mSystemType;
 
 	// all channel parameters
@@ -58,6 +64,8 @@ private:
 
 	struct PerChannelParams 
 	{
+		PerChannelParams(uint32_t sampleFreq, uint8_t ch);
+
 		void reset(SystemType type);
 		void resetParameterNumberState();
 		// ---
@@ -71,9 +79,9 @@ private:
 
 
 		// サンプリング周波数(実行時に動的にセット)
-		uint32_t sampleFreq;
+		const uint32_t sampleFreq;
 		// チャネル番号(実行時に動的にセット)
-		uint8_t ch;
+		const uint8_t ch;
 		
 		// プログラムチェンジ
 		uint8_t pcId; // プログラムId
@@ -104,11 +112,11 @@ private:
 
 	private:
 		// 発音状態管理
-		LSP::MIDI::Synthesizer::ToneMapper _toneMapper;
+		LSP::MIDI::ToneMapper _toneMapper;
 		// トーン生成
 		std::unordered_map<ToneId, std::unique_ptr<Tone>> _tones;
 	};
-	std::array<PerChannelParams, MAX_CHANNELS> mPerChannelParams;
+	std::vector<PerChannelParams> mPerChannelParams;
 };
 
 }

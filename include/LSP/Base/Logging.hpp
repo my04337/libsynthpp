@@ -67,12 +67,6 @@ class Log final
 	: non_copy_move
 {
 public:
-	// ログで使用するクロック
-	using clock = std::chrono::steady_clock;
-	// ログで使用するタイムポイント
-	using time_point = clock::time_point;
-	// ログで使用する期間
-	using duration = clock::duration;
 	// ログ出力式
 	using Writer = std::function<void(std::ostringstream& o)>;
 	// スタックトレース
@@ -119,7 +113,7 @@ public:
 	static void write(LogLevel level, const Writer& writer, const StackTrace* stacks=nullptr, bool isCritical=false)noexcept;
 
 	// 標準ログフォーマットで整形 [例外送出禁止]
-	static std::ostringstream& format_default(std::ostringstream& out, Log::time_point time, LogLevel level, std::string_view log, const Log::StackTrace* stacks)noexcept;
+	static std::ostringstream& format_default(std::ostringstream& out, clock::time_point time, LogLevel level, std::string_view log, const Log::StackTrace* stacks)noexcept;
 
 	// スタックトレースの取得 [常用禁止 : 使用するとデバッグ情報が大量に読み込まれメインメモリを圧迫するため]
 	static StackTrace getStackTrace(size_t skipFrames=0)noexcept;
@@ -148,7 +142,7 @@ public:
 	virtual bool isWritable(LogLevel level)const noexcept = 0;
 
 	// ログ書き込み (stacks!=null:スタックトレース出力)
-	virtual void write(Log::time_point time, LogLevel level, std::string_view log, const Log::StackTrace* stacks)noexcept = 0;
+	virtual void write(clock::time_point time, LogLevel level, std::string_view log, const Log::StackTrace* stacks)noexcept = 0;
 
 	// 書き込み済みログのフラッシュ
 	virtual void flush()noexcept = 0;
@@ -167,7 +161,7 @@ public:
 
 	// --- ILogger ---
 	// ログ書き込み (stacks!=null:スタックトレース出力)
-	virtual void write(Log::time_point time, LogLevel level, std::string_view log, const Log::StackTrace* stacks)noexcept override;
+	virtual void write(clock::time_point time, LogLevel level, std::string_view log, const Log::StackTrace* stacks)noexcept override;
 	virtual void flush()noexcept override;
 
 	virtual bool isWritable(LogLevel level)const noexcept override { return true; }
@@ -190,7 +184,7 @@ public:
 
 	// --- ILogger ---
 	// ログ書き込み (stacks!=null:スタックトレース出力)
-	virtual void write(Log::time_point time, LogLevel level, std::string_view log, const Log::StackTrace* stacks)noexcept override;
+	virtual void write(clock::time_point time, LogLevel level, std::string_view log, const Log::StackTrace* stacks)noexcept override;
 	virtual void flush()noexcept override;
 
 	virtual bool isWritable(LogLevel level)const noexcept override { return true; }

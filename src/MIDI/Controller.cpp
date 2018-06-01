@@ -1,39 +1,30 @@
-ï»¿#include <LSP/MIDI/Synthesizer/ToneMapper.hpp>
-#include <LSP/Base/Logging.hpp>
+#include <LSP/MIDI/Controller.hpp>
 
 using namespace LSP;
-using LSP::MIDI::Synthesizer::ToneId;
-using LSP::MIDI::Synthesizer::ToneMapper;
+using namespace LSP::MIDI;
 
 size_t ToneMapper::count()const noexcept
 {
-	std::lock_guard lock(mMutex);
-
 	return mTones.size();
 }
 
 void ToneMapper::reset()
 {
-	std::lock_guard lock(mMutex);
-
 	mTones.clear();
 	mHold = false;
 }
 
 std::pair</*on*/ToneId, /*off*/ToneId> ToneMapper::noteOn(uint32_t noteNo)
 {
-	std::lock_guard lock(mMutex);
 	std::pair</*on*/ToneId, /*off*/ToneId> ret;
 
-	// MEMO : åŒã˜ãƒãƒ¼ãƒˆç•ªå·ã¯åŒæ™‚ã«ç™ºéŸ³ä¸å¯
+	// MEMO : “¯‚¶ƒm[ƒg”Ô†‚Í“¯‚É”­‰¹•s‰Â
 	ret.second = _noteOff(noteNo);
 	ret.first = _noteOn(noteNo);
 	return ret;
 }
 ToneId ToneMapper::noteOff(uint32_t noteNo, bool force)
 {
-	std::lock_guard lock(mMutex);
-	
 	if (!mHold || force) {
 		return _noteOff(noteNo);
 	} else {
@@ -46,13 +37,10 @@ ToneId ToneMapper::noteOff(uint32_t noteNo, bool force)
 }
 void ToneMapper::holdOn()
 {
-	std::lock_guard lock(mMutex);
-
 	mHold = true;
 }
 std::vector</*off*/ToneId> ToneMapper::holdOff()
 {
-	std::lock_guard lock(mMutex);
 	std::vector</*off*/ToneId> ret;
 
 	for (auto iter = mTones.begin(); iter != mTones.end();) {

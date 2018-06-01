@@ -1,7 +1,7 @@
 ﻿#include <Luath/Window/MainWindow.hpp>
 #include <Luath/App/Application.hpp>
 #include <Luath/App/FontCache.hpp>
-#include <LSP/MIDI/SMF/Parser.hpp>
+#include <LSP/MIDI/Parser.hpp>
 
 #include <SDL_ttf.h>
 #include <array>
@@ -65,7 +65,7 @@ bool MainWindow::initialize()
 	// シーケンサセットアップ
 	auto midi_path = std::filesystem::current_path();
 	midi_path.append("assets/midi/Sample0.mid"); // 試験用MIDIファイル
-	auto parsed = MIDI::SMF::Parser::parse(midi_path);
+	auto parsed = MIDI::Parser::parse(midi_path);
 	mSequencer.load(std::move(parsed.second));
 
 	// OK
@@ -78,7 +78,6 @@ bool MainWindow::initialize()
 }
 void MainWindow::playingThreadMain()
 {
-	using clock = std::chrono::steady_clock;
 	constexpr int FRAMES_PER_SECOND = 60;
 	constexpr std::chrono::microseconds FRAME_INTERVAL(1'000'000/FRAMES_PER_SECOND);
 	auto& app = Application::instance();
@@ -103,7 +102,6 @@ void MainWindow::playingThreadMain()
 }
 void MainWindow::drawingThreadMain()
 {
-	using clock = std::chrono::steady_clock;
 	constexpr int FRAMES_PER_SECOND = 60;
 	constexpr std::chrono::microseconds FRAME_INTERVAL(1'000'000/FRAMES_PER_SECOND);
 	auto& app = Application::instance();

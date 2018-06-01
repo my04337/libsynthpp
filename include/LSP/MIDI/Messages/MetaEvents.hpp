@@ -11,7 +11,6 @@ class MetaEvent
 	: public Message
 {
 public:	
-	virtual void play(Synthesizer::ToneGenerator& gen)const override final { /* do-nothing */ }
 };
 
 // セットテンポ

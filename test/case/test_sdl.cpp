@@ -27,7 +27,7 @@ void Test::SDLTest::exec()
 		const size_t bufferFrameCount = wo.getDeviceBufferFrameCount();
 		const int64_t maxFrameCount = static_cast<int64_t>(sampleFreq * 1.5); 
 
-		Generator::FunctionGenerator<sample_type> osc(sampleFreq);
+		Generator::FunctionGenerator<sample_type> osc;
 		Filter::EnvelopeGenerator<sample_type> eg;
 		std::pmr::unsynchronized_pool_resource mem;
 		int64_t time = 0;

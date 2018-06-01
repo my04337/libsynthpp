@@ -1,4 +1,4 @@
-﻿#include <LSP/MIDI/SMF/Parser.hpp>
+﻿#include <LSP/MIDI/Parser.hpp>
 #include <LSP/MIDI/Message.hpp>
 #include <LSP/MIDI/Messages/BasicMessage.hpp>
 #include <LSP/MIDI/Messages/ExtraMessage.hpp>
@@ -11,7 +11,6 @@
 
 using namespace LSP;
 using namespace LSP::MIDI;
-using namespace LSP::MIDI::SMF;
 
 // 参考URL :
 //  http://eternalwindows.jp/winmm/midi/midi00.html

@@ -2,8 +2,6 @@
 
 #include <LSP/Base/Base.hpp>
 
-namespace LSP::MIDI::Synthesizer { class ToneGenerator; }
-
 namespace LSP::MIDI
 {
 
@@ -13,8 +11,17 @@ class Message
 public:
 	virtual ~Message() {}
 
-	// メッセージを処理します
-	virtual void play(Synthesizer::ToneGenerator& gen)const = 0;
+	// 対象チャネルを取得します (0xff=非チャネルボイスメッセージ
+	virtual uint8_t channel()const noexcept { return std::numeric_limits<uint8_t>::max(); }
+};
+
+// チャネルボイスメッセージ : 特定チャネル向けメッセージ
+class ChannelVoiceMessage
+	: public Message
+{
+public:
+	// 対象チャネルを取得します
+	virtual uint8_t channel()const noexcept = 0;
 };
 
 }

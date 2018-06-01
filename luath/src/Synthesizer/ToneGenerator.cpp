@@ -3,23 +3,22 @@
 using namespace LSP;
 using namespace Luath::Synthesizer;
 
-LuathToneGenerator::LuathToneGenerator(uint32_t sampleFreq, SystemType defaultSystemType)
+ToneGenerator::ToneGenerator(uint32_t sampleFreq, SystemType defaultSystemType)
 {
-	reset(defaultSystemType);
-
-	uint8_t ch = 0;
-	for (auto& params : mPerChannelParams) {
-		params.sampleFreq = sampleFreq;
-		params.ch = ch++;
+	mPerChannelParams.reserve(MAX_CHANNELS);
+	for (uint8_t ch = 0; ch < MAX_CHANNELS; ++ch) {
+		mPerChannelParams.emplace_back(sampleFreq, ch);
 	}
+
+	reset(defaultSystemType);
 }
-LuathToneGenerator::~LuathToneGenerator()
+ToneGenerator::~ToneGenerator()
 {
 }
 // ---
 
 // 各種パラメータ類 リセット
-void LuathToneGenerator::reset(SystemType type)
+void ToneGenerator::reset(SystemType type)
 {
 	mSystemType = type;
 
@@ -27,9 +26,14 @@ void LuathToneGenerator::reset(SystemType type)
 		params.reset(type);
 	}
 }
-float update();
+
+ToneGenerator::PerChannelParams::PerChannelParams(uint32_t sampleFreq, uint8_t ch)
+	: sampleFreq(sampleFreq)
+	, ch(ch)
+{
+}
 // チャネル毎パラメータ類 リセット
-void LuathToneGenerator::PerChannelParams::reset(SystemType type)
+void ToneGenerator::PerChannelParams::reset(SystemType type)
 {
 	_toneMapper.reset();
 	_tones.clear();
@@ -49,7 +53,7 @@ void LuathToneGenerator::PerChannelParams::reset(SystemType type)
 	updateProgram();
 }
 
-void LuathToneGenerator::PerChannelParams::resetParameterNumberState()
+void ToneGenerator::PerChannelParams::resetParameterNumberState()
 {
 	ccRPN_MSB.reset();
 	ccRPN_LSB.reset();
@@ -58,29 +62,29 @@ void LuathToneGenerator::PerChannelParams::resetParameterNumberState()
 	ccDE_MSB.reset();
 	ccDE_LSB.reset();
 }
-void LuathToneGenerator::PerChannelParams::noteOn(uint32_t noteNo, uint8_t vel)
+void ToneGenerator::PerChannelParams::noteOn(uint32_t noteNo, uint8_t vel)
 {
 	auto kvp = _toneMapper.noteOn(noteNo);
 	tone_noteOff(kvp.second);
 	tone_noteOn(kvp.first, noteNo, vel);
 }
-void LuathToneGenerator::PerChannelParams::noteOff(uint32_t noteNo)
+void ToneGenerator::PerChannelParams::noteOff(uint32_t noteNo)
 {
 	auto releasedTone = _toneMapper.noteOff(noteNo);
 	tone_noteOff(releasedTone);
 }
-void LuathToneGenerator::PerChannelParams::holdOn()
+void ToneGenerator::PerChannelParams::holdOn()
 {
 	_toneMapper.holdOn();
 }
-void LuathToneGenerator::PerChannelParams::holdOff()
+void ToneGenerator::PerChannelParams::holdOff()
 {
 	auto releasedTones = _toneMapper.holdOff();
 	for (auto& toneId : releasedTones) {
 		tone_noteOff(toneId);
 	}
 }
-std::pair<float,float> LuathToneGenerator::PerChannelParams::update()
+std::pair<float,float> ToneGenerator::PerChannelParams::update()
 {
 	// オシレータからの出力はモノラル
 	float v = 0;
@@ -94,7 +98,7 @@ std::pair<float,float> LuathToneGenerator::PerChannelParams::update()
 
 	return {lch, rch};
 }
-void LuathToneGenerator::PerChannelParams::updateProgram()
+void ToneGenerator::PerChannelParams::updateProgram()
 {
 	static const LSP::Filter::EnvelopeGenerator<float>::Curve curveExp3(3.0f);
 	switch (pcId) {
@@ -104,17 +108,17 @@ void LuathToneGenerator::PerChannelParams::updateProgram()
 		break;
 	}
 }
-void LuathToneGenerator::PerChannelParams::tone_noteOn(ToneId id, uint32_t noteNo, uint8_t vel)
+void ToneGenerator::PerChannelParams::tone_noteOn(ToneId id, uint32_t noteNo, uint8_t vel)
 {
 	float toneVolume = (vel / 127.0f);
 	float freq = 440*log2((noteNo-69)/12.0f);
 
-	KeyboardTone::FunctionGenerator fg;
+	SimpleTone::FunctionGenerator fg;
 	fg.setSinWave(sampleFreq, freq);
-	auto tone = std::make_unique<KeyboardTone>(fg, pcEG, toneVolume);
+	auto tone = std::make_unique<SimpleTone>(fg, pcEG, toneVolume);
 	_tones.emplace(id, std::move(tone));
 }
-void LuathToneGenerator::PerChannelParams::tone_noteOff(ToneId id)
+void ToneGenerator::PerChannelParams::tone_noteOff(ToneId id)
 {
 	auto found = _tones.find(id);
 	if(found == _tones.end()) return;
@@ -126,7 +130,7 @@ void LuathToneGenerator::PerChannelParams::tone_noteOff(ToneId id)
 // ---
 
 
-LSP::Signal<float> LuathToneGenerator::generate(size_t len)
+LSP::Signal<float> ToneGenerator::generate(size_t len)
 {
 	std::lock_guard lock(mMutex);
 
@@ -145,9 +149,31 @@ LSP::Signal<float> LuathToneGenerator::generate(size_t len)
 	return sig;
 }
 
+// MIDIメッセージ受信コールバック
+void ToneGenerator::onMidiMessageReceived(clock::time_point msg_time, const std::shared_ptr<const MIDI::Message>& msg){
+	std::lock_guard lock(mMutex);
+	mMessageQueue.emplace_back(msg_time, msg);
+}
+// 指定時刻時点までに蓄積されたMIDIメッセージを解釈します
+void ToneGenerator::play(clock::time_point until)
+{
+	std::lock_guard lock(mMutex);
+	while (!mMessageQueue.empty()) {
+		const auto& [msg_time, msg] = mMessageQueue.front();
+		if(msg_time >= until) break;
+
+		dispatchMessage(msg);
+
+		mMessageQueue.pop_front();
+	}
+}
+void ToneGenerator::dispatchMessage(const std::shared_ptr<const MIDI::Message>& msg)
+{
+	// TODO 
+}
 // ---
 // ノートオン
-void LuathToneGenerator::noteOn(uint8_t ch, uint8_t noteNo, uint8_t vel)
+void ToneGenerator::noteOn(clock::time_point played_time, uint8_t ch, uint8_t noteNo, uint8_t vel)
 {
 	std::lock_guard lock(mMutex);
 	if(ch >= mPerChannelParams.size()) return;
@@ -157,7 +183,7 @@ void LuathToneGenerator::noteOn(uint8_t ch, uint8_t noteNo, uint8_t vel)
 }
 
 // ノートオフ
-void LuathToneGenerator::noteOff(uint8_t ch, uint8_t noteNo, uint8_t vel)
+void ToneGenerator::noteOff(clock::time_point played_time, uint8_t ch, uint8_t noteNo, uint8_t vel)
 {
 	// MEMO 一般に、MIDIではノートオフの代わりにvel=0のノートオンが使用されるため、呼ばれることは希である
 
@@ -169,7 +195,7 @@ void LuathToneGenerator::noteOff(uint8_t ch, uint8_t noteNo, uint8_t vel)
 }
 
 // コントロールチェンジ
-void LuathToneGenerator::controlChange(uint8_t ch, uint8_t ctrlNo, uint8_t value)
+void ToneGenerator::controlChange(clock::time_point played_time, uint8_t ch, uint8_t ctrlNo, uint8_t value)
 {
 	// 参考 : http://quelque.sakura.ne.jp/midi_cc.html
 
@@ -239,7 +265,7 @@ void LuathToneGenerator::controlChange(uint8_t ch, uint8_t ctrlNo, uint8_t value
 }
 
 // システムエクスクルーシブ
-void LuathToneGenerator::sysExMessage(const uint8_t* data, size_t len)
+void ToneGenerator::sysExMessage(clock::time_point played_time, const uint8_t* data, size_t len)
 {
 	std::lock_guard lock(mMutex);
 

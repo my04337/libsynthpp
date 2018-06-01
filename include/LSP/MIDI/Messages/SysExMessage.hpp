@@ -15,8 +15,6 @@ public:
 		: mData(std::move(data))
 	{}
 
-	virtual void play(Synthesizer::ToneGenerator& gen)const override;
-
 private:
 	std::vector<uint8_t> mData;
 };
