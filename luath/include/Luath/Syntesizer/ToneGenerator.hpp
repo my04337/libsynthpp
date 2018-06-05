@@ -13,6 +13,7 @@ class ToneGenerator
 	: public LSP::MIDI::Controller
 {
 public:
+	using RenderingCallback = std::function<void(LSP::Signal<float>&& sig)>;
 	static constexpr uint8_t MAX_CHANNELS = 16;
 	enum class SystemType
 	{
@@ -20,45 +21,58 @@ public:
 		GM2,
 		GS,
 	};
+	struct Statistics {
+		uint64_t created_samples;
+		float rendering_load_average;
+	};
 
 public:
 	ToneGenerator(uint32_t sampleFreq, SystemType defaultSystemType = SystemType::GS);
 	~ToneGenerator();
 
+	void dispose();
 
 	// MIDIメッセージを受信した際にコールバックされます。
 	virtual void onMidiMessageReceived(clock::time_point received_time, const std::shared_ptr<const LSP::MIDI::Message>& msg)override;
+	
+	// 音声が生成された際のコールバック関数を設定します
+	void setRenderingCallback(RenderingCallback cb);
 
-	// 指定時刻時点までに蓄積されたMIDIメッセージを解釈します
-	virtual void play(clock::time_point until)override;
-
-	// MIDIメッセージを元に演奏した結果を返します
-	LSP::Signal<float> generate(size_t len);
+	// 統計情報を取得します
+	Statistics queryStatistics()const;
 
 protected:
+	void playingThreadMain();
 	void dispatchMessage(const std::shared_ptr<const LSP::MIDI::Message>& msg);
 	void reset(SystemType type);
 
 	// ノートオン
-	void noteOn(clock::time_point played_time, uint8_t ch, uint8_t noteNo, uint8_t vel);
+	void noteOn(uint8_t ch, uint8_t noteNo, uint8_t vel);
 
 	// ノートオフ
-	void noteOff(clock::time_point played_time, uint8_t ch, uint8_t noteNo, uint8_t vel);
+	void noteOff(uint8_t ch, uint8_t noteNo);
 
 	// コントロールチェンジ
-	void controlChange(clock::time_point played_time, uint8_t ch, uint8_t ctrlNo, uint8_t value);
+	void controlChange(uint8_t ch, uint8_t ctrlNo, uint8_t value);
 
 	// システムエクスクルーシブ
-	void sysExMessage(clock::time_point played_time, const uint8_t* data, size_t len);
+	void sysExMessage(const uint8_t* data, size_t len);
 
+	// MIDIメッセージを元に演奏した結果を返します
+	LSP::Signal<float> generate(size_t len);
 
 private:
-	std::recursive_mutex mMutex;
+	mutable std::mutex mMutex;
 	std::pmr::synchronized_pool_resource mMem;
 	std::deque<std::pair<clock::time_point, std::shared_ptr<const LSP::MIDI::Message>>> mMessageQueue;
-	SystemType mSystemType;
-
+	uint64_t mCreatedSampleCount;
+	clock::duration mCycleTime;
+	clock::duration mRenderingTime;
+	RenderingCallback mRenderingCallback;
+	
 	// all channel parameters
+	const uint32_t mSampleFreq;
+	SystemType mSystemType;
 
 	// per channel parameters
 
@@ -117,6 +131,11 @@ private:
 		std::unordered_map<ToneId, std::unique_ptr<Tone>> _tones;
 	};
 	std::vector<PerChannelParams> mPerChannelParams;
+
+
+	// 演奏スレッド
+	std::thread mPlayingThread;
+	std::atomic_bool mPlayingThreadAborted;
 };
 
 }

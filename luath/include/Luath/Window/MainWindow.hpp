@@ -4,6 +4,7 @@
 #include <Luath/Syntesizer/ToneGenerator.hpp>
 #include <LSP/MIDI/Sequencer.hpp>
 #include <LSP/Threading/EventSignal.hpp>
+#include <LSP/Audio/SDLOutput.hpp>
 
 namespace Luath::Window
 {
@@ -19,7 +20,7 @@ public:
 
 protected:
 	void drawingThreadMain();
-	void playingThreadMain();
+	void onRenderedSignal(LSP::Signal<float>&& sig);
 
 private:
 	SDL_Window* mWindow = nullptr;
@@ -29,10 +30,8 @@ private:
 	std::mutex mDrawingMutex;
 	std::atomic_bool mDrawingThreadAborted;
 
-	// 演奏スレッド
-	std::thread mPlayingThread;
-	std::mutex mPlayingMutex;
-	std::atomic_bool mPlayingThreadAborted;
+	// 再生用ストリーム
+	LSP::Audio::SDLOutput mOutput;
 
 	// シーケンサ
 	Luath::Synthesizer::ToneGenerator mToneGenerator;

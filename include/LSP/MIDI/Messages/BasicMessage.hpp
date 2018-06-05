@@ -70,6 +70,8 @@ public:
 	{}
 
 	uint8_t channel()const noexcept override final { return mChannel; } 
+	uint8_t ctrlNo()const noexcept { return mCtrlNo; }
+	uint8_t value()const noexcept { return mValue; }
 
 private:
 	uint8_t mChannel;

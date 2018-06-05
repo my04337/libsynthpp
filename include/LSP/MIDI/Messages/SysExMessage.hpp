@@ -15,6 +15,8 @@ public:
 		: mData(std::move(data))
 	{}
 
+	const std::vector<uint8_t>& data()const noexcept { return mData; }
+
 private:
 	std::vector<uint8_t> mData;
 };

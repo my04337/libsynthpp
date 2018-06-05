@@ -1,9 +1,15 @@
 ﻿#include <Luath/Syntesizer/ToneGenerator.hpp>
+#include <LSP/MIDI/Messages/BasicMessage.hpp>
+#include <LSP/MIDI/Messages/SysExMessage.hpp>
 
 using namespace LSP;
+using namespace LSP::MIDI::Messages;
 using namespace Luath::Synthesizer;
 
 ToneGenerator::ToneGenerator(uint32_t sampleFreq, SystemType defaultSystemType)
+	: mCreatedSampleCount(0)
+	, mSampleFreq(sampleFreq)
+	, mPlayingThreadAborted(false)
 {
 	mPerChannelParams.reserve(MAX_CHANNELS);
 	for (uint8_t ch = 0; ch < MAX_CHANNELS; ++ch) {
@@ -11,12 +17,81 @@ ToneGenerator::ToneGenerator(uint32_t sampleFreq, SystemType defaultSystemType)
 	}
 
 	reset(defaultSystemType);
+
+	mPlayingThread = std::thread([this]{playingThreadMain();});
 }
 ToneGenerator::~ToneGenerator()
 {
+	dispose();
 }
+
+void ToneGenerator::dispose()
+{
+	std::lock_guard lock(mMutex);
+
+	// コールバック破棄
+	mRenderingCallback = nullptr;
+
+	// 演奏スレッド停止
+	mPlayingThreadAborted = true;
+	if (mPlayingThread.joinable()) {
+		mPlayingThread.join();
+	}
+}
+
 // ---
 
+void ToneGenerator::playingThreadMain()
+{
+	constexpr auto RENDERING_INTERVAL = std::chrono::milliseconds(10);
+
+
+	// 演奏ループ開始
+	const clock::time_point begin_time = clock::now() - RENDERING_INTERVAL;
+	clock::time_point prev_wake_up_time = begin_time;
+	uint64_t prev_sample_pos = 0;
+	while (true) {
+		auto cycleBegin = clock::now();
+		auto next_wake_up_time = prev_wake_up_time;
+		while(next_wake_up_time < clock::now()) next_wake_up_time += RENDERING_INTERVAL;
+		std::this_thread::sleep_until(next_wake_up_time);
+		uint64_t next_sample_pos = std::chrono::duration_cast<std::chrono::microseconds>(next_wake_up_time-begin_time).count() * (uint64_t)mSampleFreq / 1000000ull;
+		uint64_t need_samples = next_sample_pos - prev_sample_pos;
+		prev_wake_up_time = next_wake_up_time;
+		prev_sample_pos = next_sample_pos;
+
+		if(mPlayingThreadAborted) break;
+
+		// 演奏開始
+		std::lock_guard lock(mMutex);
+
+
+		// 指定時刻時点までに蓄積されたMIDIメッセージを解釈
+		size_t msg_count = 0;
+		while (!mMessageQueue.empty()) {
+			const auto& [msg_time, msg] = mMessageQueue.front();
+			if(msg_time >= prev_wake_up_time) break;
+			dispatchMessage(msg);
+			++msg_count;
+			mMessageQueue.pop_front();
+		}
+	
+		// 信号生成
+		// TODO マルチスレッドで生成出来るようにしたい
+		auto beginRendering = clock::now();
+		auto sig = generate(need_samples);
+		auto endRendering = clock::now();
+		mRenderingTime = endRendering - beginRendering;
+		mCreatedSampleCount += sig.frames();
+
+		if(mRenderingCallback) mRenderingCallback(std::move(sig));
+		
+		// 演奏終了
+		auto cycleEnd = clock::now();
+		mCycleTime = cycleEnd - cycleBegin;
+	}
+}
+// ---
 // 各種パラメータ類 リセット
 void ToneGenerator::reset(SystemType type)
 {
@@ -66,7 +141,9 @@ void ToneGenerator::PerChannelParams::noteOn(uint32_t noteNo, uint8_t vel)
 {
 	auto kvp = _toneMapper.noteOn(noteNo);
 	tone_noteOff(kvp.second);
-	tone_noteOn(kvp.first, noteNo, vel);
+	if(vel > 0) {
+		tone_noteOn(kvp.first, noteNo, vel);
+	}
 }
 void ToneGenerator::PerChannelParams::noteOff(uint32_t noteNo)
 {
@@ -88,8 +165,13 @@ std::pair<float,float> ToneGenerator::PerChannelParams::update()
 {
 	// オシレータからの出力はモノラル
 	float v = 0;
-	for (auto& kvp : _tones) {
-		v += kvp.second->update();
+	for (auto iter = _tones.begin(); iter != _tones.end();) {
+		v += iter->second->update();
+		if (iter->second->envolopeGenerator().isBusy()) {
+			++iter;
+		} else {
+			iter = _tones.erase(iter);
+		}
 	}
 	
 	// ステレオ化
@@ -104,14 +186,14 @@ void ToneGenerator::PerChannelParams::updateProgram()
 	switch (pcId) {
 	case 0:	// Acoustic Piano
 	default:
-		pcEG.setParam((float)sampleFreq, curveExp3, 0.1f, 0.0f, 0.2f, 0.25f, -10.0f, 0.05f);
+		pcEG.setParam((float)sampleFreq, curveExp3, 0.05f, 0.0f, 0.2f, 0.25f, -1.0f, 0.05f);
 		break;
 	}
 }
 void ToneGenerator::PerChannelParams::tone_noteOn(ToneId id, uint32_t noteNo, uint8_t vel)
 {
 	float toneVolume = (vel / 127.0f);
-	float freq = 440*log2((noteNo-69)/12.0f);
+	float freq = 440*exp2(((float)noteNo-69.0f)/12.0f);
 
 	SimpleTone::FunctionGenerator fg;
 	fg.setSinWave(sampleFreq, freq);
@@ -132,8 +214,7 @@ void ToneGenerator::PerChannelParams::tone_noteOff(ToneId id)
 
 LSP::Signal<float> ToneGenerator::generate(size_t len)
 {
-	std::lock_guard lock(mMutex);
-
+	constexpr float MASTER_VOLUME = 0.125f;
 	auto sig = LSP::Signal<float>::allocate(&mMem, 2, len);
 	for (size_t i = 0; i < len; ++i) {
 		float lch = 0, rch=0;
@@ -143,39 +224,54 @@ LSP::Signal<float> ToneGenerator::generate(size_t len)
 			rch += v.second;
 		}
 		auto frame = sig.frame(i);
-		frame[0] = lch;
-		frame[1] = rch;
+		frame[0] = lch * MASTER_VOLUME;
+		frame[1] = rch * MASTER_VOLUME;
 	}
 	return sig;
 }
 
 // MIDIメッセージ受信コールバック
-void ToneGenerator::onMidiMessageReceived(clock::time_point msg_time, const std::shared_ptr<const MIDI::Message>& msg){
+void ToneGenerator::onMidiMessageReceived(clock::time_point msg_time, const std::shared_ptr<const MIDI::Message>& msg)
+{
 	std::lock_guard lock(mMutex);
 	mMessageQueue.emplace_back(msg_time, msg);
 }
-// 指定時刻時点までに蓄積されたMIDIメッセージを解釈します
-void ToneGenerator::play(clock::time_point until)
+// 音声が生成された際のコールバック関数を設定します
+void ToneGenerator::setRenderingCallback(RenderingCallback cb)
 {
 	std::lock_guard lock(mMutex);
-	while (!mMessageQueue.empty()) {
-		const auto& [msg_time, msg] = mMessageQueue.front();
-		if(msg_time >= until) break;
+	mRenderingCallback = std::move(cb);
+}
+// 統計情報を取得します
+ToneGenerator::Statistics ToneGenerator::queryStatistics()const
+{
+	std::lock_guard lock(mMutex);
 
-		dispatchMessage(msg);
-
-		mMessageQueue.pop_front();
+	Statistics s;
+	s.created_samples = mCreatedSampleCount;
+	if (mCycleTime.count() > 0) {
+		s.rendering_load_average = (float)mRenderingTime.count() / (float)mCycleTime.count();
+	} else {
+		s.rendering_load_average = 0;
 	}
+	return s;
 }
 void ToneGenerator::dispatchMessage(const std::shared_ptr<const MIDI::Message>& msg)
 {
-	// TODO 
+	if (auto m = std::dynamic_pointer_cast<const NoteOn>(msg)) {
+		noteOn(m->channel(), m->noteNo(), m->velocity());
+	} else if (auto m = std::dynamic_pointer_cast<const NoteOff>(msg)) {
+		noteOff(m->channel(), m->noteNo());
+	} else if (auto m = std::dynamic_pointer_cast<const ControlChange>(msg)) {
+		controlChange(m->channel(), m->ctrlNo(), m->value());
+	} else if (auto m = std::dynamic_pointer_cast<const SysExMessage>(msg)) {
+		sysExMessage(&m->data()[0], m->data().size());
+	}
 }
 // ---
 // ノートオン
-void ToneGenerator::noteOn(clock::time_point played_time, uint8_t ch, uint8_t noteNo, uint8_t vel)
+void ToneGenerator::noteOn(uint8_t ch, uint8_t noteNo, uint8_t vel)
 {
-	std::lock_guard lock(mMutex);
 	if(ch >= mPerChannelParams.size()) return;
 	auto& params = mPerChannelParams[ch];
 
@@ -183,11 +279,10 @@ void ToneGenerator::noteOn(clock::time_point played_time, uint8_t ch, uint8_t no
 }
 
 // ノートオフ
-void ToneGenerator::noteOff(clock::time_point played_time, uint8_t ch, uint8_t noteNo, uint8_t vel)
+void ToneGenerator::noteOff(uint8_t ch, uint8_t noteNo)
 {
 	// MEMO 一般に、MIDIではノートオフの代わりにvel=0のノートオンが使用されるため、呼ばれることは希である
 
-	std::lock_guard lock(mMutex);
 	if(ch >= mPerChannelParams.size()) return;
 	auto& params = mPerChannelParams[ch];
 
@@ -195,13 +290,9 @@ void ToneGenerator::noteOff(clock::time_point played_time, uint8_t ch, uint8_t n
 }
 
 // コントロールチェンジ
-void ToneGenerator::controlChange(clock::time_point played_time, uint8_t ch, uint8_t ctrlNo, uint8_t value)
+void ToneGenerator::controlChange(uint8_t ch, uint8_t ctrlNo, uint8_t value)
 {
 	// 参考 : http://quelque.sakura.ne.jp/midi_cc.html
-
-	std::lock_guard lock(mMutex);
-
-	// ---
 	
 	if(ch >= mPerChannelParams.size()) return;
 	auto& params = mPerChannelParams[ch];
@@ -265,12 +356,8 @@ void ToneGenerator::controlChange(clock::time_point played_time, uint8_t ch, uin
 }
 
 // システムエクスクルーシブ
-void ToneGenerator::sysExMessage(clock::time_point played_time, const uint8_t* data, size_t len)
+void ToneGenerator::sysExMessage(const uint8_t* data, size_t len)
 {
-	std::lock_guard lock(mMutex);
-
-	// ---
-
 	size_t pos = 0;
 	auto peek = [&](size_t offset = 0) -> std::optional<uint8_t> {
 		if(pos+offset >= len) return {};

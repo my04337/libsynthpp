@@ -16,22 +16,24 @@ static constexpr uint32_t SAMPLE_FREQ = 44100;
 
 MainWindow::MainWindow()
 	: mDrawingThreadAborted(false)
-	, mPlayingThreadAborted(false)
 	, mToneGenerator(SAMPLE_FREQ)
 	, mSequencer(mToneGenerator)
+	, mOutput(SAMPLE_FREQ, 2, Audio::SDLOutput::SampleFormat::Float32)
 {
+	lsp_assert(mOutput.start());
+	mToneGenerator.setRenderingCallback([this](LSP::Signal<float>&& sig){onRenderedSignal(std::move(sig));});
 }
 
 MainWindow::~MainWindow()
 {
+	// 再生停止
+	mOutput.stop();
+
 	// シーケンサ停止
 	mSequencer.stop();
-
-	// 演奏スレッド停止
-	mPlayingThreadAborted = true;
-	if (mPlayingThread.joinable()) {
-		mPlayingThread.join();
-	}
+	
+	// トーンジェネレータ停止
+	mToneGenerator.dispose();
 
 	// 描画スレッド停止
 	mDrawingThreadAborted = true;
@@ -64,7 +66,7 @@ bool MainWindow::initialize()
 
 	// シーケンサセットアップ
 	auto midi_path = std::filesystem::current_path();
-	midi_path.append("assets/midi/Sample0.mid"); // 試験用MIDIファイル
+	midi_path.append("assets/midi/brambles_vsc3.mid"); // 試験用MIDIファイル
 	auto parsed = MIDI::Parser::parse(midi_path);
 	mSequencer.load(std::move(parsed.second));
 
@@ -72,33 +74,8 @@ bool MainWindow::initialize()
 	mWindow = window;
 	fail_act_destroy.reset();
 	mDrawingThread = std::thread([this]{drawingThreadMain();});
-	mPlayingThread = std::thread([this]{playingThreadMain();});
 	mSequencer.start();
 	return true;
-}
-void MainWindow::playingThreadMain()
-{
-	constexpr int FRAMES_PER_SECOND = 60;
-	constexpr std::chrono::microseconds FRAME_INTERVAL(1'000'000/FRAMES_PER_SECOND);
-	auto& app = Application::instance();
-
-	constexpr SDL_Color COLOR_BLACK{0x00, 0x00, 0x00, 0xFF};
-	
-	// 描画ループ開始
-	clock::time_point prev_wake_up_time = clock::now() - FRAME_INTERVAL;
-	while (true) {
-		auto next_wake_up_time = prev_wake_up_time;
-		while(next_wake_up_time < clock::now()) next_wake_up_time += FRAME_INTERVAL;
-		std::this_thread::sleep_until(next_wake_up_time);
-		prev_wake_up_time = next_wake_up_time;
-
-		if(mPlayingThreadAborted) break;
-		// 演奏開始
-		std::lock_guard lock(mPlayingMutex);
-
-
-		// 演奏終了
-	}
 }
 void MainWindow::drawingThreadMain()
 {
@@ -149,6 +126,13 @@ void MainWindow::drawingThreadMain()
 		}		
 		SDL_RenderCopy(renderer, text_drawing_laod_average, nullptr, &text_drawing_laod_average.rect(0, 15));
 		
+		// 演奏情報
+		auto tgStatistics = mToneGenerator.queryStatistics();
+		auto text_samples = Text::make(renderer, default_font, FORMAT_STRING(u8"生成サンプル数 : " << tgStatistics.created_samples << u8" (" << (tgStatistics.created_samples*1000ull/SAMPLE_FREQ) << u8"[msec])").c_str(), COLOR_BLACK);
+		SDL_RenderCopy(renderer, text_samples, nullptr, &text_samples.rect(150, 0));
+		auto text_rendering_laod_average = Text::make(renderer, default_font, FORMAT_STRING(u8"演奏負荷 : " << std::setfill('0') << std::right << std::setw(3) << (int)(100*tgStatistics.rendering_load_average) << u8"[%]").c_str(), COLOR_BLACK);
+		SDL_RenderCopy(renderer, text_rendering_laod_average, nullptr, &text_rendering_laod_average.rect(150, 15));
+
 
 		// 描画終了
 		SDL_RenderPresent(renderer);
@@ -157,4 +141,8 @@ void MainWindow::drawingThreadMain()
 		++drawing_time_index;
 		++frames;
 	}
+}
+void MainWindow::onRenderedSignal(LSP::Signal<float>&& sig)
+{
+	mOutput.write(sig);
 }

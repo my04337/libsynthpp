@@ -55,9 +55,6 @@ public:
 
 	// MIDIメッセージ受信コールバック : メッセージ類は蓄積される
 	virtual void onMidiMessageReceived(clock::time_point msg_time, const std::shared_ptr<const Message>& msg) = 0;
-
-	// 指定時刻時点までに蓄積されたMIDIメッセージを解釈します
-	virtual void play(clock::time_point until) = 0;
 };
 
 

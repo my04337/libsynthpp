@@ -8,7 +8,7 @@ SimpleTone::SimpleTone(const FunctionGenerator& fg, const LSP::Filter::EnvelopeG
 	, mEG(eg)
 	, mToneVolume(toneVolume)
 {
-
+	mEG.noteOn();
 }
 
 float SimpleTone::update()
