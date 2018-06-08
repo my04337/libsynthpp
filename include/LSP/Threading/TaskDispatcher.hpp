@@ -2,12 +2,12 @@
 
 #include <LSP/Base/Base.hpp>
 #include <LSP/Threading/Thread.hpp>
-#include <LSP/Threading/Task.hpp>
 #include <LSP/Threading/EventSignal.hpp>
+
+#include <future>
 
 namespace LSP::Threading
 {
-
 // タスクディスパッチャ : 各種タスクをワーカースレッドに配給する
 class TaskDispatcher final
 {
@@ -19,33 +19,17 @@ public:
 	void abort();
 
 	// タスク登録
-	void enqueue(std::unique_ptr<Task>&& task, const std::unordered_set<Task::Id>& depends = {});
-
+	template<class Predicate, class=std::enable_if_t<std::is_invocable_v<Predicate>>>
+	[[nodiscard]]
+	std::future<std::invoke_result_t<Predicate>> enqueue(Predicate pred);
 
 	// タスク数を取得
 	size_t count()const noexcept;
 	
 private:
-	struct TaskInfo final
-		: non_copy
-	{
-		TaskInfo(const std::unordered_set<Task::Id>& depends, std::unique_ptr<Task>&& task) 
-			: id(task->id()), depends(depends), task(std::move(task))
-		{}
-
-		const Task::Id id;
-		std::unordered_set<Task::Id> depends;
-		std::unique_ptr<Task> task; //  実行中は空となる
-	};
 	// タスク取得
-	std::unique_ptr<Task> deque();
-
-	// タスク終了通知
-	void notifyComplete(Task::Id id);
-
-	// タスクの実行可能性チェック
-	bool _executable(const TaskInfo& info)const noexcept;
-
+	std::function<void()> deque();
+	
 	// ワーカースレッド メイン関数
 	void _threadMain();
 
@@ -54,12 +38,39 @@ private:
 	EventSignal mStatusChangedEvent;
 	std::atomic_bool mAborted;
 
-	std::list<Task::Id> mWaitingQueue; // 実行前タスク一覧
-	std::unordered_map<Task::Id, TaskInfo> mTasks; // タスク一覧(実行中を含む)
+	std::list<std::function<void()>> mWaitingQueue; // 実行前タスク一覧
 
 
 	std::unordered_map<std::thread::id, std::unique_ptr<std::thread>> mThreads;
 };
 
+// ---
+
+template<class Predicate, class>
+std::future<std::invoke_result_t<Predicate>> TaskDispatcher::enqueue(Predicate pred_)
+{
+	using ReturnType = typename std::invoke_result_t<Predicate>;
+	auto p = std::make_shared<std::promise<ReturnType>>();
+	std::future<ReturnType> f = p->get_future();
+
+	auto pred = std::make_shared<Predicate>(std::move(pred_));
+
+	auto task = [p = std::move(p), pred = std::move(pred)]() {
+		try {
+			p->set_value((*pred)());
+		} catch (...) {
+			p->set_exception(std::current_exception());
+		}
+	};
+
+	{
+		std::lock_guard lock(mMutex);
+		mWaitingQueue.emplace_back(std::move(task));
+	}
+	mStatusChangedEvent.set();
+
+
+	return f;
+}
 
 }
