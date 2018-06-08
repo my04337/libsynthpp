@@ -4,6 +4,7 @@
 #include <Luath/Syntesizer/Tone.hpp>
 #include <LSP/MIDI/Controller.hpp>
 #include <LSP/MIDI/Message.hpp>
+#include <LSP/Threading/TaskDispatcher.hpp>
 
 #include <array>
 
@@ -22,8 +23,18 @@ public:
 		GS,
 	};
 	struct Statistics {
-		uint64_t created_samples;
-		float rendering_load_average;
+		uint64_t created_samples = 0;
+		uint64_t skipped_samples = 0;
+
+		clock::duration cycle_time;
+		clock::duration rendering_time;
+		float rendering_load_average()const noexcept {
+			if (cycle_time.count() > 0) {
+				return (float)rendering_time.count() / (float)cycle_time.count();
+			} else {
+				return 0;
+			}
+		}
 	};
 
 public:
@@ -39,7 +50,7 @@ public:
 	void setRenderingCallback(RenderingCallback cb);
 
 	// 統計情報を取得します
-	Statistics queryStatistics()const;
+	Statistics statistics()const;
 
 protected:
 	void playingThreadMain();
@@ -65,9 +76,11 @@ private:
 	mutable std::mutex mMutex;
 	std::pmr::synchronized_pool_resource mMem;
 	std::deque<std::pair<clock::time_point, std::shared_ptr<const LSP::MIDI::Message>>> mMessageQueue;
-	uint64_t mCreatedSampleCount;
-	clock::duration mCycleTime;
-	clock::duration mRenderingTime;
+	LSP::Threading::TaskDispatcher mTaskDispatcher;
+
+	Statistics mStatistics;
+	std::atomic<Statistics> mThreadSafeStatistics;
+
 	RenderingCallback mRenderingCallback;
 	
 	// all channel parameters

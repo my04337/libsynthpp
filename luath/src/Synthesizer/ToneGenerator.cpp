@@ -7,8 +7,7 @@ using namespace LSP::MIDI::Messages;
 using namespace Luath::Synthesizer;
 
 ToneGenerator::ToneGenerator(uint32_t sampleFreq, SystemType defaultSystemType)
-	: mCreatedSampleCount(0)
-	, mSampleFreq(sampleFreq)
+	: mSampleFreq(sampleFreq)
 	, mPlayingThreadAborted(false)
 {
 	mPerChannelParams.reserve(MAX_CHANNELS);
@@ -29,6 +28,9 @@ void ToneGenerator::dispose()
 {
 	std::lock_guard lock(mMutex);
 
+	// 全タスク停止
+	mTaskDispatcher.abort();
+
 	// コールバック破棄
 	mRenderingCallback = nullptr;
 
@@ -45,9 +47,11 @@ void ToneGenerator::playingThreadMain()
 {
 	constexpr auto RENDERING_INTERVAL = std::chrono::milliseconds(10);
 
-
+	uint64_t SAMPLES_LIMIT_PER_RENDERING = 10*uint64_t(std::chrono::duration_cast<std::chrono::duration<double>>(RENDERING_INTERVAL).count() * mSampleFreq);
+	
 	// 演奏ループ開始
 	const clock::time_point begin_time = clock::now() - RENDERING_INTERVAL;
+
 	clock::time_point prev_wake_up_time = begin_time;
 	uint64_t prev_sample_pos = 0;
 	while (true) {
@@ -59,6 +63,8 @@ void ToneGenerator::playingThreadMain()
 		uint64_t need_samples = next_sample_pos - prev_sample_pos;
 		prev_wake_up_time = next_wake_up_time;
 		prev_sample_pos = next_sample_pos;
+
+		uint64_t make_samples = std::min(need_samples, SAMPLES_LIMIT_PER_RENDERING);
 
 		if(mPlayingThreadAborted) break;
 
@@ -77,18 +83,19 @@ void ToneGenerator::playingThreadMain()
 		}
 	
 		// 信号生成
-		// TODO マルチスレッドで生成出来るようにしたい
 		auto beginRendering = clock::now();
-		auto sig = generate(need_samples);
+		auto sig = generate(make_samples);
 		auto endRendering = clock::now();
-		mRenderingTime = endRendering - beginRendering;
-		mCreatedSampleCount += sig.frames();
+		mStatistics.rendering_time = endRendering - beginRendering;
+		mStatistics.created_samples += sig.frames();
+		mStatistics.skipped_samples += (need_samples - make_samples);
 
 		if(mRenderingCallback) mRenderingCallback(std::move(sig));
 		
 		// 演奏終了
 		auto cycleEnd = clock::now();
-		mCycleTime = cycleEnd - cycleBegin;
+		mStatistics.cycle_time = cycleEnd - cycleBegin;
+		mThreadSafeStatistics = mStatistics;
 	}
 }
 // ---
@@ -215,19 +222,43 @@ void ToneGenerator::PerChannelParams::tone_noteOff(ToneId id)
 LSP::Signal<float> ToneGenerator::generate(size_t len)
 {
 	constexpr float MASTER_VOLUME = 0.125f;
-	auto sig = LSP::Signal<float>::allocate(&mMem, 2, len);
-	for (size_t i = 0; i < len; ++i) {
-		float lch = 0, rch=0;
-		for (auto& params : mPerChannelParams) {
-			auto v = params.update();
-			lch += v.first;
-			rch += v.second;
-		}
-		auto frame = sig.frame(i);
-		frame[0] = lch * MASTER_VOLUME;
-		frame[1] = rch * MASTER_VOLUME;
+	std::array<std::future<LSP::Signal<float>>, MAX_CHANNELS> perChannelFutures;
+	for (size_t ch=0; ch<MAX_CHANNELS; ++ch) {
+		auto pred = [this, len, ch]()->LSP::Signal<float>
+		{ 
+			auto& params = mPerChannelParams[ch];
+			auto sig = LSP::Signal<float>::allocate(&mMem, 2, len);
+			for (size_t i = 0; i < len; ++i) {
+				auto frame = sig.frame(i);
+				auto v = params.update();
+				frame[0] = v.first;
+				frame[1] = v.second;
+			}
+			return sig;
+		};
+#ifndef _DEBUG
+		perChannelFutures[ch] = mTaskDispatcher.enqueue(pred);
+#else
+		perChannelFutures[ch] = std::async(std::launch::deferred, pred);
+#endif
 	}
-	return sig;
+
+	auto masterSignal = LSP::Signal<float>::allocate(&mMem, 2, len);
+	memset(masterSignal.data(), 0, masterSignal.frames()*masterSignal.channels()*sizeof(float));
+	size_t mergedChannels = 0;
+	while(mergedChannels < MAX_CHANNELS) {
+		for (size_t ch=0; ch<MAX_CHANNELS; ++ch) {
+			auto& f = perChannelFutures[ch];
+			if(!f.valid() || f.wait_for(std::chrono::milliseconds(0)) == std::future_status::timeout) continue;
+			auto sig = f.get();
+			size_t sz = len * /*stereo*/2;
+			for (size_t i = 0; i < sz; ++i) {
+				masterSignal.data()[i] += sig.data()[i];
+			}
+			++mergedChannels;
+		}
+	}
+	return masterSignal;
 }
 
 // MIDIメッセージ受信コールバック
@@ -243,18 +274,9 @@ void ToneGenerator::setRenderingCallback(RenderingCallback cb)
 	mRenderingCallback = std::move(cb);
 }
 // 統計情報を取得します
-ToneGenerator::Statistics ToneGenerator::queryStatistics()const
+ToneGenerator::Statistics ToneGenerator::statistics()const
 {
-	std::lock_guard lock(mMutex);
-
-	Statistics s;
-	s.created_samples = mCreatedSampleCount;
-	if (mCycleTime.count() > 0) {
-		s.rendering_load_average = (float)mRenderingTime.count() / (float)mCycleTime.count();
-	} else {
-		s.rendering_load_average = 0;
-	}
-	return s;
+	return mThreadSafeStatistics;
 }
 void ToneGenerator::dispatchMessage(const std::shared_ptr<const MIDI::Message>& msg)
 {
