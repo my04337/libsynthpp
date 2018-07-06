@@ -2,7 +2,6 @@
 #include <LSP/Audio/SDLOutput.hpp>
 #include <LSP/Audio/WasapiOutput.hpp>
 #include <LSP/Generator/FunctionGenerator.hpp>
-#include <LSP/Filter/Requantizer.hpp>
 #include <LSP/Filter/EnvelopeGenerator.hpp>
 
 #include <LSP/Base/Message.hpp>
@@ -22,7 +21,6 @@ void Test::SDLTest::exec()
 		}
 
 		using sample_type = float;
-		constexpr auto to_sample_type = Filter::Requantizer<sample_type>();
 		const uint32_t sampleFreq = wo.getDeviceSampleFreq();
 		const size_t bufferFrameCount = wo.getDeviceBufferFrameCount();
 		const int64_t maxFrameCount = static_cast<int64_t>(sampleFreq * 1.5); 
@@ -51,8 +49,8 @@ void Test::SDLTest::exec()
 					}
 					float p = (time % sampleFreq) * 2.0f * PI<float> / sampleFreq; // 位相
 					auto frame = sig.frame(i);
-					frame[0] = to_sample_type( osc.update() );
-					frame[1] = to_sample_type( eg.update() );
+					frame[0] = requantize<sample_type>( osc.update() );
+					frame[1] = requantize<sample_type>( eg.update() );
 					++time;
 					if(time >= maxFrameCount) break;
 				}

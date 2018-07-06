@@ -1,5 +1,4 @@
 ﻿#include <LSP/Audio/SDLOutput.hpp>
-#include <LSP/Filter/Normalizer.hpp>
 #include <SDL_audio.h>
 
 

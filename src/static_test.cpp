@@ -1,7 +1,5 @@
 #include <LSP/Base/Math.hpp>
 #include <LSP/Base/Signal.hpp>
-#include <LSP/Filter/Requantizer.hpp>
-#include <LSP/Filter/Normalizer.hpp>
 #include <LSP/Filter/BiquadraticFilter.hpp>
 #include <LSP/Filter/EnvelopeGenerator.hpp>
 #include <LSP/MIDI/Message.hpp>
@@ -35,48 +33,44 @@ static_assert(!is_integral_sample_type_v<double>,  "is_integral_sample_type_v fa
 static_assert(!is_floating_point_sample_type_v<int32_t>, "is_floating_point_sample_type_v failed");
 static_assert( is_floating_point_sample_type_v<double>,  "is_floating_point_sample_type_v failed");
 
-// ############################################################################
-// ### Filter/Requantizer
-static_assert(Filter::Requantizer<int8_t>()(static_cast<int8_t>(0)) == 0, "Filter::Requantizer failed");
-static_assert(Filter::Requantizer<int8_t>()(static_cast<int8_t>(0)) == 0, "Filter::Requantizer failed");
-static_assert(Filter::Requantizer<int16_t>()(static_cast<int16_t>(0)) == 0, "Filter::Requantizer failed");
-static_assert(Filter::Requantizer<int32_t>()(static_cast<int32_t>(0)) == 0, "Filter::Requantizer failed");
-static_assert(Filter::Requantizer<float>()(0.0f) == 0.0f, "Filter::Requantizer failed");
-static_assert(Filter::Requantizer<double>()(0.0) == 0.0, "Filter::Requantizer failed");
 
-static_assert(Filter::Requantizer<int16_t>()(static_cast<int8_t>(+0x01)) == +0x00000100, "Filter::Requantizer failed");
-static_assert(Filter::Requantizer<int32_t>()(static_cast<int8_t>(+0x01)) == +0x01000000, "Filter::Requantizer failed");
-static_assert(Filter::Requantizer<int16_t>()(static_cast<int8_t>(-0x01)) == -0x00000100, "Filter::Requantizer failed");
-static_assert(Filter::Requantizer<int32_t>()(static_cast<int8_t>(-0x01)) == -0x01000000, "Filter::Requantizer failed");
+static_assert(normalize(+2.0) == +1.0,  "Filter::Normalizer failed");
+static_assert(normalize(-2.0) == -1.0,  "Filter::Normalizer failed");
 
-static_assert(Filter::Requantizer<int16_t>()(static_cast<int32_t>(+0x01000000)) == +0x0100, "Filter::Requantizer failed");
-static_assert(Filter::Requantizer< int8_t>()(static_cast<int32_t>(+0x01000000)) == +0x01,   "Filter::Requantizer failed");
-static_assert(Filter::Requantizer<int16_t>()(static_cast<int32_t>(-0x01000000)) == -0x0100, "Filter::Requantizer failed");
-static_assert(Filter::Requantizer< int8_t>()(static_cast<int32_t>(-0x01000000)) == -0x01,   "Filter::Requantizer failed");
+static_assert(normalize(static_cast<int8_t>(+0x7F)) == +0x7F,  "Filter::Normalizer failed");
+static_assert(normalize(static_cast<int8_t>(-0x7F)) == -0x7F,  "Filter::Normalizer failed");
+static_assert(normalize(static_cast<int8_t>(-0x80)) == -0x7F,  "Filter::Normalizer failed");
 
-static_assert(Filter::Requantizer<double>()(+2.0f) == +2.0, "Filter::Requantizer failed");
-static_assert(Filter::Requantizer<double>()(-2.0f) == -2.0, "Filter::Requantizer failed");
+static_assert(requantize<int8_t>(static_cast<int8_t>(0)) == 0, "Filter::Requantizer failed");
+static_assert(requantize<int8_t>(static_cast<int8_t>(0)) == 0, "Filter::Requantizer failed");
+static_assert(requantize<int16_t>(static_cast<int16_t>(0)) == 0, "Filter::Requantizer failed");
+static_assert(requantize<int32_t>(static_cast<int32_t>(0)) == 0, "Filter::Requantizer failed");
+static_assert(requantize<float>(0.0f) == 0.0f, "Filter::Requantizer failed");
+static_assert(requantize<double>(0.0) == 0.0, "Filter::Requantizer failed");
 
-static_assert(Filter::Requantizer<float>()(static_cast<int32_t>(0)) == 0.0f, "Filter::Requantizer failed");
-static_assert(Filter::Requantizer<double>()(static_cast<int32_t>(0)) == 0.0,  "Filter::Requantizer failed");
-static_assert(Filter::Requantizer<int32_t>()(0.0f) == 0, "Filter::Requantizer failed");
-static_assert(Filter::Requantizer<int32_t>()(0.0)  == 0,  "Filter::Requantizer failed");
+static_assert(requantize<int16_t>(static_cast<int8_t>(+0x01)) == +0x00000100, "Filter::Requantizer failed");
+static_assert(requantize<int32_t>(static_cast<int8_t>(+0x01)) == +0x01000000, "Filter::Requantizer failed");
+static_assert(requantize<int16_t>(static_cast<int8_t>(-0x01)) == -0x00000100, "Filter::Requantizer failed");
+static_assert(requantize<int32_t>(static_cast<int8_t>(-0x01)) == -0x01000000, "Filter::Requantizer failed");
 
-static_assert(Filter::Requantizer<double>()(static_cast<int8_t>(+0x7F)) == +1.0,  "Filter::Requantizer failed");
-static_assert(Filter::Requantizer<double>()(static_cast<int8_t>(-0x7F)) == -1.0,  "Filter::Requantizer failed");
+static_assert(requantize<int16_t>(static_cast<int32_t>(+0x01000000)) == +0x0100, "Filter::Requantizer failed");
+static_assert(requantize< int8_t>(static_cast<int32_t>(+0x01000000)) == +0x01,   "Filter::Requantizer failed");
+static_assert(requantize<int16_t>(static_cast<int32_t>(-0x01000000)) == -0x0100, "Filter::Requantizer failed");
+static_assert(requantize< int8_t>(static_cast<int32_t>(-0x01000000)) == -0x01,   "Filter::Requantizer failed");
 
-static_assert(Filter::Requantizer<int8_t>()(+1.0) == +0x7F,  "Filter::Requantizer failed");
-static_assert(Filter::Requantizer<int8_t>()(-1.0) == -0x7F,  "Filter::Requantizer failed");
+static_assert(requantize<double>(+2.0f) == +2.0, "Filter::Requantizer failed");
+static_assert(requantize<double>(-2.0f) == -2.0, "Filter::Requantizer failed");
 
+static_assert(requantize<float>(static_cast<int32_t>(0)) == 0.0f, "Filter::Requantizer failed");
+static_assert(requantize<double>(static_cast<int32_t>(0)) == 0.0,  "Filter::Requantizer failed");
+static_assert(requantize<int32_t>(0.0f) == 0, "Filter::Requantizer failed");
+static_assert(requantize<int32_t>(0.0)  == 0,  "Filter::Requantizer failed");
 
-// ############################################################################
-// ### Filter/Normalizer
-static_assert(Filter::Normalizer()(+2.0) == +1.0,  "Filter::Normalizer failed");
-static_assert(Filter::Normalizer()(-2.0) == -1.0,  "Filter::Normalizer failed");
+static_assert(requantize<double>(static_cast<int8_t>(+0x7F)) == +1.0,  "Filter::Requantizer failed");
+static_assert(requantize<double>(static_cast<int8_t>(-0x7F)) == -1.0,  "Filter::Requantizer failed");
 
-static_assert(Filter::Normalizer()(static_cast<int8_t>(+0x7F)) == +0x7F,  "Filter::Normalizer failed");
-static_assert(Filter::Normalizer()(static_cast<int8_t>(-0x7F)) == -0x7F,  "Filter::Normalizer failed");
-static_assert(Filter::Normalizer()(static_cast<int8_t>(-0x80)) == -0x7F,  "Filter::Normalizer failed");
+static_assert(requantize<int8_t>(+1.0) == +0x7F,  "Filter::Requantizer failed");
+static_assert(requantize<int8_t>(-1.0) == -0x7F,  "Filter::Requantizer failed");
 
 // ############################################################################
 // ### Filter/EnvelopeGenerator

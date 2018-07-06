@@ -94,7 +94,6 @@ void SDLOutput::write(const Signal<sample_type>& sig)
 
 	auto convAndWrite = [&](auto type_hint) {
 		using to_type = decltype(type_hint);
-		auto conv = Filter::Requantizer<to_type>();
 
 		size_t out_buff_size = signal_frames * device_channels;
 		auto out_buff = allocate_memory<to_type>(&mMem, out_buff_size);
@@ -104,7 +103,7 @@ void SDLOutput::write(const Signal<sample_type>& sig)
 			auto frame = sig.frame(i);
 			for (size_t ch=0; ch<device_channels; ++ch) {
 				if (ch < signal_channels) {
-					out_buff[out_buff_pos] = conv(frame[ch]);
+					out_buff[out_buff_pos] = requantize<to_type>(frame[ch]);
 				} else {
 					out_buff[out_buff_pos] = 0;
 				}

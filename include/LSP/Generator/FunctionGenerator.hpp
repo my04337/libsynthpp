@@ -3,8 +3,6 @@
 #include <LSP/Base/Base.hpp>
 #include <LSP/Base/Signal.hpp>
 #include <LSP/Base/Math.hpp>
-#include <LSP/Filter/Requantizer.hpp>
-#include <LSP/Filter/Normalizer.hpp>
 
 #include <random>
 
@@ -92,8 +90,6 @@ public:
 
 	sample_type update() 
 	{
-		constexpr auto normalize = Filter::Normalizer();
-		constexpr auto to_sample_type = Filter::Requantizer<sample_type>();
 		constexpr auto period = 2.0f * PI<parameter_type>; // 一周期 : 2π
 		constexpr auto half_period = PI<parameter_type>; // 一周期 : 2π
 
@@ -105,37 +101,37 @@ public:
 			break;
 		case WaveFormType::Sin:	
 			// 正弦波
-			s = to_sample_type(std::sin(mPhase));
+			s = requantize<sample_type>(std::sin(mPhase));
 			break;
 		case WaveFormType::Saw:	
 			// 鋸波
-			s = to_sample_type(-1.0f + 2.0f*(mPhase / period));
+			s = requantize<sample_type>(-1.0f + 2.0f*(mPhase / period));
 			break;
 		case WaveFormType::Triangle:	
 			// 三角波
 			if(mPhase < half_period) {
-				s = to_sample_type(-1.0f + 2.0f*(mPhase / half_period));
+				s = requantize<sample_type>(-1.0f + 2.0f*(mPhase / half_period));
 			} else {
-				s = to_sample_type(+1.0f - 2.0f*((mPhase - half_period) / half_period));
+				s = requantize<sample_type>(+1.0f - 2.0f*((mPhase - half_period) / half_period));
 			}
 			break;
 		case WaveFormType::Square:	
 			// 矩形波
 			if(mPhase < mDutyRate) {
-				s = to_sample_type(+1.0f);
+				s = requantize<sample_type>(+1.0f);
 			} else {
-				s = to_sample_type(-1.0f);
+				s = requantize<sample_type>(-1.0f);
 			}
 			break;
 		case WaveFormType::WhiteNoise:
 			// ホワイトノイズ
-			s = to_sample_type(mUniDist(mRandomEngine));
+			s = requantize<sample_type>(mUniDist(mRandomEngine));
 			break;
 		case WaveFormType::BrownNoise: {
 			// ブラウンノイズ
 			auto delta = mUniDist(mRandomEngine)/100; // 概ね20dB下げると丁度良い波形が生成できる。 理由は不明
 			mBrownNoisePrevLevel = normalize(mBrownNoisePrevLevel + delta);
-			s = to_sample_type(mBrownNoisePrevLevel);
+			s = requantize<sample_type>(mBrownNoisePrevLevel);
 		}	break;
 		}
 

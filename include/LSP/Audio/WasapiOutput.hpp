@@ -132,7 +132,7 @@ void WasapiOutput::write(const Signal<sample_type>& sig)
 	case SampleFormat::Int32:
 		for(size_t i=0; i<signal_frames; ++i) {
 			for (size_t ch=0; ch<device_channels; ++ch) {
-				auto s = Filter::Requantizer<int32_t>()(safeGetSample(ch, i));
+				auto s = requantize<int32_t>(safeGetSample(ch, i));
 				mAudioBuffer.push_back(s);
 			}
 		}
@@ -140,7 +140,7 @@ void WasapiOutput::write(const Signal<sample_type>& sig)
 	case SampleFormat::Float32:
 		for(size_t i=0; i<signal_frames; ++i) {
 			for (size_t ch=0; ch<device_channels; ++ch) {
-				auto s = Filter::Requantizer<float>()(safeGetSample(ch, i));
+				auto s = requantize<float>(safeGetSample(ch, i));
 				mAudioBuffer.push_back(s);
 			}
 		}

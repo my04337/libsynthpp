@@ -1,7 +1,6 @@
 ﻿#pragma once
 
 #include <LSP/minimal.hpp>
-#include <LSP/Filter/Requantizer.hpp>
 
 #include <fstream>
 #include <filesystem>
@@ -65,7 +64,7 @@ void WavFileOutput::write(const Signal<sample_type>& sig)
 		auto in_frame = sig.frame(i);
 		for (size_t ch=0; ch< signal_channels; ++ch) {
 			// 32bit整数型に変換
-			auto s = Filter::Requantizer<int32_t>()(in_frame[ch]);
+			auto s = requantize<int32_t>(in_frame[ch]);
 
 			// 32bitで記録しているので、必要サイズに併せて切り詰める
 			// MEMO リトルエンディアン前提コード, 下位側から必要バイト分を転写
