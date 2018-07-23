@@ -6,8 +6,34 @@
 namespace LSP
 {
 
+// 信号 view
+template<typename sample_type>
+class signal_view
+{
+public:
+	constexpr signal_view(const sample_type* data, uint32_t channels, size_t frames) 
+		: mData(data), mChannels(channels), mFrames(frames) {}
+
+	// チャネル数を取得します
+	constexpr uint32_t channels()const noexcept { return mChannels; }
+
+	// フレーム数を取得します
+	constexpr size_t frames()const noexcept { return mFrames; }
+
+	// 各フレームの先頭ポインタを取得します
+	constexpr sample_type* frame(size_t frame_index)const noexcept { return mData + mChannels * frame_index; }
+
+	// 全データへのポインタを取得します
+	constexpr sample_type* data()const noexcept { return mData; }
+
+private:
+	const sample_type* mData;
+	uint32_t mChannels;
+	size_t mFrames;
+};
+
 // 信号型
-template<typename signal_type>
+template<typename sample_type>
 class Signal final
 	: non_copy
 {
@@ -20,10 +46,10 @@ public:
 		return allocate(std::pmr::get_default_resource(), channels, frames);
 	}
 	static Signal allocate(std::pmr::memory_resource* mem, size_t frames) {
-		return allocate<signal_type>(mem, 1, frames);
+		return allocate<sample_type>(mem, 1, frames);
 	}
 	static Signal allocate(std::pmr::memory_resource* mem, uint32_t channels, size_t frames) {
-		auto data = allocate_memory<signal_type>(mem, channels*frames);
+		auto data = allocate_memory<sample_type>(mem, channels*frames);
 		return Signal(std::move(data), channels, frames);
 	}
 
@@ -32,6 +58,8 @@ public:
 	Signal(Signal&& d)noexcept = default;
 	Signal& operator=(Signal&& d)noexcept = default;
 
+	operator signal_view<sample_type> ()const noexcept { return signal_view<sample_type>(mData.get(), mChannels, mFrames); }
+
 	// チャネル数を取得します
 	uint32_t channels()const noexcept { return mChannels; }
 
@@ -39,17 +67,17 @@ public:
 	size_t frames()const noexcept { return mFrames; }
 
 	// 各フレームの先頭ポインタを取得します
-	signal_type* frame(size_t frame_index)const noexcept { return mData.get() + mChannels * frame_index; }
+	sample_type* frame(size_t frame_index)const noexcept { return mData.get() + mChannels * frame_index; }
 
 	// 全データへのポインタを取得します
-	signal_type* data()const noexcept { return mData.get(); }
+	sample_type* data()const noexcept { return mData.get(); }
 
 protected:
-	Signal(std::unique_ptr<signal_type[], _memory_resource_deleter<signal_type>>&& data, uint32_t channels, size_t frames) 
+	Signal(std::unique_ptr<sample_type[], _memory_resource_deleter<sample_type>>&& data, uint32_t channels, size_t frames) 
 		: mData(std::move(data)), mChannels(channels), mFrames(frames) {}
 
 private:
-	std::unique_ptr<signal_type[], _memory_resource_deleter<signal_type>> mData;
+	std::unique_ptr<sample_type[], _memory_resource_deleter<sample_type>> mData;
 	uint32_t mChannels;
 	size_t mFrames;
 };
