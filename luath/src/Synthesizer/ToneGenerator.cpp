@@ -222,43 +222,26 @@ void ToneGenerator::PerChannelParams::tone_noteOff(ToneId id)
 LSP::Signal<float> ToneGenerator::generate(size_t len)
 {
 	constexpr float MASTER_VOLUME = 0.125f;
-	std::array<std::future<LSP::Signal<float>>, MAX_CHANNELS> perChannelFutures;
-	for (size_t ch=0; ch<MAX_CHANNELS; ++ch) {
-		auto pred = [this, len, ch]()->LSP::Signal<float>
-		{ 
-			auto& params = mPerChannelParams[ch];
-			auto sig = LSP::Signal<float>::allocate(&mMem, 2, len);
-			for (size_t i = 0; i < len; ++i) {
-				auto frame = sig.frame(i);
-				auto v = params.update();
-				frame[0] = v.first;
-				frame[1] = v.second;
-			}
-			return sig;
-		};
-#ifndef _DEBUG
-		perChannelFutures[ch] = mTaskDispatcher.enqueue(pred);
-#else
-		perChannelFutures[ch] = std::async(std::launch::deferred, pred);
-#endif
-	}
 
-	auto masterSignal = LSP::Signal<float>::allocate(&mMem, 2, len);
-	memset(masterSignal.data(), 0, masterSignal.frames()*masterSignal.channels()*sizeof(float));
-	size_t mergedChannels = 0;
-	while(mergedChannels < MAX_CHANNELS) {
-		for (size_t ch=0; ch<MAX_CHANNELS; ++ch) {
-			auto& f = perChannelFutures[ch];
-			if(!f.valid() || f.wait_for(std::chrono::milliseconds(0)) == std::future_status::timeout) continue;
-			auto sig = f.get();
-			size_t sz = len * /*stereo*/2;
-			for (size_t i = 0; i < sz; ++i) {
-				masterSignal.data()[i] += sig.data()[i];
-			}
-			++mergedChannels;
+	auto sig = LSP::Signal<float>::allocate(&mMem, 2, len);
+
+	for (size_t i = 0; i < len; ++i) {
+		auto frame = sig.frame(i);
+		frame[0] = frame[1] = 0;
+
+		// Tone, Channel
+		for (size_t ch = 0; ch < MAX_CHANNELS; ++ch) {
+			auto& params = mPerChannelParams[ch];
+			auto v = params.update();
+			frame[0] += v.first;
+			frame[1] + v.second;
 		}
+
+		// Master
+		frame[0] *= MASTER_VOLUME;
+		frame[1] *= MASTER_VOLUME;
 	}
-	return masterSignal;
+	return sig;
 }
 
 // MIDIメッセージ受信コールバック
