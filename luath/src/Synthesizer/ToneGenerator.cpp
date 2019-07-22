@@ -234,7 +234,7 @@ LSP::Signal<float> ToneGenerator::generate(size_t len)
 			auto& params = mPerChannelParams[ch];
 			auto v = params.update();
 			frame[0] += v.first;
-			frame[1] + v.second;
+			frame[1] += v.second;
 		}
 
 		// Master
