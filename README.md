@@ -10,7 +10,7 @@ https://ja.osdn.net/projects/libsynthpp/
 * 開発言語 : C++17
 * 対応プラットフォーム : Windows 7以降
 * 音声バックエンド : WASAPI
-* CMakeプロジェクト(Visual Studio 2017上で開発)
+* CMakeプロジェクト(Visual Studio 2019上で開発)
 * 簡潔で使いやすいAPI
 * 並列性が高く、レイテンシの少ない信号処理機構
 
