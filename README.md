@@ -1,8 +1,5 @@
 # libsynthpp
 
-※2018/11/25 開発停止中。現在はRust言語での実装を実験中。
-https://github.com/my04337/rustersynth
-
 マルチプラットフォーム 信号処理ライブラリ &amp;MIDIシンセサイザ サンプル  
 Multiplatoform signal processing library &amp; MIDI synthesizer sample.
 
