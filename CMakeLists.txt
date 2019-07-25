@@ -20,6 +20,6 @@ include(CMakeLists-UmeFont.txt)
 
 # ---
 
-add_subdirectory(src)
+add_subdirectory(libsynthpp)
 add_subdirectory(test)
 add_subdirectory(luath)
