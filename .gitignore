@@ -36,3 +36,4 @@
 /.vs/*
 /CppProperties.json
 /out
+CMakeSettings.json
