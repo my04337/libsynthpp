@@ -27,8 +27,8 @@ public:
 	uint32_t op()const noexcept;
 
 	// 制御パラメータ(受信先と制御命令種別により解釈が異なります)
-	const std::any& Message::param()const noexcept;
-	      std::any& Message::param()noexcept;
+	const std::any& param()const noexcept;
+	      std::any& param()noexcept;
     
 private:
 	int64_t mPosition;
