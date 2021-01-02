@@ -33,7 +33,7 @@ private:
 	// 再生用ストリーム
 	LSP::Audio::SDLOutput mOutput;
 
-	// シーケンサ
+	// シーケンサ,シンセサイザ
 	Luath::Synthesizer::ToneGenerator mToneGenerator;
 	LSP::MIDI::Sequencer mSequencer;
 };

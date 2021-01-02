@@ -1,8 +1,8 @@
-#include <LSP/MIDI/Synthesizer/VoiceMapper.hpp>
+#include <LSP/Synth/VoiceMapper.hpp>
 
 using namespace LSP;
 using namespace LSP::MIDI;
-using namespace LSP::MIDI::Synthesizer;
+using namespace LSP::Synth;
 
 size_t VoiceMapper::count()const noexcept
 {

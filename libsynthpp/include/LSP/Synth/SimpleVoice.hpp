@@ -3,29 +3,23 @@
 #include <LSP/Base/Base.hpp>
 #include <LSP/Generator/FunctionGenerator.hpp>
 #include <LSP/Filter/EnvelopeGenerator.hpp>
-#include <LSP/MIDI/Synthesizer/Voice.hpp>
+#include <LSP/Synth/Voice.hpp>
 
 
 #include <array>
 
-namespace LSP::MIDI::Synthesizer
+namespace LSP::Synth
 {
 
 // 単純なボイス実装
-template <
-	typename sample_type,
-	class = std::enable_if_t<
-	is_sample_type_v<sample_type>
-	>
->
 class SimpleVoice
-	: public Voice<sample_type>
+	: public Voice
 {
 public:
-	using FunctionGenerator = LSP::Generator::FunctionGenerator<sample_type>;
+	using FunctionGenerator = LSP::Generator::FunctionGenerator<float>;
 
 public:
-	SimpleVoice(const FunctionGenerator& fg, const LSP::Filter::EnvelopeGenerator<sample_type>& eg, sample_type volume)
+	SimpleVoice(const FunctionGenerator& fg, const EnvelopeGenerator& eg, float volume)
 		: mFG(fg)
 		, mEG(eg)
 		, mVolume(volume)
@@ -35,7 +29,7 @@ public:
 
 	virtual ~SimpleVoice() {}
 
-	virtual sample_type update()override
+	virtual float update()override
 	{
 		auto v = mFG.update();
 		v *= mEG.update();
@@ -50,6 +44,6 @@ public:
 private:
 	FunctionGenerator mFG;
 	EnvelopeGenerator mEG;
-	sample_type mVolume;
+	float mVolume;
 };
 }

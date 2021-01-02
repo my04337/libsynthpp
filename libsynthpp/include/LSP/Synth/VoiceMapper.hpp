@@ -2,9 +2,9 @@
 
 #include <LSP/Base/Base.hpp>
 #include <LSP/MIDI/Message.hpp>
-#include <LSP/MIDI/Synthesizer/Voice.hpp>
+#include <LSP/Synth/Voice.hpp>
 
-namespace LSP::MIDI::Synthesizer
+namespace LSP::Synth
 {
 // ノートOn/Off情報から各ボイスへマッピングする
 class VoiceMapper
