@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-#include <Luath/Base/Base.hpp>
+#include <LSP/Base/Base.hpp>
 #include <LSP/MIDI/Message.hpp>
 #include <LSP/MIDI/MessageReceiver.hpp>
 #include <LSP/Synth/VoiceMapper.hpp>
@@ -9,11 +9,11 @@
 
 #include <array>
 
-namespace Luath::Synthesizer
+namespace LSP::Synth
 {
-using VoiceId = LSP::Synth::VoiceId;
 
-class ToneGenerator
+// Luath : Simple synthesizer implimentation
+class Luath
 	: public LSP::MIDI::MessageReceiver
 {
 public:
@@ -41,8 +41,8 @@ public:
 	};
 
 public:
-	ToneGenerator(uint32_t sampleFreq, SystemType defaultSystemType = SystemType::GS);
-	~ToneGenerator();
+	Luath(uint32_t sampleFreq, SystemType defaultSystemType = SystemType::GS);
+	~Luath();
 
 	void dispose();
 

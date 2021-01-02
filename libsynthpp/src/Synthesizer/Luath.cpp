@@ -1,12 +1,12 @@
-﻿#include <Luath/Syntesizer/Generator.hpp>
+﻿#include <LSP/Synth/Luath.hpp>
 #include <LSP/MIDI/Messages/BasicMessage.hpp>
 #include <LSP/MIDI/Messages/SysExMessage.hpp>
 
 using namespace LSP;
 using namespace LSP::MIDI::Messages;
-using namespace Luath::Synthesizer;
+using namespace LSP::Synth;
 
-ToneGenerator::ToneGenerator(uint32_t sampleFreq, SystemType defaultSystemType)
+Luath::Luath(uint32_t sampleFreq, SystemType defaultSystemType)
 	: mSampleFreq(sampleFreq)
 	, mPlayingThreadAborted(false)
 {
@@ -19,12 +19,12 @@ ToneGenerator::ToneGenerator(uint32_t sampleFreq, SystemType defaultSystemType)
 
 	mPlayingThread = std::thread([this]{playingThreadMain();});
 }
-ToneGenerator::~ToneGenerator()
+Luath::~Luath()
 {
 	dispose();
 }
 
-void ToneGenerator::dispose()
+void Luath::dispose()
 {
 	std::lock_guard lock(mMutex);
 
@@ -43,7 +43,7 @@ void ToneGenerator::dispose()
 
 // ---
 
-void ToneGenerator::playingThreadMain()
+void Luath::playingThreadMain()
 {
 	constexpr auto RENDERING_INTERVAL = std::chrono::milliseconds(10);
 
@@ -100,7 +100,7 @@ void ToneGenerator::playingThreadMain()
 }
 // ---
 // 各種パラメータ類 リセット
-void ToneGenerator::reset(SystemType type)
+void Luath::reset(SystemType type)
 {
 	mSystemType = type;
 
@@ -109,13 +109,13 @@ void ToneGenerator::reset(SystemType type)
 	}
 }
 
-ToneGenerator::PerChannelParams::PerChannelParams(uint32_t sampleFreq, uint8_t ch)
+Luath::PerChannelParams::PerChannelParams(uint32_t sampleFreq, uint8_t ch)
 	: sampleFreq(sampleFreq)
 	, ch(ch)
 {
 }
 // チャネル毎パラメータ類 リセット
-void ToneGenerator::PerChannelParams::reset(SystemType type)
+void Luath::PerChannelParams::reset(SystemType type)
 {
 	_voiceMapper.reset();
 	_voices.clear();
@@ -135,7 +135,7 @@ void ToneGenerator::PerChannelParams::reset(SystemType type)
 	updateProgram();
 }
 
-void ToneGenerator::PerChannelParams::resetParameterNumberState()
+void Luath::PerChannelParams::resetParameterNumberState()
 {
 	ccRPN_MSB.reset();
 	ccRPN_LSB.reset();
@@ -144,7 +144,7 @@ void ToneGenerator::PerChannelParams::resetParameterNumberState()
 	ccDE_MSB.reset();
 	ccDE_LSB.reset();
 }
-void ToneGenerator::PerChannelParams::noteOn(uint32_t noteNo, uint8_t vel)
+void Luath::PerChannelParams::noteOn(uint32_t noteNo, uint8_t vel)
 {
 	auto kvp = _voiceMapper.noteOn(noteNo);
 	voice_noteOff(kvp.second);
@@ -152,23 +152,23 @@ void ToneGenerator::PerChannelParams::noteOn(uint32_t noteNo, uint8_t vel)
 		voice_noteOn(kvp.first, noteNo, vel);
 	}
 }
-void ToneGenerator::PerChannelParams::noteOff(uint32_t noteNo)
+void Luath::PerChannelParams::noteOff(uint32_t noteNo)
 {
 	auto releasedTone = _voiceMapper.noteOff(noteNo);
 	voice_noteOff(releasedTone);
 }
-void ToneGenerator::PerChannelParams::holdOn()
+void Luath::PerChannelParams::holdOn()
 {
 	_voiceMapper.holdOn();
 }
-void ToneGenerator::PerChannelParams::holdOff()
+void Luath::PerChannelParams::holdOff()
 {
 	auto releasedTones = _voiceMapper.holdOff();
 	for (auto& toneId : releasedTones) {
 		voice_noteOff(toneId);
 	}
 }
-std::pair<float,float> ToneGenerator::PerChannelParams::update()
+std::pair<float,float> Luath::PerChannelParams::update()
 {
 	// オシレータからの出力はモノラル
 	float v = 0;
@@ -187,7 +187,7 @@ std::pair<float,float> ToneGenerator::PerChannelParams::update()
 
 	return {lch, rch};
 }
-void ToneGenerator::PerChannelParams::updateProgram()
+void Luath::PerChannelParams::updateProgram()
 {
 	static const LSP::Filter::EnvelopeGenerator<float>::Curve curveExp3(3.0f);
 	switch (pcId) {
@@ -197,7 +197,7 @@ void ToneGenerator::PerChannelParams::updateProgram()
 		break;
 	}
 }
-void ToneGenerator::PerChannelParams::voice_noteOn(VoiceId id, uint32_t noteNo, uint8_t vel)
+void Luath::PerChannelParams::voice_noteOn(VoiceId id, uint32_t noteNo, uint8_t vel)
 {
 	float toneVolume = (vel / 127.0f);
 	float freq = 440*exp2(((float)noteNo-69.0f)/12.0f);
@@ -207,7 +207,7 @@ void ToneGenerator::PerChannelParams::voice_noteOn(VoiceId id, uint32_t noteNo, 
 	auto tone = std::make_unique<LSP::Synth::SimpleVoice>(fg, pcEG, toneVolume);
 	_voices.emplace(id, std::move(tone));
 }
-void ToneGenerator::PerChannelParams::voice_noteOff(VoiceId id)
+void Luath::PerChannelParams::voice_noteOff(VoiceId id)
 {
 	auto found = _voices.find(id);
 	if(found == _voices.end()) return;
@@ -219,7 +219,7 @@ void ToneGenerator::PerChannelParams::voice_noteOff(VoiceId id)
 // ---
 
 
-LSP::Signal<float> ToneGenerator::generate(size_t len)
+LSP::Signal<float> Luath::generate(size_t len)
 {
 	constexpr float MASTER_VOLUME = 0.125f;
 
@@ -245,23 +245,23 @@ LSP::Signal<float> ToneGenerator::generate(size_t len)
 }
 
 // MIDIメッセージ受信コールバック
-void ToneGenerator::onMidiMessageReceived(clock::time_point msg_time, const std::shared_ptr<const MIDI::Message>& msg)
+void Luath::onMidiMessageReceived(clock::time_point msg_time, const std::shared_ptr<const MIDI::Message>& msg)
 {
 	std::lock_guard lock(mMutex);
 	mMessageQueue.emplace_back(msg_time, msg);
 }
 // 音声が生成された際のコールバック関数を設定します
-void ToneGenerator::setRenderingCallback(RenderingCallback cb)
+void Luath::setRenderingCallback(RenderingCallback cb)
 {
 	std::lock_guard lock(mMutex);
 	mRenderingCallback = std::move(cb);
 }
 // 統計情報を取得します
-ToneGenerator::Statistics ToneGenerator::statistics()const
+Luath::Statistics Luath::statistics()const
 {
 	return mThreadSafeStatistics;
 }
-void ToneGenerator::dispatchMessage(const std::shared_ptr<const MIDI::Message>& msg)
+void Luath::dispatchMessage(const std::shared_ptr<const MIDI::Message>& msg)
 {
 	if (auto m = std::dynamic_pointer_cast<const NoteOn>(msg)) {
 		noteOn(m->channel(), m->noteNo(), m->velocity());
@@ -275,7 +275,7 @@ void ToneGenerator::dispatchMessage(const std::shared_ptr<const MIDI::Message>& 
 }
 // ---
 // ノートオン
-void ToneGenerator::noteOn(uint8_t ch, uint8_t noteNo, uint8_t vel)
+void Luath::noteOn(uint8_t ch, uint8_t noteNo, uint8_t vel)
 {
 	if(ch >= mPerChannelParams.size()) return;
 	auto& params = mPerChannelParams[ch];
@@ -284,7 +284,7 @@ void ToneGenerator::noteOn(uint8_t ch, uint8_t noteNo, uint8_t vel)
 }
 
 // ノートオフ
-void ToneGenerator::noteOff(uint8_t ch, uint8_t noteNo)
+void Luath::noteOff(uint8_t ch, uint8_t noteNo)
 {
 	// MEMO 一般に、MIDIではノートオフの代わりにvel=0のノートオンが使用されるため、呼ばれることは希である
 
@@ -295,7 +295,7 @@ void ToneGenerator::noteOff(uint8_t ch, uint8_t noteNo)
 }
 
 // コントロールチェンジ
-void ToneGenerator::controlChange(uint8_t ch, uint8_t ctrlNo, uint8_t value)
+void Luath::controlChange(uint8_t ch, uint8_t ctrlNo, uint8_t value)
 {
 	// 参考 : http://quelque.sakura.ne.jp/midi_cc.html
 	
@@ -361,7 +361,7 @@ void ToneGenerator::controlChange(uint8_t ch, uint8_t ctrlNo, uint8_t value)
 }
 
 // システムエクスクルーシブ
-void ToneGenerator::sysExMessage(const uint8_t* data, size_t len)
+void Luath::sysExMessage(const uint8_t* data, size_t len)
 {
 	size_t pos = 0;
 	auto peek = [&](size_t offset = 0) -> std::optional<uint8_t> {

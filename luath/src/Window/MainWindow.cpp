@@ -16,12 +16,12 @@ static constexpr uint32_t SAMPLE_FREQ = 44100;
 
 MainWindow::MainWindow()
 	: mDrawingThreadAborted(false)
-	, mToneGenerator(SAMPLE_FREQ)
-	, mSequencer(mToneGenerator)
+	, mSynthesizer(SAMPLE_FREQ)
+	, mSequencer(mSynthesizer)
 	, mOutput(SAMPLE_FREQ, 2, Audio::SDLOutput::SampleFormat::Float32)
 {
 	lsp_assert(mOutput.start());
-	mToneGenerator.setRenderingCallback([this](LSP::Signal<float>&& sig){onRenderedSignal(std::move(sig));});
+	mSynthesizer.setRenderingCallback([this](LSP::Signal<float>&& sig){onRenderedSignal(std::move(sig));});
 }
 
 MainWindow::~MainWindow()
@@ -33,7 +33,7 @@ MainWindow::~MainWindow()
 	mSequencer.stop();
 	
 	// トーンジェネレータ停止
-	mToneGenerator.dispose();
+	mSynthesizer.dispose();
 
 	// 描画スレッド停止
 	mDrawingThreadAborted = true;
@@ -127,7 +127,7 @@ void MainWindow::drawingThreadMain()
 		SDL_RenderCopy(renderer, text_drawing_laod_average, nullptr, &text_drawing_laod_average.rect(0, 15));
 		
 		// 演奏情報
-		auto tgStatistics = mToneGenerator.statistics();
+		auto tgStatistics = mSynthesizer.statistics();
 		auto text_samples = Text::make(renderer, default_font, FORMAT_STRING(u8"生成サンプル数 : " << tgStatistics.created_samples << u8" (" << (tgStatistics.created_samples*1000ull/SAMPLE_FREQ) << u8"[msec])  skipped : " << tgStatistics.skipped_samples*1000ull/SAMPLE_FREQ << u8"[msec]").c_str(), COLOR_BLACK);
 		SDL_RenderCopy(renderer, text_samples, nullptr, &text_samples.rect(150, 0));
 		auto text_rendering_laod_average = Text::make(renderer, default_font, FORMAT_STRING(u8"演奏負荷 : " << std::setfill('0') << std::right << std::setw(3) << (int)(100*tgStatistics.rendering_load_average()) << u8"[%]").c_str(), COLOR_BLACK);

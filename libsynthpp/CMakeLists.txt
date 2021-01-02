@@ -20,8 +20,8 @@ add_library(
 	src/MIDI/Sequencer.cpp
 
 	src/Synthesizer/VoiceMapper.cpp
+	src/Synthesizer/Luath.cpp
 	
-
 	src/static_test.cpp)  
 
 target_include_directories(

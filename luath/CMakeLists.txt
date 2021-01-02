@@ -12,8 +12,6 @@ add_executable(
 
 	src/Window/MainWindow.cpp
 	
-	src/Synthesizer/Generator.cpp
-
 	src/Widget/OscilloScope.cpp
 	)
 	

@@ -1,7 +1,7 @@
 ﻿#pragma once
 
 #include <Luath/Base/Base.hpp>
-#include <Luath/Syntesizer/Generator.hpp>
+#include <LSP/Synth/Luath.hpp>
 #include <LSP/MIDI/Sequencer.hpp>
 #include <LSP/Threading/EventSignal.hpp>
 #include <LSP/Audio/SDLOutput.hpp>
@@ -34,7 +34,7 @@ private:
 	LSP::Audio::SDLOutput mOutput;
 
 	// シーケンサ,シンセサイザ
-	Luath::Synthesizer::ToneGenerator mToneGenerator;
+	LSP::Synth::Luath mSynthesizer;
 	LSP::MIDI::Sequencer mSequencer;
 };
 
