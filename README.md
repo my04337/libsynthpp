@@ -7,7 +7,7 @@ Multiplatoform MIDI synthesizer library.
 https://ja.osdn.net/projects/libsynthpp/
 
 現時点で目指しているもの :  
-* 開発言語 : C++17
+* 開発言語 : C++20
 * 対応プラットフォーム : Windows 10
 * 音声バックエンド : WASAPI (or SDL経由)
 * CMakeプロジェクト(基本的にVisual Studio 2019で開発)
@@ -22,4 +22,4 @@ MIDIシンセサイザが目指しているもの :
 * マルチプラットフォーム対応 (メインターゲットはWindows, Linux)
 * 音声バックエンド : OpenAL
 * VSTi対応
-W
+* C++20 Moduleへの対応 (CMakeの対応後)
