@@ -17,11 +17,9 @@ Text& Text::operator=(Text&& d)noexcept
 
 	dispose();
 	mTexture = d.mTexture;
-	mWidth = d.mWidth;
-	mHeight = d.mHeight;
+	mRect = d.mRect;
 	d.mTexture = nullptr;
-	d.mWidth = 0;
-	d.mHeight = 0;
+	d.mRect = SDL_Rect{0, 0, 0, 0};
 	return *this;
 }
 Text::~Text()
@@ -41,8 +39,8 @@ Text Text::make(SDL_Renderer* renderer, TTF_Font* font, const wchar_t* textW, SD
 
 	Text text;
 	text.mTexture = SDL_CreateTextureFromSurface(renderer, surface);
-	text.mWidth = surface->w;
-	text.mHeight = surface->h;
+	text.mRect.w = surface->w;
+	text.mRect.h = surface->h;
 	return text; // NRVO
 }
 void Text::dispose()

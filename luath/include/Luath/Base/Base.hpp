@@ -39,14 +39,14 @@ public:
 
 	operator SDL_Texture*()const noexcept { return mTexture; }
 	
-	int width()const noexcept { return mWidth; }
-	int height()const noexcept { return mHeight; }
+	int width()const noexcept { return mRect.w; }
+	int height()const noexcept { return mRect.h; }
 
-	SDL_Rect rect(int x, int y) { return {x, y, mWidth, mHeight}; }
+	const SDL_Rect& rect() const { return mRect; }
+	const SDL_Rect& rect(int x, int y) { mRect.x = x; mRect.y = y; return rect(); }
 
 private:
 	SDL_Texture* mTexture = nullptr;
-	int mWidth = 0;
-	int mHeight = 0;
+	SDL_Rect mRect = { 0, 0, 0, 0 };
 };
 }
