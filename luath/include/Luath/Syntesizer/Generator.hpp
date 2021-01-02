@@ -1,9 +1,10 @@
 ﻿#pragma once
 
 #include <Luath/Base/Base.hpp>
-#include <Luath/Syntesizer/Tone.hpp>
-#include <LSP/MIDI/Controller.hpp>
 #include <LSP/MIDI/Message.hpp>
+#include <LSP/MIDI/MessageReceiver.hpp>
+#include <LSP/MIDI/Synthesizer/VoiceMapper.hpp>
+#include <LSP/MIDI/Synthesizer/SimpleVoice.hpp>
 #include <LSP/Threading/TaskDispatcher.hpp>
 
 #include <array>
@@ -11,9 +12,10 @@
 namespace Luath::Synthesizer
 {
 class ToneGenerator
-	: public LSP::MIDI::Controller
+	: public LSP::MIDI::MessageReceiver
 {
 public:
+	using VoiceId = LSP::MIDI::Synthesizer::VoiceId;
 	using RenderingCallback = std::function<void(LSP::Signal<float>&& sig)>;
 	static constexpr uint8_t MAX_CHANNELS = 16;
 	enum class SystemType
@@ -134,14 +136,14 @@ private:
 		bool    rpnNull;
 
 	private:
-		void tone_noteOn(ToneId id, uint32_t noteNo, uint8_t vel);
-		void tone_noteOff(ToneId id);
+		void tone_noteOn(VoiceId id, uint32_t noteNo, uint8_t vel);
+		void tone_noteOff(VoiceId id);
 
 	private:
 		// 発音状態管理
-		LSP::MIDI::ToneMapper _toneMapper;
+		LSP::MIDI::Synthesizer::VoiceMapper _voiceMapper;
 		// トーン生成
-		std::unordered_map<ToneId, std::unique_ptr<Tone>> _tones;
+		std::unordered_map<VoiceId, std::unique_ptr<LSP::MIDI::Synthesizer::Voice<float>>> _voices;
 	};
 	std::vector<PerChannelParams> mPerChannelParams;
 

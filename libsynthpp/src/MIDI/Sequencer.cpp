@@ -1,5 +1,5 @@
 ﻿#include <LSP/MIDI/Sequencer.hpp>
-#include <LSP/MIDI/Controller.hpp>
+#include <LSP/MIDI/MessageReceiver.hpp>
 #include <LSP/Threading/Thread.hpp>
 #include <LSP/Threading/EventSignal.hpp>
 #include <LSP/Base/Logging.hpp>
@@ -72,8 +72,8 @@ std::optional<uint32_t> read_variable(std::istream& s)
 }
 
 
-Sequencer::Sequencer(Controller& controller)
-	: mController(controller)
+Sequencer::Sequencer(MessageReceiver& receiver)
+	: mReceiver(receiver)
 	, mPlayThreadAbortFlag(false)
 {
 }
@@ -136,7 +136,7 @@ void Sequencer::playThreadMain(const Body& smfBody)
 				next_message_time = msg_time;
 				break;
 			}
-			mController.onMidiMessageReceived(msg_time,  msg);
+			mReceiver.onMidiMessageReceived(msg_time,  msg);
 			++next_message_iter;
 		}
 

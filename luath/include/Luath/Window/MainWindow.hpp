@@ -1,7 +1,7 @@
 ﻿#pragma once
 
 #include <Luath/Base/Base.hpp>
-#include <Luath/Syntesizer/ToneGenerator.hpp>
+#include <Luath/Syntesizer/Generator.hpp>
 #include <LSP/MIDI/Sequencer.hpp>
 #include <LSP/Threading/EventSignal.hpp>
 #include <LSP/Audio/SDLOutput.hpp>

@@ -6,14 +6,14 @@
 
 namespace LSP::MIDI
 {
-class Controller;
+class MessageReceiver;
 
 // SMFファイル シーケンサ
 class Sequencer
 	: non_copy_move
 {
 public:
-	Sequencer(Controller& controller);
+	Sequencer(MessageReceiver& receiver);
 	~Sequencer();
 
 	// SMFを開きます
@@ -33,7 +33,7 @@ private:
 	void playThreadMain(const Body& messages);
 
 private:
-	Controller& mController;
+	MessageReceiver& mReceiver;
 	std::thread mPlayThread;
 	std::atomic_bool mPlayThreadAbortFlag;
 	Body mSmfBody;

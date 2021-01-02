@@ -1,4 +1,4 @@
-﻿#include <Luath/Syntesizer/ToneGenerator.hpp>
+﻿#include <Luath/Syntesizer/Generator.hpp>
 #include <LSP/MIDI/Messages/BasicMessage.hpp>
 #include <LSP/MIDI/Messages/SysExMessage.hpp>
 
@@ -117,8 +117,8 @@ ToneGenerator::PerChannelParams::PerChannelParams(uint32_t sampleFreq, uint8_t c
 // チャネル毎パラメータ類 リセット
 void ToneGenerator::PerChannelParams::reset(SystemType type)
 {
-	_toneMapper.reset();
-	_tones.clear();
+	_voiceMapper.reset();
+	_voices.clear();
 
 	ccPan = 0.0f;
 	ccExpression = 1.0;
@@ -146,7 +146,7 @@ void ToneGenerator::PerChannelParams::resetParameterNumberState()
 }
 void ToneGenerator::PerChannelParams::noteOn(uint32_t noteNo, uint8_t vel)
 {
-	auto kvp = _toneMapper.noteOn(noteNo);
+	auto kvp = _voiceMapper.noteOn(noteNo);
 	tone_noteOff(kvp.second);
 	if(vel > 0) {
 		tone_noteOn(kvp.first, noteNo, vel);
@@ -154,16 +154,16 @@ void ToneGenerator::PerChannelParams::noteOn(uint32_t noteNo, uint8_t vel)
 }
 void ToneGenerator::PerChannelParams::noteOff(uint32_t noteNo)
 {
-	auto releasedTone = _toneMapper.noteOff(noteNo);
+	auto releasedTone = _voiceMapper.noteOff(noteNo);
 	tone_noteOff(releasedTone);
 }
 void ToneGenerator::PerChannelParams::holdOn()
 {
-	_toneMapper.holdOn();
+	_voiceMapper.holdOn();
 }
 void ToneGenerator::PerChannelParams::holdOff()
 {
-	auto releasedTones = _toneMapper.holdOff();
+	auto releasedTones = _voiceMapper.holdOff();
 	for (auto& toneId : releasedTones) {
 		tone_noteOff(toneId);
 	}
@@ -172,12 +172,12 @@ std::pair<float,float> ToneGenerator::PerChannelParams::update()
 {
 	// オシレータからの出力はモノラル
 	float v = 0;
-	for (auto iter = _tones.begin(); iter != _tones.end();) {
+	for (auto iter = _voices.begin(); iter != _voices.end();) {
 		v += iter->second->update();
 		if (iter->second->envolopeGenerator().isBusy()) {
 			++iter;
 		} else {
-			iter = _tones.erase(iter);
+			iter = _voices.erase(iter);
 		}
 	}
 	
@@ -197,23 +197,23 @@ void ToneGenerator::PerChannelParams::updateProgram()
 		break;
 	}
 }
-void ToneGenerator::PerChannelParams::tone_noteOn(ToneId id, uint32_t noteNo, uint8_t vel)
+void ToneGenerator::PerChannelParams::tone_noteOn(VoiceId id, uint32_t noteNo, uint8_t vel)
 {
 	float toneVolume = (vel / 127.0f);
 	float freq = 440*exp2(((float)noteNo-69.0f)/12.0f);
 
-	SimpleTone::FunctionGenerator fg;
+	LSP::Generator::FunctionGenerator<float> fg;
 	fg.setSinWave(sampleFreq, freq);
-	auto tone = std::make_unique<SimpleTone>(fg, pcEG, toneVolume);
-	_tones.emplace(id, std::move(tone));
+	auto tone = std::make_unique<LSP::MIDI::Synthesizer::SimpleVoice<float>>(fg, pcEG, toneVolume);
+	_voices.emplace(id, std::move(tone));
 }
-void ToneGenerator::PerChannelParams::tone_noteOff(ToneId id)
+void ToneGenerator::PerChannelParams::tone_noteOff(VoiceId id)
 {
-	auto found = _tones.find(id);
-	if(found == _tones.end()) return;
-	Tone& tone = *found->second;
+	auto found = _voices.find(id);
+	if(found == _voices.end()) return;
+	auto& voice = *found->second;
 
-	tone.envolopeGenerator().noteOff();
+	voice.envolopeGenerator().noteOff();
 }
 
 // ---

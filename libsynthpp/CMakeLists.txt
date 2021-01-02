@@ -18,10 +18,10 @@ add_library(
 	
 	src/MIDI/Parser.cpp
 	src/MIDI/Sequencer.cpp
-	src/MIDI/Controller.cpp
+	src/MIDI/Synthesizer/VoiceMapper.cpp
+	
 
-	src/static_test.cpp
-)  
+	src/static_test.cpp "include/LSP/MIDI/Synthesizer/Voice.hpp" "include/LSP/MIDI/Synthesizer/SimpleVoice.hpp")  
 
 target_include_directories(
              libsynthpp
