@@ -10,11 +10,8 @@ namespace LSP::Filter {
 //   参考URL : http://ufcpp.net/study/sp/digital_filter/biquad/
 //             http://www.musicdsp.org/files/Audio-EQ-Cookbook.txt
 template<
-	typename sample_type,
-	typename parameter_type = sample_type,
-	class = std::enable_if_t<
-		is_sample_type_v<sample_type> && is_floating_point_sample_type_v<parameter_type>
-	>
+	sample_typeable sample_type,
+	sample_typeable parameter_type = sample_type
 >
 class BiquadraticFilter
 {

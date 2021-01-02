@@ -19,8 +19,7 @@ enum class EnvelopeState
 
 // AHDSFRエンベロープジェネレータ
 template<
-	typename parameter_type,
-	class = std::enable_if_t<is_floating_point_sample_type_v<parameter_type>>
+	sample_typeable parameter_type
 >
 class EnvelopeGenerator final
 {

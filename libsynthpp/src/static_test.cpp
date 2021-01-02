@@ -11,27 +11,26 @@ using namespace LSP;
 
 // ############################################################################
 // ### Base/Math
-static_assert(PI<int32_t>     != 0,  "PI<> failed");
 static_assert(PI<float>       != 0,  "PI<>failed");
 static_assert(PI<double>      != 0,  "PI<> failed");
 static_assert(PI<long double> != 0,  "PI<> failed");
 
 // ############################################################################
 // ### Base/Signal 
-static_assert(is_sample_type_v<int8_t>,  "is_sample_type_v failed");
-static_assert(is_sample_type_v<int16_t>, "is_sample_type_v failed");
-static_assert(is_sample_type_v<int32_t>, "is_sample_type_v failed");
-static_assert(is_sample_type_v<float>,   "is_sample_type_v failed");
-static_assert(is_sample_type_v<double>,  "is_sample_type_v failed");
+static_assert(sample_typeable<int8_t>,  "is_sample_type_v failed");
+static_assert(sample_typeable<int16_t>, "is_sample_type_v failed");
+static_assert(sample_typeable<int32_t>, "is_sample_type_v failed");
+static_assert(sample_typeable<float>,   "is_sample_type_v failed");
+static_assert(sample_typeable<double>,  "is_sample_type_v failed");
 
-static_assert(!is_sample_type_v<uint32_t>,    "is_sample_type_v failed");
-static_assert(!is_sample_type_v<long double>, "is_sample_type_v failed");
+static_assert(!sample_typeable<uint32_t>,    "is_sample_type_v failed");
+static_assert(!sample_typeable<long double>, "is_sample_type_v failed");
 
-static_assert( is_integral_sample_type_v<int32_t>, "is_integral_sample_type_v failed");
-static_assert(!is_integral_sample_type_v<double>,  "is_integral_sample_type_v failed");
+static_assert( integral_sample_typeable<int32_t>, "is_integral_sample_type_v failed");
+static_assert(!integral_sample_typeable<double>,  "is_integral_sample_type_v failed");
 
-static_assert(!is_floating_point_sample_type_v<int32_t>, "is_floating_point_sample_type_v failed");
-static_assert( is_floating_point_sample_type_v<double>,  "is_floating_point_sample_type_v failed");
+static_assert(!floating_sample_typeable<int32_t>, "is_floating_point_sample_type_v failed");
+static_assert( floating_sample_typeable<double>,  "is_floating_point_sample_type_v failed");
 
 
 static_assert(normalize(+2.0) == +1.0,  "Filter::Normalizer failed");

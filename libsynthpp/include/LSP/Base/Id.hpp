@@ -5,12 +5,14 @@
 namespace LSP
 {
 
+template<class T>
+concept id_typeable = std::is_arithmetic_v<T>;
+
 /// ID基本型
-template<class T, typename id_type_ = uint64_t, id_type_ INITIAL_VALUE=static_cast<id_type_>(0)>
+template<class T, id_typeable id_type_ = uint64_t, id_type_ INITIAL_VALUE=static_cast<id_type_>(0)>
 struct id_base_t final
 {
 	using id_type = id_type_;
-	static_assert(std::is_arithmetic<id_type>::value, "invalid id_type");
 
 	static id_base_t fromValue(id_type id) noexcept { return id_base_t(id); }
 
@@ -41,7 +43,7 @@ private:
 };
 
 /// 発番可能ID基本型
-template<class T, typename id_type_ = uint64_t, id_type_ INITIAL_VALUE=static_cast<id_type_>(0)>
+template<class T, id_typeable id_type_ = uint64_t, id_type_ INITIAL_VALUE=static_cast<id_type_>(0)>
 struct issuable_id_base_t final
 {
 	using id_type = id_type_;
@@ -69,7 +71,7 @@ private:
 	static std::atomic<id_type> _cur;
 	id_type _v;
 };
-template<class T, typename id_type_, id_type_ INITIAL_VALUE>
+template<class T, id_typeable id_type_, id_type_ INITIAL_VALUE>
 std::atomic<id_type_> issuable_id_base_t<T, id_type_, INITIAL_VALUE>::_cur(INITIAL_VALUE);
 
 
@@ -77,10 +79,10 @@ std::atomic<id_type_> issuable_id_base_t<T, id_type_, INITIAL_VALUE>::_cur(INITI
 }
 
 namespace std{
-template <class T, typename id_type, id_type INITIAL_VALUE>
+template <class T, LSP::id_typeable id_type, id_type INITIAL_VALUE>
 struct hash<LSP::id_base_t<T, id_type, INITIAL_VALUE>>
 {
-	constexpr std::size_t operator () (const LSP::id_base_t<T,id_type, INITIAL_VALUE>& key) const noexcept { return static_cast<size_t>(key.id()); }
+	constexpr std::size_t operator () (const LSP::id_base_t<T, id_type, INITIAL_VALUE>& key) const noexcept { return static_cast<size_t>(key.id()); }
 };
 }
 namespace std{

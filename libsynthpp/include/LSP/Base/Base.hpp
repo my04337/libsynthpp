@@ -25,13 +25,8 @@
 #include <typeindex>
 #include <type_traits>
 #include <filesystem>
+#include <concepts>
 
-// C++17 関連パッチ
-#if _MSC_VER <= 1913 // 少なくともVisual Studio 2017 Update6以前はstd::filesystemは実験的実装
-namespace std::filesystem {
-	using namespace std::experimental::filesystem;
-}
-#endif
 
 // --- 基本的なマクロ類 ---
 #ifdef WIN32

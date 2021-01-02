@@ -5,9 +5,22 @@
 
 namespace LSP
 {
+template<typename T>
+concept integral_sample_typeable
+	= std::is_same_v<T, int8_t>
+	|| std::is_same_v<T, int16_t>
+	|| std::is_same_v<T, int32_t>
+	;
+template<typename T>
+concept floating_sample_typeable
+	=  std::is_same_v<T, float>
+	|| std::is_same_v<T, double>
+	;
+template<typename T>
+concept sample_typeable = integral_sample_typeable<T> || floating_sample_typeable<T>;
 
 /// サンプル型情報 
-template<typename sample_type> struct sample_traits {
+template<sample_typeable sample_type> struct sample_traits {
 	// MEMO abs(min) == abs(max)が成り立つようにすること
 };
 template<> struct sample_traits<int8_t> {
@@ -46,34 +59,11 @@ template<> struct sample_traits<double> {
 	static constexpr sample_type normalized_min = -abs_max;
 };
 
-// サンプル型であるか否か
-template <class T, class = void>
-struct is_sample_type : std::false_type {};
-template <class T>
-struct is_sample_type<T, std::void_t<typename sample_traits<T>::_sample_type_tag>> : std::true_type {};
-template<class T>
-constexpr bool is_sample_type_v = is_sample_type<T>::value;
-
-template <class T, class = void>
-struct is_integral_sample_type : std::false_type {};
-template <class T>
-struct is_integral_sample_type<T, std::enable_if_t<is_sample_type_v<T> && std::is_integral_v<T>>> : std::true_type {};
-template<class T>
-constexpr bool is_integral_sample_type_v = is_integral_sample_type<T>::value;
-
-template <class T, class = void>
-struct is_floating_point_sample_type : std::false_type {};
-template <class T>
-struct is_floating_point_sample_type<T, std::enable_if_t<is_sample_type_v<T> && std::is_floating_point_v<T>>> : std::true_type {};
-template<class T>
-constexpr bool is_floating_point_sample_type_v = is_floating_point_sample_type<T>::value;
-
 // ---
 
 // ノーマライズ : 値域を信号の標準的な幅に狭める
 template<
-	typename sample_type,
-	class = std::enable_if_t<is_sample_type_v<sample_type>>
+	sample_typeable sample_type
 >
 constexpr sample_type normalize(sample_type in) noexcept 
 {
@@ -88,9 +78,8 @@ constexpr sample_type normalize(sample_type in) noexcept
 
 // 再量子化 : サンプルのフォーマットを変更
 template<
-	typename Tout,
-	typename Tin,
-	class = std::enable_if_t<is_sample_type_v<Tin> && is_sample_type_v<Tout>>
+	sample_typeable Tout,
+	sample_typeable Tin
 >
 constexpr Tout requantize(Tin in) noexcept 
 {

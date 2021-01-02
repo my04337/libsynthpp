@@ -18,8 +18,7 @@ namespace
 
 // ビッグエンディアンの値を読み出します
 template<
-	typename T,
-	class = std::enable_if_t<std::is_arithmetic_v<T>>
+	std::integral T
 >
 std::optional<T> read_big(std::istream& s, size_t bytes = sizeof(T)) 
 {

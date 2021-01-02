@@ -7,7 +7,7 @@ namespace LSP
 {
 
 // 信号 view
-template<typename sample_type>
+template<sample_typeable sample_type>
 class signal_view
 {
 public:
@@ -33,7 +33,7 @@ private:
 };
 
 // 信号型
-template<typename sample_type>
+template<sample_typeable sample_type>
 class Signal final
 	: non_copy
 {
