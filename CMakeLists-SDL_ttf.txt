@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.2)
+cmake_minimum_required(VERSION 3.18)
 
 set(DEPEND_LIB_ROOT ${PROJECT_BINARY_DIR}/Depends)
 set(SDL2_ttf_PREFIX_PATH ${DEPEND_LIB_ROOT}/SDL2_ttf)
