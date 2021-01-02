@@ -8,10 +8,10 @@ namespace LSP
 
 // 信号 view
 template<sample_typeable sample_type>
-class signal_view
+class SignalView
 {
 public:
-	constexpr signal_view(const sample_type* data, uint32_t channels, size_t frames) 
+	constexpr SignalView(const sample_type* data, uint32_t channels, size_t frames)
 		: mData(data), mChannels(channels), mFrames(frames) {}
 
 	// チャネル数を取得します
@@ -58,7 +58,7 @@ public:
 	Signal(Signal&& d)noexcept = default;
 	Signal& operator=(Signal&& d)noexcept = default;
 
-	operator signal_view<sample_type> ()const noexcept { return signal_view<sample_type>(mData.get(), mChannels, mFrames); }
+	operator SignalView<sample_type> ()const noexcept { return signal_view<sample_type>(mData.get(), mChannels, mFrames); }
 
 	// チャネル数を取得します
 	uint32_t channels()const noexcept { return mChannels; }
