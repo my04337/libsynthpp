@@ -40,7 +40,6 @@ void OscilloScope::write(const LSP::Signal<sample_type>& sig)
 {
 	std::lock_guard lock(mMutex);
 
-	const auto to_float_type = LSP::Filter::Requantizer<float>();
 	const auto signal_channels = sig.channels();
 	const auto signal_frames = sig.frames();
 	const auto buffer_length = mBufferLength;
@@ -51,7 +50,7 @@ void OscilloScope::write(const LSP::Signal<sample_type>& sig)
 	for (size_t ch=0; ch<signal_channels; ++ch) {
 		auto& buff = mBuffers[ch];
 		for(size_t i=0; i<signal_frames; ++i) {
-			buff.push_back(to_float_type(sig.frame(i)[ch]));
+			buff.push_back(requantize<float>(sig.frame(i)[ch]));
 		}
 		while(buff.size() > buffer_length) buff.pop_front();
 	}
