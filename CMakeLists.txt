@@ -22,4 +22,4 @@ include(CMakeLists-UmeFont.txt)
 
 add_subdirectory(libsynthpp)
 add_subdirectory(test)
-add_subdirectory(luath)
+add_subdirectory(luath-gui)
