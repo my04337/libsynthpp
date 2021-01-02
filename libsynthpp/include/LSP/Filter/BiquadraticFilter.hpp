@@ -2,6 +2,7 @@
 
 #include <LSP/Base/Base.hpp>
 #include <LSP/Base/Math.hpp>
+#
 
 namespace LSP::Filter {
 
@@ -51,9 +52,6 @@ public:
 	// 出力更新
 	sample_type update(sample_type x0_) noexcept
 	{
-		constexpr auto to_sample_type = Filter::Requantizer<sample_type>();
-		constexpr auto to_param_type = Filter::Requantizer<parameter_type>();
-
 		const auto x0 = to_param_type(x0_);
 
 		const auto x1 = x[idx1], x2 = x[idx2];
@@ -68,7 +66,7 @@ public:
 		idx1 ^= 0x01;
 		idx2 ^= 0x01;
 
-		return to_sample_type(y0);
+		return requantize<sample_type>(y0);
 	}
 
 
