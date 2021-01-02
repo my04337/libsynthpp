@@ -29,12 +29,13 @@ Text::~Text()
 	dispose();
 }
 
-Text Text::make(SDL_Renderer* renderer, TTF_Font* font, const char* textU8, SDL_Color color)
+Text Text::make(SDL_Renderer* renderer, TTF_Font* font, const wchar_t* textW, SDL_Color color)
 {
 	lsp_assert(renderer != nullptr);
 	lsp_assert(font != nullptr);
+	lsp_assert(sizeof(wchar_t) == sizeof(Uint16));
 	
-	auto surface = TTF_RenderUTF8_Blended(font, textU8, color);
+	auto surface = TTF_RenderUNICODE_Blended(font, reinterpret_cast<const Uint16 *>(textW), color);
 	if(!surface) return {};
 	auto fin_act_free_surface = finally([&]{SDL_FreeSurface(surface);});
 

@@ -116,21 +116,21 @@ void MainWindow::drawingThreadMain()
 		SDL_RenderClear(renderer);
 
 		// 描画情報
-		auto text_frames = Text::make(renderer, default_font, FORMAT_STRING(u8"描画フレーム数 : " << frames).c_str(), COLOR_BLACK);
+		auto text_frames = Text::make(renderer, default_font, FORMAT_STRING(L"描画フレーム数 : " << frames).c_str(), COLOR_BLACK);
 		SDL_RenderCopy(renderer, text_frames, nullptr, &text_frames.rect(0, 0));
 		if (drawing_time_index == drawing_time_history.size()) {
 			auto average_time = std::accumulate(drawing_time_history.cbegin(), drawing_time_history.cend(), std::chrono::microseconds(0)) / drawing_time_history.size();
 			auto load_average = (int)(100.0*average_time.count()/FRAME_INTERVAL.count());
-			text_drawing_laod_average = Text::make(renderer, default_font, FORMAT_STRING(u8"描画負荷 : " << std::setfill('0') << std::right << std::setw(3) << load_average << u8"[%]").c_str(), COLOR_BLACK);
+			text_drawing_laod_average = Text::make(renderer, default_font, FORMAT_STRING(L"描画負荷 : " << std::setfill(L'0') << std::right << std::setw(3) << load_average << u8"[%]").c_str(), COLOR_BLACK);
 			drawing_time_index = 0;
 		}		
 		SDL_RenderCopy(renderer, text_drawing_laod_average, nullptr, &text_drawing_laod_average.rect(0, 15));
 		
 		// 演奏情報
 		auto tgStatistics = mSynthesizer.statistics();
-		auto text_samples = Text::make(renderer, default_font, FORMAT_STRING(u8"生成サンプル数 : " << tgStatistics.created_samples << u8" (" << (tgStatistics.created_samples*1000ull/SAMPLE_FREQ) << u8"[msec])  skipped : " << tgStatistics.skipped_samples*1000ull/SAMPLE_FREQ << u8"[msec]").c_str(), COLOR_BLACK);
+		auto text_samples = Text::make(renderer, default_font, FORMAT_STRING(L"生成サンプル数 : " << tgStatistics.created_samples << L" (" << (tgStatistics.created_samples*1000ull/SAMPLE_FREQ) << u8"[msec])  skipped : " << tgStatistics.skipped_samples*1000ull/SAMPLE_FREQ << u8"[msec]").c_str(), COLOR_BLACK);
 		SDL_RenderCopy(renderer, text_samples, nullptr, &text_samples.rect(150, 0));
-		auto text_rendering_laod_average = Text::make(renderer, default_font, FORMAT_STRING(u8"演奏負荷 : " << std::setfill('0') << std::right << std::setw(3) << (int)(100*tgStatistics.rendering_load_average()) << u8"[%]").c_str(), COLOR_BLACK);
+		auto text_rendering_laod_average = Text::make(renderer, default_font, FORMAT_STRING(L"演奏負荷 : " << std::setfill(L'0') << std::right << std::setw(3) << (int)(100*tgStatistics.rendering_load_average()) << u8"[%]").c_str(), COLOR_BLACK);
 		SDL_RenderCopy(renderer, text_rendering_laod_average, nullptr, &text_rendering_laod_average.rect(150, 15));
 
 

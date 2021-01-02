@@ -8,7 +8,7 @@
 #include <sstream>
 #include <iomanip>
 
-#define FORMAT_STRING(...) dynamic_cast<std::ostringstream&>(std::ostringstream() << __VA_ARGS__).str()
+#define FORMAT_STRING(...) ((std::wostringstream() << __VA_ARGS__).str())
 
 namespace Luath
 {
@@ -27,7 +27,7 @@ class Text
 	: non_copy
 {
 public:
-	static Text make(SDL_Renderer* renderer, TTF_Font* font, const char* textU8, SDL_Color color = SDL_Color{0,0,0,255});
+	static Text make(SDL_Renderer* renderer, TTF_Font* font, const wchar_t* text, SDL_Color color = SDL_Color{0,0,0,255});
 
 	Text()noexcept;
 	~Text();
