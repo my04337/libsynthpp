@@ -3,22 +3,22 @@ cmake_minimum_required(VERSION 3.2)
 add_executable(
 	luath-gui WIN32 
 	
-	src/main.cpp
+	src/Luath/main.cpp
 	
-	src/Base/Base.cpp
+	src/Luath/Base/Base.cpp
 
-	src/App/Application.cpp
-	src/App/FontCache.cpp
+	src/Luath/App/Application.cpp
+	src/Luath/App/FontCache.cpp
 
-	src/Window/MainWindow.cpp
+	src/Luath/Window/MainWindow.cpp
 	
-	src/Widget/OscilloScope.cpp
+	src/Luath/Widget/OscilloScope.cpp
 	)
 	
 	
 target_include_directories(
              luath-gui
-             PUBLIC  ./include
+             PUBLIC  src
             )
 
 target_link_libraries(luath-gui libsynthpp SDL2main SDL2_ttf.lib)

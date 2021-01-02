@@ -5,7 +5,7 @@
 
 namespace LSP
 {
-
+	 
 // 制御メッセージ
 class Message final
 	: non_copy
