@@ -8,8 +8,9 @@ include(ExternalProject)
 ExternalProject_Add(
 	SDL2
 	
-	URL https://www.libsdl.org/release/SDL2-devel-2.0.8-VC.zip
-	URL_HASH SHA1=BCC130CF38AED326DCDCC6C21CA9B1FF421E768E
+	URL https://www.libsdl.org/release/SDL2-devel-2.0.14-VC.zip
+	URL_HASH SHA1=48D5DCD4A445410301F5575219CFFB6DE654EDB8
+
 	PREFIX ${SDL2_PREFIX_PATH}
 	SOURCE_DIR   ${SDL2_ROOT_PATH}
 	CONFIGURE_COMMAND  ""
