@@ -2,6 +2,7 @@
 
 #include <Luath/Base/Base.hpp>
 #include <Luath/Widget/OscilloScope.hpp>
+#include <Luath/Widget/Lissajous.hpp>
 #include <LSP/Synth/Luath.hpp>
 #include <LSP/MIDI/Sequencer.hpp>
 #include <LSP/Threading/EventSignal.hpp>
@@ -39,7 +40,8 @@ private:
 	LSP::MIDI::Sequencer mSequencer;
 
 	// 各種ウィジット
-	Luath::Widget::OscilloScope mOscilloScope;
+	Luath::Widget::OscilloScope mOscilloScopeWidget;
+	Luath::Widget::Lissajous mLissajousWidget;
 };
 
 }

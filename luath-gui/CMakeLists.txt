@@ -13,7 +13,6 @@ add_executable(
 	src/Luath/Window/MainWindow.cpp
 	
 	src/Luath/Widget/OscilloScope.cpp
-	src/Luath/Widget/Lissajous.cpp
 	)
 	
 	
