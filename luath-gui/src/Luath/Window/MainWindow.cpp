@@ -86,11 +86,13 @@ void MainWindow::onDropFile(const SDL_DropEvent& ev)
 {
 	// シーケンサセットアップ
 	if (!ev.file) return;
-	std::filesystem::path midi_path(ev.file);
+	auto midi_path = std::filesystem::u8path(ev.file);
 	loadMidi(midi_path);
 }
 void MainWindow::loadMidi(const std::filesystem::path& midi_path) {
 	mSequencer.stop();
+	mSequencer.reset(MIDI::SystemType::GM1);
+
 	try {
 		auto parsed = MIDI::Parser::parse(midi_path);
 		mSequencer.load(std::move(parsed.second));
