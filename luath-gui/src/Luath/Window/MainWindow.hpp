@@ -28,8 +28,11 @@ public:
 	~MainWindow();
 
 	bool initialize();
+	void onDropFile(const SDL_DropEvent& ev);
+
 
 protected:
+	void loadMidi(const std::filesystem::path& path);
 	void drawingThreadMain();
 	void onRenderedSignal(LSP::Signal<float>&& sig);
 

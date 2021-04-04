@@ -74,15 +74,37 @@ bool MainWindow::initialize()
 	// シーケンサセットアップ
 	auto midi_path = std::filesystem::current_path();
 	midi_path.append("assets/sample_midi/brambles_vsc3.mid"); // 試験用MIDIファイル
-	auto parsed = MIDI::Parser::parse(midi_path);
-	mSequencer.load(std::move(parsed.second));
+	loadMidi(midi_path);
 
 	// OK
 	mWindow = window;
 	fail_act_destroy.reset();
 	mDrawingThread = std::thread([this]{drawingThreadMain();});
-	mSequencer.start();
 	return true;
+}
+void MainWindow::onDropFile(const SDL_DropEvent& ev)
+{
+	// シーケンサセットアップ
+	if (!ev.file) return;
+	std::filesystem::path midi_path(ev.file);
+	loadMidi(midi_path);
+}
+void MainWindow::loadMidi(const std::filesystem::path& midi_path) {
+	mSequencer.stop();
+	try {
+		auto parsed = MIDI::Parser::parse(midi_path);
+		mSequencer.load(std::move(parsed.second));
+		mSequencer.start();
+	} catch (const MIDI::decoding_exception& e) {
+		// ロード失敗
+		SDL_ShowSimpleMessageBox(
+			SDL_MESSAGEBOX_ERROR,
+			reinterpret_cast<const char*>(u8"ファイルエラー"),
+			reinterpret_cast<const char*>((u8"MIDIファイルを開けません : " + midi_path.u8string()).c_str()),
+			mWindow
+		);
+	}
+
 }
 void MainWindow::drawingThreadMain()
 {
