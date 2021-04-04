@@ -56,8 +56,8 @@ void SpectrumAnalyzer::draw(SDL_Renderer* renderer, int left_, int top_, int wid
 	const SDL_Rect rect{ left_, top_, width_, height_ };
 
 	// よく使う値を先に計算
-	static const float log_min_freq = std::log10(10); // Hz
-	static const float log_max_freq = std::log10(25000); // Hz
+	static const float log_min_freq = std::log10(20); // Hz
+	static const float log_max_freq = std::log10(20000); // Hz
 	static const float log_min_dbfs = -20; // dbFS(power)
 	static const float log_max_dbfs = +60; // dbFS(power)
 	const int left = rect.x;
