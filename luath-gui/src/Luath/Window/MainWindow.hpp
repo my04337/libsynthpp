@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include <Luath/Base/Base.hpp>
+#include <Luath/Widget/OscilloScope.hpp>
 #include <LSP/Synth/Luath.hpp>
 #include <LSP/MIDI/Sequencer.hpp>
 #include <LSP/Threading/EventSignal.hpp>
@@ -36,6 +37,9 @@ private:
 	// シーケンサ,シンセサイザ
 	LSP::Synth::Luath mSynthesizer;
 	LSP::MIDI::Sequencer mSequencer;
+
+	// 各種ウィジット
+	Luath::Widget::OscilloScope mOscilloScope;
 };
 
 }

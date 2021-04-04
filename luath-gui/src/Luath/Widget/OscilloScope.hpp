@@ -12,7 +12,6 @@ public:
 	~OscilloScope();
 
 	// 表示パラメータを設定します
-	void setSize(int width, int height);
 	void setParam(uint32_t sampleFreq, uint32_t channels, uint32_t bufferLength);
 
 	// 表示波形を書き込みます
@@ -21,7 +20,7 @@ public:
 
 
 	// オシロスコープを描画します
-	void draw(SDL_Renderer* renderer, int x, int y);
+	void draw(SDL_Renderer* renderer, int x, int y, int width, int height);
 	
 private:
 	void _reset();
@@ -31,8 +30,6 @@ private:
 	uint32_t mChannels = 1; // 受信チャネル
 	uint32_t mBufferLength = 1;
 	std::vector<std::deque<float>> mBuffers; // リングバッファ
-
-	int mWidth, mHeight;
 };
 
 template<typename sample_type>

@@ -22,6 +22,8 @@ MainWindow::MainWindow()
 {
 	lsp_assert(mOutput.start());
 	mSynthesizer.setRenderingCallback([this](LSP::Signal<float>&& sig){onRenderedSignal(std::move(sig));});
+
+	mOscilloScope.setParam(SAMPLE_FREQ, 2, SAMPLE_FREQ*250e-4);
 }
 
 MainWindow::~MainWindow()
@@ -48,8 +50,8 @@ MainWindow::~MainWindow()
 }
 bool MainWindow::initialize()
 {
-	constexpr int SCREEN_WIDTH = 600;
-	constexpr int SCREEN_HEIGHT = 400;
+	constexpr int SCREEN_WIDTH = 800;
+	constexpr int SCREEN_HEIGHT = 640;
 
 	// ウィンドウ生成
 	auto window = SDL_CreateWindow(
@@ -128,11 +130,15 @@ void MainWindow::drawingThreadMain()
 		
 		// 演奏情報
 		auto tgStatistics = mSynthesizer.statistics();
-		auto text_samples = Text::make(renderer, default_font, FORMAT_STRING(L"生成サンプル数 : " << tgStatistics.created_samples << L" (" << (tgStatistics.created_samples*1000ull/SAMPLE_FREQ) << L"[msec])  skipped : " << tgStatistics.skipped_samples*1000ull/SAMPLE_FREQ << L"[msec]").c_str(), COLOR_BLACK);
+		auto text_samples = Text::make(renderer, default_font, FORMAT_STRING(L"生成サンプル数 : " << tgStatistics.created_samples << L" (" << (tgStatistics.created_samples*1000ull/SAMPLE_FREQ)
+			<< L"[msec])  skipped : " << tgStatistics.skipped_samples*1000ull/SAMPLE_FREQ 
+			<< L"[msec] buffered : " << std::setfill(L'0') << std::right << std::setw(4) << mOutput.getBufferedFrameCount()*1000 / SAMPLE_FREQ << "[msec]").c_str(), COLOR_BLACK);
 		SDL_RenderCopy(renderer, text_samples, nullptr, &text_samples.rect(150, 0));
 		auto text_rendering_laod_average = Text::make(renderer, default_font, FORMAT_STRING(L"演奏負荷 : " << std::setfill(L'0') << std::right << std::setw(3) << (int)(100*tgStatistics.rendering_load_average()) << L"[%]").c_str(), COLOR_BLACK);
 		SDL_RenderCopy(renderer, text_rendering_laod_average, nullptr, &text_rendering_laod_average.rect(150, 15));
-
+		
+		// オシロスコープ
+		mOscilloScope.draw(renderer, 500, 400, 300, 240);
 
 		// 描画終了
 		SDL_RenderPresent(renderer);
@@ -145,4 +151,5 @@ void MainWindow::drawingThreadMain()
 void MainWindow::onRenderedSignal(LSP::Signal<float>&& sig)
 {
 	mOutput.write(sig);
+	mOscilloScope.write(sig);
 }

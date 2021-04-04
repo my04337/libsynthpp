@@ -10,15 +10,6 @@ OscilloScope::OscilloScope()
 OscilloScope::~OscilloScope()
 {
 }
-// 表示パラメータを設定します
-void OscilloScope::setSize(int width, int height)
-{
-	std::lock_guard lock(mMutex);
-	mWidth = width;
-	mHeight = height;
-
-	_reset();
-}
 void OscilloScope::setParam(uint32_t sampleFreq, uint32_t channels, uint32_t bufferLength)
 {
 	std::lock_guard lock(mMutex);
@@ -42,28 +33,27 @@ void OscilloScope::_reset()
 }
 
 
-void OscilloScope::draw(SDL_Renderer* renderer, int left_, int top_)
+void OscilloScope::draw(SDL_Renderer* renderer, int left_, int top_, int width_, int height_)
 {
 	lsp_assert(renderer != nullptr);
 
 	std::lock_guard lock(mMutex);
 
-	const SDL_Rect rect { left_, top_, mWidth, mHeight };
+	const SDL_Rect rect { left_, top_, width_, height_};
 
-	// クリッピング
-	bool has_clip_rect = SDL_RenderIsClipEnabled(renderer);
+	// クリッピング	
+	SDL_bool is_clipped = SDL_RenderIsClipEnabled(renderer);
 	SDL_Rect original_clip_rect;
-	if(has_clip_rect) SDL_RenderGetClipRect(renderer, &original_clip_rect);
-	auto fin_act_reset_clip_rect = LSP::finally([&]{SDL_RenderSetClipRect(renderer, has_clip_rect ? &original_clip_rect : nullptr);});
-	SDL_RenderSetClipRect(renderer, &rect);
-
+	if(is_clipped) SDL_RenderGetClipRect(renderer, &original_clip_rect);
+	auto fin_act = LSP::finally([&] { SDL_RenderSetClipRect(renderer, is_clipped ? &original_clip_rect : nullptr); });
+	
 	// よく使う値を先に計算
 	const int left   = rect.x;
 	const int top    = rect.y;
 	const int right  = rect.x + rect.w;
 	const int bottom = rect.y + rect.h;
-	const int width  = mWidth;
-	const int height = mHeight;
+	const int width  = rect.w;
+	const int height = rect.h;
 
 	const int mid_x = (left + right) / 2;
 	const int mid_y = (top + bottom) / 2;
@@ -104,4 +94,7 @@ void OscilloScope::draw(SDL_Renderer* renderer, int left_, int top_)
 	// 枠描画
 	SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 	SDL_RenderDrawRect(renderer, &rect);
+
+	// クリッピング解除
+	lsp_assert(SDL_RenderIsClipEnabled(renderer) == is_clipped);
 }
