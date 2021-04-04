@@ -278,22 +278,22 @@ void Luath::sysExMessage(const uint8_t* data, size_t len)
 		// リアルタイム ユニバーサルシステムエクスクルーシブ
 		// https://www.g200kg.com/jp/docs/tech/universalsysex.html
 
-		if (match({0x7F, 0x09, 0x01, 0xF7})) {
+		if (match({0x7F, 0x09, 0x01})) {
 			// GM1 System On
 			reset(SystemType::GM1);
 		} 
-		if(match({0x7F, 0x09, 0x03, 0xF7})) {
+		if(match({0x7F, 0x09, 0x03})) {
 			// GM2 System On
 			reset(SystemType::GM2);
 		}
-		if (match({0x7F, 0x09, 0x02, 0xF7})) {
+		if (match({0x7F, 0x09, 0x02})) {
 			// GM System Off → GS Reset
 			reset(SystemType::GS);
 		}
 	} 
 	if (makerId = 0x41) {
 		// Roland
-		if (match({{/*dev:any*/}, 0x42, 0x12, 0x40, 0x00, 0x7F, 0x00, 0x41, 0xF7})) {
+		if (match({{/*dev:any*/}, 0x42, 0x12, 0x40, 0x00, 0x7F, 0x00, 0x41})) {
 			// GS Reset
 			reset(SystemType::GS);
 		}
