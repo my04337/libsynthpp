@@ -41,12 +41,6 @@ void OscilloScope::draw(SDL_Renderer* renderer, int left_, int top_, int width_,
 
 	const SDL_Rect rect { left_, top_, width_, height_};
 
-	// クリッピング	
-	SDL_bool is_clipped = SDL_RenderIsClipEnabled(renderer);
-	SDL_Rect original_clip_rect;
-	if(is_clipped) SDL_RenderGetClipRect(renderer, &original_clip_rect);
-	auto fin_act = LSP::finally([&] { SDL_RenderSetClipRect(renderer, is_clipped ? &original_clip_rect : nullptr); });
-	
 	// よく使う値を先に計算
 	const int left   = rect.x;
 	const int top    = rect.y;
@@ -83,7 +77,7 @@ void OscilloScope::draw(SDL_Renderer* renderer, int left_, int top_, int width_,
 		int num = 0;
 		for (uint32_t i = 0; i < buffer_length; ++i) {
 			int x = left + (int)(i * sample_pitch);
-			int y = mid_y - (int)(height/2.0f * buffer[i]);
+			int y = mid_y - (int)(height/2.0f * std::clamp(buffer[i], LSP::sample_traits<float>::normalized_min, LSP::sample_traits<float>::normalized_max));
 			SDL_Point pt{x, y};
 			if(num > 0 && points[num-1].x == pt.x && points[num-1].y == pt.y) continue;
 			points[num++] = SDL_Point{x, y};
@@ -94,7 +88,4 @@ void OscilloScope::draw(SDL_Renderer* renderer, int left_, int top_, int width_,
 	// 枠描画
 	SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 	SDL_RenderDrawRect(renderer, &rect);
-
-	// クリッピング解除
-	lsp_assert(SDL_RenderIsClipEnabled(renderer) == is_clipped);
 }
