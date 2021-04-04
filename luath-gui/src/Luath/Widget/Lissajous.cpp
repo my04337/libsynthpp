@@ -1,4 +1,4 @@
-#include <Luath/Widget/Lissajous.hpp>
+ï»¿#include <Luath/Widget/Lissajous.hpp>
 
 using namespace Luath;
 using namespace Luath::Widget;
@@ -43,14 +43,14 @@ void Lissajous::draw(SDL_Renderer* renderer, int left_, int top_, int width_, in
 
 	const SDL_Rect rect { left_, top_, width_, height_};
 
-	// ƒNƒŠƒbƒsƒ“ƒO	
+	// ã‚¯ãƒªãƒƒãƒ”ãƒ³ã‚°	
 	SDL_bool is_clipped = SDL_RenderIsClipEnabled(renderer);
 	SDL_Rect original_clip_rect;
 	if(is_clipped) SDL_RenderGetClipRect(renderer, &original_clip_rect);
 	auto fin_act = LSP::finally([&] { SDL_RenderSetClipRect(renderer, is_clipped ? &original_clip_rect : nullptr); });
 	SDL_RenderSetClipRect(renderer, &rect);
 	
-	// ‚æ‚­g‚¤’l‚ğæ‚ÉŒvZ
+	// ã‚ˆãä½¿ã†å€¤ã‚’å…ˆã«è¨ˆç®—
 	const int left   = rect.x;
 	const int top    = rect.y;
 	const int right  = rect.x + rect.w;
@@ -65,7 +65,7 @@ void Lissajous::draw(SDL_Renderer* renderer, int left_, int top_, int width_, in
 	const float sample_pitch = width / (float)mBufferLength;
 
 
-	// Œrü•`‰æ
+	// ç½«ç·šæç”»
 	SDL_SetRenderDrawColor(renderer, 0x80, 0xFF, 0x20, 255);
 	for (int i = 1; i <= 9; ++i) {
 		int x = left + int(width  * 0.1f * i);
@@ -74,7 +74,7 @@ void Lissajous::draw(SDL_Renderer* renderer, int left_, int top_, int width_, in
 		SDL_RenderDrawLine(renderer, x, top, x, bottom);
 	}
 
-	// M†•`‰æ
+	// ä¿¡å·æç”»
 	std::vector<SDL_Point> points(buffer_length);
 	SDL_SetRenderDrawColor(renderer, 0xFF, 0x00, 0x00, 0xFF);
 	int num = 0;
@@ -87,11 +87,11 @@ void Lissajous::draw(SDL_Renderer* renderer, int left_, int top_, int width_, in
 	}
 	SDL_RenderDrawLines(renderer, &points[0], num);
 
-	// ˜g•`‰æ
+	// æ æç”»
 	SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 	SDL_RenderDrawRect(renderer, &rect);
 
-	// ƒNƒŠƒbƒsƒ“ƒO‰ğœ
+	// ã‚¯ãƒªãƒƒãƒ”ãƒ³ã‚°è§£é™¤
 	fin_act.action();
 	lsp_assert(SDL_RenderIsClipEnabled(renderer) == is_clipped);
 }

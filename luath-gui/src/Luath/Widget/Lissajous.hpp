@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 #include <Luath/Base/Base.hpp>
 
@@ -11,15 +11,15 @@ public:
 	Lissajous();
 	~Lissajous();
 
-	// •\¦ƒpƒ‰ƒ[ƒ^‚ğİ’è‚µ‚Ü‚·
+	// è¡¨ç¤ºãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ã‚’è¨­å®šã—ã¾ã™
 	void setParam(uint32_t sampleFreq, uint32_t channels, uint32_t bufferLength);
 
-	// •\¦”gŒ`‚ğ‘‚«‚İ‚Ü‚·
+	// è¡¨ç¤ºæ³¢å½¢ã‚’æ›¸ãè¾¼ã¿ã¾ã™
 	template<typename sample_type>
 	void write(const LSP::Signal<sample_type>& sig);
 
 
-	// ƒŠƒT[ƒWƒ…‹Èü‚ğ•`‰æ‚ğ•`‰æ‚µ‚Ü‚·
+	// ãƒªã‚µãƒ¼ã‚¸ãƒ¥æ›²ç·šã‚’æç”»ã‚’æç”»ã—ã¾ã™
 	void draw(SDL_Renderer* renderer, int x, int y, int width, int height);
 	
 private:
@@ -27,9 +27,9 @@ private:
 
 	mutable std::mutex mMutex;
 	uint32_t mSampleFreq = 1;
-	uint32_t mChannels = 1; // óMƒ`ƒƒƒlƒ‹
+	uint32_t mChannels = 1; // å—ä¿¡ãƒãƒ£ãƒãƒ«
 	uint32_t mBufferLength = 1;
-	std::vector<std::deque<float>> mBuffers; // ƒŠƒ“ƒOƒoƒbƒtƒ@
+	std::vector<std::deque<float>> mBuffers; // ãƒªãƒ³ã‚°ãƒãƒƒãƒ•ã‚¡
 };
 
 template<typename sample_type>
