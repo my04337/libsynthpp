@@ -27,7 +27,9 @@ public:
 
 	// 再生中か否かを取得します
 	bool isPlaying()const;
-	// ---
+
+	// システムリセットを送信します
+	void reset(SystemType type);
 
 private:
 	void playThreadMain(const Body& messages);

@@ -1,5 +1,6 @@
 ﻿#include <LSP/MIDI/Sequencer.hpp>
 #include <LSP/MIDI/MessageReceiver.hpp>
+#include <LSP/MIDI/Messages/SysExMessage.hpp>
 #include <LSP/Threading/Thread.hpp>
 #include <LSP/Threading/EventSignal.hpp>
 #include <LSP/Base/Logging.hpp>
@@ -114,6 +115,24 @@ void Sequencer::stop()
 bool Sequencer::isPlaying()const
 {
 	return !mPlayThreadAbortFlag;
+}
+void Sequencer::reset(SystemType type)
+{
+	std::shared_ptr<Message> msg;
+	switch (type) {
+	case SystemType::GM1:
+		msg = std::make_shared<Messages::SysExMessage>(std::vector<uint8_t>{ 0x7E, 0x7F, 0x09, 0x01 });
+		break;
+	case SystemType::GM2:
+		msg = std::make_shared<Messages::SysExMessage>(std::vector<uint8_t>{ 0x7E, 0x7F, 0x09, 0x03 });
+		break;
+	case SystemType::GS:
+		msg = std::make_shared<Messages::SysExMessage>(std::vector<uint8_t>{ 0x7E, 0x7F, 0x09, 0x02 });
+		break;
+	}
+	if (msg) {
+		mReceiver.onMidiMessageReceived(std::chrono::steady_clock::time_point::min(), msg);
+	}
 }
 
 void Sequencer::playThreadMain(const Body& smfBody)
