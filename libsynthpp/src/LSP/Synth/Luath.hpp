@@ -20,7 +20,7 @@ public:
 	static constexpr uint8_t MAX_CHANNELS = 16;
 	struct Statistics {
 		uint64_t created_samples = 0;
-		uint64_t skipped_samples = 0;
+		uint64_t failed_samples = 0;
 
 		clock::duration cycle_time;
 		clock::duration rendering_time;

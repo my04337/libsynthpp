@@ -89,7 +89,7 @@ void Luath::playingThreadMain()
 		auto endRendering = clock::now();
 		mStatistics.rendering_time = endRendering - beginRendering;
 		mStatistics.created_samples += sig.frames();
-		mStatistics.skipped_samples += (need_samples - make_samples);
+		mStatistics.failed_samples += (need_samples - make_samples);
 
 		if(mRenderingCallback) mRenderingCallback(std::move(sig));
 		

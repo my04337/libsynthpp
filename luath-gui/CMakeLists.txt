@@ -15,8 +15,7 @@ add_executable(
 	src/Luath/Widget/OscilloScope.cpp
 	src/Luath/Widget/Lissajous.cpp
 	)
-	
-	
+		
 target_include_directories(
              luath-gui
              PUBLIC  src

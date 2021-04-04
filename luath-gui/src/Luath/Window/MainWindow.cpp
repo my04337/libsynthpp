@@ -18,7 +18,11 @@ MainWindow::MainWindow()
 	: mDrawingThreadAborted(false)
 	, mSynthesizer(SAMPLE_FREQ)
 	, mSequencer(mSynthesizer)
+#ifdef USE_WASAPI_OUTPUT
+	, mOutput()
+#else
 	, mOutput(SAMPLE_FREQ, 2, Audio::SDLOutput::SampleFormat::Float32)
+#endif
 {
 	lsp_assert(mOutput.start());
 	mSynthesizer.setRenderingCallback([this](LSP::Signal<float>&& sig){onRenderedSignal(std::move(sig));});
@@ -132,8 +136,8 @@ void MainWindow::drawingThreadMain()
 		// 演奏情報
 		auto tgStatistics = mSynthesizer.statistics();
 		auto text_samples = Text::make(renderer, default_font, FORMAT_STRING(L"生成サンプル数 : " << tgStatistics.created_samples << L" (" << (tgStatistics.created_samples*1000ull/SAMPLE_FREQ)
-			<< L"[msec])  skipped : " << tgStatistics.skipped_samples*1000ull/SAMPLE_FREQ 
-			<< L"[msec] buffered : " << std::setfill(L'0') << std::right << std::setw(4) << mOutput.getBufferedFrameCount()*1000 / SAMPLE_FREQ << "[msec]").c_str(), COLOR_BLACK);
+			<< L"[msec])  failed : " << tgStatistics.failed_samples*1000ull/SAMPLE_FREQ 
+			<< L"[msec]  buffered : " << std::setfill(L'0') << std::right << std::setw(4) << mOutput.getBufferedFrameCount()*1000 / SAMPLE_FREQ << "[msec]").c_str(), COLOR_BLACK);
 		SDL_RenderCopy(renderer, text_samples, nullptr, &text_samples.rect(150, 0));
 		auto text_rendering_laod_average = Text::make(renderer, default_font, FORMAT_STRING(L"演奏負荷 : " << std::setfill(L'0') << std::right << std::setw(3) << (int)(100*tgStatistics.rendering_load_average()) << L"[%]").c_str(), COLOR_BLACK);
 		SDL_RenderCopy(renderer, text_rendering_laod_average, nullptr, &text_rendering_laod_average.rect(150, 15));

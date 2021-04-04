@@ -8,6 +8,15 @@
 #include <LSP/Threading/EventSignal.hpp>
 #include <LSP/Audio/SDLOutput.hpp>
 
+// より低遅延なオーディオ出力APIが使える場合、それを使用する
+#ifdef WIN32
+#define USE_WASAPI_OUTPUT
+#endif
+
+#ifdef USE_WASAPI_OUTPUT
+#include <LSP/Audio/WasapiOutput.hpp>
+#endif
+
 namespace Luath::Window
 {
 
@@ -33,7 +42,11 @@ private:
 	std::atomic_bool mDrawingThreadAborted;
 
 	// 再生用ストリーム
+#ifdef USE_WASAPI_OUTPUT
+	LSP::Audio::WasapiOutput mOutput;
+#else
 	LSP::Audio::SDLOutput mOutput;
+#endif
 
 	// シーケンサ,シンセサイザ
 	LSP::Synth::Luath mSynthesizer;
