@@ -8,33 +8,45 @@ namespace LSP::Util::FFT
 // 各種窓関数
 float BlackmanWf(float pos) 
 {
+	// https://en.wikipedia.org/wiki/Window_function#Blackman_window
+	constexpr float alpha = 0.16f;
+	constexpr float a0 = (1.0f - alpha) / 2.0f;
+	constexpr float a1 = 0.5f;
+	constexpr float a2 = alpha / 2.0f;
+
 	if (pos < 0 || pos > 1) return 0;
-	return 0.42 - 0.46 * std::cos(2 * PI<float> * pos) + 0.08 * std::cos(4 * PI<float> * pos);
+	return a0 - a1 * std::cos(2 * PI<float> * pos) + a2 * std::cos(4 * PI<float> * pos);
 }
 float BlackmanHarrisWf(float pos)
 {
+	constexpr float a0 = 0.35875f;
+	constexpr float a1 = 0.48829f;
+	constexpr float a2 = 0.14128f;
+	constexpr float a3 = 0.01168f;
+
 	if (pos < 0 || pos > 1) return 0;
-	return 0.35875 - 0.48829 * std::cos(pos) + 0.14128 * std::cos(2 * pos) - 0.01168 * std::cos(3 * pos);
+	return a0 - a1 * std::cos(2 * PI<float> * pos) + a2 * std::cos(4 * PI<float> * pos) - a3 * std::cos(4 * PI<float> *pos);
 }
 float RectangularWf(float pos)
 {
 	if (pos < 0 || pos > 1) return 0;
 	return 1;
 }
-float GaussW(float pos)
+float HannWf(float pos)
 {
+	constexpr float a0 = 0.5f;
+	constexpr float a1 = 1.0f - a0;
+
 	if (pos < 0 || pos > 1) return 0;
-	return std::exp(-(pos * pos) / (0.4 * 0.4));
+	return a0 - a1 * (std::cos(2 * PI<float> *pos));
 }
 float HammingWf(float pos)
 {
+	constexpr float a0 = 25.0f / 46.0f;
+	constexpr float a1 = 1.0f - a0;
+
 	if (pos < 0 || pos > 1) return 0;
-	return 0.5 - 0.5 * (std::cos(2 * PI<float> * pos));
-}
-float HanningWf(float pos)
-{
-	if (pos < 0 || pos > 1) return 0;
-	return 0.54 - 0.46 * (std::cos(2 * PI<float> * pos));
+	return a0 - a1 * (std::cos(2 * PI<float> * pos));
 }
 
 template<floating_sample_typeable sample_type, subscript_operator_available<sample_type> container>
