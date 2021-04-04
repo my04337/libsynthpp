@@ -24,6 +24,7 @@ add_library(
 	src/LSP/Synth/Luath.cpp
 	
 	src/LSP/static_test.cpp
+	src/LSP/Util/fft.hpp
 	)  
 
 target_include_directories(

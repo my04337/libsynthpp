@@ -139,4 +139,9 @@ allocate_memory(std::pmr::memory_resource* mem, size_t length, size_t align = al
 	auto data = reinterpret_cast<T*>(mem->allocate(size, align));
 	return std::unique_ptr<T[], _memory_resource_deleter<T>>(data, _memory_resource_deleter<T>(mem, size, align));
 }
+// 添字演算子可能である事を表すコンセプト
+template<typename Tcontainer, typename Telement>
+concept subscript_operator_available = requires(Tcontainer a, size_t index) {
+	{a[index]} -> std::convertible_to<Telement>;
+};
 }
