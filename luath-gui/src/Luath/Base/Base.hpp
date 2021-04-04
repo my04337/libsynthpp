@@ -36,17 +36,17 @@ public:
 	Text& operator=(Text&&)noexcept;
 
 	void dispose();
+		
+	int width()const noexcept { return mWidth; }
+	int height()const noexcept { return mHeight; }
 
-	operator SDL_Texture*()const noexcept { return mTexture; }
-	
-	int width()const noexcept { return mRect.w; }
-	int height()const noexcept { return mRect.h; }
+	void draw(int x, int y);
 
-	const SDL_Rect& rect() const { return mRect; }
-	const SDL_Rect& rect(int x, int y) { mRect.x = x; mRect.y = y; return rect(); }
 
 private:
+	SDL_Renderer* mRenderer = nullptr;
 	SDL_Texture* mTexture = nullptr;
-	SDL_Rect mRect = { 0, 0, 0, 0 };
+	int mWidth = 0;
+	int mHeight = 0;
 };
 }

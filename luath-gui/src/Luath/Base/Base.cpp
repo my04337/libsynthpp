@@ -16,10 +16,14 @@ Text& Text::operator=(Text&& d)noexcept
 	if(&d == this) return *this;
 
 	dispose();
+	mRenderer = d.mRenderer;
 	mTexture = d.mTexture;
-	mRect = d.mRect;
+	mWidth = d.mWidth;
+	mHeight = d.mHeight;
+	d.mRenderer = nullptr;
 	d.mTexture = nullptr;
-	d.mRect = SDL_Rect{0, 0, 0, 0};
+	d.mWidth = 0;
+	d.mHeight = 0;
 	return *this;
 }
 Text::~Text()
@@ -38,9 +42,10 @@ Text Text::make(SDL_Renderer* renderer, TTF_Font* font, const wchar_t* textW, SD
 	auto fin_act_free_surface = finally([&]{SDL_FreeSurface(surface);});
 
 	Text text;
+	text.mRenderer = renderer;
 	text.mTexture = SDL_CreateTextureFromSurface(renderer, surface);
-	text.mRect.w = surface->w;
-	text.mRect.h = surface->h;
+	text.mWidth = surface->w;
+	text.mHeight = surface->h;
 	return text; // NRVO
 }
 void Text::dispose()
@@ -49,4 +54,11 @@ void Text::dispose()
 		SDL_DestroyTexture(mTexture);
 		mTexture = nullptr;
 	}
+}
+void Text::draw(int x, int y)
+{
+	if (!mRenderer || !mTexture) return;
+
+	SDL_Rect rect{ x, y, mWidth, mHeight };
+	SDL_RenderCopy(mRenderer, mTexture, nullptr, &rect);
 }
