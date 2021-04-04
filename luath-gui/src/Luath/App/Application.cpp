@@ -46,6 +46,9 @@ int Application::exec(int argc, char** argv)
 	while (!done && SDL_WaitEvent(&ev))
 	{
 		switch (ev.type) {
+		case SDL_KEYDOWN:
+			main_window.onKeyDown(ev.key);
+			break;
 		case SDL_DROPFILE:
 			main_window.onDropFile(ev.drop);
 			break;

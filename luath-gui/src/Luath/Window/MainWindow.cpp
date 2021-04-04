@@ -90,6 +90,14 @@ void MainWindow::onDropFile(const SDL_DropEvent& ev)
 	auto midi_path = std::filesystem::u8path(ev.file);
 	loadMidi(midi_path);
 }
+void MainWindow::onKeyDown(const SDL_KeyboardEvent& ev)
+{
+	if (ev.keysym.sym == SDLK_UP) {
+		mPostAmpVolume.store(mPostAmpVolume.load() * 1.5f);
+	} else if(ev.keysym.sym == SDLK_DOWN) {
+		mPostAmpVolume.store(mPostAmpVolume.load() / 1.5f);
+	}
+}
 void MainWindow::loadMidi(const std::filesystem::path& midi_path) {
 	mSequencer.stop();
 	mSequencer.reset(MIDI::SystemType::GM1);
@@ -166,6 +174,8 @@ void MainWindow::drawingThreadMain()
 		SDL_RenderCopy(renderer, text_samples, nullptr, &text_samples.rect(150, 0));
 		auto text_rendering_laod_average = Text::make(renderer, default_font, FORMAT_STRING(L"演奏負荷 : " << std::setfill(L'0') << std::right << std::setw(3) << (int)(100*tgStatistics.rendering_load_average()) << L"[%]").c_str(), COLOR_BLACK);
 		SDL_RenderCopy(renderer, text_rendering_laod_average, nullptr, &text_rendering_laod_average.rect(150, 15));
+		auto text_rendering_post_amp = Text::make(renderer, default_font, FORMAT_STRING(L"PostAmp : " << std::fixed << std::setprecision(3) << mPostAmpVolume.load()).c_str(), COLOR_BLACK);
+		SDL_RenderCopy(renderer, text_rendering_post_amp, nullptr, &text_rendering_post_amp.rect(150, 30));
 
 		// 波形情報
 		const int margin = 5;
@@ -183,6 +193,15 @@ void MainWindow::drawingThreadMain()
 }
 void MainWindow::onRenderedSignal(LSP::Signal<float>&& sig)
 {
+	// ポストアンプ適用
+	auto postAmpVolume = mPostAmpVolume.load();
+	size_t samples = sig.frames() * sig.channels();
+	auto p = sig.data();
+	for (size_t i = 0; i < samples; ++i) {
+		p[i] *= postAmpVolume;
+	}
+
+	// 各出力先に配送
 	mOutput.write(sig);
 	mOscilloScopeWidget.write(sig);
 	mSpectrumAnalyzerWidget.write(sig);

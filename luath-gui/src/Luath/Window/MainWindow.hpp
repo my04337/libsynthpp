@@ -29,6 +29,7 @@ public:
 	~MainWindow();
 
 	bool initialize();
+	void onKeyDown(const SDL_KeyboardEvent& ev);
 	void onDropFile(const SDL_DropEvent& ev);
 
 
@@ -51,6 +52,8 @@ private:
 #else
 	LSP::Audio::SDLOutput mOutput;
 #endif
+	// 再生パラメータ
+	std::atomic<float> mPostAmpVolume = 1.0f;
 
 	// シーケンサ,シンセサイザ
 	LSP::Synth::Luath mSynthesizer;
