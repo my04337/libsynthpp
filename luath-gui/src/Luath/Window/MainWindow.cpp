@@ -168,9 +168,10 @@ void MainWindow::drawingThreadMain()
 		SDL_RenderCopy(renderer, text_rendering_laod_average, nullptr, &text_rendering_laod_average.rect(150, 15));
 
 		// 波形情報
-		mLissajousWidget.draw(renderer, 250, 440, 200, 200);
-		mSpectrumAnalyzerWidget.draw(renderer, 450, 240, 350, 200);
-		mOscilloScopeWidget.draw(renderer, 450, 440, 350, 200);
+		const int margin = 5;
+		mLissajousWidget.draw(renderer, 250+margin, 440+margin, 200-margin*2, 200-margin*2);
+		mSpectrumAnalyzerWidget.draw(renderer, 450+margin, 240+margin, 350-margin*2, 200-margin*2);
+		mOscilloScopeWidget.draw(renderer, 450+margin, 440+margin, 350-margin*2, 200-margin*2);
 
 		// 描画終了
 		SDL_RenderPresent(renderer);
