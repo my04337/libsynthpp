@@ -30,3 +30,10 @@
 *.exe
 *.out
 *.app
+
+# Build directory and intermediate file
+/build/*
+/.vs/*
+/CppProperties.json
+/out
+CMakeSettings.json
