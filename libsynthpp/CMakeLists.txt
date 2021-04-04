@@ -20,9 +20,11 @@ add_library(
 	src/LSP/MIDI/Sequencer.cpp
 
 	src/LSP/Synth/VoiceMapper.cpp
+	src/LSP/Synth/MidiChannel.cpp
 	src/LSP/Synth/Luath.cpp
 	
-	src/LSP/static_test.cpp)  
+	src/LSP/static_test.cpp
+	)  
 
 target_include_directories(
              libsynthpp
