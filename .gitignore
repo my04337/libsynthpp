@@ -32,8 +32,9 @@
 *.app
 
 # Build directory and intermediate file
-/build/*
-/.vs/*
-/CppProperties.json
-/out
+build/*
+.vs/*
+CppProperties.json
+out
+out
 CMakeSettings.json
