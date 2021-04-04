@@ -137,6 +137,8 @@ void Sequencer::reset(SystemType type)
 
 void Sequencer::playThreadMain(const Body& smfBody)
 {
+	static constexpr std::chrono::milliseconds max_sleep_duration{ 100 };
+
 	auto start_time = clock::now();
 	auto next_message_iter = smfBody.cbegin();
 
@@ -162,6 +164,7 @@ void Sequencer::playThreadMain(const Body& smfBody)
 		if(next_message_iter == smfBody.cend()) break;
 
 		// 次のメッセージまで待機
-		std::this_thread::sleep_until(next_message_time);
+		auto max_sleep_until = clock::now() + max_sleep_duration;
+		std::this_thread::sleep_until(std::min(next_message_time, max_sleep_until));
 	}
 }
