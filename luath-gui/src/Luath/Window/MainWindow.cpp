@@ -23,7 +23,7 @@ MainWindow::MainWindow()
 	lsp_assert(mOutput.start());
 	mSynthesizer.setRenderingCallback([this](LSP::Signal<float>&& sig){onRenderedSignal(std::move(sig));});
 
-	mOscilloScopeWidget.setParam(SAMPLE_FREQ, 2, SAMPLE_FREQ*250e-4);
+	mOscilloScopeWidget.setParam(SAMPLE_FREQ, 2, SAMPLE_FREQ * 250e-4);
 	mLissajousWidget.setParam(SAMPLE_FREQ, 2, SAMPLE_FREQ * 250e-4);
 }
 
@@ -137,7 +137,7 @@ void MainWindow::drawingThreadMain()
 		SDL_RenderCopy(renderer, text_samples, nullptr, &text_samples.rect(150, 0));
 		auto text_rendering_laod_average = Text::make(renderer, default_font, FORMAT_STRING(L"演奏負荷 : " << std::setfill(L'0') << std::right << std::setw(3) << (int)(100*tgStatistics.rendering_load_average()) << L"[%]").c_str(), COLOR_BLACK);
 		SDL_RenderCopy(renderer, text_rendering_laod_average, nullptr, &text_rendering_laod_average.rect(150, 15));
-		
+
 		// 波形情報
 		mLissajousWidget.draw(renderer, 300, 440, 200, 200);
 		mOscilloScopeWidget.draw(renderer, 500, 440, 300, 200);
