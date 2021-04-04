@@ -139,9 +139,8 @@ void MainWindow::drawingThreadMain()
 
 	// FPS計算,表示用
 	size_t frames = 0;
-	Text text_drawing_laod_average;
 	std::array<std::chrono::microseconds, FRAMES_PER_SECOND/4> drawing_time_history = {};
-	size_t drawing_time_index = drawing_time_history.size();
+	size_t drawing_time_index = 0;
 
 
 	// 描画ループ開始
@@ -162,12 +161,9 @@ void MainWindow::drawingThreadMain()
 		// 描画情報
 		auto text_frames = Text::make(renderer, default_font, FORMAT_STRING(L"描画フレーム数 : " << frames).c_str(), COLOR_BLACK);
 		text_frames.draw(0, 0);
-		if (drawing_time_index == drawing_time_history.size()) {
-			auto average_time = std::accumulate(drawing_time_history.cbegin(), drawing_time_history.cend(), std::chrono::microseconds(0)) / drawing_time_history.size();
-			auto load_average = (int)(100.0*average_time.count()/FRAME_INTERVAL.count());
-			text_drawing_laod_average = Text::make(renderer, default_font, FORMAT_STRING(L"描画負荷 : " << std::setfill(L'0') << std::right << std::setw(3) << load_average << L"[%]").c_str(), COLOR_BLACK);
-			drawing_time_index = 0;
-		}		
+		auto average_time = std::accumulate(drawing_time_history.cbegin(), drawing_time_history.cend(), std::chrono::microseconds(0)) / drawing_time_history.size();
+		auto load_average = (int)(100.0*average_time.count()/FRAME_INTERVAL.count());
+		auto text_drawing_laod_average = Text::make(renderer, default_font, FORMAT_STRING(L"描画負荷 : " << std::setfill(L'0') << std::right << std::setw(3) << load_average << L"[%]").c_str(), COLOR_BLACK);
 		text_drawing_laod_average.draw(0, 15);
 		
 		// 演奏情報
@@ -191,7 +187,10 @@ void MainWindow::drawingThreadMain()
 		SDL_RenderPresent(renderer);
 		auto drawing_end_time = clock::now();
 		drawing_time_history[drawing_time_index] = std::chrono::duration_cast<std::chrono::microseconds>(drawing_end_time - drawing_start_time);
-		++drawing_time_index;
+		++drawing_time_index;;
+		if (drawing_time_index == drawing_time_history.size()) {
+			drawing_time_index = 0;
+		}
 		++frames;
 	}
 }
