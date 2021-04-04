@@ -2,6 +2,7 @@
 
 #include <Luath/Base/Base.hpp>
 #include <Luath/Widget/OscilloScope.hpp>
+#include <Luath/Widget/SpectrumAnalyzer.hpp>
 #include <Luath/Widget/Lissajous.hpp>
 #include <LSP/Synth/Luath.hpp>
 #include <LSP/MIDI/Sequencer.hpp>
@@ -57,6 +58,7 @@ private:
 
 	// 各種ウィジット
 	Luath::Widget::OscilloScope mOscilloScopeWidget;
+	Luath::Widget::SpectrumAnalyzer mSpectrumAnalyzerWidget;
 	Luath::Widget::Lissajous mLissajousWidget;
 };
 

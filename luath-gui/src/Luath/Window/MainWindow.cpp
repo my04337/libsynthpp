@@ -29,6 +29,7 @@ MainWindow::MainWindow()
 
 	mOscilloScopeWidget.setParam(SAMPLE_FREQ, 2, SAMPLE_FREQ * 250e-4);
 	mLissajousWidget.setParam(SAMPLE_FREQ, 2, SAMPLE_FREQ * 250e-4);
+	mSpectrumAnalyzerWidget.setParam(SAMPLE_FREQ, 2, 4096);
 }
 
 MainWindow::~MainWindow()
@@ -167,8 +168,9 @@ void MainWindow::drawingThreadMain()
 		SDL_RenderCopy(renderer, text_rendering_laod_average, nullptr, &text_rendering_laod_average.rect(150, 15));
 
 		// 波形情報
-		mLissajousWidget.draw(renderer, 300, 440, 200, 200);
-		mOscilloScopeWidget.draw(renderer, 500, 440, 300, 200);
+		mLissajousWidget.draw(renderer, 250, 440, 200, 200);
+		mSpectrumAnalyzerWidget.draw(renderer, 450, 240, 350, 200);
+		mOscilloScopeWidget.draw(renderer, 450, 440, 350, 200);
 
 		// 描画終了
 		SDL_RenderPresent(renderer);
@@ -182,5 +184,6 @@ void MainWindow::onRenderedSignal(LSP::Signal<float>&& sig)
 {
 	mOutput.write(sig);
 	mOscilloScopeWidget.write(sig);
+	mSpectrumAnalyzerWidget.write(sig);
 	mLissajousWidget.write(sig);
 }

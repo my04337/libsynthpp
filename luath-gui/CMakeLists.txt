@@ -14,6 +14,7 @@ add_executable(
 	
 	src/Luath/Widget/OscilloScope.cpp
 	src/Luath/Widget/Lissajous.cpp
+	src/Luath/Widget/SpectrumAnalyzer.cpp
 	)
 		
 target_include_directories(
