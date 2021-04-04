@@ -83,7 +83,7 @@ void OscilloScope::draw(SDL_Renderer* renderer, int left_, int top_, int width_,
 		int num = 0;
 		for (uint32_t i = 0; i < buffer_length; ++i) {
 			int x = left + (int)(i * sample_pitch);
-			int y = mid_y + (int)(height/2.0f * buffer[i]);
+			int y = mid_y - (int)(height/2.0f * buffer[i]);
 			SDL_Point pt{x, y};
 			if(num > 0 && points[num-1].x == pt.x && points[num-1].y == pt.y) continue;
 			points[num++] = SDL_Point{x, y};
