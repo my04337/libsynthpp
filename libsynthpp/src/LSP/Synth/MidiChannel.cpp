@@ -16,7 +16,7 @@ void MidiChannel::reset(SystemType type)
 	_voiceMapper.reset();
 	_voices.clear();
 
-	ccPan = 0.0f;
+	ccPan = 0.5f;
 	ccExpression = 1.0;
 
 	ccPrevCtrlNo = 0xFF; // invalid value
