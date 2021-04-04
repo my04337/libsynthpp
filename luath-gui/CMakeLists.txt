@@ -28,9 +28,18 @@ add_dependencies(luath-gui SDL2_ttf UmeFont)
 get_property(LUATH_BINARY_DIR TARGET luath-gui PROPERTY BINARY_DIR )
 get_property(LUATH_SOURCEY_DIR TARGET luath-gui PROPERTY SOURCE_DIR )
 add_custom_command(TARGET luath-gui POST_BUILD
-    COMMAND robocopy /NFL /NDL /NJH /NJS /nc /ns /np  "${SDL2_LIB_DIRS}" "${LUATH_BINARY_DIR}" SDL2.dll 2> NUL & %COMSPEC% /C exit 0
-    COMMAND robocopy /NFL /NDL /NJH /NJS /nc /ns /np  "${SDL2_ttf_LIB_DIRS}" "${LUATH_BINARY_DIR}" SDL2_ttf.dll libfreetype-6.dll zlib1.dll 2> NUL & %COMSPEC% /C exit 0
-	COMMAND robocopy /NFL /NDL /NJH /NJS /nc /ns /np  "${UmeFont_ROOT_PATH}" "${LUATH_BINARY_DIR}/assets/font" license.html ume-tgo4.ttf 2> NUL & %COMSPEC% /C exit 0
-	COMMAND robocopy /NFL /NDL /NJH /NJS /nc /ns /np  "${LSP_SAMPLE_MIDI_PATH}" "${LUATH_BINARY_DIR}/assets/midi" 2> NUL & %COMSPEC% /C exit 0
+	COMMAND ${CMAKE_COMMAND} -E make_directory ${LUATH_BINARY_DIR}/assets
+	COMMAND ${CMAKE_COMMAND} -E make_directory ${LUATH_BINARY_DIR}/assets/font
+	COMMAND ${CMAKE_COMMAND} -E make_directory ${LUATH_BINARY_DIR}/assets/sample_midi
+
+	COMMAND ${CMAKE_COMMAND} -E copy ${SDL2_LIB_DIRS}/SDL2.dll ${LUATH_BINARY_DIR}
+	COMMAND ${CMAKE_COMMAND} -E copy ${SDL2_ttf_LIB_DIRS}/SDL2_ttf.dll ${LUATH_BINARY_DIR}
+	COMMAND ${CMAKE_COMMAND} -E copy ${SDL2_ttf_LIB_DIRS}/libfreetype-6.dll ${LUATH_BINARY_DIR}
+	COMMAND ${CMAKE_COMMAND} -E copy ${SDL2_ttf_LIB_DIRS}/zlib1.dll ${LUATH_BINARY_DIR}
+
+	COMMAND ${CMAKE_COMMAND} -E copy ${UmeFont_ROOT_PATH}/ume-tgo4.ttf ${LUATH_BINARY_DIR}/assets/font
+	COMMAND ${CMAKE_COMMAND} -E copy ${UmeFont_ROOT_PATH}/license.html ${LUATH_BINARY_DIR}/assets/font
+
+	COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_LIST_DIR}/assets ${LUATH_BINARY_DIR}/assets
 )
  

@@ -69,7 +69,7 @@ bool MainWindow::initialize()
 
 	// シーケンサセットアップ
 	auto midi_path = std::filesystem::current_path();
-	midi_path.append("assets/midi/brambles_vsc3.mid"); // 試験用MIDIファイル
+	midi_path.append("assets/sample_midi/brambles_vsc3.mid"); // 試験用MIDIファイル
 	auto parsed = MIDI::Parser::parse(midi_path);
 	mSequencer.load(std::move(parsed.second));
 
