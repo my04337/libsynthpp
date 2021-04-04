@@ -4,7 +4,7 @@
 #include <LSP/MIDI/Message.hpp>
 #include <LSP/MIDI/MessageReceiver.hpp>
 #include <LSP/Synth/VoiceMapper.hpp>
-#include <LSP/Synth/SimpleVoice.hpp>
+#include <LSP/Synth/Voice.hpp>
 #include <LSP/Threading/TaskDispatcher.hpp>
 
 #include <array>

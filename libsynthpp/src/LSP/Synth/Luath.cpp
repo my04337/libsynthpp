@@ -1,4 +1,5 @@
 ﻿#include <LSP/Synth/Luath.hpp>
+#include <LSP/Synth/SimpleVoice.hpp>
 #include <LSP/MIDI/Messages/BasicMessage.hpp>
 #include <LSP/MIDI/Messages/SysExMessage.hpp>
 
