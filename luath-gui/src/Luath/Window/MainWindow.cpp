@@ -34,12 +34,21 @@ MainWindow::MainWindow()
 
 MainWindow::~MainWindow()
 {
+	dispose();
+
+	// ウィンドウ破棄
+	if (mWindow) {
+		SDL_DestroyWindow(mWindow);
+	}
+}
+void MainWindow::dispose() 
+{
 	// 再生停止
 	mOutput.stop();
 
 	// シーケンサ停止
 	mSequencer.stop();
-	
+
 	// トーンジェネレータ停止
 	mSynthesizer.dispose();
 
@@ -47,11 +56,6 @@ MainWindow::~MainWindow()
 	mDrawingThreadAborted = true;
 	if (mDrawingThread.joinable()) {
 		mDrawingThread.join();
-	}
-
-	// ウィンドウ破棄
-	if (mWindow) {
-		SDL_DestroyWindow(mWindow);
 	}
 }
 bool MainWindow::initialize()

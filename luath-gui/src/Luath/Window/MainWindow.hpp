@@ -29,6 +29,7 @@ public:
 	~MainWindow();
 
 	bool initialize();
+	void dispose();
 	void onKeyDown(const SDL_KeyboardEvent& ev);
 	void onDropFile(const SDL_DropEvent& ev);
 

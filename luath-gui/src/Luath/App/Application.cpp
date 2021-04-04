@@ -53,6 +53,7 @@ int Application::exec(int argc, char** argv)
 			main_window.onDropFile(ev.drop);
 			break;
 		case SDL_QUIT:
+			main_window.dispose();
 			done = true;
 			break;
 		}
