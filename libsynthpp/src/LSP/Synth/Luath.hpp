@@ -47,20 +47,13 @@ public:
 
 	// 統計情報を取得します
 	Statistics statistics()const;
+	// チャネル情報を取得します
+	std::vector<MidiChannel::Info> channelInfo()const;
 
 protected:
 	void playingThreadMain();
 	void dispatchMessage(const std::shared_ptr<const LSP::MIDI::Message>& msg);
 	void reset(LSP::MIDI::SystemType type);
-
-	// ノートオン
-	void noteOn(uint8_t ch, uint8_t noteNo, uint8_t vel);
-
-	// ノートオフ
-	void noteOff(uint8_t ch, uint8_t noteNo);
-
-	// コントロールチェンジ
-	void controlChange(uint8_t ch, uint8_t ctrlNo, uint8_t value);
 
 	// システムエクスクルーシブ
 	void sysExMessage(const uint8_t* data, size_t len);

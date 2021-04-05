@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 #include <LSP/Base/Base.hpp>
 #include <LSP/MIDI/Message.hpp>
@@ -13,6 +13,15 @@ namespace LSP::Synth
 class MidiChannel
 {
 public:
+	struct Info {
+		uint8_t ch; // ãƒãƒ£ãƒãƒ«
+		uint8_t programChange; // ãƒ—ãƒ­ã‚°ãƒ©ãƒ ãƒã‚§ãƒ³ã‚¸
+		uint8_t bankSelect; // ãƒãƒ³ã‚¯ã‚»ãƒ¬ã‚¯ãƒˆ
+		float pan; // ãƒ‘ãƒ³
+		float volume; // ãƒãƒ£ãƒãƒ«ãƒœãƒªãƒ¥ãƒ¼ãƒ 
+		float expression; // ã‚¨ã‚¯ã‚¹ãƒ—ãƒ¬ãƒƒã‚·ãƒ§ãƒ³
+	};
+
 	MidiChannel(uint32_t sampleFreq, uint8_t ch);
 
 	void reset(LSP::MIDI::SystemType type);
@@ -20,28 +29,36 @@ public:
 	// ---
 	void noteOn(uint32_t noteNo, uint8_t vel);
 	void noteOff(uint32_t noteNo);
+	void programChange(uint8_t progId);
+	void controlChange(uint8_t ctrlNo, uint8_t value);
 	void holdOn();
 	void holdOff();
 	// ---
 	std::pair<float,float> update();
 	// ---
+	Info info()const;
+	// ---
 
 
-	// ƒTƒ“ƒvƒŠƒ“ƒOü”g”(Às‚É“®“I‚ÉƒZƒbƒg)
+	// ã‚µãƒ³ãƒ—ãƒªãƒ³ã‚°å‘¨æ³¢æ•°(å®Ÿè¡Œæ™‚ã«å‹•çš„ã«ã‚»ãƒƒãƒˆ)
 	const uint32_t sampleFreq;
-	// ƒ`ƒƒƒlƒ‹”Ô†(Às‚É“®“I‚ÉƒZƒbƒg)
+	// ãƒãƒ£ãƒãƒ«ç•ªå·(å®Ÿè¡Œæ™‚ã«å‹•çš„ã«ã‚»ãƒƒãƒˆ)
 	const uint8_t ch;
 		
-	// ƒvƒƒOƒ‰ƒ€ƒ`ƒFƒ“ƒW
-	uint8_t pcId; // ƒvƒƒOƒ‰ƒ€Id
-	LSP::Filter::EnvelopeGenerator<float> pcEG; // ƒ`ƒƒƒlƒ‹EG(ƒpƒ‰ƒ[ƒ^ŒvZÏ)
+	// ãƒ—ãƒ­ã‚°ãƒ©ãƒ ãƒã‚§ãƒ³ã‚¸
+	uint8_t pcId; // ãƒ—ãƒ­ã‚°ãƒ©ãƒ Id
+	uint16_t bankSelect; // ãƒãƒ³ã‚¯ã‚»ãƒ¬ã‚¯ãƒˆ
+	LSP::Filter::EnvelopeGenerator<float> pcEG; // ãƒãƒ£ãƒãƒ«EG(ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿è¨ˆç®—æ¸ˆ)
 	void updateProgram();
 
-	// ƒRƒ“ƒgƒ[ƒ‹ƒ`ƒFƒ“ƒW
+	// ã‚³ãƒ³ãƒˆãƒ­ãƒ¼ãƒ«ãƒã‚§ãƒ³ã‚¸
 	uint8_t ccPrevCtrlNo;
 	uint8_t ccPrevValue;
-	float ccPan;		// CC:10 - ƒpƒ“ [0.0(¶), +1.0(‰E)]
-	float ccExpression;	// CC:11 - ƒGƒNƒXƒvƒŒƒbƒVƒ‡ƒ“ [0.0, +1.0]
+	uint8_t ccBankSelectMSB;// CC:0 - ãƒãƒ³ã‚¯ã‚»ãƒ¬ã‚¯ãƒˆMSB
+	float ccVolume;			// CC:7 - ãƒãƒ£ãƒãƒ«ç°¿ãƒªãƒ¥ï¼ç„¡;
+	float ccPan;			// CC:10 - ãƒ‘ãƒ³ [0.0(å·¦), +1.0(å³)]
+	float ccExpression;		// CC:11 - ã‚¨ã‚¯ã‚¹ãƒ—ãƒ¬ãƒƒã‚·ãƒ§ãƒ³ [0.0, +1.0]
+	uint8_t ccBankSelectLSB;// CC:32 - ãƒãƒ³ã‚¯ã‚»ãƒ¬ã‚¯ãƒˆLSB
 
 	// RPN/NRPN State
 	std::optional<uint8_t> ccRPN_MSB;
@@ -60,9 +77,9 @@ private:
 	void voice_noteOff(VoiceId id);
 
 private:
-	// ”­‰¹ó‘ÔŠÇ—
+	// ç™ºéŸ³çŠ¶æ…‹ç®¡ç†
 	LSP::Synth::VoiceMapper _voiceMapper;
-	// ƒ{ƒCƒX¶¬
+	// ãƒœã‚¤ã‚¹ç”Ÿæˆ
 	std::unordered_map<VoiceId, std::unique_ptr<LSP::Synth::Voice>> _voices;
 };
 

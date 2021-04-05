@@ -153,104 +153,36 @@ Luath::Statistics Luath::statistics()const
 {
 	return mThreadSafeStatistics;
 }
+std::vector<MidiChannel::Info> Luath::channelInfo()const
+{
+	std::lock_guard lock(mMutex);
+	std::vector<MidiChannel::Info> ret;
+	ret.reserve(mMidiChannels.size());
+	for (auto& ch : mMidiChannels) {
+		ret.push_back(ch.info());
+	}
+	return ret;
+}
 void Luath::dispatchMessage(const std::shared_ptr<const MIDI::Message>& msg)
 {
 	if (auto m = std::dynamic_pointer_cast<const NoteOn>(msg)) {
-		noteOn(m->channel(), m->noteNo(), m->velocity());
+		auto& midich = mMidiChannels[m->channel()];
+		midich.noteOn(m->noteNo(), m->velocity());
 	} else if (auto m = std::dynamic_pointer_cast<const NoteOff>(msg)) {
-		noteOff(m->channel(), m->noteNo());
+		// MEMO 一般に、MIDIではノートオフの代わりにvel=0のノートオンが使用されるため、呼ばれることは希である
+		auto& midich = mMidiChannels[m->channel()];
+		midich.noteOff(m->noteNo());
+	} else if (auto m = std::dynamic_pointer_cast<const ProgramChange>(msg)) {
+		auto& midich = mMidiChannels[m->channel()];
+		midich.programChange(m->progId());
 	} else if (auto m = std::dynamic_pointer_cast<const ControlChange>(msg)) {
-		controlChange(m->channel(), m->ctrlNo(), m->value());
+		auto& midich = mMidiChannels[m->channel()];
+		midich.controlChange(m->ctrlNo(), m->value());
 	} else if (auto m = std::dynamic_pointer_cast<const SysExMessage>(msg)) {
 		sysExMessage(&m->data()[0], m->data().size());
 	}
 }
 // ---
-// ノートオン
-void Luath::noteOn(uint8_t ch, uint8_t noteNo, uint8_t vel)
-{
-	if(ch >= mMidiChannels.size()) return;
-	auto& midich = mMidiChannels[ch];
-
-	midich.noteOn(noteNo, vel);
-}
-
-// ノートオフ
-void Luath::noteOff(uint8_t ch, uint8_t noteNo)
-{
-	// MEMO 一般に、MIDIではノートオフの代わりにvel=0のノートオンが使用されるため、呼ばれることは希である
-
-	if(ch >= mMidiChannels.size()) return;
-	auto& midich = mMidiChannels[ch];
-
-	midich.noteOff(noteNo);
-}
-
-// コントロールチェンジ
-void Luath::controlChange(uint8_t ch, uint8_t ctrlNo, uint8_t value)
-{
-	// 参考 : http://quelque.sakura.ne.jp/midi_cc.html
-	
-	if(ch >= mMidiChannels.size()) return;
-	auto& midich = mMidiChannels[ch];
-	
-	bool apply_RPN_NRPN_state = false;
-
-	switch (ctrlNo) {
-	case 6: // Data Entry(MSB)
-		midich.ccDE_MSB = value;
-		midich.ccDE_LSB.reset();
-		apply_RPN_NRPN_state = true; // MSBのみでよいものはこのタイミングで適用する
-		break;
-	case 10: // Pan(パン)
-		midich.ccPan = (value / 127.0f);
-		break;
-	case 11: // Expression(エクスプレッション)
-		midich.ccExpression = (value / 127.0f);
-		break;
-	case 36: // Data Entry(LSB)
-		midich.ccDE_LSB = value;
-		apply_RPN_NRPN_state = true; // MSBのみでよいものはこのタイミングで適用する
-		break;
-	case 64: // Hold1(ホールド1:ダンパーペダル)
-		if(value < 0x64) {
-			midich.holdOff();
-		} else {
-			midich.holdOn();
-		}
-		break;
-	case 98: // NRPN(LSB)
-		midich.ccNRPN_LSB = value;
-		break;
-	case 99: // NRPN(MSB)
-		midich.resetParameterNumberState();
-		midich.ccNRPN_MSB = value;
-		break;
-	case 100: // RPN(LSB)
-		midich.ccRPN_LSB = value;
-		break;
-	case 101: // RPN(MSB)
-		midich.resetParameterNumberState();
-		midich.ccRPN_MSB = value;
-		break;
-	}
-
-	// RPN/NRPNの受付が禁止されている場合、適用しない
-	if (midich.rpnNull) {
-		apply_RPN_NRPN_state = false;
-	}
-
-	// RPN/NRPN 適用
-	if (apply_RPN_NRPN_state) {
-		if (midich.ccRPN_MSB == 0 && midich.ccRPN_MSB == 0 && midich.ccDE_MSB.has_value()) {
-			// ピッチベンドセンシティビティ: MSBのみ使用
-			midich.rpnPitchBendSensitibity = midich.ccDE_MSB.value();
-		}
-	}
-
-	midich.ccPrevCtrlNo = ctrlNo;
-	midich.ccPrevValue = value;
-}
 
 // システムエクスクルーシブ
 void Luath::sysExMessage(const uint8_t* data, size_t len)

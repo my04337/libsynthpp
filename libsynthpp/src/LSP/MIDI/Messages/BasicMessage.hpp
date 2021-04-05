@@ -88,7 +88,8 @@ public:
 		: mChannel(ch), mProgNo(progNo)
 	{}
 
-	uint8_t channel()const noexcept override final { return mChannel; } 
+	uint8_t channel()const noexcept override final { return mChannel; }
+	uint8_t progId()const noexcept { return mProgNo; }
 
 private:
 	uint8_t mChannel;
