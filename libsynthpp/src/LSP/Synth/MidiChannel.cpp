@@ -90,7 +90,8 @@ void MidiChannel::controlChange(uint8_t ctrlNo, uint8_t value)
 		apply_RPN_NRPN_state = true; // MSBのみでよいものはこのタイミングで適用する
 		break;
 	case 10: // Pan(パン)
-		ccPan = (value / 127.0f);
+		// MEMO 中央値は64。 1-127の範囲を取る実装が多い
+		ccPan = std::clamp((value - 1) / 126.0f, 0.0f, 1.0f);
 		break;
 	case 7: // Channel Volumeチャンネルボリューム）
 		ccVolume = (value / 127.0f);
