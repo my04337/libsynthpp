@@ -181,9 +181,9 @@ void MainWindow::drawingThreadMain()
 		// チャネル情報
 		{
 			constexpr int ofsX = 300;
-			constexpr int ofsY = 30;
+			constexpr int ofsY = 50;
 
-			constexpr std::array<int, 5> columnWidth{ 20, 55, 50, 50 };
+			constexpr std::array<int, 6> columnWidth{ 20, 50, 45, 45, 60, 30 };
 			int x = ofsX, ci = 0;
 			auto col = [&] { 
 				int ret = x;  
@@ -198,6 +198,8 @@ void MainWindow::drawingThreadMain()
 				textRenderer.draw(col(), y, L"Ins");
 				textRenderer.draw(col(), y, L"Vol");
 				textRenderer.draw(col(), y, L"Exp");
+				textRenderer.draw(col(), y, L"Pitch");
+				textRenderer.draw(col(), y, L"Pan");
 			}
 			for (const auto& info : mSynthesizer.channelInfo()) {
 				y += 15;
@@ -207,6 +209,8 @@ void MainWindow::drawingThreadMain()
 				textRenderer.draw(col(), y, FORMAT_STRING(std::setfill(L'0') << std::setw(3) << info.programChange << L"-" << std::setw(3) << info.bankSelect));
 				textRenderer.draw(col(), y, FORMAT_STRING(std::setfill(L'0') << std::fixed << std::setprecision(4) << info.volume));
 				textRenderer.draw(col(), y, FORMAT_STRING(std::setfill(L'0') << std::fixed << std::setprecision(4) << info.expression));
+				textRenderer.draw(col(), y, FORMAT_STRING((info.pitchBend >= 0 ? L"+" : L"-") << std::setfill(L'0') << std::setw(4) << std::abs(info.pitchBend) << L":" << std::setw(2) << info.pitchBendSensitibity));
+				textRenderer.draw(col(), y, FORMAT_STRING(std::setfill(L'0') << std::fixed << std::setprecision(4) << info.pan));
 
 			}
 
