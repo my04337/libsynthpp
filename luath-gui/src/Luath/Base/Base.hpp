@@ -27,7 +27,8 @@ class Text
 	: non_copy
 {
 public:
-	static Text make(SDL_Renderer* renderer, TTF_Font* font, const wchar_t* text, SDL_Color color = SDL_Color{0,0,0,255});
+	// 文字列から描画可能なテクスチャに変換します (注意 : 非常に低速です)
+	static Text make(SDL_Renderer* renderer, TTF_Font* font, const std::wstring& text, SDL_Color color = SDL_Color{0,0,0,255});
 
 	Text()noexcept;
 	~Text();
@@ -49,4 +50,23 @@ private:
 	int mWidth = 0;
 	int mHeight = 0;
 };
+
+// 文字列高速描画ユーティリティクラス
+class FastTextRenderer
+	: non_copy_move
+{
+public:
+	FastTextRenderer(SDL_Renderer* renderer, TTF_Font* font, SDL_Color color = SDL_Color{ 0,0,0,255 });
+	~FastTextRenderer();
+
+	SDL_Rect draw(int x, int y, const std::wstring& text);
+
+private:
+	SDL_Renderer* mRenderer;
+	TTF_Font* mFont;
+	SDL_Color mColor;
+	std::unordered_map<std::wstring, Text> mCachedCharacters; // // SDL_ttfのテクスチャ生成が非常に遅いため、一文字単位で描画した文字をキャッシュする
+};
+
+
 }

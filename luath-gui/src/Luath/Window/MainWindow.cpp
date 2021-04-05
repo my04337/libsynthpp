@@ -136,12 +136,14 @@ void MainWindow::drawingThreadMain()
 	auto renderer = SDL_CreateRenderer(mWindow, -1, 0);
 	lsp_assert(renderer != nullptr);
 	auto fin_act_destroy_renderer = finally([&]{SDL_DestroyRenderer(renderer);});
+	FastTextRenderer textRenderer(renderer, default_font);
 
 	// FPS計算,表示用
 	size_t frames = 0;
 	std::array<std::chrono::microseconds, FRAMES_PER_SECOND/4> drawing_time_history = {};
 	size_t drawing_time_index = 0;
 
+	// 文字列プール ※SDL2_ttfはフォントを用いての描画からのテクスチャ生成までが非常に重いため、キャッシュが必要
 
 	// 描画ループ開始
 	clock::time_point prev_wake_up_time = clock::now() - FRAME_INTERVAL;
@@ -159,23 +161,18 @@ void MainWindow::drawingThreadMain()
 		SDL_RenderClear(renderer);
 
 		// 描画情報
-		auto text_frames = Text::make(renderer, default_font, FORMAT_STRING(L"描画フレーム数 : " << frames).c_str(), COLOR_BLACK);
-		text_frames.draw(0, 0);
+		textRenderer.draw(0, 0, FORMAT_STRING(L"描画フレーム数 : " << frames));
 		auto average_time = std::accumulate(drawing_time_history.cbegin(), drawing_time_history.cend(), std::chrono::microseconds(0)) / drawing_time_history.size();
 		auto load_average = (int)(100.0*average_time.count()/FRAME_INTERVAL.count());
-		auto text_drawing_laod_average = Text::make(renderer, default_font, FORMAT_STRING(L"描画負荷 : " << std::setfill(L'0') << std::right << std::setw(3) << load_average << L"[%]").c_str(), COLOR_BLACK);
-		text_drawing_laod_average.draw(0, 15);
+		textRenderer.draw(0, 15, FORMAT_STRING(L"描画負荷 : " << std::setfill(L'0') << std::right << std::setw(3) << load_average << L"[%]"));
 		
 		// 演奏情報
 		auto tgStatistics = mSynthesizer.statistics();
-		auto text_samples = Text::make(renderer, default_font, FORMAT_STRING(L"生成サンプル数 : " << tgStatistics.created_samples << L" (" << (tgStatistics.created_samples*1000ull/SAMPLE_FREQ)
+		textRenderer.draw(150, 0, FORMAT_STRING(L"生成サンプル数 : " << tgStatistics.created_samples << L" (" << (tgStatistics.created_samples*1000ull/SAMPLE_FREQ)
 			<< L"[msec])  failed : " << tgStatistics.failed_samples*1000ull/SAMPLE_FREQ 
-			<< L"[msec]  buffered : " << std::setfill(L'0') << std::right << std::setw(4) << mOutput.getBufferedFrameCount()*1000 / SAMPLE_FREQ << "[msec]").c_str(), COLOR_BLACK);
-		text_samples.draw(150, 0);
-		auto text_rendering_laod_average = Text::make(renderer, default_font, FORMAT_STRING(L"演奏負荷 : " << std::setfill(L'0') << std::right << std::setw(3) << (int)(100*tgStatistics.rendering_load_average()) << L"[%]").c_str(), COLOR_BLACK);
-		text_rendering_laod_average.draw(150, 15);
-		auto text_rendering_post_amp = Text::make(renderer, default_font, FORMAT_STRING(L"PostAmp : " << std::fixed << std::setprecision(3) << mPostAmpVolume.load()).c_str(), COLOR_BLACK);
-		text_rendering_post_amp.draw(150, 30);
+			<< L"[msec]  buffered : " << std::setfill(L'0') << std::right << std::setw(4) << mOutput.getBufferedFrameCount()*1000 / SAMPLE_FREQ << "[msec]"));
+		textRenderer.draw(150, 15, FORMAT_STRING(L"演奏負荷 : " << std::setfill(L'0') << std::right << std::setw(3) << (int)(100*tgStatistics.rendering_load_average()) << L"[%]"));
+		textRenderer.draw(150, 30, FORMAT_STRING(L"PostAmp : " << std::fixed << std::setprecision(3) << mPostAmpVolume.load()));
 
 		// 波形情報
 		const int margin = 5;
