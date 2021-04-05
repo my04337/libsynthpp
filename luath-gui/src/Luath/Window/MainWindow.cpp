@@ -161,24 +161,64 @@ void MainWindow::drawingThreadMain()
 		SDL_RenderClear(renderer);
 
 		// 描画情報
-		textRenderer.draw(0, 0, FORMAT_STRING(L"描画フレーム数 : " << frames));
-		auto average_time = std::accumulate(drawing_time_history.cbegin(), drawing_time_history.cend(), std::chrono::microseconds(0)) / drawing_time_history.size();
-		auto load_average = (int)(100.0*average_time.count()/FRAME_INTERVAL.count());
-		textRenderer.draw(0, 15, FORMAT_STRING(L"描画負荷 : " << std::setfill(L'0') << std::right << std::setw(3) << load_average << L"[%]"));
+		{
+			textRenderer.draw(0, 0, FORMAT_STRING(L"描画フレーム数 : " << frames));
+			auto average_time = std::accumulate(drawing_time_history.cbegin(), drawing_time_history.cend(), std::chrono::microseconds(0)) / drawing_time_history.size();
+			auto load_average = (int)(100.0 * average_time.count() / FRAME_INTERVAL.count());
+			textRenderer.draw(0, 15, FORMAT_STRING(L"描画負荷 : " << std::setfill(L'0') << std::right << std::setw(3) << load_average << L"[%]"));
+		}
 		
 		// 演奏情報
-		auto tgStatistics = mSynthesizer.statistics();
-		textRenderer.draw(150, 0, FORMAT_STRING(L"生成サンプル数 : " << tgStatistics.created_samples << L" (" << (tgStatistics.created_samples*1000ull/SAMPLE_FREQ)
-			<< L"[msec])  failed : " << tgStatistics.failed_samples*1000ull/SAMPLE_FREQ 
-			<< L"[msec]  buffered : " << std::setfill(L'0') << std::right << std::setw(4) << mOutput.getBufferedFrameCount()*1000 / SAMPLE_FREQ << "[msec]"));
-		textRenderer.draw(150, 15, FORMAT_STRING(L"演奏負荷 : " << std::setfill(L'0') << std::right << std::setw(3) << (int)(100*tgStatistics.rendering_load_average()) << L"[%]"));
-		textRenderer.draw(150, 30, FORMAT_STRING(L"PostAmp : " << std::fixed << std::setprecision(3) << mPostAmpVolume.load()));
+		{
+			auto tgStatistics = mSynthesizer.statistics();
+			textRenderer.draw(150, 0, FORMAT_STRING(L"生成サンプル数 : " << tgStatistics.created_samples << L" (" << (tgStatistics.created_samples * 1000ull / SAMPLE_FREQ)
+				<< L"[msec])  failed : " << tgStatistics.failed_samples * 1000ull / SAMPLE_FREQ
+				<< L"[msec]  buffered : " << std::setfill(L'0') << std::right << std::setw(4) << mOutput.getBufferedFrameCount() * 1000 / SAMPLE_FREQ << "[msec]"));
+			textRenderer.draw(150, 15, FORMAT_STRING(L"演奏負荷 : " << std::setfill(L'0') << std::right << std::setw(3) << (int)(100 * tgStatistics.rendering_load_average()) << L"[%]"));
+			textRenderer.draw(150, 30, FORMAT_STRING(L"PostAmp : " << std::fixed << std::setprecision(3) << mPostAmpVolume.load()));
+		}
+
+		// チャネル情報
+		{
+			constexpr int ofsX = 300;
+			constexpr int ofsY = 30;
+
+			constexpr std::array<int, 5> columnWidth{ 20, 55, 50, 50 };
+			int x = ofsX, ci = 0;
+			auto col = [&] { 
+				int ret = x;  
+				x += columnWidth[ci++];
+				return ret;
+			};
+			int y = ofsY;
+			{
+				x = ofsX;
+				ci = 0;
+				textRenderer.draw(col(), y, L"Ch");
+				textRenderer.draw(col(), y, L"Ins");
+				textRenderer.draw(col(), y, L"Vol");
+				textRenderer.draw(col(), y, L"Exp");
+			}
+			for (const auto& info : mSynthesizer.channelInfo()) {
+				y += 15;
+				x = ofsX;
+				ci = 0;
+				textRenderer.draw(col(), y, FORMAT_STRING(std::setfill(L'0') << std::setw(2) << info.ch));
+				textRenderer.draw(col(), y, FORMAT_STRING(std::setfill(L'0') << std::setw(3) << info.programChange << L"-" << std::setw(3) << info.bankSelect));
+				textRenderer.draw(col(), y, FORMAT_STRING(std::setfill(L'0') << std::fixed << std::setprecision(4) << info.volume));
+				textRenderer.draw(col(), y, FORMAT_STRING(std::setfill(L'0') << std::fixed << std::setprecision(4) << info.expression));
+
+			}
+
+		}
+		
+
 
 		// 波形情報
 		const int margin = 5;
-		mLissajousWidget.draw(renderer, 250+margin, 440+margin, 200-margin*2, 200-margin*2);
-		mSpectrumAnalyzerWidget.draw(renderer, 450+margin, 240+margin, 350-margin*2, 200-margin*2);
-		mOscilloScopeWidget.draw(renderer, 450+margin, 440+margin, 350-margin*2, 200-margin*2);
+		mLissajousWidget.draw(renderer, 350+margin, 490+margin, 150-margin*2, 150-margin*2);
+		mSpectrumAnalyzerWidget.draw(renderer, 500+margin, 340+margin, 300-margin*2, 150-margin*2);
+		mOscilloScopeWidget.draw(renderer, 500+margin, 490+margin, 300-margin*2, 150-margin*2);
 
 		// 描画終了
 		SDL_RenderPresent(renderer);
