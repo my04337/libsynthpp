@@ -16,6 +16,9 @@ void MidiChannel::reset(SystemType type)
 	_voiceMapper.reset();
 	_voices.clear();
 
+	cmPitchBend = 0;
+	calculatedPitchBend = 0;
+
 	ccVolume = 1.0;
 	ccPan = 0.5f;
 	ccExpression = 1.0;
@@ -33,7 +36,7 @@ void MidiChannel::reset(SystemType type)
 
 	pcId = 0; // Acoustic Piano
 	bankSelect = 0; 
-	updateProgram();
+	applyProgram();
 }
 
 void MidiChannel::resetParameterNumberState()
@@ -68,7 +71,7 @@ void MidiChannel::programChange(uint8_t progId)
 
 	// プログラムId更新
 	pcId = progId;
-	updateProgram();
+	applyProgram();
 }
 // コントロールチェンジ
 void MidiChannel::controlChange(uint8_t ctrlNo, uint8_t value)
@@ -135,11 +138,18 @@ void MidiChannel::controlChange(uint8_t ctrlNo, uint8_t value)
 		if (ccRPN_MSB == 0 && ccRPN_MSB == 0 && ccDE_MSB.has_value()) {
 			// ピッチベンドセンシティビティ: MSBのみ使用
 			rpnPitchBendSensitibity = ccDE_MSB.value();
+			applyPitchBend();
 		}
 	}
 
 	ccPrevCtrlNo = ctrlNo;
 	ccPrevValue = value;
+}
+
+void MidiChannel::pitchBend(int16_t pitch)
+{
+	cmPitchBend = pitch;
+	applyPitchBend();
 }
 
 void MidiChannel::holdOn()
@@ -187,10 +197,12 @@ MidiChannel::Info MidiChannel::info()const
 	info.volume = ccVolume; 
 	info.expression = ccExpression;
 	info.pan = ccPan;
+	info.pitchBend = cmPitchBend;
+	info.pitchBendSensitibity = rpnPitchBendSensitibity;
 
 	return info;
 }
-void MidiChannel::updateProgram()
+void MidiChannel::applyProgram()
 {
 	static const LSP::Filter::EnvelopeGenerator<float>::Curve curveExp3(3.0f);
 	switch (pcId) {
@@ -200,15 +212,18 @@ void MidiChannel::updateProgram()
 		break;
 	}
 }
+void MidiChannel::applyPitchBend()
+{
+	calculatedPitchBend = rpnPitchBendSensitibity * (cmPitchBend / 8192.0f);
+	for (auto& kvp : _voices) {
+		kvp.second->setPitchBend(calculatedPitchBend);
+	}
+}
 void MidiChannel::voice_noteOn(VoiceId id, uint32_t noteNo, uint8_t vel)
 {
 	float toneVolume = (vel / 127.0f);
-	float freq = 440 * exp2(((float)noteNo - 69.0f) / 12.0f);
-
-	LSP::Generator::FunctionGenerator<float> fg;
-	fg.setSinWave(sampleFreq, freq);
-	auto tone = std::make_unique<LSP::Synth::SimpleVoice>(fg, pcEG, toneVolume);
-	_voices.emplace(id, std::move(tone));
+	auto voice = std::make_unique<LSP::Synth::SimpleVoice>(pcEG, noteNo, calculatedPitchBend, toneVolume);
+	_voices.emplace(id, std::move(voice));
 }
 void MidiChannel::voice_noteOff(VoiceId id)
 {

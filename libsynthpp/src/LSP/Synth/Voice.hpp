@@ -23,6 +23,7 @@ public:
 	virtual ~Voice() {}
 
 	virtual float update() = 0;
+	virtual void setPitchBend(float pitchBend) = 0;
 	virtual EnvelopeGenerator& envolopeGenerator() = 0;
 
 };

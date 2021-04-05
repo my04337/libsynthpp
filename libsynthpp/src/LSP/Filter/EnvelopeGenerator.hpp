@@ -95,6 +95,7 @@ public:
 		parameter_type release_time		// sec)
 	)
 	{
+		mSampleFreq = sampleFreq;
 		// 各種パラメータの範囲調整 & サンプル単位に変換 
 		mAttackTime   = std::max<uint64_t>(0, static_cast<uint64_t>(sampleFreq * attack_time));
 		mHoldTime     = std::max<uint64_t>(0, static_cast<uint64_t>(sampleFreq * hold_time));
@@ -105,6 +106,12 @@ public:
 		mFadeSlope    = std::min<parameter_type>(fade_slope, 0) / sampleFreq; // 減衰率なので負の値
 
 		mCurve = curve;
+	}
+
+	// サンプリング周波数
+	parameter_type sampleFreq()
+	{
+		return mSampleFreq;
 	}
 
 	// ノートオン (Attackへ遷移)
@@ -282,6 +289,7 @@ protected:
 	
 
 private:	
+	parameter_type mSampleFreq=0;	// サンプリング周波数
 	EnvelopeState mState;			// 現在の状態
 	uint64_t mTime;					// 現在の時刻(ノートオン/ノートオフからの)
 	Curve mCurve;

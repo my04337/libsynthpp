@@ -122,6 +122,7 @@ public:
 	{}
 
 	uint8_t channel()const noexcept override final { return mChannel; } 
+	int16_t pitch()const noexcept { return mPitch; }
 
 private:
 	uint8_t mChannel;

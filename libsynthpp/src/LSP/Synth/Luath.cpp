@@ -178,6 +178,9 @@ void Luath::dispatchMessage(const std::shared_ptr<const MIDI::Message>& msg)
 	} else if (auto m = std::dynamic_pointer_cast<const ControlChange>(msg)) {
 		auto& midich = mMidiChannels[m->channel()];
 		midich.controlChange(m->ctrlNo(), m->value());
+	} else if (auto m = std::dynamic_pointer_cast<const PitchBend>(msg)) {
+		auto& midich = mMidiChannels[m->channel()];
+		midich.pitchBend(m->pitch());
 	} else if (auto m = std::dynamic_pointer_cast<const SysExMessage>(msg)) {
 		sysExMessage(&m->data()[0], m->data().size());
 	}

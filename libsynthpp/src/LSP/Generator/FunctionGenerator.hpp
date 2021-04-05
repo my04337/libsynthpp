@@ -43,34 +43,34 @@ public:
 		mType = WaveFormType::Ground;
 		mSamplePerPhase = 0;
 	}
-	void setSinWave(uint32_t sampleFreq, parameter_type freq)noexcept 
+	void setSinWave(uint32_t sampleFreq, parameter_type freq, bool keepPhase = false)noexcept 
 	{
 		auto freq_ = std::abs(freq);  // 負の位相はこの実装では対応不可
 		mType = WaveFormType::Sin;
 		mSamplePerPhase = 2.0f * PI<parameter_type> * (freq_ / sampleFreq);
-		mPhase = 0;
+		if(!keepPhase) mPhase = 0;
 	}
-	void setSawWave(uint32_t sampleFreq, parameter_type freq)noexcept 
+	void setSawWave(uint32_t sampleFreq, parameter_type freq, bool keepPhase = false)noexcept
 	{
 		auto freq_ = std::abs(freq);  // 負の位相はこの実装では対応不可
 		mType = WaveFormType::Saw;
 		mSamplePerPhase = 2.0f * PI<parameter_type> * (freq_ / sampleFreq);
-		mPhase = 0;
+		if (!keepPhase) mPhase = 0;
 	}
-	void setTriangleWave(uint32_t sampleFreq, parameter_type freq)noexcept 
+	void setTriangleWave(uint32_t sampleFreq, parameter_type freq, bool keepPhase = false)noexcept
 	{
 		auto freq_ = std::abs(freq);  // 負の位相はこの実装では対応不可
 		mType = WaveFormType::Triangle;
 		mSamplePerPhase = 2.0f * PI<parameter_type> * (freq_ / sampleFreq);
-		mPhase = 0;
+		if (!keepPhase) mPhase = 0;
 	}
-	void setSquareWave(uint32_t sampleFreq, parameter_type freq, parameter_type duty=PI<parameter_type>)noexcept 
+	void setSquareWave(uint32_t sampleFreq, parameter_type freq, parameter_type duty=PI<parameter_type>, bool keepPhase = false)noexcept
 	{
 		auto freq_ = std::abs(freq);  // 負の位相はこの実装では対応不可
 		mType = WaveFormType::Square;
 		mSamplePerPhase = 2.0f * PI<parameter_type> * (freq_ / sampleFreq);
 		mDutyRate = duty;
-		mPhase = 0;
+		if (!keepPhase) mPhase = 0;
 	}
 	void setWhiteNoise()noexcept 
 	{

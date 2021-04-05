@@ -20,6 +20,8 @@ public:
 		float pan; // パン
 		float volume; // チャネルボリューム
 		float expression; // エクスプレッション
+		int16_t pitchBend; // ピッチベンド
+		int16_t pitchBendSensitibity; // ピッチベンドセンシティビティ
 	};
 
 	MidiChannel(uint32_t sampleFreq, uint8_t ch);
@@ -31,6 +33,7 @@ public:
 	void noteOff(uint32_t noteNo);
 	void programChange(uint8_t progId);
 	void controlChange(uint8_t ctrlNo, uint8_t value);
+	void pitchBend(int16_t pitch);
 	void holdOn();
 	void holdOff();
 	// ---
@@ -49,7 +52,7 @@ public:
 	uint8_t pcId; // プログラムId
 	uint16_t bankSelect; // バンクセレクト
 	LSP::Filter::EnvelopeGenerator<float> pcEG; // チャネルEG(パラメータ計算済)
-	void updateProgram();
+	void applyProgram();
 
 	// コントロールチェンジ
 	uint8_t ccPrevCtrlNo;
@@ -59,6 +62,11 @@ public:
 	float ccPan;			// CC:10 - パン [0.0(左), +1.0(右)]
 	float ccExpression;		// CC:11 - エクスプレッション [0.0, +1.0]
 	uint8_t ccBankSelectLSB;// CC:32 - バンクセレクトLSB
+
+	// ピッチベンド
+	int16_t cmPitchBend;
+	float calculatedPitchBend;
+	void applyPitchBend();
 
 	// RPN/NRPN State
 	std::optional<uint8_t> ccRPN_MSB;
