@@ -355,9 +355,9 @@ void MainWindow::drawingThreadMain()
 
 		// 波形情報
 		const int margin = 5;
-		mLissajousWidget.draw(renderer, 350+margin, 490+margin, 150-margin*2, 150-margin*2);
-		mSpectrumAnalyzerWidget.draw(renderer, 500+margin, 340+margin, 300-margin*2, 150-margin*2);
-		mOscilloScopeWidget.draw(renderer, 500+margin, 490+margin, 300-margin*2, 150-margin*2);
+		mLissajousWidget.draw(renderer, 350+margin, 340+margin, 150-margin*2, 150-margin*2);
+		mOscilloScopeWidget.draw(renderer, 500 + margin, 340 + margin, 300 - margin * 2, 150 - margin * 2);
+		mSpectrumAnalyzerWidget.draw(renderer, 350+margin, 490+margin, 450-margin*2, 150-margin*2);
 
 		// 描画終了
 		SDL_RenderPresent(renderer);
