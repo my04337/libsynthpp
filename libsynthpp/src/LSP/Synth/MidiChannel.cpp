@@ -35,7 +35,6 @@ void MidiChannel::reset(SystemType type)
 	resetParameterNumberState();
 
 	pcId = 0; // Acoustic Piano
-	bankSelect = 0; 
 	applyProgram();
 }
 
@@ -65,10 +64,6 @@ void MidiChannel::noteOff(uint32_t noteNo)
 void MidiChannel::programChange(uint8_t progId)
 {
 	// 事前に受信していたバンクセレクトを解決
-	bankSelect = static_cast<uint16_t>((0x7F & ccBankSelectMSB) * 128 + (0x7F & ccBankSelectLSB));
-	ccBankSelectMSB = 0;
-	ccBankSelectLSB = 0;
-
 	// プログラムId更新
 	pcId = progId;
 	applyProgram();
@@ -194,12 +189,14 @@ MidiChannel::Info MidiChannel::info()const
 
 	info.ch = ch;
 	info.programChange = pcId;
-	info.bankSelect = 0; // TODO
+	info.bankSelectMSB = ccBankSelectMSB;
+	info.bankSelectLSB = ccBankSelectLSB;
 	info.volume = ccVolume; 
 	info.expression = ccExpression;
 	info.pan = ccPan;
 	info.pitchBend = cmPitchBend;
 	info.pitchBendSensitibity = rpnPitchBendSensitibity;
+	info.poly = _voices.size();
 
 	return info;
 }

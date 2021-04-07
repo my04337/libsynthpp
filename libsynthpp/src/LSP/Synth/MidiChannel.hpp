@@ -16,12 +16,14 @@ public:
 	struct Info {
 		uint8_t ch; // チャネル
 		uint8_t programChange; // プログラムチェンジ
-		uint8_t bankSelect; // バンクセレクト
+		uint8_t bankSelectMSB; // バンクセレクト
+		uint8_t bankSelectLSB; // バンクセレクト
 		float pan; // パン
 		float volume; // チャネルボリューム
 		float expression; // エクスプレッション
 		int16_t pitchBend; // ピッチベンド
 		int16_t pitchBendSensitibity; // ピッチベンドセンシティビティ
+		size_t poly; // 同時発音数
 	};
 
 	MidiChannel(uint32_t sampleFreq, uint8_t ch);
@@ -50,7 +52,6 @@ public:
 		
 	// プログラムチェンジ
 	uint8_t pcId; // プログラムId
-	uint16_t bankSelect; // バンクセレクト
 	LSP::Filter::EnvelopeGenerator<float> pcEG; // チャネルEG(パラメータ計算済)
 	void applyProgram();
 
