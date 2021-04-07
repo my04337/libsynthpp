@@ -131,7 +131,7 @@ void MidiChannel::controlChange(uint8_t ctrlNo, uint8_t value)
 
 	// RPN/NRPN 適用
 	if (apply_RPN_NRPN_state) {
-		if (ccRPN_MSB == 0 && ccRPN_MSB == 0 && ccDE_MSB.has_value()) {
+		if (ccRPN_MSB == 0 && ccRPN_LSB == 0 && ccDE_MSB.has_value()) {
 			// ピッチベンドセンシティビティ: MSBのみ使用
 			rpnPitchBendSensitibity = ccDE_MSB.value();
 			applyPitchBend();
