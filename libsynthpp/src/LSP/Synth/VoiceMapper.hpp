@@ -26,6 +26,9 @@ public:
 	// ダンパーペダル オフ
 	std::vector</*off*/VoiceId> holdOff();
 
+	// ダンパーペダル オン/オフ を取得します
+	bool isHolding()const noexcept { return mHold; }
+
 private:
 	struct NoteInfo {
 		VoiceId toneId;			// トーンId

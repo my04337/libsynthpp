@@ -29,12 +29,16 @@ void MidiChannel::reset(SystemType type)
 	ccBankSelectLSB = 0;
 	ccBankSelectMSB = 0;
 
+	ccAttackTime = 64;
+	ccDecayTime = 64;
+	ccReleaseTime = 64;
+
 	rpnNull = false;
 	rpnPitchBendSensitibity = 2;
 
 	resetParameterNumberState();
 
-	pcId = 0; // Acoustic Piano
+	progId = 0; // Acoustic Piano
 	applyProgram();
 }
 
@@ -65,7 +69,7 @@ void MidiChannel::programChange(uint8_t progId)
 {
 	// 事前に受信していたバンクセレクトを解決
 	// プログラムId更新
-	pcId = progId;
+	this->progId = progId;
 	applyProgram();
 }
 // コントロールチェンジ
@@ -107,6 +111,15 @@ void MidiChannel::controlChange(uint8_t ctrlNo, uint8_t value)
 		} else {
 			holdOn();
 		}
+		break;
+	case 72: // Release Time(リリースタイム)
+		ccReleaseTime = value;
+		break;
+	case 73: // Attack Time(アタックタイム)
+		ccAttackTime = value;
+		break;
+	case 75: // Decay Time(ディケイタイム)
+		ccDecayTime = value;
 		break;
 	case 98: // NRPN(LSB)
 		ccNRPN_LSB = value;
@@ -188,22 +201,30 @@ MidiChannel::Info MidiChannel::info()const
 	Info info;
 
 	info.ch = ch;
-	info.programChange = pcId;
+	info.progId = progId;
 	info.bankSelectMSB = ccBankSelectMSB;
 	info.bankSelectLSB = ccBankSelectLSB;
 	info.volume = ccVolume; 
 	info.expression = ccExpression;
 	info.pan = ccPan;
-	info.pitchBend = cmPitchBend;
-	info.pitchBendSensitibity = rpnPitchBendSensitibity;
+	info.pitchBend = calculatedPitchBend;
+	info.attackTime = ccAttackTime;
+	info.decayTime = ccDecayTime;
+	info.releaseTime = ccReleaseTime;
 	info.poly = _voices.size();
+	info.pedal = _voiceMapper.isHolding();
+	info.drum = false; // TODO
+
+	for (auto& kvp : _voices) {
+		info.voiceInfo.emplace(kvp.first, kvp.second->info());
+	}
 
 	return info;
 }
 void MidiChannel::applyProgram()
 {
 	static const LSP::Filter::EnvelopeGenerator<float>::Curve curveExp3(3.0f);
-	switch (pcId) {
+	switch (progId) {
 	case 0:	// Acoustic Piano
 	default:
 		pcEG.setParam((float)sampleFreq, curveExp3, 0.05f, 0.0f, 0.2f, 0.25f, -1.0f, 0.05f);

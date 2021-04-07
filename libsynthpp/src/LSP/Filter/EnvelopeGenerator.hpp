@@ -243,6 +243,12 @@ public:
 		return mState != EnvelopeState::Free;
 	}
 
+	// エンベロープジェネレータ ステート
+	EnvelopeState state()const noexcept
+	{
+		return mState;
+	}
+
 protected:
 	void switchToAttack() 
 	{

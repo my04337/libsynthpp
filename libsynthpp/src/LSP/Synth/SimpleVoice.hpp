@@ -31,6 +31,16 @@ public:
 
 	virtual ~SimpleVoice() {}
 
+	virtual Info info()const override
+	{
+		Info info;
+
+		info.freq = mCalculatedFreq;
+		info.envelope = mEG.envelope();
+		info.state = mEG.state();
+
+		return info;
+	}
 	virtual float update()override
 	{
 		auto v = mFG.update();
@@ -50,8 +60,8 @@ public:
 private:
 	void updateFunctionGenerator()
 	{
-		float freq = 440 * exp2((static_cast<float>(mNoteNo) + mPitchBend - 69.0f) / 12.0f);
-		mFG.setSinWave(mEG.sampleFreq(), freq, true);
+		mCalculatedFreq = 440 * exp2((static_cast<float>(mNoteNo) + mPitchBend - 69.0f) / 12.0f);
+		mFG.setSinWave(mEG.sampleFreq(), mCalculatedFreq, true);
 	}
 
 private:
@@ -59,6 +69,7 @@ private:
 	EnvelopeGenerator mEG;
 	uint32_t mNoteNo;
 	float mPitchBend;
+	float mCalculatedFreq = 0;
 	float mVolume;
 };
 }

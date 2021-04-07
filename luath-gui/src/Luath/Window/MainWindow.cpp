@@ -5,6 +5,7 @@
 
 #include <SDL_ttf.h>
 #include <array>
+#include <map>
 #include <numeric>
 
 using namespace LSP;
@@ -12,6 +13,25 @@ using namespace Luath;
 using namespace Luath::Window;
 
 static constexpr uint32_t SAMPLE_FREQ = 44100;
+
+static constexpr std::array<SDL_Color, 16> CHANNEL_COLOR{
+	SDL_Color{0xFF, 0x00, 0x00, 0xFF}, // 赤
+	SDL_Color{0xFF, 0x80, 0x00, 0xFF}, // 朱色
+	SDL_Color{0xFF, 0xBF, 0x00, 0xFF}, // ゴールデンイエロー
+	SDL_Color{0xFF, 0xFF, 0x00, 0xFF}, // 黄色
+	SDL_Color{0xBF, 0xFF, 0x00, 0xFF}, // 明るい黄緑色 
+	SDL_Color{0x00, 0xFF, 0x00, 0xFF}, // 緑
+	SDL_Color{0x00, 0xFF, 0xBF, 0xFF}, // 黄緑色
+	SDL_Color{0x00, 0xBF, 0xFF, 0xFF}, // セルリアンブルー
+	SDL_Color{0x00, 0x40, 0xFF, 0xFF}, // コバルトブルー
+	SDL_Color{0x80, 0x80, 0x80, 0xFF}, // グレー ※通常ドラム
+	SDL_Color{0x40, 0x00, 0xFF, 0xFF}, // ヒヤシンス
+	SDL_Color{0x80, 0x00, 0xFF, 0xFF}, // バイオレット
+	SDL_Color{0xBF, 0x00, 0xFF, 0xFF}, // ムラサキ
+	SDL_Color{0xFF, 0x00, 0xFF, 0xFF}, // マゼンタ
+	SDL_Color{0xFF, 0x00, 0x80, 0xFF}, // ルビーレッド
+	SDL_Color{0xBF, 0x00, 0x40, 0xFF}, // カーマイン
+};
 
 
 MainWindow::MainWindow()
@@ -123,6 +143,8 @@ void MainWindow::loadMidi(const std::filesystem::path& midi_path) {
 }
 void MainWindow::drawingThreadMain()
 {
+	using LSP::Synth::VoiceId;
+
 	constexpr int FRAMES_PER_SECOND = 60;
 	constexpr std::chrono::microseconds FRAME_INTERVAL(1'000'000/FRAMES_PER_SECOND);
 	auto& app = Application::instance();
@@ -137,13 +159,16 @@ void MainWindow::drawingThreadMain()
 	lsp_assert(renderer != nullptr);
 	auto fin_act_destroy_renderer = finally([&]{SDL_DestroyRenderer(renderer);});
 	FastTextRenderer textRenderer(renderer, default_font);
+	SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
 
 	// FPS計算,表示用
 	size_t frames = 0;
 	std::array<std::chrono::microseconds, FRAMES_PER_SECOND/4> drawing_time_history = {};
 	size_t drawing_time_index = 0;
 
-	// 文字列プール ※SDL2_ttfはフォントを用いての描画からのテクスチャ生成までが非常に重いため、キャッシュが必要
+	// 前回のボイス表示位置 (素直に順番に描画するとちらついて見づらいため表示を揃える)
+	std::unordered_map<VoiceId, int> prevVoicePosMap;
+	size_t prevVoiceEndPos = 0;
 
 	// 描画ループ開始
 	clock::time_point prev_wake_up_time = clock::now() - FRAME_INTERVAL;
@@ -159,6 +184,13 @@ void MainWindow::drawingThreadMain()
 		auto drawing_start_time = clock::now();
 		SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
 		SDL_RenderClear(renderer);
+		
+		// 各種情報取得
+		const auto tgStatistics = mSynthesizer.statistics();
+		const auto channelInfo = mSynthesizer.channelInfo();
+		int polyCount = 0;
+		for (auto& info : channelInfo) polyCount += info.poly;
+
 
 		// 描画情報
 		{
@@ -170,12 +202,12 @@ void MainWindow::drawingThreadMain()
 		
 		// 演奏情報
 		{
-			auto tgStatistics = mSynthesizer.statistics();
 			textRenderer.draw(150, 0, FORMAT_STRING(L"生成サンプル数 : " << tgStatistics.created_samples << L" (" << (tgStatistics.created_samples * 1000ull / SAMPLE_FREQ)
 				<< L"[msec])  failed : " << tgStatistics.failed_samples * 1000ull / SAMPLE_FREQ
 				<< L"[msec]  buffered : " << std::setfill(L'0') << std::right << std::setw(4) << mOutput.getBufferedFrameCount() * 1000 / SAMPLE_FREQ << "[msec]"));
 			textRenderer.draw(150, 15, FORMAT_STRING(L"演奏負荷 : " << std::setfill(L'0') << std::right << std::setw(3) << (int)(100 * tgStatistics.rendering_load_average()) << L"[%]"));
 			textRenderer.draw(150, 30, FORMAT_STRING(L"PostAmp : " << std::fixed << std::setprecision(3) << mPostAmpVolume.load()));
+			textRenderer.draw(280, 15, FORMAT_STRING(L"同時発音数 : " << std::setfill(L'0') << std::right << std::setw(2) << polyCount));
 		}
 
 		// チャネル情報
@@ -183,7 +215,7 @@ void MainWindow::drawingThreadMain()
 			constexpr int ofsX = 300;
 			constexpr int ofsY = 50;
 
-			constexpr std::array<int, 7> columnWidth{ 25, 75, 50, 50, 60, 50, 25 };
+			constexpr std::array<int, 10> columnWidth{ 25, 75, 40, 40, 60, 35, 75, 25, 25, 25 };
 			int x = ofsX, ci = 0;
 			auto col = [&] { 
 				int ret = x;  
@@ -191,6 +223,9 @@ void MainWindow::drawingThreadMain()
 				return ret;
 			};
 			int y = ofsY;
+			constexpr int width = std::accumulate(columnWidth.begin(), columnWidth.end(), 0);
+			constexpr int height = 15;
+
 			{
 				x = ofsX;
 				ci = 0;
@@ -200,22 +235,120 @@ void MainWindow::drawingThreadMain()
 				textRenderer.draw(col(), y, L"Exp");
 				textRenderer.draw(col(), y, L"Pitch");
 				textRenderer.draw(col(), y, L"Pan");
+				textRenderer.draw(col(), y, L"Envelope");
+				textRenderer.draw(col(), y, L"Ped");
+				textRenderer.draw(col(), y, L"Drm");
 				textRenderer.draw(col(), y, L"Poly");
 			}
-			for (const auto& info : mSynthesizer.channelInfo()) {
+			for (const auto& info : channelInfo) {
 				y += 15;
 				x = ofsX;
 				ci = 0;
-				textRenderer.draw(col(), y, FORMAT_STRING(std::setfill(L'0') << std::setw(2) << info.ch));
-				textRenderer.draw(col(), y, FORMAT_STRING(std::setfill(L'0') << std::setw(3) << info.programChange << L":" << std::setw(3) << info.bankSelectMSB <<L"." << std::setw(3) << info.bankSelectLSB));
-				textRenderer.draw(col(), y, FORMAT_STRING(std::setfill(L'0') << std::fixed << std::setprecision(4) << info.volume));
-				textRenderer.draw(col(), y, FORMAT_STRING(std::setfill(L'0') << std::fixed << std::setprecision(4) << info.expression));
-				textRenderer.draw(col(), y, FORMAT_STRING((info.pitchBend >= 0 ? L"+" : L"-") << std::setfill(L'0') << std::setw(4) << std::abs(info.pitchBend) << L":" << std::setw(2) << info.pitchBendSensitibity));
-				textRenderer.draw(col(), y, FORMAT_STRING(std::setfill(L'0') << std::fixed << std::setprecision(4) << info.pan));
-				textRenderer.draw(col(), y, FORMAT_STRING(std::setfill(L'0') << std::setw(2) << info.poly));
 
+				const auto bgColor = CHANNEL_COLOR[info.ch];
+				SDL_SetRenderDrawColor(renderer, bgColor.r, bgColor.g, bgColor.b, bgColor.a/2);
+				SDL_Rect bgRect{ x, y, width, height };
+				SDL_RenderFillRect(renderer, &bgRect);
+
+				textRenderer.draw(col(), y, FORMAT_STRING(std::setfill(L'0') << std::setw(2) << info.ch));
+				textRenderer.draw(col(), y, FORMAT_STRING(std::setfill(L'0') << std::setw(3) << info.progId << L":" << std::setw(3) << info.bankSelectMSB <<L"." << std::setw(3) << info.bankSelectLSB));
+				textRenderer.draw(col(), y, FORMAT_STRING(std::setfill(L'0') << std::fixed << std::setprecision(3) << info.volume));
+				textRenderer.draw(col(), y, FORMAT_STRING(std::setfill(L'0') << std::fixed << std::setprecision(3) << info.expression));
+				textRenderer.draw(col(), y, FORMAT_STRING((info.pitchBend >= 0 ? L"+" : L"-") << std::fixed << std::setprecision(4) << std::abs(info.pitchBend)));
+				textRenderer.draw(col(), y, FORMAT_STRING(std::setfill(L'0') << std::fixed << std::setprecision(2) << info.pan));
+				textRenderer.draw(col(), y, FORMAT_STRING(std::setfill(L'0') << std::setw(3) << info.attackTime << L"." << std::setw(3) << info.decayTime << L"." << std::setw(3) << info.releaseTime));
+				textRenderer.draw(col(), y, FORMAT_STRING((info.pedal ? L"on" : L"off")));
+				textRenderer.draw(col(), y, FORMAT_STRING((info.drum ? L"on" : L"off")));
+				textRenderer.draw(col(), y, FORMAT_STRING(std::setfill(L'0') << std::setw(2) << info.poly));
+			}
+		}
+
+		// ボイス情報
+		{
+			constexpr int ofsX = 10;
+			constexpr int ofsY = 50;
+
+			// 全チャネルのボイス情報を統合
+			std::unordered_map<VoiceId, std::pair</*ch*/uint8_t, LSP::Synth::Voice::Info>> unsortedVoiceInfo;
+			for (const auto& ci : channelInfo) {
+				for (const auto& [vid, vi] : ci.voiceInfo) {
+					unsortedVoiceInfo.emplace(vid, std::make_pair(ci.ch, vi));
+				}
+			}
+			// 前回の描画位置を維持しながら描画順を決定する
+			std::vector<std::tuple<VoiceId, /*ch*/uint8_t, LSP::Synth::Voice::Info>> voiceInfo;
+			voiceInfo.resize(std::max(unsortedVoiceInfo.size(), prevVoiceEndPos));
+			for (auto& [vid, pos] : prevVoicePosMap) {
+				auto found = unsortedVoiceInfo.find(vid);
+				if (found != unsortedVoiceInfo.end()) {
+					voiceInfo[pos] = std::make_tuple(found->first, std::get<0>(found->second), std::get<1>(found->second));
+					unsortedVoiceInfo.erase(found);
+				}
+			}
+			for (size_t i = 0; i < voiceInfo.size() && !unsortedVoiceInfo.empty(); ++i) {
+				if (!std::get<0>(voiceInfo[i]).empty()) continue;
+				auto found = unsortedVoiceInfo.begin();
+				voiceInfo[i] = std::make_tuple(found->first, std::get<0>(found->second), std::get<1>(found->second));
+				unsortedVoiceInfo.erase(found);
+			}
+			lsp_assert(unsortedVoiceInfo.empty());
+			prevVoiceEndPos = 0;
+			prevVoicePosMap.clear();
+			for (size_t i = 0; i < voiceInfo.size(); ++i) {
+				if (std::get<0>(voiceInfo[i]).empty()) continue;
+				prevVoicePosMap[std::get<0>(voiceInfo[i])] = i;
+				prevVoiceEndPos = i+1;
 			}
 
+			// 描画
+			constexpr std::array<int, 5> columnWidth{ 60, 25, 60, 50, 40 };
+			int x = ofsX, ci = 0;
+			auto col = [&] {
+				int ret = x;
+				x += columnWidth[ci++];
+				return ret;
+			};
+			constexpr auto state2text = [](LSP::Synth::Voice::EnvelopeState state) -> const wchar_t* {
+				switch (state) {
+				case LSP::Synth::Voice::EnvelopeState::Attack: return L"Attack";
+				case LSP::Synth::Voice::EnvelopeState::Hold:   return L"Hold";
+				case LSP::Synth::Voice::EnvelopeState::Decay:  return L"Decay";
+				case LSP::Synth::Voice::EnvelopeState::Fade:   return L"Fade";
+				case LSP::Synth::Voice::EnvelopeState::Release:return L"Release";
+				case LSP::Synth::Voice::EnvelopeState::Free:   return L"Free";
+				default: return L"Unknown";
+				}
+			};
+			int y = ofsY;
+			constexpr int width = std::accumulate(columnWidth.begin(), columnWidth.end(), 0);
+			constexpr int height = 15;
+			{
+				x = ofsX;
+				ci = 0;
+				textRenderer.draw(col(), y, L"VoiceID");
+				textRenderer.draw(col(), y, L"Ch");
+				textRenderer.draw(col(), y, L"Freq");
+				textRenderer.draw(col(), y, L"Envelope");
+				textRenderer.draw(col(), y, L"State");
+			}
+			for (const auto& [vid, ch, info] : voiceInfo) {
+				y += 15;
+				x = ofsX;
+				ci = 0;
+
+				if (vid.empty()) continue;
+
+				const auto bgColor = CHANNEL_COLOR[ch];
+				SDL_SetRenderDrawColor(renderer, bgColor.r, bgColor.g, bgColor.b, static_cast<Uint8>(bgColor.a * 0.5f * info.envelope));
+				SDL_Rect bgRect{ x, y, width, height };
+				SDL_RenderFillRect(renderer, &bgRect);
+
+				textRenderer.draw(col(), y, FORMAT_STRING(std::setfill(L'0') << std::setw(8) << vid.id()));
+				textRenderer.draw(col(), y, FORMAT_STRING(std::setfill(L'0') << std::setw(2) << ch));
+				textRenderer.draw(col(), y, FORMAT_STRING(std::setfill(L'0') << std::fixed << std::setprecision(4) << info.freq));
+				textRenderer.draw(col(), y, FORMAT_STRING(std::setfill(L'0') << std::fixed << std::setprecision(3) << info.envelope));
+				textRenderer.draw(col(), y, FORMAT_STRING(state2text(info.state)));
+			}
 		}
 		
 
