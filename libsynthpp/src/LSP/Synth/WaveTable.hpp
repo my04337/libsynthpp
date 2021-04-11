@@ -30,16 +30,20 @@ public:
 
 	// カスタム波形を登録します
 	size_t add(Signal<float>&& wav);
+	size_t add(Signal<float>&& wav, float preAmp);
 
 	// 波形を取得します
-	SignalView<float> get(size_t id)const;
+	std::pair<SignalView<float>, float> get(size_t id)const;
 
 
 private:
 	void add(size_t id, Signal<float>&& wav);
+	void add(size_t id, Signal<float>&& wav, float preAmp);
+	static float calcRMS(SignalView<float> wav);
 
 private:
-	std::unordered_map<size_t, Signal<float>> mWaveTable;
+	std::unordered_map<size_t, std::pair<Signal<float>, /*preAmp*/float>> mWaveTable;
 	size_t mNextCustomWaveId = CustomWaveIdBegin;
+	float mBaseRMS; // 基準となる実効値
 };
 }

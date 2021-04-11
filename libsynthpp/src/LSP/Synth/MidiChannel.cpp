@@ -226,23 +226,22 @@ MidiChannel::Info MidiChannel::info()const
 std::unique_ptr<LSP::Synth::Voice> MidiChannel::createVoice(uint8_t noteNo, uint8_t vel)
 {
 	const float volume = (vel / 127.0f);
+	SignalView<float> wt;
 	float preAmp = 1.0;
 	static const LSP::Filter::EnvelopeGenerator<float>::Curve curveExp3(3.0f);
 	Voice::EnvelopeGenerator eg;
-	SignalView<float> wt = _waveTable.get(WaveTable::Preset::Ground);
 	if (!isDrumPart) {
 		switch (progId) {
 		case 0:	// Acoustic Piano
 		default:
-			wt = _waveTable.get(WaveTable::Preset::SquareWave);
+			std::tie(wt, preAmp) = _waveTable.get(WaveTable::Preset::SquareWave);
 			eg.setParam((float)sampleFreq, curveExp3, 0.05f, 0.0f, 0.2f, 0.25f, -1.0f, 0.05f);
-			preAmp = 1.0f;
 			break;
 		}
 	} else {
 		// TODO ドラム用音色を用意する
+		std::tie(wt, preAmp) = _waveTable.get(WaveTable::Preset::Ground);
 		eg.setParam((float)sampleFreq, curveExp3, 0.05f, 0.0f, 0.2f, 0.25f, -1.0f, 0.05f);
-		preAmp = 0;
 	}
 	return std::make_unique<LSP::Synth::WaveTableVoice>(sampleFreq, wt, eg, noteNo, calculatedPitchBend, volume * preAmp);
 }

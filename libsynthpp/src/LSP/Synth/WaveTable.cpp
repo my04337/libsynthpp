@@ -10,16 +10,31 @@ WaveTable::WaveTable()
 }
 size_t WaveTable::add(Signal<float>&& wav)
 {
+	lsp_assert(wav.channels() == 1);
 	size_t id = mNextCustomWaveId++;
 	add(id, std::move(wav));
 	return id;
 }
+size_t WaveTable::add(Signal<float> && wav, float preAmp)
+{
+	lsp_assert(wav.channels() == 1);
+	size_t id = mNextCustomWaveId++;
+	add(id, std::move(wav), preAmp);
+	return id;
+}
 void WaveTable::add(size_t id, Signal<float>&& wav)
 {
-	mWaveTable.insert_or_assign(id, std::move(wav));
+	// MEMO 実効値の2乗=パワーを用いて正規化すると、それらしい音量で揃う(ラウドネスは考慮していないので注意)
+	float rms = calcRMS(wav);
+	float preAmp = mBaseRMS * mBaseRMS / (rms * rms + 1.0e-8f);
+	mWaveTable.insert_or_assign(id, std::make_pair(std::move(wav), preAmp));
+}
+void WaveTable::add(size_t id, Signal<float>&& wav, float preAmp)
+{
+	mWaveTable.insert_or_assign(id, std::make_pair(std::move(wav), preAmp));
 }
 
-SignalView<float> WaveTable::get(size_t id)const
+std::pair<SignalView<float>, float> WaveTable::get(size_t id)const
 {
 	auto found = mWaveTable.find(id);
 	if (found == mWaveTable.end()) {
@@ -36,7 +51,7 @@ void WaveTable::reset()
 	{
 		auto sig = Signal<float>::allocate(1);
 		*sig.data() = 0;
-		add(Preset::Ground, std::move(sig));
+		add(Preset::Ground, std::move(sig), 0);
 	}
 	// SinWave
 	{
@@ -47,7 +62,8 @@ void WaveTable::reset()
 		for (size_t i = 0; i < frames; ++i) {
 			sig.frame(i)[0] = fg.update();
 		}
-		add(Preset::SinWave, std::move(sig));
+		mBaseRMS = calcRMS(sig);
+		add(Preset::SinWave, std::move(sig), 1);
 	}
 	// SquareWave
 	{
@@ -60,4 +76,18 @@ void WaveTable::reset()
 		}
 		add(Preset::SquareWave, std::move(sig));
 	}
+}
+
+float WaveTable::calcRMS(SignalView<float> wav)
+{
+	lsp_assert(wav.channels() == 1);
+
+	// 信号の2乗平均値を取る
+	const size_t frames = wav.frames();
+	float p = 0;
+	for (size_t i = 0; i < frames; ++i) {
+		p += wav.frame(i)[0] * wav.frame(i)[0];
+	}
+	p /= frames;
+	return std::sqrt(p);
 }
