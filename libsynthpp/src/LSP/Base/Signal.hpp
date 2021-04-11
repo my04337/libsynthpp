@@ -11,6 +11,8 @@ template<sample_typeable sample_type>
 class SignalView
 {
 public:
+	constexpr SignalView()
+		: SignalView(nullptr, 1, 0) {}
 	constexpr SignalView(const sample_type* data, uint32_t channels, size_t frames)
 		: mData(data), mChannels(channels), mFrames(frames) {}
 
@@ -21,11 +23,9 @@ public:
 	constexpr size_t frames()const noexcept { return mFrames; }
 
 	// 各フレームの先頭ポインタを取得します
-	constexpr sample_type* frame(size_t frame_index)noexcept { return mData + mChannels * frame_index; }
 	constexpr const sample_type* frame(size_t frame_index)const noexcept { return mData + mChannels * frame_index; }
 
 	// 全データへのポインタを取得します
-	constexpr sample_type* data()noexcept { return mData; }
 	constexpr const sample_type* data()const noexcept { return mData; }
 
 private:
