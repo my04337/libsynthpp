@@ -1,31 +1,16 @@
 cmake_minimum_required(VERSION 3.18)
 
+file(GLOB_RECURSE srcs 
+	src/*.h
+	src/*.hpp
+	src/*.c
+	src/*.cpp
+	)
+
 add_library(
 	libsynthpp STATIC
-
-	src/LSP/Base/Base.cpp
-	src/LSP/Base/StackTrace.cpp
-	src/LSP/Base/Logging.cpp
-	src/LSP/Base/Message.cpp
-	
-	src/LSP/Threading/Thread.cpp
-	src/LSP/Threading/EventSignal.cpp
-	src/LSP/Threading/TaskDispatcher.cpp
-		
-	src/LSP/Audio/WavFileOutput.cpp
-	src/LSP/Audio/WasapiOutput.cpp
-	src/LSP/Audio/SDLOutput.cpp
-	
-	src/LSP/MIDI/Parser.cpp
-	src/LSP/MIDI/Sequencer.cpp
-
-	src/LSP/Synth/VoiceMapper.cpp
-	src/LSP/Synth/MidiChannel.cpp
-	src/LSP/Synth/Luath.cpp
-	
-	src/LSP/static_test.cpp
-	src/LSP/Util/fft.hpp
-	 "src/LSP/Generator/WaveTableGenerator.hpp" "src/LSP/Synth/WaveTable.cpp" "src/LSP/Synth/WaveTableVoice.hpp")  
+	${srcs}
+)
 
 target_include_directories(
              libsynthpp

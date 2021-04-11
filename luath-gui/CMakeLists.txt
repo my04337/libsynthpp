@@ -1,20 +1,15 @@
 cmake_minimum_required(VERSION 3.18)
 
+file(GLOB_RECURSE srcs 
+	src/*.h
+	src/*.hpp
+	src/*.c
+	src/*.cpp
+	)
+	
 add_executable(
 	luath-gui WIN32 
-	
-	src/Luath/main.cpp
-	
-	src/Luath/Base/Base.cpp
-
-	src/Luath/App/Application.cpp
-	src/Luath/App/FontCache.cpp
-
-	src/Luath/Window/MainWindow.cpp
-	
-	src/Luath/Widget/OscilloScope.cpp
-	src/Luath/Widget/Lissajous.cpp
-	src/Luath/Widget/SpectrumAnalyzer.cpp
+	${srcs}
 	)
 		
 target_include_directories(
