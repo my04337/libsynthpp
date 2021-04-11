@@ -65,7 +65,7 @@ void WaveTable::reset()
 		mBaseRMS = calcRMS(sig);
 		add(Preset::SinWave, std::move(sig), 1);
 	}
-	// SquareWave
+	// SquareWave50
 	{
 		constexpr size_t frames = 512;
 		auto sig = Signal<float>::allocate(frames);
@@ -74,7 +74,42 @@ void WaveTable::reset()
 		for (size_t i = 0; i < frames; ++i) {
 			sig.frame(i)[0] = fg.update();
 		}
-		add(Preset::SquareWave, std::move(sig));
+		add(Preset::SquareWave50, std::move(sig));
+	}
+	// SquareWave25
+	{
+		constexpr size_t frames = 512;
+		auto sig = Signal<float>::allocate(frames);
+		FunctionGenerator fg;
+		fg.setSquareWave(frames, 1, PI<float>/2);
+		for (size_t i = 0; i < frames; ++i) {
+			sig.frame(i)[0] = fg.update();
+		}
+		add(Preset::SquareWave25, std::move(sig));
+	}
+	// WhiteNoise
+	{
+		// MEMO サンプリング周波数よりサンプル数を大きくしないと、金属音のような規則性のある音が混ざることに注意
+		constexpr size_t frames = 16384; 
+		auto sig = Signal<float>::allocate(frames);
+		FunctionGenerator fg;
+		fg.setWhiteNoise();
+		for (size_t i = 0; i < frames; ++i) {
+			sig.frame(i)[0] = fg.update();
+		}
+		add(Preset::WhiteNoise, std::move(sig));
+	}
+	// BrownNoise
+	{
+		// MEMO サンプリング周波数よりサンプル数を大きくしないと、金属音のような規則性のある音が混ざることに注意
+		constexpr size_t frames = 16384;
+		auto sig = Signal<float>::allocate(frames);
+		FunctionGenerator fg;
+		fg.setBrownNoise();
+		for (size_t i = 0; i < frames; ++i) {
+			sig.frame(i)[0] = fg.update();
+		}
+		add(Preset::BrownNoise, std::move(sig));
 	}
 }
 
