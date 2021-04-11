@@ -11,9 +11,9 @@ using namespace LSP;
 
 // ############################################################################
 // ### Base/Math
-static_assert(PI<float>       != 0,  "PI<>failed");
-static_assert(PI<double>      != 0,  "PI<> failed");
-static_assert(PI<long double> != 0,  "PI<> failed");
+static_assert(Math::PI<float>       != 0,  "Math::PI<>failed");
+static_assert(Math::PI<double>      != 0,  "Math::PI<> failed");
+static_assert(Math::PI<long double> != 0,  "Math::PI<> failed");
 
 // ############################################################################
 // ### Base/Signal 

@@ -15,7 +15,7 @@ float BlackmanWf(float pos)
 	constexpr float a2 = alpha / 2.0f;
 
 	if (pos < 0 || pos > 1) return 0;
-	return a0 - a1 * std::cos(2 * PI<float> * pos) + a2 * std::cos(4 * PI<float> * pos);
+	return a0 - a1 * std::cos(2 * Math::PI<float> * pos) + a2 * std::cos(4 * Math::PI<float> * pos);
 }
 float BlackmanHarrisWf(float pos)
 {
@@ -25,7 +25,7 @@ float BlackmanHarrisWf(float pos)
 	constexpr float a3 = 0.01168f;
 
 	if (pos < 0 || pos > 1) return 0;
-	return a0 - a1 * std::cos(2 * PI<float> * pos) + a2 * std::cos(4 * PI<float> * pos) - a3 * std::cos(4 * PI<float> *pos);
+	return a0 - a1 * std::cos(2 * Math::PI<float> * pos) + a2 * std::cos(4 * Math::PI<float> * pos) - a3 * std::cos(4 * Math::PI<float> *pos);
 }
 float RectangularWf(float pos)
 {
@@ -38,7 +38,7 @@ float HannWf(float pos)
 	constexpr float a1 = 1.0f - a0;
 
 	if (pos < 0 || pos > 1) return 0;
-	return a0 - a1 * (std::cos(2 * PI<float> *pos));
+	return a0 - a1 * (std::cos(2 * Math::PI<float> *pos));
 }
 float HammingWf(float pos)
 {
@@ -46,7 +46,7 @@ float HammingWf(float pos)
 	constexpr float a1 = 1.0f - a0;
 
 	if (pos < 0 || pos > 1) return 0;
-	return a0 - a1 * (std::cos(2 * PI<float> * pos));
+	return a0 - a1 * (std::cos(2 * Math::PI<float> * pos));
 }
 
 template<floating_sample_typeable sample_type, subscript_operator_available<sample_type> container>
@@ -71,7 +71,7 @@ bool fft1d(container& ar, container& ai, int n, int iter, bool isIFFT)
 	{
 		return false;
 	}
-	w = (isIFFT ? PI<sample_type> : -PI<sample_type>) / (sample_type)n;
+	w = (isIFFT ? Math::PI<sample_type> : -Math::PI<sample_type>) / (sample_type)n;
 	xp2 = n;
 	for (it = 0; it < iter; it++)
 	{

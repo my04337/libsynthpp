@@ -2,7 +2,7 @@
 
 #include <LSP/Base/Base.hpp>
 
-namespace LSP
+namespace LSP::Math
 {
 
 // 数学関数&定数群

@@ -70,7 +70,7 @@ public:
 	// パラメータ設定 : ローパスフィルタ
 	void setLopassParam(parameter_type sampleFreq, parameter_type cutOffFreq, parameter_type Q)
 	{
-		const parameter_type w0    = 2 * PI<parameter_type> * cutOffFreq / sampleFreq;
+		const parameter_type w0    = 2 * Math::PI<parameter_type> * cutOffFreq / sampleFreq;
 		const parameter_type sinw0 = sin(w0);
 		const parameter_type cosw0 = cos(w0);
 		const parameter_type alpha = sinw0 / (2 * Q);
@@ -90,7 +90,7 @@ public:
 	// パラメータ設定 : ハイパスフィルタ
 	void setHighpassParam(parameter_type sampleFreq, parameter_type cutOffFreq, parameter_type Q)
 	{
-		const parameter_type w0    = 2 * PI<parameter_type> * cutOffFreq / sampleFreq;
+		const parameter_type w0    = 2 * Math::PI<parameter_type> * cutOffFreq / sampleFreq;
 		const parameter_type sinw0 = sin(w0);
 		const parameter_type cosw0 = cos(w0);
 		const parameter_type alpha = sinw0 / (2 * Q);
@@ -110,7 +110,7 @@ public:
 	// パラメータ設定 : バンドパス1
 	void setBandpass1Param(parameter_type sampleFreq, parameter_type centerFreq, parameter_type BW)
 	{
-		const parameter_type w0    = 2 * PI<parameter_type> * centerFreq / sampleFreq;
+		const parameter_type w0    = 2 * Math::PI<parameter_type> * centerFreq / sampleFreq;
 		const parameter_type sinw0 = sin(w0);
 		const parameter_type cosw0 = cos(w0);
 		const parameter_type alpha = 2 * sinw0 / BW;
@@ -126,7 +126,7 @@ public:
 	// パラメータ設定 : バンドパス2
 	void setBandpass2Param(parameter_type sampleFreq, parameter_type centerFreq, parameter_type BW)
 	{
-		const parameter_type w0    = 2 * PI<parameter_type> * centerFreq / sampleFreq;
+		const parameter_type w0    = 2 * Math::PI<parameter_type> * centerFreq / sampleFreq;
 		const parameter_type sinw0 = sin(w0);
 		const parameter_type cosw0 = cos(w0);
 		const parameter_type log2  = log((parameter_type)2);
@@ -143,7 +143,7 @@ public:
 	// パラメータ設定 : バンドストップ
 	void setBandstopParam(parameter_type sampleFreq, parameter_type centerFreq, parameter_type BW)
 	{
-		const parameter_type w0    = 2 * PI<parameter_type> * centerFreq / sampleFreq;
+		const parameter_type w0    = 2 * Math::PI<parameter_type> * centerFreq / sampleFreq;
 		const parameter_type sinw0 = sin(w0);
 		const parameter_type cosw0 = cos(w0);
 		const parameter_type log2  = log((parameter_type)2);
@@ -160,7 +160,7 @@ public:
 	// パラメータ設定 : オールパス
 	void setAllpassParam(parameter_type sampleFreq, parameter_type cutOffFreq, parameter_type BW)
 	{
-		const parameter_type w0    = 2 * PI<parameter_type> * cutOffFreq / sampleFreq;
+		const parameter_type w0    = 2 * Math::PI<parameter_type> * cutOffFreq / sampleFreq;
 		const parameter_type sinw0 = sin(w0);
 		const parameter_type cosw0 = cos(w0);
 		const parameter_type log2  = log((parameter_type)2);
@@ -177,7 +177,7 @@ public:
 	// パラメータ設定 : ピーキング
 	void setPeakingParam(parameter_type sampleFreq, parameter_type centerFreq, parameter_type BW, parameter_type gain)
 	{
-		const parameter_type w0    = 2 * PI<parameter_type> * centerFreq / sampleFreq;
+		const parameter_type w0    = 2 * Math::PI<parameter_type> * centerFreq / sampleFreq;
 		const parameter_type sinw0 = sin(w0);
 		const parameter_type cosw0 = cos(w0);
 		const parameter_type log2  = log((parameter_type)2);
@@ -195,7 +195,7 @@ public:
 	// パラメータ設定 : ローシェルフ
 	void setLoshelfParam(parameter_type sampleFreq, parameter_type cutOffFreq, parameter_type S, parameter_type gain)
 	{
-		const parameter_type w0    = 2 * PI<parameter_type> * cutOffFreq / sampleFreq;
+		const parameter_type w0    = 2 * Math::PI<parameter_type> * cutOffFreq / sampleFreq;
 		const parameter_type sinw0 = sin(w0);
 		const parameter_type cosw0 = cos(w0);
 		const parameter_type A     = sqrt(pow((parameter_type)10, gain / 20));
@@ -213,7 +213,7 @@ public:
 	// パラメータ設定 : ハイシェルフ
 	void setHighshelfParam(parameter_type sampleFreq, parameter_type cutOffFreq, parameter_type S, parameter_type gain)
 	{
-		const parameter_type w0    = 2 * PI<parameter_type> * cutOffFreq / sampleFreq;
+		const parameter_type w0    = 2 * Math::PI<parameter_type> * cutOffFreq / sampleFreq;
 		const parameter_type sinw0 = sin(w0);
 		const parameter_type cosw0 = cos(w0);
 		const parameter_type A     = sqrt(pow((parameter_type)10, gain / 20));

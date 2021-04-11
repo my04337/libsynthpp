@@ -31,7 +31,7 @@ public:
 	sample_type update(parameter_type phaseDelta)
 	{
 		sample_type v = peek(mPhase);
-		mPhase = floored_division< parameter_type>(mPhase + phaseDelta, 1);
+		mPhase = Math::floored_division< parameter_type>(mPhase + phaseDelta, 1);
 		return v;
 	}
 

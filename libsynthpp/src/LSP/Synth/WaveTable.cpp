@@ -81,7 +81,7 @@ void WaveTable::reset()
 		constexpr size_t frames = 512;
 		auto sig = Signal<float>::allocate(frames);
 		FunctionGenerator fg;
-		fg.setSquareWave(frames, 1, PI<float>/2);
+		fg.setSquareWave(frames, 1, Math::PI<float>/2);
 		for (size_t i = 0; i < frames; ++i) {
 			sig.frame(i)[0] = fg.update();
 		}
