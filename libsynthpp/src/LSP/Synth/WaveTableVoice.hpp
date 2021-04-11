@@ -1,7 +1,7 @@
 #pragma once
 
 #include <LSP/Base/Base.hpp>
-#include <LSP/Generator/FunctionGenerator.hpp>
+#include <LSP/Generator/WaveTableGenerator.hpp>
 #include <LSP/Filter/EnvelopeGenerator.hpp>
 #include <LSP/Synth/Voice.hpp>
 
@@ -11,25 +11,27 @@
 namespace LSP::Synth
 {
 
-// 単純なボイス実装
-class SimpleVoice
+// 波形メモリ ボイス実装
+class WaveTableVoice
 	: public Voice
 {
 public:
-	using FunctionGenerator = LSP::Generator::FunctionGenerator<float>;
+	using WaveTableGenerator = LSP::Generator::WaveTableGenerator<float>;
 
 public:
-	SimpleVoice(const EnvelopeGenerator& eg, uint32_t noteNo, float pitchBend, float volume)
-		: mEG(eg)
+	WaveTableVoice(size_t sampleFreq, SignalView<float> waveTable, const EnvelopeGenerator& eg, uint32_t noteNo, float pitchBend, float volume)
+		: mSampleFreq(sampleFreq)
+		, mWG(waveTable)
+		, mEG(eg)
 		, mNoteNo(noteNo)
 		, mPitchBend(pitchBend)
 		, mVolume(volume)
 	{
-		updateFunctionGenerator();
+		updateFreq();
 		mEG.noteOn();
 	}
 
-	virtual ~SimpleVoice() {}
+	virtual ~WaveTableVoice() {}
 
 	virtual Info info()const override
 	{
@@ -43,7 +45,7 @@ public:
 	}
 	virtual float update()override
 	{
-		auto v = mFG.update();
+		auto v = mWG.update(mSampleFreq, mCalculatedFreq);
 		v *= mEG.update();
 		v *= mVolume;
 		return v;
@@ -51,21 +53,21 @@ public:
 	virtual void setPitchBend(float pitchBend)override 
 	{
 		mPitchBend = pitchBend;
-		updateFunctionGenerator();
+		updateFreq();
 	}
 	virtual EnvelopeGenerator& envolopeGenerator()override 
 	{ 
 		return mEG; 
 	}
 private:
-	void updateFunctionGenerator()
+	void updateFreq()
 	{
 		mCalculatedFreq = 440 * exp2((static_cast<float>(mNoteNo) + mPitchBend - 69.0f) / 12.0f);
-		mFG.setSinWave(mEG.sampleFreq(), mCalculatedFreq, true);
 	}
 
 private:
-	FunctionGenerator mFG;
+	const size_t mSampleFreq;
+	WaveTableGenerator mWG;
 	EnvelopeGenerator mEG;
 	uint32_t mNoteNo;
 	float mPitchBend;

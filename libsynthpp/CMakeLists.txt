@@ -25,7 +25,7 @@ add_library(
 	
 	src/LSP/static_test.cpp
 	src/LSP/Util/fft.hpp
-	)  
+	 "src/LSP/Generator/WaveTableGenerator.hpp" "src/LSP/Synth/WaveTable.cpp" "src/LSP/Synth/WaveTableVoice.hpp")  
 
 target_include_directories(
              libsynthpp

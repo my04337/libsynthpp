@@ -132,7 +132,7 @@ public:
 		}	break;
 		}
 
-		mPhase = std::fmod(mPhase + mSamplePerPhase, period);
+		mPhase = floored_division(mPhase + mSamplePerPhase, period);
 		return s;
 	}
 

@@ -9,6 +9,7 @@
 
 namespace LSP::Synth
 {
+class WaveTable;
 
 class MidiChannel
 {
@@ -32,7 +33,7 @@ public:
 		std::unordered_map<VoiceId, Voice::Info> voiceInfo;
 	};
 
-	MidiChannel(uint32_t sampleFreq, uint8_t ch);
+	MidiChannel(uint32_t sampleFreq, uint8_t ch, const WaveTable& waveTable);
 
 	void reset(LSP::MIDI::SystemType type);
 	void resetParameterNumberState();
@@ -96,6 +97,8 @@ private:
 	void voice_noteOff(VoiceId id);
 
 private:
+	// 波形テーブル
+	const WaveTable& _waveTable;
 	// 発音状態管理
 	LSP::Synth::VoiceMapper _voiceMapper;
 	// ボイス生成

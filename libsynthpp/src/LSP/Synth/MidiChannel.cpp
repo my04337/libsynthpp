@@ -1,13 +1,15 @@
 ﻿#include <LSP/Synth/MidiChannel.hpp>
-#include <LSP/Synth/SimpleVoice.hpp>
+#include <LSP/Synth/WaveTable.hpp>
+#include <LSP/Synth/WaveTableVoice.hpp>
 
 using namespace LSP;
 using namespace LSP::MIDI;
 using namespace LSP::Synth;
 
-MidiChannel::MidiChannel(uint32_t sampleFreq, uint8_t ch)
+MidiChannel::MidiChannel(uint32_t sampleFreq, uint8_t ch, const WaveTable& waveTable)
 	: sampleFreq(sampleFreq)
 	, ch(ch)
+	, _waveTable(waveTable)
 {
 }
 // チャネル毎パラメータ類 リセット
@@ -227,11 +229,14 @@ std::unique_ptr<LSP::Synth::Voice> MidiChannel::createVoice(uint8_t noteNo, uint
 	float preAmp = 1.0;
 	static const LSP::Filter::EnvelopeGenerator<float>::Curve curveExp3(3.0f);
 	Voice::EnvelopeGenerator eg;
+	SignalView<float> wt = _waveTable.get(WaveTable::Preset::Ground);
 	if (!isDrumPart) {
 		switch (progId) {
 		case 0:	// Acoustic Piano
 		default:
+			wt = _waveTable.get(WaveTable::Preset::SquareWave);
 			eg.setParam((float)sampleFreq, curveExp3, 0.05f, 0.0f, 0.2f, 0.25f, -1.0f, 0.05f);
+			preAmp = 1.0f;
 			break;
 		}
 	} else {
@@ -239,7 +244,7 @@ std::unique_ptr<LSP::Synth::Voice> MidiChannel::createVoice(uint8_t noteNo, uint
 		eg.setParam((float)sampleFreq, curveExp3, 0.05f, 0.0f, 0.2f, 0.25f, -1.0f, 0.05f);
 		preAmp = 0;
 	}
-	return std::make_unique<LSP::Synth::SimpleVoice>(eg, noteNo, calculatedPitchBend, volume * preAmp);
+	return std::make_unique<LSP::Synth::WaveTableVoice>(sampleFreq, wt, eg, noteNo, calculatedPitchBend, volume * preAmp);
 }
 void MidiChannel::applyPitchBend()
 {

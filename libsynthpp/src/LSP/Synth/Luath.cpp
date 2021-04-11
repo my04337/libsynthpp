@@ -13,7 +13,7 @@ Luath::Luath(uint32_t sampleFreq, SystemType defaultSystemType)
 {
 	mMidiChannels.reserve(MAX_CHANNELS);
 	for (uint8_t ch = 0; ch < MAX_CHANNELS; ++ch) {
-		mMidiChannels.emplace_back(sampleFreq, ch);
+		mMidiChannels.emplace_back(sampleFreq, ch, mWaveTable);
 	}
 
 	reset(defaultSystemType);
@@ -104,6 +104,7 @@ void Luath::playingThreadMain()
 void Luath::reset(SystemType type)
 {
 	mSystemType = type;
+	mWaveTable.reset();
 
 	for (auto& midich : mMidiChannels) {
 		midich.reset(type);

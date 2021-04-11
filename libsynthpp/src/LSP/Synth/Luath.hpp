@@ -4,6 +4,7 @@
 #include <LSP/MIDI/Message.hpp>
 #include <LSP/MIDI/MessageReceiver.hpp>
 #include <LSP/Synth/MidiChannel.hpp>
+#include <LSP/Synth/WaveTable.hpp>
 #include <LSP/Threading/TaskDispatcher.hpp>
 
 #include <array>
@@ -71,10 +72,11 @@ private:
 	std::atomic<Statistics> mThreadSafeStatistics;
 
 	RenderingCallback mRenderingCallback;
-	
+		
 	// all channel parameters
 	const uint32_t mSampleFreq;
 	LSP::MIDI::SystemType mSystemType;
+	WaveTable mWaveTable;
 
 	// midi channel parameters
 	std::vector<MidiChannel> mMidiChannels;

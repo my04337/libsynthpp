@@ -21,10 +21,12 @@ public:
 	constexpr size_t frames()const noexcept { return mFrames; }
 
 	// 各フレームの先頭ポインタを取得します
-	constexpr sample_type* frame(size_t frame_index)const noexcept { return mData + mChannels * frame_index; }
+	constexpr sample_type* frame(size_t frame_index)noexcept { return mData + mChannels * frame_index; }
+	constexpr const sample_type* frame(size_t frame_index)const noexcept { return mData + mChannels * frame_index; }
 
 	// 全データへのポインタを取得します
-	constexpr sample_type* data()const noexcept { return mData; }
+	constexpr sample_type* data()noexcept { return mData; }
+	constexpr const sample_type* data()const noexcept { return mData; }
 
 private:
 	const sample_type* mData;
@@ -58,7 +60,7 @@ public:
 	Signal(Signal&& d)noexcept = default;
 	Signal& operator=(Signal&& d)noexcept = default;
 
-	operator SignalView<sample_type> ()const noexcept { return signal_view<sample_type>(mData.get(), mChannels, mFrames); }
+	operator SignalView<sample_type> ()const noexcept { return SignalView<sample_type>(mData.get(), mChannels, mFrames); }
 
 	// チャネル数を取得します
 	uint32_t channels()const noexcept { return mChannels; }
