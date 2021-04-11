@@ -33,13 +33,14 @@ void MidiChannel::reset(SystemType type)
 	ccDecayTime = 64;
 	ccReleaseTime = 64;
 
+	isDrumPart = (ch == 9);
+
 	rpnNull = false;
 	rpnPitchBendSensitibity = 2;
 
 	resetParameterNumberState();
 
 	progId = 0; // Acoustic Piano
-	applyProgram();
 }
 
 void MidiChannel::resetParameterNumberState()
@@ -70,7 +71,6 @@ void MidiChannel::programChange(uint8_t progId)
 	// 事前に受信していたバンクセレクトを解決
 	// プログラムId更新
 	this->progId = progId;
-	applyProgram();
 }
 // コントロールチェンジ
 void MidiChannel::controlChange(uint8_t ctrlNo, uint8_t value)
@@ -213,7 +213,7 @@ MidiChannel::Info MidiChannel::info()const
 	info.releaseTime = ccReleaseTime;
 	info.poly = _voices.size();
 	info.pedal = _voiceMapper.isHolding();
-	info.drum = false; // TODO
+	info.drum = isDrumPart;
 
 	for (auto& kvp : _voices) {
 		info.voiceInfo.emplace(kvp.first, kvp.second->info());
@@ -221,15 +221,25 @@ MidiChannel::Info MidiChannel::info()const
 
 	return info;
 }
-void MidiChannel::applyProgram()
+std::unique_ptr<LSP::Synth::Voice> MidiChannel::createVoice(uint8_t noteNo, uint8_t vel)
 {
+	const float volume = (vel / 127.0f);
+	float preAmp = 1.0;
 	static const LSP::Filter::EnvelopeGenerator<float>::Curve curveExp3(3.0f);
-	switch (progId) {
-	case 0:	// Acoustic Piano
-	default:
-		pcEG.setParam((float)sampleFreq, curveExp3, 0.05f, 0.0f, 0.2f, 0.25f, -1.0f, 0.05f);
-		break;
+	Voice::EnvelopeGenerator eg;
+	if (!isDrumPart) {
+		switch (progId) {
+		case 0:	// Acoustic Piano
+		default:
+			eg.setParam((float)sampleFreq, curveExp3, 0.05f, 0.0f, 0.2f, 0.25f, -1.0f, 0.05f);
+			break;
+		}
+	} else {
+		// TODO ドラム用音色を用意する
+		eg.setParam((float)sampleFreq, curveExp3, 0.05f, 0.0f, 0.2f, 0.25f, -1.0f, 0.05f);
+		preAmp = 0;
 	}
+	return std::make_unique<LSP::Synth::SimpleVoice>(eg, noteNo, calculatedPitchBend, volume * preAmp);
 }
 void MidiChannel::applyPitchBend()
 {
@@ -240,8 +250,7 @@ void MidiChannel::applyPitchBend()
 }
 void MidiChannel::voice_noteOn(VoiceId id, uint32_t noteNo, uint8_t vel)
 {
-	float toneVolume = (vel / 127.0f);
-	auto voice = std::make_unique<LSP::Synth::SimpleVoice>(pcEG, noteNo, calculatedPitchBend, toneVolume);
+	auto voice = createVoice(noteNo, vel);
 	_voices.emplace(id, std::move(voice));
 }
 void MidiChannel::voice_noteOff(VoiceId id)

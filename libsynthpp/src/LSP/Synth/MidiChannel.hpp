@@ -58,8 +58,8 @@ public:
 		
 	// プログラムチェンジ
 	uint8_t progId; // プログラムId
-	LSP::Filter::EnvelopeGenerator<float> pcEG; // チャネルEG(パラメータ計算済)
-	void applyProgram();
+	bool isDrumPart = false;
+	std::unique_ptr<LSP::Synth::Voice> createVoice(uint8_t noteNo, uint8_t vel);
 
 	// コントロールチェンジ
 	uint8_t ccPrevCtrlNo;
