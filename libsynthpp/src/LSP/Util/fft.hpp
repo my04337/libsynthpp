@@ -6,47 +6,62 @@
 namespace LSP::Util::FFT
 {
 // 各種窓関数
-float BlackmanWf(float pos) 
+template<
+	floating_sample_typeable parameter_type
+>
+parameter_type BlackmanWf(parameter_type pos)
 {
 	// https://en.wikipedia.org/wiki/Window_function#Blackman_window
-	constexpr float alpha = 0.16f;
-	constexpr float a0 = (1.0f - alpha) / 2.0f;
-	constexpr float a1 = 0.5f;
-	constexpr float a2 = alpha / 2.0f;
+	constexpr parameter_type alpha = 0.16f;
+	constexpr parameter_type a0 = (1.0f - alpha) / 2.0f;
+	constexpr parameter_type a1 = 0.5f;
+	constexpr parameter_type a2 = alpha / 2.0f;
 
 	if (pos < 0 || pos > 1) return 0;
-	return a0 - a1 * std::cos(2 * Math::PI<float> * pos) + a2 * std::cos(4 * Math::PI<float> * pos);
+	return a0 - a1 * std::cos(2 * Math::PI<parameter_type> * pos) + a2 * std::cos(4 * Math::PI<parameter_type> * pos);
 }
-float BlackmanHarrisWf(float pos)
+template<
+	floating_sample_typeable parameter_type
+>
+parameter_type BlackmanHarrisWf(parameter_type pos)
 {
-	constexpr float a0 = 0.35875f;
-	constexpr float a1 = 0.48829f;
-	constexpr float a2 = 0.14128f;
-	constexpr float a3 = 0.01168f;
+	constexpr parameter_type a0 = 0.35875f;
+	constexpr parameter_type a1 = 0.48829f;
+	constexpr parameter_type a2 = 0.14128f;
+	constexpr parameter_type a3 = 0.01168f;
 
 	if (pos < 0 || pos > 1) return 0;
-	return a0 - a1 * std::cos(2 * Math::PI<float> * pos) + a2 * std::cos(4 * Math::PI<float> * pos) - a3 * std::cos(4 * Math::PI<float> *pos);
+	return a0 - a1 * std::cos(2 * Math::PI<parameter_type> * pos) + a2 * std::cos(4 * Math::PI<parameter_type> * pos) - a3 * std::cos(4 * Math::PI<parameter_type> *pos);
 }
-float RectangularWf(float pos)
+template<
+	floating_sample_typeable parameter_type
+>
+parameter_type RectangularWf(parameter_type pos)
 {
 	if (pos < 0 || pos > 1) return 0;
 	return 1;
 }
-float HannWf(float pos)
+template<
+	floating_sample_typeable parameter_type
+>
+parameter_type HannWf(parameter_type pos)
 {
-	constexpr float a0 = 0.5f;
-	constexpr float a1 = 1.0f - a0;
+	constexpr parameter_type a0 = 0.5f;
+	constexpr parameter_type a1 = 1.0f - a0;
 
 	if (pos < 0 || pos > 1) return 0;
-	return a0 - a1 * (std::cos(2 * Math::PI<float> *pos));
+	return a0 - a1 * (std::cos(2 * Math::PI<parameter_type> *pos));
 }
-float HammingWf(float pos)
+template<
+	floating_sample_typeable parameter_type
+>
+parameter_type HammingWf(parameter_type pos)
 {
-	constexpr float a0 = 25.0f / 46.0f;
-	constexpr float a1 = 1.0f - a0;
+	constexpr parameter_type a0 = 25.0f / 46.0f;
+	constexpr parameter_type a1 = 1.0f - a0;
 
 	if (pos < 0 || pos > 1) return 0;
-	return a0 - a1 * (std::cos(2 * Math::PI<float> * pos));
+	return a0 - a1 * (std::cos(2 * Math::PI<parameter_type> * pos));
 }
 
 template<floating_sample_typeable sample_type, subscript_operator_available<sample_type> container>

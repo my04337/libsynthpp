@@ -11,7 +11,7 @@ namespace LSP::Generator {
 // 波形テーブルジェネレータ
 template<
 	sample_typeable sample_type,
-	sample_typeable parameter_type = sample_type
+	floating_sample_typeable parameter_type = std::conditional_t<floating_sample_typeable<sample_type>, sample_type, float>
 >
 class WaveTableGenerator final
 {

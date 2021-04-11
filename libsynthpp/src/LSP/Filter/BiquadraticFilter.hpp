@@ -11,7 +11,7 @@ namespace LSP::Filter {
 //             http://www.musicdsp.org/files/Audio-EQ-Cookbook.txt
 template<
 	sample_typeable sample_type,
-	sample_typeable parameter_type = sample_type
+	floating_sample_typeable parameter_type = std::conditional_t<floating_sample_typeable<sample_type>, sample_type, float>
 >
 class BiquadraticFilter
 {
@@ -49,7 +49,7 @@ public:
 	// 出力更新
 	sample_type update(sample_type x0_) noexcept
 	{
-		const auto x0 = to_param_type(x0_);
+		const auto x0 = requantize<parameter_type>(x0_);
 
 		const auto x1 = x[idx1], x2 = x[idx2];
 		const auto y1 = y[idx1], y2 = y[idx2];
