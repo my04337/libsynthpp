@@ -1,6 +1,6 @@
 ﻿#include <LSP/Synth/MidiChannel.hpp>
 #include <LSP/Synth/WaveTable.hpp>
-#include <LSP/Synth/WaveTableVoice.hpp>
+#include <LSP/Synth/Voice.hpp>
 
 using namespace LSP;
 using namespace LSP::MIDI;
