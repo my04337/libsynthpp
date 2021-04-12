@@ -1,7 +1,6 @@
 ﻿#pragma once
 
-#include <LSP/Base/Base.hpp>
-#include <LSP/MIDI/Message.hpp>
+#include <LSP/Synth/Base.hpp>
 #include <LSP/Synth/VoiceMapper.hpp>
 #include <LSP/Synth/Voice.hpp>
 
@@ -46,7 +45,7 @@ public:
 	void holdOn();
 	void holdOff();
 	// ---
-	std::pair<float,float> update();
+	StereoFrame update();
 	// ---
 	Info info()const;
 	// ---

@@ -1,7 +1,6 @@
 ﻿#pragma once
 
-#include <LSP/Base/Base.hpp>
-#include <LSP/MIDI/Message.hpp>
+#include <LSP/Synth/Base.hpp>
 #include <LSP/Synth/Voice.hpp>
 
 namespace LSP::Synth

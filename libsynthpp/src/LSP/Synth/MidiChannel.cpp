@@ -174,29 +174,49 @@ void MidiChannel::holdOff()
 		voice_noteOff(toneId);
 	}
 }
-std::pair<float, float> MidiChannel::update()
+StereoFrame MidiChannel::update()
 {
 	// オシレータからの出力はモノラル
-	float v = 0;
+	StereoFrame ret = std::make_pair(0.0f, 0.0f);
 	for (auto iter = _voices.begin(); iter != _voices.end();) {
-		v += iter->second->update();
+		auto& voice = *iter->second;
+		// ボイス単体の音を生成
+		float v = voice.update();
+
+		// パン適用
+		float pan = ccPan;
+		if (voice.pan().has_value()) {
+			float vpan = *voice.pan();
+			if (vpan < 0.5f) {
+				// vpan=0 : 左, vpan=0.5 : 元のpan
+				pan = pan * (vpan * 2);
+			} else {
+				// vpan=0.5 : 元のpan, vpan=1.0 : 右
+				pan = 1.0f - (1.0f - pan) * ((1.0 - vpan) * 2);
+			}
+		}
+
+		ret.first += v * (1.0f - pan); // L ch
+		ret.second += v * pan;         // R ch
+
+
+		// 発音終了済のボイスを破棄
 		if (iter->second->envolopeGenerator().isBusy()) {
 			++iter;
-		}
-		else {
+		} else {
 			iter = _voices.erase(iter);
 		}
 	}
 
-	// ボリューム & エクスプレッション
-	v *= ccVolume;
-	v *= ccExpression;
+	// ボリューム
+	ret.first *= ccVolume;
+	ret.second *= ccVolume;
 
-	// ステレオ化
-	float lch = v * ccPan;
-	float rch = v * (1.0f - ccPan);
+	// エクスプレッション
+	ret.first *= ccExpression;
+	ret.second *= ccExpression;
 
-	return { lch, rch };
+	return ret;
 }
 MidiChannel::Info MidiChannel::info()const
 {

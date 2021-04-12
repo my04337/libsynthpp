@@ -28,6 +28,14 @@ Voice::Info Voice::info()const noexcept
 	return info;
 }
 
+std::optional<float> Voice::pan()const noexcept
+{
+	return mPan;
+}
+void Voice::setPan(float pan)noexcept
+{
+	mPan = pan;
+}
 void Voice::setPitchBend(float pitchBend)noexcept
 {
 	mPitchBend = pitchBend;

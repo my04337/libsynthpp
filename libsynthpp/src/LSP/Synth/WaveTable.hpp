@@ -1,7 +1,6 @@
 ﻿#pragma once
 
-#include <LSP/Base/Base.hpp>
-#include <LSP/Base/Signal.hpp>
+#include <LSP/Synth/Base.hpp>
 
 namespace LSP::Synth
 {

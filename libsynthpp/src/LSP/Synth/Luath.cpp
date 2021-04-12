@@ -122,7 +122,7 @@ LSP::Signal<float> Luath::generate(size_t len)
 		auto frame = sig.frame(i);
 		frame[0] = frame[1] = 0;
 
-		// Tone, Channel
+		// チャネル毎の信号を生成する
 		for (size_t ch = 0; ch < MAX_CHANNELS; ++ch) {
 			auto& midich = mMidiChannels[ch];
 			auto v = midich.update();
@@ -130,7 +130,7 @@ LSP::Signal<float> Luath::generate(size_t len)
 			frame[1] += v.second;
 		}
 
-		// Master
+		// マスタボリューム適用
 		frame[0] *= MASTER_VOLUME;
 		frame[1] *= MASTER_VOLUME;
 	}

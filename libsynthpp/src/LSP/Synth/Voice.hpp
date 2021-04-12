@@ -1,8 +1,6 @@
 ﻿#pragma once
 
-#include <LSP/Base/Base.hpp>
-#include <LSP/Base/Id.hpp>
-#include <LSP/Base/Sample.hpp>
+#include <LSP/Synth/Base.hpp>
 #include <LSP/Filter/EnvelopeGenerator.hpp>
 #include <LSP/Generator/WaveTableGenerator.hpp>
 
@@ -24,7 +22,7 @@ public:
 	struct Info {
 		float freq = 0; // 基本周波数
 		float envelope = 0; // エンベロープジェネレータ出力
-		EnvelopeState state = EnvelopeState::Free; // エンベロープジェネレータ ステート
+		LSP::Filter::EnvelopeState state = LSP::Filter::EnvelopeState::Free; // エンベロープジェネレータ ステート
 	};
 
 public:
@@ -35,6 +33,8 @@ public:
 
 	Info info()const noexcept;
 
+	std::optional<float> pan()const noexcept;
+	void setPan(float pan)noexcept;
 	void setPitchBend(float pitchBend)noexcept;
 	EnvelopeGenerator& envolopeGenerator()noexcept;
 	const EnvelopeGenerator& envolopeGenerator()const noexcept;
@@ -51,10 +51,8 @@ protected:
 	float mPitchBend;
 	float mCalculatedFreq = 0;
 	float mVolume;
+	std::optional<float> mPan; // ドラムなど、ボイス毎にパンが指定される場合のヒント
 };
-
-
-// ---
 
 
 // 波形メモリ ボイス実装
