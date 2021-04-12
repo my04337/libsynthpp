@@ -20,8 +20,10 @@ public:
 		// 波形 : 矩形波(デューティー比0.5)
 		static constexpr size_t SquareWave = 2;
 		static constexpr size_t SquareWave50 = SquareWave;
+		// 波形 : 矩形波(デューティー比0.33)
+		static constexpr size_t SquareWave33 = 3;
 		// 波形 : 矩形波(デューティー比0.25)
-		static constexpr size_t SquareWave25 = 3;
+		static constexpr size_t SquareWave25 = 4;
 
 		// 波形 : ホワイトノイズ
 		static constexpr size_t WhiteNoise = 100;

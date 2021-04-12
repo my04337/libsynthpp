@@ -76,6 +76,17 @@ void WaveTable::reset()
 		}
 		add(Preset::SquareWave50, std::move(sig));
 	}
+	// SquareWave33
+	{
+		constexpr size_t frames = 512;
+		auto sig = Signal<float>::allocate(frames);
+		FunctionGenerator fg;
+		fg.setSquareWave(frames, 1, Math::PI<float>/1.5f);
+		for (size_t i = 0; i < frames; ++i) {
+			sig.frame(i)[0] = fg.update();
+		}
+		add(Preset::SquareWave33, std::move(sig));
+	}
 	// SquareWave25
 	{
 		constexpr size_t frames = 512;
