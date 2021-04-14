@@ -27,17 +27,23 @@ public:
 	};
 
 public:
-	Voice(size_t sampleFreq, const EnvelopeGenerator& eg, uint32_t noteNo, float pitchBend, float volume);
+	Voice(size_t sampleFreq, const EnvelopeGenerator& eg, uint32_t noteNo, float pitchBend, float volume, bool hold);
 	virtual ~Voice();
 
 	virtual float update() = 0;
 
 	Info info()const noexcept;
 
+	uint32_t noteNo()const noexcept;
+
+	void noteOff(bool force = false)noexcept;
+
+	void setHold(bool hold)noexcept;
+
 	std::optional<float> pan()const noexcept;
 	void setPan(float pan)noexcept;
+
 	void setPitchBend(float pitchBend)noexcept;
-	EnvelopeGenerator& envolopeGenerator()noexcept;
 	const EnvelopeGenerator& envolopeGenerator()const noexcept;
 
 
@@ -49,6 +55,8 @@ protected:
 	const size_t mSampleFreq;
 	EnvelopeGenerator mEG;
 	uint32_t mNoteNo;
+	bool mPendingNoteOff = false;
+	bool mHold = false;
 	float mPitchBend;
 	float mCalculatedFreq = 0;
 	float mVolume;
@@ -65,8 +73,8 @@ public:
 
 
 public:
-	WaveTableVoice(size_t sampleFreq, const WaveTableGenerator& wg, const EnvelopeGenerator& eg, uint32_t noteNo, float pitchBend, float volume)
-		: Voice(sampleFreq, eg, noteNo, pitchBend, volume)
+	WaveTableVoice(size_t sampleFreq, const WaveTableGenerator& wg, const EnvelopeGenerator& eg, uint32_t noteNo, float pitchBend, float volume, bool hold)
+		: Voice(sampleFreq, eg, noteNo, pitchBend, volume, hold)
 		, mWG(wg)
 	{}
 

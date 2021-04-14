@@ -1,7 +1,6 @@
 ﻿#pragma once
 
 #include <LSP/Synth/Base.hpp>
-#include <LSP/Synth/VoiceMapper.hpp>
 #include <LSP/Synth/Voice.hpp>
 
 #include <array>
@@ -11,6 +10,7 @@ namespace LSP::Synth
 class WaveTable;
 
 class MidiChannel
+	: non_copy
 {
 public:
 	struct Info {
@@ -44,8 +44,7 @@ public:
 	void programChange(uint8_t progId);
 	void controlChange(uint8_t ctrlNo, uint8_t value);
 	void pitchBend(int16_t pitch);
-	void holdOn();
-	void holdOff();
+	void updateHold();
 	// ---
 	StereoFrame update();
 	// ---
@@ -74,6 +73,7 @@ public:
 	float ccPan;			// CC:10 - パン [0.0(左), +1.0(右)]
 	float ccExpression;		// CC:11 - エクスプレッション [0.0, +1.0]
 	uint8_t ccBankSelectLSB;// CC:32 - バンクセレクトLSB
+	bool	ccPedal;        // CC:64 - Hold1(ペダル)
 	uint8_t ccReleaseTime;	// CC:72 - リリースタイム
 	uint8_t ccAttackTime;	// CC:73 - アタックタイム
 	uint8_t ccDecayTime;	// CC:75 - ディケイタイム
@@ -97,16 +97,10 @@ public:
 	bool    rpnNull;
 
 private:
-	void voice_noteOn(VoiceId id, uint32_t noteNo, uint8_t vel);
-	void voice_noteOff(VoiceId id);
-
-private:
 	// 波形テーブル
-	const WaveTable& _waveTable;
-	// 発音状態管理
-	LSP::Synth::VoiceMapper _voiceMapper;
-	// ボイス生成
-	std::unordered_map<VoiceId, std::unique_ptr<LSP::Synth::Voice>> _voices;
+	const WaveTable& mWaveTable;
+	// 発音中のボイス
+	std::unordered_map<VoiceId, std::unique_ptr<LSP::Synth::Voice>> mVoices;
 };
 
 }

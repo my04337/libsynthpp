@@ -9,7 +9,7 @@ using namespace LSP::Synth;
 MidiChannel::MidiChannel(uint32_t sampleFreq, uint8_t ch, const WaveTable& waveTable)
 	: sampleFreq(sampleFreq)
 	, ch(ch)
-	, _waveTable(waveTable)
+	, mWaveTable(waveTable)
 {
 	reset(LSP::MIDI::SystemType::GM1);
 }
@@ -25,8 +25,8 @@ void MidiChannel::reset(SystemType type)
 }
 void MidiChannel::resetVoices()
 {
-	_voiceMapper.reset();
-	_voices.clear();
+	// 全発音を強制停止
+	mVoices.clear();
 }
 void MidiChannel::resetParameters()
 {
@@ -36,6 +36,7 @@ void MidiChannel::resetParameters()
 	ccVolume = 1.0;
 	ccPan = 0.5f;
 	ccExpression = 1.0;
+	ccPedal = false;
 
 	ccPrevCtrlNo = 0xFF; // invalid value
 	ccPrevValue = 0x00;
@@ -66,16 +67,22 @@ void MidiChannel::resetParameterNumberState()
 }
 void MidiChannel::noteOn(uint32_t noteNo, uint8_t vel)
 {
-	auto kvp = _voiceMapper.noteOn(noteNo);
-	voice_noteOff(kvp.second);
+	// 同じノート番号は同時発音不可
+	noteOff(noteNo);
+	// ---
 	if (vel > 0) {
-		voice_noteOn(kvp.first, noteNo, vel);
+		auto id = VoiceId::issue();
+		auto voice = createVoice(noteNo, vel);
+		mVoices.emplace(id, std::move(voice));
 	}
 }
 void MidiChannel::noteOff(uint32_t noteNo)
 {
-	auto releasedTone = _voiceMapper.noteOff(noteNo);
-	voice_noteOff(releasedTone);
+	for (auto& [id, voice] : mVoices) {
+		if (voice->noteNo() == noteNo) {
+			voice->noteOff();
+		}
+	}
 }
 // プログラムチェンジ
 void MidiChannel::programChange(uint8_t progId)
@@ -120,11 +127,8 @@ void MidiChannel::controlChange(uint8_t ctrlNo, uint8_t value)
 		apply_RPN_NRPN_state = true; // MSBのみでよいものはこのタイミングで適用する
 		break;
 	case 64: // Hold1(ホールド1:ダンパーペダル)
-		if (value < 0x64) {
-			holdOff();
-		} else {
-			holdOn();
-		}
+		ccPedal = (value >= 0x64);
+		updateHold();
 		break;
 	case 72: // Release Time(リリースタイム)
 		ccReleaseTime = value;
@@ -158,9 +162,8 @@ void MidiChannel::controlChange(uint8_t ctrlNo, uint8_t value)
 		resetParameters();
 		break;
 	case 123: // オールノートオフ
-		_voiceMapper.reset();
-		for (auto& kvp : _voices) {
-			kvp.second->envolopeGenerator().noteOff();
+		for (auto& kvp : mVoices) {
+			kvp.second->noteOff(true);
 		}
 		break;
 	// --- チャネルモードメッセージ : not implemented ---
@@ -196,22 +199,18 @@ void MidiChannel::pitchBend(int16_t pitch)
 	applyPitchBend();
 }
 
-void MidiChannel::holdOn()
+void MidiChannel::updateHold()
 {
-	_voiceMapper.holdOn();
-}
-void MidiChannel::holdOff()
-{
-	auto releasedTones = _voiceMapper.holdOff();
-	for (auto& toneId : releasedTones) {
-		voice_noteOff(toneId);
+	for (auto& [id, voice] : mVoices) {
+		voice->setHold(ccPedal);
 	}
+
 }
 StereoFrame MidiChannel::update()
 {
 	// オシレータからの出力はモノラル
 	StereoFrame ret = std::make_pair(0.0f, 0.0f);
-	for (auto iter = _voices.begin(); iter != _voices.end();) {
+	for (auto iter = mVoices.begin(); iter != mVoices.end();) {
 		auto& voice = *iter->second;
 		// ボイス単体の音を生成
 		float v = voice.update();
@@ -237,7 +236,7 @@ StereoFrame MidiChannel::update()
 		if (iter->second->envolopeGenerator().isBusy()) {
 			++iter;
 		} else {
-			iter = _voices.erase(iter);
+			iter = mVoices.erase(iter);
 		}
 	}
 
@@ -266,11 +265,11 @@ MidiChannel::Info MidiChannel::info()const
 	info.attackTime = ccAttackTime;
 	info.decayTime = ccDecayTime;
 	info.releaseTime = ccReleaseTime;
-	info.poly = _voices.size();
-	info.pedal = _voiceMapper.isHolding();
+	info.poly = mVoices.size();
+	info.pedal = ccPedal;
 	info.drum = isDrumPart;
 
-	for (auto& kvp : _voices) {
+	for (auto& kvp : mVoices) {
 		info.voiceInfo.emplace(kvp.first, kvp.second->info());
 	}
 
@@ -282,8 +281,8 @@ std::unique_ptr<LSP::Synth::Voice> MidiChannel::createVoice(uint8_t noteNo, uint
 	static const LSP::Filter::EnvelopeGenerator<float>::Curve curveExp3(3.0f);
 	Voice::EnvelopeGenerator eg;
 	auto makeWaveTableVoice = [&](size_t waveTableId) {
-		auto wg = _waveTable.get(waveTableId);
-		return std::make_unique<LSP::Synth::WaveTableVoice>(sampleFreq, wg, eg, noteNo, calculatedPitchBend, volume);
+		auto wg = mWaveTable.get(waveTableId);
+		return std::make_unique<LSP::Synth::WaveTableVoice>(sampleFreq, wg, eg, noteNo, calculatedPitchBend, volume, ccPedal);
 	};
 
 	if (!isDrumPart) {
@@ -302,20 +301,7 @@ std::unique_ptr<LSP::Synth::Voice> MidiChannel::createVoice(uint8_t noteNo, uint
 void MidiChannel::applyPitchBend()
 {
 	calculatedPitchBend = rpnPitchBendSensitibity * (cmPitchBend / 8192.0f);
-	for (auto& kvp : _voices) {
+	for (auto& kvp : mVoices) {
 		kvp.second->setPitchBend(calculatedPitchBend);
 	}
-}
-void MidiChannel::voice_noteOn(VoiceId id, uint32_t noteNo, uint8_t vel)
-{
-	auto voice = createVoice(noteNo, vel);
-	_voices.emplace(id, std::move(voice));
-}
-void MidiChannel::voice_noteOff(VoiceId id)
-{
-	auto found = _voices.find(id);
-	if (found == _voices.end()) return;
-	auto& voice = *found->second;
-
-	voice.envolopeGenerator().noteOff();
 }

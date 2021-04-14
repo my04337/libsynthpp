@@ -3,12 +3,13 @@
 using namespace LSP;
 using namespace LSP::Synth;
 
-Voice::Voice(size_t sampleFreq, const EnvelopeGenerator& eg, uint32_t noteNo, float pitchBend, float volume)
+Voice::Voice(size_t sampleFreq, const EnvelopeGenerator& eg, uint32_t noteNo, float pitchBend, float volume, bool hold)
 	: mSampleFreq(sampleFreq)
 	, mEG(eg)
 	, mNoteNo(noteNo)
 	, mPitchBend(pitchBend)
 	, mVolume(volume)
+	, mHold(hold)
 {
 	updateFreq();
 	mEG.noteOn();
@@ -27,7 +28,27 @@ Voice::Info Voice::info()const noexcept
 
 	return info;
 }
+uint32_t Voice::noteNo()const noexcept
+{
+	return mNoteNo;
+}
 
+void Voice::noteOff(bool force)noexcept
+{
+	if (mHold && !force) {
+		mPendingNoteOff = true;
+	} else {
+		mPendingNoteOff = false;
+		mEG.noteOff();
+	}
+}
+void Voice::setHold(bool hold)noexcept
+{
+	mHold = hold;
+	if (mPendingNoteOff && !hold) {
+		noteOff();
+	}
+}
 std::optional<float> Voice::pan()const noexcept
 {
 	return mPan;
@@ -40,10 +61,6 @@ void Voice::setPitchBend(float pitchBend)noexcept
 {
 	mPitchBend = pitchBend;
 	updateFreq();
-}
-Voice::EnvelopeGenerator& Voice::envolopeGenerator() noexcept
-{
-	return mEG;
 }
 const Voice::EnvelopeGenerator& Voice::envolopeGenerator()const noexcept
 {
