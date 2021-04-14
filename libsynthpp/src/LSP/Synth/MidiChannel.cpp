@@ -7,8 +7,8 @@ using namespace LSP::MIDI;
 using namespace LSP::Synth;
 
 MidiChannel::MidiChannel(uint32_t sampleFreq, uint8_t ch, const WaveTable& waveTable)
-	: sampleFreq(sampleFreq)
-	, ch(ch)
+	: mSampleFreq(sampleFreq)
+	, mMidiCh(ch)
 	, mWaveTable(waveTable)
 {
 	reset(LSP::MIDI::SystemType::GM1);
@@ -16,12 +16,10 @@ MidiChannel::MidiChannel(uint32_t sampleFreq, uint8_t ch, const WaveTable& waveT
 // チャネル毎パラメータ類 リセット
 void MidiChannel::reset(SystemType type)
 {
-	systemType = type;
+	mSystemType = type;
 
 	resetVoices();
 	resetParameters();
-
-	progId = 0; // Acoustic Piano
 }
 void MidiChannel::resetVoices()
 {
@@ -30,9 +28,13 @@ void MidiChannel::resetVoices()
 }
 void MidiChannel::resetParameters()
 {
-	cmPitchBend = 0;
-	calculatedPitchBend = 0;
+	// チャネル ボイス メッセージ系
+	mProgId = 0; // Acoustic Piano
+	mIsDrumPart = (mMidiCh == 9);
+	mRawPitchBend = 0;
+	mCalculatedPitchBend = 0;
 
+	// コントロールチェンジ系
 	ccVolume = 1.0;
 	ccPan = 0.5f;
 	ccExpression = 1.0;
@@ -47,8 +49,6 @@ void MidiChannel::resetParameters()
 	ccAttackTime = 64;
 	ccDecayTime = 64;
 	ccReleaseTime = 64;
-
-	isDrumPart = (ch == 9);
 
 	rpnNull = false;
 	rpnPitchBendSensitibity = 2;
@@ -89,7 +89,7 @@ void MidiChannel::programChange(uint8_t progId)
 {
 	// 事前に受信していたバンクセレクトを解決
 	// プログラムId更新
-	this->progId = progId;
+	mProgId = progId;
 }
 // コントロールチェンジ & チャネルモードメッセージ
 void MidiChannel::controlChange(uint8_t ctrlNo, uint8_t value)
@@ -185,7 +185,7 @@ void MidiChannel::controlChange(uint8_t ctrlNo, uint8_t value)
 		if (ccRPN_MSB == 0 && ccRPN_LSB == 0 && ccDE_MSB.has_value()) {
 			// ピッチベンドセンシティビティ: MSBのみ使用
 			rpnPitchBendSensitibity = ccDE_MSB.value();
-			applyPitchBend();
+			updatePitchBend();
 		}
 	}
 
@@ -195,17 +195,10 @@ void MidiChannel::controlChange(uint8_t ctrlNo, uint8_t value)
 
 void MidiChannel::pitchBend(int16_t pitch)
 {
-	cmPitchBend = pitch;
-	applyPitchBend();
+	mRawPitchBend = pitch;
+	updatePitchBend();
 }
 
-void MidiChannel::updateHold()
-{
-	for (auto& [id, voice] : mVoices) {
-		voice->setHold(ccPedal);
-	}
-
-}
 StereoFrame MidiChannel::update()
 {
 	// オシレータからの出力はモノラル
@@ -254,20 +247,20 @@ MidiChannel::Info MidiChannel::info()const
 {
 	Info info;
 
-	info.ch = ch;
-	info.progId = progId;
+	info.ch = mMidiCh;
+	info.progId = mProgId;
 	info.bankSelectMSB = ccBankSelectMSB;
 	info.bankSelectLSB = ccBankSelectLSB;
 	info.volume = ccVolume; 
 	info.expression = ccExpression;
 	info.pan = ccPan;
-	info.pitchBend = calculatedPitchBend;
+	info.pitchBend = mCalculatedPitchBend;
 	info.attackTime = ccAttackTime;
 	info.decayTime = ccDecayTime;
 	info.releaseTime = ccReleaseTime;
 	info.poly = mVoices.size();
 	info.pedal = ccPedal;
-	info.drum = isDrumPart;
+	info.drum = mIsDrumPart;
 
 	for (auto& kvp : mVoices) {
 		info.voiceInfo.emplace(kvp.first, kvp.second->info());
@@ -282,26 +275,33 @@ std::unique_ptr<LSP::Synth::Voice> MidiChannel::createVoice(uint8_t noteNo, uint
 	Voice::EnvelopeGenerator eg;
 	auto makeWaveTableVoice = [&](size_t waveTableId) {
 		auto wg = mWaveTable.get(waveTableId);
-		return std::make_unique<LSP::Synth::WaveTableVoice>(sampleFreq, wg, eg, noteNo, calculatedPitchBend, volume, ccPedal);
+		return std::make_unique<LSP::Synth::WaveTableVoice>(mSampleFreq, wg, eg, noteNo, mCalculatedPitchBend, volume, ccPedal);
 	};
 
-	if (!isDrumPart) {
-		switch (progId) {
+	if (!mIsDrumPart) {
+		switch (mProgId) {
 		case 0:	// Acoustic Piano
 		default:
-			eg.setParam((float)sampleFreq, curveExp3, 0.05f, 0.0f, 0.2f, 0.25f, -1.0f, 0.05f);
+			eg.setParam((float)mSampleFreq, curveExp3, 0.05f, 0.0f, 0.2f, 0.25f, -1.0f, 0.05f);
 			return makeWaveTableVoice(WaveTable::Preset::SquareWave);
 		}
 	} else {
 		// TODO ドラム用音色を用意する
-		eg.setParam((float)sampleFreq, curveExp3, 0.05f, 0.0f, 0.2f, 0.25f, -1.0f, 0.05f);
+		eg.setParam((float)mSampleFreq, curveExp3, 0.05f, 0.0f, 0.2f, 0.25f, -1.0f, 0.05f);
 		return makeWaveTableVoice(WaveTable::Preset::Ground);
 	}
 }
-void MidiChannel::applyPitchBend()
+void MidiChannel::updatePitchBend()
 {
-	calculatedPitchBend = rpnPitchBendSensitibity * (cmPitchBend / 8192.0f);
+	mCalculatedPitchBend = rpnPitchBendSensitibity * (mRawPitchBend / 8192.0f);
 	for (auto& kvp : mVoices) {
-		kvp.second->setPitchBend(calculatedPitchBend);
+		kvp.second->setPitchBend(mCalculatedPitchBend);
 	}
+}
+void MidiChannel::updateHold()
+{
+	for (auto& [id, voice] : mVoices) {
+		voice->setHold(ccPedal);
+	}
+
 }

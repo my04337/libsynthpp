@@ -51,25 +51,30 @@ public:
 	Info info()const;
 	// ---
 
+private:
+	// ボイスを生成します
+	std::unique_ptr<LSP::Synth::Voice> createVoice(uint8_t noteNo, uint8_t vel);
 
+	void updatePitchBend();
+
+private:
 	// サンプリング周波数(実行時に動的にセット)
-	const uint32_t sampleFreq;
+	const uint32_t mSampleFreq;
 	// チャネル番号(実行時に動的にセット)
-	const uint8_t ch;
+	const uint8_t mMidiCh;
 
 	// システムリセット種別
-	LSP::MIDI::SystemType systemType;
+	LSP::MIDI::SystemType mSystemType;
 		
 	// プログラムチェンジ
-	uint8_t progId; // プログラムId
-	bool isDrumPart = false;
-	std::unique_ptr<LSP::Synth::Voice> createVoice(uint8_t noteNo, uint8_t vel);
+	uint8_t mProgId; // プログラムId
+	bool mIsDrumPart = false;
 
 	// コントロールチェンジ
 	uint8_t ccPrevCtrlNo;
 	uint8_t ccPrevValue;
 	uint8_t ccBankSelectMSB;// CC:0 - バンクセレクトMSB
-	float ccVolume;			// CC:7 - チャネル簿リュ－無;
+	float ccVolume;			// CC:7 - チャネルボリューム
 	float ccPan;			// CC:10 - パン [0.0(左), +1.0(右)]
 	float ccExpression;		// CC:11 - エクスプレッション [0.0, +1.0]
 	uint8_t ccBankSelectLSB;// CC:32 - バンクセレクトLSB
@@ -80,9 +85,8 @@ public:
 
 
 	// ピッチベンド
-	int16_t cmPitchBend;
-	float calculatedPitchBend;
-	void applyPitchBend();
+	int16_t mRawPitchBend;
+	float mCalculatedPitchBend;
 
 	// RPN/NRPN State
 	std::optional<uint8_t> ccRPN_MSB;
@@ -92,7 +96,7 @@ public:
 	std::optional<uint8_t> ccDE_MSB;
 	std::optional<uint8_t> ccDE_LSB;
 
-	// RPN
+	// RPN Values
 	int16_t rpnPitchBendSensitibity;
 	bool    rpnNull;
 
