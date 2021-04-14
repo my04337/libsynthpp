@@ -11,13 +11,25 @@ MidiChannel::MidiChannel(uint32_t sampleFreq, uint8_t ch, const WaveTable& waveT
 	, ch(ch)
 	, _waveTable(waveTable)
 {
+	reset(LSP::MIDI::SystemType::GM1);
 }
 // チャネル毎パラメータ類 リセット
 void MidiChannel::reset(SystemType type)
 {
+	systemType = type;
+
+	resetVoices();
+	resetParameters();
+
+	progId = 0; // Acoustic Piano
+}
+void MidiChannel::resetVoices()
+{
 	_voiceMapper.reset();
 	_voices.clear();
-
+}
+void MidiChannel::resetParameters()
+{
 	cmPitchBend = 0;
 	calculatedPitchBend = 0;
 
@@ -41,8 +53,6 @@ void MidiChannel::reset(SystemType type)
 	rpnPitchBendSensitibity = 2;
 
 	resetParameterNumberState();
-
-	progId = 0; // Acoustic Piano
 }
 
 void MidiChannel::resetParameterNumberState()
@@ -74,14 +84,16 @@ void MidiChannel::programChange(uint8_t progId)
 	// プログラムId更新
 	this->progId = progId;
 }
-// コントロールチェンジ
+// コントロールチェンジ & チャネルモードメッセージ
 void MidiChannel::controlChange(uint8_t ctrlNo, uint8_t value)
 {
 	// 参考 : http://quelque.sakura.ne.jp/midi_cc.html
+	//        https://www.g200kg.com/jp/docs/tech/midi.html
 
 	bool apply_RPN_NRPN_state = false;
 
 	switch (ctrlNo) {
+	// --- コントロールチェンジ ---
 	case 0: // Bank Select <MSB>（バンクセレクト）
 		ccBankSelectMSB = value;
 		break;
@@ -136,6 +148,27 @@ void MidiChannel::controlChange(uint8_t ctrlNo, uint8_t value)
 	case 101: // RPN(MSB)
 		resetParameterNumberState();
 		ccRPN_MSB = value;
+		break;
+
+	// --- チャネルモードメッセージ ---
+	case 120: // オールサウンドオフ
+		resetVoices();
+		break;
+	case 121: // リセットオールコントローラ
+		resetParameters();
+		break;
+	case 123: // オールノートオフ
+		_voiceMapper.reset();
+		for (auto& kvp : _voices) {
+			kvp.second->envolopeGenerator().noteOff();
+		}
+		break;
+	// --- チャネルモードメッセージ : not implemented ---
+	case 122: // ローカルコントロール
+	case 124: // オムニオフ
+	case 125: // オムニオン
+	case 126: // モノモード
+	case 127: // モノモード
 		break;
 	}
 

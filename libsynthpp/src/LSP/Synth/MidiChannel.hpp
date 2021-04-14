@@ -35,6 +35,8 @@ public:
 	MidiChannel(uint32_t sampleFreq, uint8_t ch, const WaveTable& waveTable);
 
 	void reset(LSP::MIDI::SystemType type);
+	void resetVoices();
+	void resetParameters();
 	void resetParameterNumberState();
 	// ---
 	void noteOn(uint32_t noteNo, uint8_t vel);
@@ -55,6 +57,9 @@ public:
 	const uint32_t sampleFreq;
 	// チャネル番号(実行時に動的にセット)
 	const uint8_t ch;
+
+	// システムリセット種別
+	LSP::MIDI::SystemType systemType;
 		
 	// プログラムチェンジ
 	uint8_t progId; // プログラムId
