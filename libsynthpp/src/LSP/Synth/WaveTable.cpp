@@ -8,40 +8,35 @@ WaveTable::WaveTable()
 {
 	reset();
 }
-size_t WaveTable::add(Signal<float>&& wav)
+size_t WaveTable::add(Signal<float>&& wav, float preAmp)
 {
-	lsp_assert(wav.channels() == 1);
-	size_t id = mNextCustomWaveId++;
-	add(id, std::move(wav));
-	return id;
-}
-size_t WaveTable::add(Signal<float> && wav, float preAmp)
-{
-	lsp_assert(wav.channels() == 1);
 	size_t id = mNextCustomWaveId++;
 	add(id, std::move(wav), preAmp);
 	return id;
 }
-void WaveTable::add(size_t id, Signal<float>&& wav)
-{
-	// MEMO 実効値の2乗=パワーを用いて正規化すると、それらしい音量で揃う(ラウドネスは考慮していないので注意)
-	float rms = calcRMS(wav);
-	float preAmp = mBaseRMS * mBaseRMS / (rms * rms + 1.0e-8f);
-	mWaveTable.insert_or_assign(id, std::make_pair(std::move(wav), preAmp));
-}
 void WaveTable::add(size_t id, Signal<float>&& wav, float preAmp)
 {
-	mWaveTable.insert_or_assign(id, std::make_pair(std::move(wav), preAmp));
+	lsp_assert(wav.channels() == 1);
+
+	if (preAmp < 0) {
+		// MEMO 実効値の2乗=パワーを用いて正規化すると、それらしい音量で揃う(ラウドネスは考慮していないので注意)
+		float rms = calcRMS(wav);
+		preAmp = mBaseRMS * mBaseRMS / (rms * rms + 1.0e-8f);
+	}
+	mWaveTable.insert_or_assign(id, std::make_tuple(std::move(wav), preAmp));
 }
 
-std::pair<SignalView<float>, float> WaveTable::get(size_t id)const
+LSP::Generator::WaveTableGenerator<float> WaveTable::get(size_t id)const
 {
 	auto found = mWaveTable.find(id);
 	if (found == mWaveTable.end()) {
-		return mWaveTable.at(Preset::Ground);
+		found = mWaveTable.find(Preset::Ground);
+		lsp_assert(found != mWaveTable.end());
 	}
 
-	return found->second;
+	auto& [wave, preAmp] = found->second;
+
+	return LSP::Generator::WaveTableGenerator<float>(wave, preAmp);
 }
 
 void WaveTable::reset()

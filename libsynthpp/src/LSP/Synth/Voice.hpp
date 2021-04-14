@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include <LSP/Synth/Base.hpp>
+#include <LSP/Synth/WaveTable.hpp>
 #include <LSP/Filter/EnvelopeGenerator.hpp>
 #include <LSP/Generator/WaveTableGenerator.hpp>
 
@@ -64,9 +65,9 @@ public:
 
 
 public:
-	WaveTableVoice(size_t sampleFreq, SignalView<float> waveTable, const EnvelopeGenerator& eg, uint32_t noteNo, float pitchBend, float volume)
+	WaveTableVoice(size_t sampleFreq, const WaveTableGenerator& wg, const EnvelopeGenerator& eg, uint32_t noteNo, float pitchBend, float volume)
 		: Voice(sampleFreq, eg, noteNo, pitchBend, volume)
-		, mWG(waveTable)
+		, mWG(wg)
 	{}
 
 

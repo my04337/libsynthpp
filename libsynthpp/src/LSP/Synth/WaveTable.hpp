@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include <LSP/Synth/Base.hpp>
+#include <LSP/Generator/WaveTableGenerator.hpp>
 
 namespace LSP::Synth
 {
@@ -38,20 +39,18 @@ public:
 	void reset();
 
 	// カスタム波形を登録します
-	size_t add(Signal<float>&& wav);
-	size_t add(Signal<float>&& wav, float preAmp);
+	size_t add(Signal<float>&& wav, float preAmp = -1);
 
-	// 波形を取得します
-	std::pair<SignalView<float>, float> get(size_t id)const;
+	// 波形テーブルジェネレータを取得します
+	LSP::Generator::WaveTableGenerator<float> get(size_t id)const;
 
 
 private:
-	void add(size_t id, Signal<float>&& wav);
-	void add(size_t id, Signal<float>&& wav, float preAmp);
+	void add(size_t id, Signal<float>&& wav, float preAmp = -1);
 	static float calcRMS(SignalView<float> wav);
 
 private:
-	std::unordered_map<size_t, std::pair<Signal<float>, /*preAmp*/float>> mWaveTable;
+	std::unordered_map<size_t, std::tuple<Signal<float>, /*preAmp*/float>> mWaveTable;
 	size_t mNextCustomWaveId = CustomWaveIdBegin;
 	float mBaseRMS; // 基準となる実効値
 };

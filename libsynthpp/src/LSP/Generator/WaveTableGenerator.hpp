@@ -16,8 +16,9 @@ template<
 class WaveTableGenerator final
 {
 public:
-	WaveTableGenerator(SignalView<sample_type> table)
+	WaveTableGenerator(SignalView<sample_type> table, parameter_type volume = 1.0f)
 		: mTable(table)
+		, mVolume(volume)
 	{
 		lsp_assert(table.frames() > 0);
 		lsp_assert(table.channels() == 1);
@@ -45,12 +46,13 @@ private:
 		const size_t frames = mTable.frames();
 		auto pos = static_cast<size_t>(phase * frames);
 		sample_type v = mTable.frame(pos)[0];
-		return v;
+		return v * mVolume;
 	}
 
 private:
-	const SignalView<sample_type> mTable; // 1周期分の信号
-	parameter_type mPhase = 0;
+	const SignalView<sample_type> mTable; // period周期分の信号
+	const parameter_type mVolume; // 出力ボリューム
+	parameter_type mPhase = 0; // 現在の位相 [0, 1)
 };
 
 }
