@@ -63,6 +63,11 @@ private:
 	// チャネル番号(実行時に動的にセット)
 	const uint8_t mMidiCh;
 
+	// 波形テーブル
+	const WaveTable& mWaveTable;
+	// 発音中のボイス
+	std::unordered_map<VoiceId, std::unique_ptr<LSP::Synth::Voice>> mVoices;
+
 	// システムリセット種別
 	LSP::MIDI::SystemType mSystemType;
 		
@@ -99,12 +104,6 @@ private:
 	// RPN Values
 	int16_t rpnPitchBendSensitibity;
 	bool    rpnNull;
-
-private:
-	// 波形テーブル
-	const WaveTable& mWaveTable;
-	// 発音中のボイス
-	std::unordered_map<VoiceId, std::unique_ptr<LSP::Synth::Voice>> mVoices;
 };
 
 }

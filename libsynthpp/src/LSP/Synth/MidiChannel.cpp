@@ -278,10 +278,123 @@ std::unique_ptr<LSP::Synth::Voice> MidiChannel::createVoice(uint8_t noteNo, uint
 		return std::make_unique<LSP::Synth::WaveTableVoice>(mSampleFreq, wg, eg, noteNo, mCalculatedPitchBend, volume, ccPedal);
 	};
 
+	/*
+	* MEMO : EnvelopeGenerator::setParam(AHDSFR系)の引数
+	*	attack_time,	// sec
+	*	hold_time,		// sec
+	*	decay_time,		// sec
+	*	sustain_level,	// level
+	*	fade_slope,		// Linear : level/sec, Exp : dBFS/sec
+	*	release_time	// sec)
+	*/
+	
 	if (!mIsDrumPart) {
-		switch (mProgId) {
-		case 0:	// Acoustic Piano
-		default:
+		// 参考 : http://www2u.biglobe.ne.jp/~rachi/midinst.htm
+		if (mProgId >= 0 && mProgId <= 7) {
+			// ピアノ系
+			eg.setParam((float)mSampleFreq, curveExp3, 0.02f, 0.0f, 0.2f, 0.4f, -15.0f, 0.05f);
+			return makeWaveTableVoice(WaveTable::Preset::SquareWave);
+		} else if(mProgId >= 8 && mProgId <= 15) {
+			// 音階付き打楽器系
+			eg.setParam((float)mSampleFreq, curveExp3, 0.01f, 0.0f, 0.2f, 0.3f, -10.0f, 0.05f);
+			return makeWaveTableVoice(WaveTable::Preset::SquareWave);
+		} else if (mProgId >= 16 && mProgId <= 23) {
+			// オルガン系
+			eg.setParam((float)mSampleFreq, curveExp3, 0.03f, 0.0f, 0.2f, 0.6f, -0.0f, 0.05f);
+			return makeWaveTableVoice(WaveTable::Preset::SquareWave);
+		} else if (mProgId >= 24 && mProgId <= 28) {
+			// ギター系 : 減衰早い
+			eg.setParam((float)mSampleFreq, curveExp3, 0.02f, 0.0f, 0.2f, 0.4f, -15.0f, 0.05f);
+			return makeWaveTableVoice(WaveTable::Preset::SquareWave);
+		} else if (mProgId >= 29 && mProgId <= 31) {
+			// ギター系 : 減衰遅い
+			eg.setParam((float)mSampleFreq, curveExp3, 0.02f, 0.0f, 0.2f, 0.4f, -10.0f, 0.05f);
+			return makeWaveTableVoice(WaveTable::Preset::SquareWave);
+		} else if (mProgId >= 32 && mProgId <= 38) {
+			// ベース系
+			eg.setParam((float)mSampleFreq, curveExp3, 0.02f, 0.0f, 0.2f, 0.4f, -10.0f, 0.05f);
+			return makeWaveTableVoice(WaveTable::Preset::SquareWave);
+		} else if (mProgId >= 40 && mProgId <= 47) {
+			// ストリングス系
+			eg.setParam((float)mSampleFreq, curveExp3, 0.08f, 0.0f, 0.2f, 0.6f, -0.0f, 0.05f);
+			return makeWaveTableVoice(WaveTable::Preset::SquareWave);
+		} else if (mProgId == 48 || mProgId >= 52 && mProgId <= 54) {
+			// アンサンブル系 : 立ち上がり早い
+			eg.setParam((float)mSampleFreq, curveExp3, 0.08f, 0.0f, 0.2f, 0.6f, -0.0f, 0.05f);
+			return makeWaveTableVoice(WaveTable::Preset::SquareWave);
+		} else if (mProgId >= 49 && mProgId <= 51) {
+			// アンサンブル系 : 立ち上がり遅い
+			eg.setParam((float)mSampleFreq, curveExp3, 0.30f, 0.0f, 0.2f, 0.6f, -0.0f, 0.20f);
+			return makeWaveTableVoice(WaveTable::Preset::SquareWave);
+		} else if (mProgId == 55) {
+			// アンサンブル系 : オーケストラヒット
+			eg.setParam((float)mSampleFreq, curveExp3, 0.10f, 0.0f, 0.2f, 0.4f, -30.0f, 0.05f);
+			return makeWaveTableVoice(WaveTable::Preset::SquareWave);
+		} else if (mProgId >= 64 && mProgId <= 71) {
+			// ブラス系
+			eg.setParam((float)mSampleFreq, curveExp3, 0.08f, 0.0f, 0.2f, 0.6f, -0.0f, 0.05f);
+			return makeWaveTableVoice(WaveTable::Preset::SquareWave);
+		} else if (mProgId >= 72 && mProgId <= 79) {
+			// リード系
+			eg.setParam((float)mSampleFreq, curveExp3, 0.08f, 0.0f, 0.2f, 0.6f, -0.0f, 0.05f);
+			return makeWaveTableVoice(WaveTable::Preset::SquareWave);
+		} else if (mProgId >= 72 && mProgId <= 79) {
+			// 笛系
+			eg.setParam((float)mSampleFreq, curveExp3, 0.08f, 0.0f, 0.2f, 0.6f, -0.0f, 0.05f);
+			return makeWaveTableVoice(WaveTable::Preset::SquareWave);
+		} else if (mProgId >= 80 && mProgId <= 87) {
+			// シンセサイザ系1
+			eg.setParam((float)mSampleFreq, curveExp3, 0.03f, 0.0f, 0.2f, 0.6f, -0.0f, 0.05f);
+			return makeWaveTableVoice(WaveTable::Preset::SquareWave);
+		} else if (mProgId == 88 || mProgId == 96 || mProgId == 98) {
+			// シンセサイザ系2/3 : 打楽器寄り
+			eg.setParam((float)mSampleFreq, curveExp3, 0.01f, 0.0f, 0.2f, 0.3f, -10.0f, 0.05f);
+			return makeWaveTableVoice(WaveTable::Preset::SquareWave);
+		} else if (mProgId == 89 || mProgId == 92 || mProgId == 93 || mProgId == 95 || mProgId == 97 || mProgId == 101) {
+			// シンセサイザ系2/3 : 立ち上がり遅い
+			eg.setParam((float)mSampleFreq, curveExp3, 0.30f, 0.0f, 0.2f, 0.6f, -0.0f, 0.20f);
+			return makeWaveTableVoice(WaveTable::Preset::SquareWave);
+		} else if (mProgId == 90 || mProgId == 94 || mProgId == 99 || mProgId == 100) {
+			// シンセサイザ系2/3 : ベース系音色
+			eg.setParam((float)mSampleFreq, curveExp3, 0.02f, 0.0f, 0.2f, 0.4f, -10.0f, 0.05f);
+			return makeWaveTableVoice(WaveTable::Preset::SquareWave);
+		} else if (mProgId == 91 || mProgId == 102 || mProgId == 103) {
+			// シンセサイザ系2/3 : ストリングス系
+			eg.setParam((float)mSampleFreq, curveExp3, 0.08f, 0.0f, 0.2f, 0.6f, -0.0f, 0.05f);
+			return makeWaveTableVoice(WaveTable::Preset::SquareWave);
+		} else if (mProgId >= 104 && mProgId <= 105) {
+			// 民族楽器 : ベース系 減衰遅い
+			eg.setParam((float)mSampleFreq, curveExp3, 0.02f, 0.0f, 0.2f, 0.4f, -10.0f, 0.05f);
+			return makeWaveTableVoice(WaveTable::Preset::SquareWave);
+		} else if (mProgId >= 106 && mProgId <= 108) {
+			// 民族楽器 : ベース系 : 減衰早い
+			eg.setParam((float)mSampleFreq, curveExp3, 0.02f, 0.0f, 0.2f, 0.4f, -20.0f, 0.05f);
+			return makeWaveTableVoice(WaveTable::Preset::SquareWave);
+		} else if (mProgId >= 109 && mProgId <= 111) {
+			// 民族楽器 : ストリングス, 笛系系
+			eg.setParam((float)mSampleFreq, curveExp3, 0.08f, 0.0f, 0.2f, 0.6f, -0.0f, 0.05f);
+			return makeWaveTableVoice(WaveTable::Preset::SquareWave);
+		} else if (mProgId == 112 || mProgId == 114 || mProgId >= 116 && mProgId <= 118) {
+			// 打楽器系 : 減衰早い
+			eg.setParam((float)mSampleFreq, curveExp3, 0.01f, 0.0f, 0.2f, 0.3f, -10.0f, 0.05f);
+			return makeWaveTableVoice(WaveTable::Preset::SquareWave);
+		} else if (mProgId == 113 || mProgId == 115) {
+			// 打楽器系 : 減衰とても早い
+			eg.setParam((float)mSampleFreq, curveExp3, 0.01f, 0.0f, 0.3f, 0.0f, -00.0f, 0.05f);
+			return makeWaveTableVoice(WaveTable::Preset::SquareWave);
+		} else if (mProgId == 119) {
+			// 打楽器系 : リバースシンバル
+			eg.setParam((float)mSampleFreq, curveExp3, 1.2f, 0.0f, 0.1f, 0.0f, -00.0f, 0.05f);
+			return makeWaveTableVoice(WaveTable::Preset::WhiteNoise);
+		} else if (mProgId == 120 || mProgId == 121 || mProgId == 127) {
+			// 効果音系 : ノイズ, 減衰とても早い
+			eg.setParam((float)mSampleFreq, curveExp3, 0.01f, 0.0f, 0.3f, 0.0f, -00.0f, 0.05f);
+			return makeWaveTableVoice(WaveTable::Preset::WhiteNoise);
+		} else if (mProgId >= 122 && mProgId <= 126) {
+			// 効果音系 : ノイズ とてもゆっくり
+			eg.setParam((float)mSampleFreq, curveExp3, 1.2f, 0.0f, 0.5f, 0.6f, -0.0f, 0.50f);
+			return makeWaveTableVoice(WaveTable::Preset::WhiteNoise);
+		} else {
 			eg.setParam((float)mSampleFreq, curveExp3, 0.05f, 0.0f, 0.2f, 0.25f, -1.0f, 0.05f);
 			return makeWaveTableVoice(WaveTable::Preset::SquareWave);
 		}
