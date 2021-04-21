@@ -316,11 +316,11 @@ std::unique_ptr<LSP::Synth::Voice> MidiChannel::createVoice(uint8_t noteNo, uint
 			return makeWaveTableVoice(WaveTable::Preset::SquareWave);
 		} else if (mProgId >= 40 && mProgId <= 47) {
 			// ストリングス系
-			eg.setParam((float)mSampleFreq, curveExp3, 0.08f, 0.0f, 0.2f, 0.6f, -0.0f, 0.05f);
+			eg.setParam((float)mSampleFreq, curveExp3, 0.05f, 0.0f, 0.2f, 0.6f, -0.0f, 0.05f);
 			return makeWaveTableVoice(WaveTable::Preset::SquareWave);
 		} else if (mProgId == 48 || mProgId >= 52 && mProgId <= 54) {
 			// アンサンブル系 : 立ち上がり早い
-			eg.setParam((float)mSampleFreq, curveExp3, 0.08f, 0.0f, 0.2f, 0.6f, -0.0f, 0.05f);
+			eg.setParam((float)mSampleFreq, curveExp3, 0.05f, 0.0f, 0.2f, 0.6f, -0.0f, 0.05f);
 			return makeWaveTableVoice(WaveTable::Preset::SquareWave);
 		} else if (mProgId >= 49 && mProgId <= 51) {
 			// アンサンブル系 : 立ち上がり遅い
@@ -332,15 +332,15 @@ std::unique_ptr<LSP::Synth::Voice> MidiChannel::createVoice(uint8_t noteNo, uint
 			return makeWaveTableVoice(WaveTable::Preset::SquareWave);
 		} else if (mProgId >= 64 && mProgId <= 71) {
 			// ブラス系
-			eg.setParam((float)mSampleFreq, curveExp3, 0.08f, 0.0f, 0.2f, 0.6f, -0.0f, 0.05f);
+			eg.setParam((float)mSampleFreq, curveExp3, 0.05f, 0.0f, 0.2f, 0.6f, -0.0f, 0.05f);
 			return makeWaveTableVoice(WaveTable::Preset::SquareWave);
 		} else if (mProgId >= 72 && mProgId <= 79) {
 			// リード系
-			eg.setParam((float)mSampleFreq, curveExp3, 0.08f, 0.0f, 0.2f, 0.6f, -0.0f, 0.05f);
+			eg.setParam((float)mSampleFreq, curveExp3, 0.05f, 0.0f, 0.2f, 0.6f, -0.0f, 0.05f);
 			return makeWaveTableVoice(WaveTable::Preset::SquareWave);
 		} else if (mProgId >= 72 && mProgId <= 79) {
 			// 笛系
-			eg.setParam((float)mSampleFreq, curveExp3, 0.08f, 0.0f, 0.2f, 0.6f, -0.0f, 0.05f);
+			eg.setParam((float)mSampleFreq, curveExp3, 0.05f, 0.0f, 0.2f, 0.6f, -0.0f, 0.05f);
 			return makeWaveTableVoice(WaveTable::Preset::SquareWave);
 		} else if (mProgId >= 80 && mProgId <= 87) {
 			// シンセサイザ系1
@@ -360,7 +360,7 @@ std::unique_ptr<LSP::Synth::Voice> MidiChannel::createVoice(uint8_t noteNo, uint
 			return makeWaveTableVoice(WaveTable::Preset::SquareWave);
 		} else if (mProgId == 91 || mProgId == 102 || mProgId == 103) {
 			// シンセサイザ系2/3 : ストリングス系
-			eg.setParam((float)mSampleFreq, curveExp3, 0.08f, 0.0f, 0.2f, 0.6f, -0.0f, 0.05f);
+			eg.setParam((float)mSampleFreq, curveExp3, 0.05f, 0.0f, 0.2f, 0.6f, -0.0f, 0.05f);
 			return makeWaveTableVoice(WaveTable::Preset::SquareWave);
 		} else if (mProgId >= 104 && mProgId <= 105) {
 			// 民族楽器 : ベース系 減衰遅い
@@ -372,7 +372,7 @@ std::unique_ptr<LSP::Synth::Voice> MidiChannel::createVoice(uint8_t noteNo, uint
 			return makeWaveTableVoice(WaveTable::Preset::SquareWave);
 		} else if (mProgId >= 109 && mProgId <= 111) {
 			// 民族楽器 : ストリングス, 笛系系
-			eg.setParam((float)mSampleFreq, curveExp3, 0.08f, 0.0f, 0.2f, 0.6f, -0.0f, 0.05f);
+			eg.setParam((float)mSampleFreq, curveExp3, 0.05f, 0.0f, 0.2f, 0.6f, -0.0f, 0.05f);
 			return makeWaveTableVoice(WaveTable::Preset::SquareWave);
 		} else if (mProgId == 112 || mProgId == 114 || mProgId >= 116 && mProgId <= 118) {
 			// 打楽器系 : 減衰早い
