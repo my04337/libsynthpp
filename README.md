@@ -3,15 +3,16 @@
 マルチプラットフォーム MIDIシンセサイザ ライブラリ  
 Multiplatoform MIDI synthesizer library.
 
+※本プロジェクトは、私が最新C++を理解するためのテストベッドとして開発しているものです。
 ※本プロジェクトは、私がかつて下記OSDNプロジェクトで開発していたライブラリの焼き直し版です。  
 https://ja.osdn.net/projects/libsynthpp/
 
 現時点で目指しているもの :  
 
 * 開発言語 : C++20
-* 対応プラットフォーム : Windows 10
+* 対応プラットフォーム : Windows 10 or 11
 * 音声バックエンド : WASAPI (or SDL経由)
-* CMakeプロジェクト(基本的にVisual Studio 2019で開発)
+* CMakeプロジェクト(基本的にVisual Studio 2022で開発)
 * 簡潔で使いやすいAPI
 * 並列性が高く、レイテンシの少ない信号処理機構
 
