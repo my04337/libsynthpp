@@ -8,8 +8,8 @@ include(ExternalProject)
 ExternalProject_Add(
 	SDL2_ttf
 	
-	URL https://www.libsdl.org/projects/SDL_ttf/release/SDL2_ttf-devel-2.0.15-VC.zip
-	URL_HASH SHA1=1436DF41EBC47AC36E02EC9BDA5699E80FF9BD27
+	URL https://www.libsdl.org/projects/SDL_ttf/release/SDL2_ttf-devel-2.0.18-VC.zip
+	URL_HASH SHA1=a421d47e9336ab722eac4ba107fab7f7b080eb4e
 	PREFIX ${SDL2_ttf_PREFIX_PATH}
 	SOURCE_DIR   ${SDL2_ttf_ROOT_PATH}
 	CONFIGURE_COMMAND  ""
