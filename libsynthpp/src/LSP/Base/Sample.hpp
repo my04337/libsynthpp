@@ -110,7 +110,7 @@ constexpr Tout requantize(Tin in) noexcept
 		return static_cast<Tout>(in) / sample_traits<Tin>::abs_max;
 	} else {
 		// 変換未対応
-		static_assert(false, "Unsupported type.");
+		static_assert(false_v, "Unsupported type.");
 	}
 }
 
