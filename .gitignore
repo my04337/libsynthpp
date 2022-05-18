@@ -31,6 +31,9 @@
 *.out
 *.app
 
+# Debug information files
+*.pdb
+
 # Build directory and intermediate file
 build/*
 .vs/*
