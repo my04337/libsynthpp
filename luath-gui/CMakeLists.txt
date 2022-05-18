@@ -29,8 +29,6 @@ add_custom_command(TARGET luath-gui POST_BUILD
 
 	COMMAND ${CMAKE_COMMAND} -E copy ${SDL2_LIB_DIRS}/SDL2.dll ${LUATH_BINARY_DIR}
 	COMMAND ${CMAKE_COMMAND} -E copy ${SDL2_ttf_LIB_DIRS}/SDL2_ttf.dll ${LUATH_BINARY_DIR}
-	COMMAND ${CMAKE_COMMAND} -E copy ${SDL2_ttf_LIB_DIRS}/libfreetype-6.dll ${LUATH_BINARY_DIR}
-	COMMAND ${CMAKE_COMMAND} -E copy ${SDL2_ttf_LIB_DIRS}/zlib1.dll ${LUATH_BINARY_DIR}
 
 	COMMAND ${CMAKE_COMMAND} -E copy ${UmeFont_ROOT_PATH}/ume-tgo4.ttf ${LUATH_BINARY_DIR}/assets/font
 	COMMAND ${CMAKE_COMMAND} -E copy ${UmeFont_ROOT_PATH}/license.html ${LUATH_BINARY_DIR}/assets/font
