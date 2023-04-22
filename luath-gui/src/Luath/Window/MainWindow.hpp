@@ -32,6 +32,7 @@ public:
 	void dispose();
 	void onKeyDown(const SDL_KeyboardEvent& ev);
 	void onDropFile(const SDL_DropEvent& ev);
+	void onDpiChanged(float scale);
 
 
 protected:
@@ -41,6 +42,9 @@ protected:
 
 private:
 	SDL_Window* mWindow = nullptr;
+
+	// 描画スケール
+	std::atomic<float> mDrawingScale = 1.0f;
 
 	// 描画スレッド
 	std::thread mDrawingThread;

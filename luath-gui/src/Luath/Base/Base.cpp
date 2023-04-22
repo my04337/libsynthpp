@@ -55,33 +55,30 @@ void Text::dispose()
 		mTexture = nullptr;
 	}
 }
-void Text ::draw(int x, int y)
+void Text ::draw(float x, float y)
 {
 	if (!mRenderer || !mTexture) return;
 
-	SDL_Rect rect{ x, y, mWidth, mHeight };
-	SDL_RenderCopy(mRenderer, mTexture, nullptr, &rect);
+	SDL_FRect rect{ x, y, mWidth, mHeight };
+	SDL_RenderCopyF(mRenderer, mTexture, nullptr, &rect);
 }
 
 // ---
-
 FastTextRenderer::FastTextRenderer(SDL_Renderer* renderer, TTF_Font* font, SDL_Color color)
 	: mRenderer(renderer)
 	, mFont(font)
 	, mColor(color)
 {
 }
-FastTextRenderer::~FastTextRenderer()
-{
-}
-SDL_Rect FastTextRenderer::draw(int x, int y, const std::wstring& text)
+SDL_FRect FastTextRenderer::draw(float x, float y, const std::wstring& text)
 {
 	// 高速化のため、一文字毎に分解して描画する
 	// TODO サロゲートペアに対応する
 	// TODO 改行に対応する
+	if (!mRenderer || !mFont) return { x, y, 0.f, 0.f };
 
-	int curX = x;
-	int maxHeight = 0;
+	float curX = x;
+	float maxHeight = 0.f;
 
 	for(wchar_t ch_ : text) { 
 		std::wstring ch(1, ch_);
@@ -102,5 +99,5 @@ SDL_Rect FastTextRenderer::draw(int x, int y, const std::wstring& text)
 	}
 
 
-	return { x, y, curX, y + maxHeight };
+	return { x, y, curX - x,  maxHeight };
 }

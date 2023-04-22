@@ -38,33 +38,37 @@ public:
 
 	void dispose();
 		
-	int width()const noexcept { return mWidth; }
-	int height()const noexcept { return mHeight; }
+	float width()const noexcept { return mWidth; }
+	float height()const noexcept { return mHeight; }
 
-	void draw(int x, int y);
+	void draw(float x, float y);
 
 
 private:
 	SDL_Renderer* mRenderer = nullptr;
 	SDL_Texture* mTexture = nullptr;
-	int mWidth = 0;
-	int mHeight = 0;
+	float mWidth = 0;
+	float mHeight = 0;
 };
 
 // 文字列高速描画ユーティリティクラス
 class FastTextRenderer
-	: non_copy_move
+	: non_copy
 {
 public:
+	FastTextRenderer() = default;
 	FastTextRenderer(SDL_Renderer* renderer, TTF_Font* font, SDL_Color color = SDL_Color{ 0,0,0,255 });
-	~FastTextRenderer();
+	~FastTextRenderer() = default;
 
-	SDL_Rect draw(int x, int y, const std::wstring& text);
+	FastTextRenderer(FastTextRenderer&&)noexcept = default;
+	FastTextRenderer& operator=(FastTextRenderer&&)noexcept = default;
+
+	SDL_FRect draw(float x, float y, const std::wstring& text);
 
 private:
-	SDL_Renderer* mRenderer;
-	TTF_Font* mFont;
-	SDL_Color mColor;
+	SDL_Renderer* mRenderer = nullptr;
+	TTF_Font* mFont = nullptr;
+	SDL_Color mColor = SDL_Color{ 0,0,0,255 };
 	std::unordered_map<std::wstring, Text> mCachedCharacters; // // SDL_ttfのテクスチャ生成が非常に遅いため、一文字単位で描画した文字をキャッシュする
 };
 

@@ -36,7 +36,7 @@ int Application::exec(int argc, char** argv)
 
 	// ウィンドウ生成
 	Luath::Window::MainWindow main_window;
-	if (!main_window.initialize()) {
+	if(!main_window.initialize()) {
 		return 1;
 	}
 

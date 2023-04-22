@@ -12,6 +12,8 @@ using namespace LSP;
 using namespace Luath;
 using namespace Luath::Window;
 
+static constexpr int SCREEN_WIDTH = 800;
+static constexpr int SCREEN_HEIGHT = 640;
 static constexpr uint32_t SAMPLE_FREQ = 44100;
 
 static constexpr std::array<SDL_Color, 16> CHANNEL_COLOR{
@@ -80,14 +82,17 @@ void MainWindow::dispose()
 }
 bool MainWindow::initialize()
 {
-	constexpr int SCREEN_WIDTH = 800;
-	constexpr int SCREEN_HEIGHT = 640;
+	// 初期DPIセット : プライマリディスプレイのDPIを使用する
+	float current_dpi = 96.0f;
+	if(SDL_GetDisplayDPI(0, nullptr, nullptr, &current_dpi) == 0) {
+		onDpiChanged(current_dpi / 96.0f);
+	}
 
 	// ウィンドウ生成
 	auto window = SDL_CreateWindow(
 		"luath - LibSynth++ Sample MIDI Synthesizer",
 		SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-		SCREEN_WIDTH, SCREEN_HEIGHT,
+		SCREEN_WIDTH * mDrawingScale, SCREEN_HEIGHT * mDrawingScale,
 		SDL_WINDOW_OPENGL
 	);
 	if(!window) {
@@ -101,9 +106,12 @@ bool MainWindow::initialize()
 	midi_path.append("assets/sample_midi/brambles_vsc3.mid"); // 試験用MIDIファイル
 	loadMidi(midi_path);
 
-	// OK
+	// 生成OK
 	mWindow = window;
 	fail_act_destroy.reset();
+
+
+	// 描画開始
 	mDrawingThread = std::thread([this]{drawingThreadMain();});
 	return true;
 }
@@ -121,6 +129,11 @@ void MainWindow::onKeyDown(const SDL_KeyboardEvent& ev)
 	} else if(ev.keysym.sym == SDLK_DOWN) {
 		mPostAmpVolume.store(mPostAmpVolume.load() / 1.5f);
 	}
+}
+void MainWindow::onDpiChanged(float scale)
+{
+	mDrawingScale = scale;
+	SDL_SetWindowSize(mWindow, SCREEN_WIDTH * scale, SCREEN_HEIGHT * scale);
 }
 void MainWindow::loadMidi(const std::filesystem::path& midi_path) {
 	mSequencer.stop();
@@ -151,14 +164,14 @@ void MainWindow::drawingThreadMain()
 
 	constexpr SDL_Color COLOR_BLACK{0x00, 0x00, 0x00, 0xFF};
 
-	// 描画用フォント取得
-	auto default_font = app.fontCache().get(12);
+	// 描画スケール (動的に変更される事に注意
+	float s = 0.0f;
 
 	// レンダラ生成
 	auto renderer = SDL_CreateRenderer(mWindow, -1, 0);
 	lsp_assert(renderer != nullptr);
 	auto fin_act_destroy_renderer = finally([&]{SDL_DestroyRenderer(renderer);});
-	FastTextRenderer textRenderer(renderer, default_font);
+	FastTextRenderer textRenderer;
 	SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
 
 	// FPS計算,表示用
@@ -172,24 +185,33 @@ void MainWindow::drawingThreadMain()
 
 	// 描画ループ開始
 	clock::time_point prev_wake_up_time = clock::now() - FRAME_INTERVAL;
-	while (true) {
+	while(true) {
 		auto next_wake_up_time = prev_wake_up_time;
 		while(next_wake_up_time < clock::now()) next_wake_up_time += FRAME_INTERVAL;
 		std::this_thread::sleep_until(next_wake_up_time);
 		prev_wake_up_time = next_wake_up_time;
 
 		if(mDrawingThreadAborted) break;
+
+		// 描画スケール再計算処理
+		if(auto new_scale = mDrawingScale.load(); s != new_scale) {
+			s = new_scale;
+
+			auto default_font = app.fontCache().get(12 * s);
+			textRenderer = FastTextRenderer(renderer, default_font);
+		}
+
 		// 描画開始
 		std::lock_guard lock(mDrawingMutex);
 		auto drawing_start_time = clock::now();
 		SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
 		SDL_RenderClear(renderer);
-		
+
 		// 各種情報取得
 		const auto tgStatistics = mSynthesizer.statistics();
 		const auto channelInfo = mSynthesizer.channelInfo();
 		int polyCount = 0;
-		for (auto& info : channelInfo) polyCount += info.poly;
+		for(auto& info : channelInfo) polyCount += info.poly;
 
 
 		// 描画情報
@@ -197,34 +219,35 @@ void MainWindow::drawingThreadMain()
 			textRenderer.draw(0, 0, FORMAT_STRING(L"描画フレーム数 : " << frames));
 			auto average_time = std::accumulate(drawing_time_history.cbegin(), drawing_time_history.cend(), std::chrono::microseconds(0)) / drawing_time_history.size();
 			auto load_average = (int)(100.0 * average_time.count() / FRAME_INTERVAL.count());
-			textRenderer.draw(0, 15, FORMAT_STRING(L"描画負荷 : " << std::setfill(L'0') << std::right << std::setw(3) << load_average << L"[%]"));
+			textRenderer.draw(0, 15 * s, FORMAT_STRING(L"描画負荷 : " << std::setfill(L'0') << std::right << std::setw(3) << load_average << L"[%]"));
 		}
-		
+
 		// 演奏情報
 		{
-			textRenderer.draw(150, 0, FORMAT_STRING(L"生成サンプル数 : " << tgStatistics.created_samples << L" (" << (tgStatistics.created_samples * 1000ull / SAMPLE_FREQ)
+			textRenderer.draw(150 * s, 0, FORMAT_STRING(L"生成サンプル数 : " << tgStatistics.created_samples << L" (" << (tgStatistics.created_samples * 1000ull / SAMPLE_FREQ)
 				<< L"[msec])  failed : " << tgStatistics.failed_samples * 1000ull / SAMPLE_FREQ
 				<< L"[msec]  buffered : " << std::setfill(L'0') << std::right << std::setw(4) << mOutput.getBufferedFrameCount() * 1000 / SAMPLE_FREQ << "[msec]"));
-			textRenderer.draw(150, 15, FORMAT_STRING(L"演奏負荷 : " << std::setfill(L'0') << std::right << std::setw(3) << (int)(100 * tgStatistics.rendering_load_average()) << L"[%]"));
-			textRenderer.draw(150, 30, FORMAT_STRING(L"PostAmp : " << std::fixed << std::setprecision(3) << mPostAmpVolume.load()));
-			textRenderer.draw(280, 15, FORMAT_STRING(L"同時発音数 : " << std::setfill(L'0') << std::right << std::setw(2) << polyCount));
+			textRenderer.draw(150 * s, 15 * s, FORMAT_STRING(L"演奏負荷 : " << std::setfill(L'0') << std::right << std::setw(3) << (int)(100 * tgStatistics.rendering_load_average()) << L"[%]"));
+			textRenderer.draw(150 * s, 30 * s, FORMAT_STRING(L"PostAmp : " << std::fixed << std::setprecision(3) << mPostAmpVolume.load()));
+			textRenderer.draw(280 * s, 15 * s, FORMAT_STRING(L"同時発音数 : " << std::setfill(L'0') << std::right << std::setw(2) << polyCount));
 		}
 
 		// チャネル情報
 		{
-			constexpr int ofsX = 300;
-			constexpr int ofsY = 50;
+			const float ofsX = 300 * s;
+			const float ofsY = 50 * s;
 
 			constexpr std::array<int, 10> columnWidth{ 25, 75, 40, 40, 60, 35, 75, 25, 25, 25 };
-			int x = ofsX, ci = 0;
-			auto col = [&] { 
-				int ret = x;  
-				x += columnWidth[ci++];
+			float x = ofsX, ci = 0;
+			auto col = [&] {
+				int ret = x;
+				x += columnWidth[ci++] * s;
 				return ret;
 			};
 			int y = ofsY;
-			constexpr int width = std::accumulate(columnWidth.begin(), columnWidth.end(), 0);
-			constexpr int height = 15;
+			constexpr float unscaled_width = std::accumulate(columnWidth.begin(), columnWidth.end(), 0);
+			const float width = unscaled_width * s;
+			const float height = 15 * s;
 
 			{
 				x = ofsX;
@@ -240,18 +263,18 @@ void MainWindow::drawingThreadMain()
 				textRenderer.draw(col(), y, L"Drm");
 				textRenderer.draw(col(), y, L"Poly");
 			}
-			for (const auto& info : channelInfo) {
-				y += 15;
+			for(const auto& info : channelInfo) {
+				y += 15 * s;
 				x = ofsX;
 				ci = 0;
 
 				const auto bgColor = CHANNEL_COLOR[info.ch];
-				SDL_SetRenderDrawColor(renderer, bgColor.r, bgColor.g, bgColor.b, bgColor.a/2);
-				SDL_Rect bgRect{ x, y, width, height };
-				SDL_RenderFillRect(renderer, &bgRect);
+				SDL_SetRenderDrawColor(renderer, bgColor.r, bgColor.g, bgColor.b, bgColor.a / 2);
+				SDL_FRect bgRect{ x, y, width, height };
+				SDL_RenderFillRectF(renderer, &bgRect);
 
 				textRenderer.draw(col(), y, FORMAT_STRING(std::setfill(L'0') << std::setw(2) << info.ch));
-				textRenderer.draw(col(), y, FORMAT_STRING(std::setfill(L'0') << std::setw(3) << info.progId << L":" << std::setw(3) << info.bankSelectMSB <<L"." << std::setw(3) << info.bankSelectLSB));
+				textRenderer.draw(col(), y, FORMAT_STRING(std::setfill(L'0') << std::setw(3) << info.progId << L":" << std::setw(3) << info.bankSelectMSB << L"." << std::setw(3) << info.bankSelectLSB));
 				textRenderer.draw(col(), y, FORMAT_STRING(std::setfill(L'0') << std::fixed << std::setprecision(3) << info.volume));
 				textRenderer.draw(col(), y, FORMAT_STRING(std::setfill(L'0') << std::fixed << std::setprecision(3) << info.expression));
 				textRenderer.draw(col(), y, FORMAT_STRING((info.pitchBend >= 0 ? L"+" : L"-") << std::fixed << std::setprecision(4) << std::abs(info.pitchBend)));
@@ -265,28 +288,28 @@ void MainWindow::drawingThreadMain()
 
 		// ボイス情報
 		{
-			constexpr int ofsX = 10;
-			constexpr int ofsY = 50;
+			const int ofsX = 10 * s;
+			const int ofsY = 50 * s;
 
 			// 全チャネルのボイス情報を統合
 			std::unordered_map<VoiceId, std::pair</*ch*/uint8_t, LSP::Synth::Voice::Info>> unsortedVoiceInfo;
-			for (const auto& ci : channelInfo) {
-				for (const auto& [vid, vi] : ci.voiceInfo) {
+			for(const auto& ci : channelInfo) {
+				for(const auto& [vid, vi] : ci.voiceInfo) {
 					unsortedVoiceInfo.emplace(vid, std::make_pair(ci.ch, vi));
 				}
 			}
 			// 前回の描画位置を維持しながら描画順を決定する
 			std::vector<std::tuple<VoiceId, /*ch*/uint8_t, LSP::Synth::Voice::Info>> voiceInfo;
 			voiceInfo.resize(std::max(unsortedVoiceInfo.size(), prevVoiceEndPos));
-			for (auto& [vid, pos] : prevVoicePosMap) {
+			for(auto& [vid, pos] : prevVoicePosMap) {
 				auto found = unsortedVoiceInfo.find(vid);
-				if (found != unsortedVoiceInfo.end()) {
+				if(found != unsortedVoiceInfo.end()) {
 					voiceInfo[pos] = std::make_tuple(found->first, std::get<0>(found->second), std::get<1>(found->second));
 					unsortedVoiceInfo.erase(found);
 				}
 			}
-			for (size_t i = 0; i < voiceInfo.size() && !unsortedVoiceInfo.empty(); ++i) {
-				if (!std::get<0>(voiceInfo[i]).empty()) continue;
+			for(size_t i = 0; i < voiceInfo.size() && !unsortedVoiceInfo.empty(); ++i) {
+				if(!std::get<0>(voiceInfo[i]).empty()) continue;
 				auto found = unsortedVoiceInfo.begin();
 				voiceInfo[i] = std::make_tuple(found->first, std::get<0>(found->second), std::get<1>(found->second));
 				unsortedVoiceInfo.erase(found);
@@ -294,10 +317,10 @@ void MainWindow::drawingThreadMain()
 			lsp_assert(unsortedVoiceInfo.empty());
 			prevVoiceEndPos = 0;
 			prevVoicePosMap.clear();
-			for (size_t i = 0; i < voiceInfo.size(); ++i) {
-				if (std::get<0>(voiceInfo[i]).empty()) continue;
+			for(size_t i = 0; i < voiceInfo.size(); ++i) {
+				if(std::get<0>(voiceInfo[i]).empty()) continue;
 				prevVoicePosMap[std::get<0>(voiceInfo[i])] = i;
-				prevVoiceEndPos = i+1;
+				prevVoiceEndPos = i + 1;
 			}
 
 			// 描画
@@ -305,11 +328,11 @@ void MainWindow::drawingThreadMain()
 			int x = ofsX, ci = 0;
 			auto col = [&] {
 				int ret = x;
-				x += columnWidth[ci++];
+				x += columnWidth[ci++] * s;
 				return ret;
 			};
 			constexpr auto state2text = [](LSP::Synth::Voice::EnvelopeState state) -> const wchar_t* {
-				switch (state) {
+				switch(state) {
 				case LSP::Synth::Voice::EnvelopeState::Attack: return L"Attack";
 				case LSP::Synth::Voice::EnvelopeState::Hold:   return L"Hold";
 				case LSP::Synth::Voice::EnvelopeState::Decay:  return L"Decay";
@@ -320,8 +343,9 @@ void MainWindow::drawingThreadMain()
 				}
 			};
 			int y = ofsY;
-			constexpr int width = std::accumulate(columnWidth.begin(), columnWidth.end(), 0);
-			constexpr int height = 15;
+			constexpr int unscaled_width = std::accumulate(columnWidth.begin(), columnWidth.end(), 0);
+			const int width = unscaled_width * s;
+			const int height = 15 * s;
 			{
 				x = ofsX;
 				ci = 0;
@@ -331,12 +355,12 @@ void MainWindow::drawingThreadMain()
 				textRenderer.draw(col(), y, L"Envelope");
 				textRenderer.draw(col(), y, L"State");
 			}
-			for (const auto& [vid, ch, info] : voiceInfo) {
-				y += 15;
+			for(const auto& [vid, ch, info] : voiceInfo) {
+				y += 15 * s;
 				x = ofsX;
 				ci = 0;
 
-				if (vid.empty()) continue;
+				if(vid.empty()) continue;
 
 				const auto bgColor = CHANNEL_COLOR[ch];
 				SDL_SetRenderDrawColor(renderer, bgColor.r, bgColor.g, bgColor.b, static_cast<Uint8>(bgColor.a * 0.5f * info.envelope));
@@ -350,14 +374,16 @@ void MainWindow::drawingThreadMain()
 				textRenderer.draw(col(), y, FORMAT_STRING(state2text(info.state)));
 			}
 		}
-		
+
 
 
 		// 波形情報
-		const int margin = 5;
-		mLissajousWidget.draw(renderer, 350+margin, 340+margin, 150-margin*2, 150-margin*2);
-		mOscilloScopeWidget.draw(renderer, 500 + margin, 340 + margin, 300 - margin * 2, 150 - margin * 2);
-		mSpectrumAnalyzerWidget.draw(renderer, 350+margin, 490+margin, 450-margin*2, 150-margin*2);
+		{
+			const int margin = 5; // unsecaled
+			mLissajousWidget.draw(renderer, (350 + margin)*s, (340 + margin)* s, (150 - margin * 2)* s, (150 - margin * 2)* s);
+			mOscilloScopeWidget.draw(renderer, (500 + margin)* s, (340 + margin)* s, (300 - margin * 2)* s, (150 - margin * 2)* s);
+			mSpectrumAnalyzerWidget.draw(renderer, (350 + margin)* s, (490 + margin)* s, (450 - margin * 2)* s, (150 - margin * 2)* s);
+		}
 
 		// 描画終了
 		SDL_RenderPresent(renderer);
