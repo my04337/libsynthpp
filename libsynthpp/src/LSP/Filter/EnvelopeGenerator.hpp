@@ -35,13 +35,14 @@ public:
 	{
 		Curve() 
 			: shape(Shape::Linear)
+			, exp_param_n(1)
+			, exp_param_level_at_n(0)
 		{}
 		Curve(parameter_type exp_param_n)
 			: shape(Shape::Exp)
-		{
-			this->exp_param_n = exp_param_n;
-			this->exp_param_level_at_n = static_cast<parameter_type>(1 - std::exp(-exp_param_n));
-		}
+			, exp_param_n(exp_param_n)
+			, exp_param_level_at_n(static_cast<parameter_type>(1 - std::exp(-exp_param_n)))
+		{}
 
 		constexpr operator Shape()const noexcept { return shape; }
 

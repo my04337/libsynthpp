@@ -138,7 +138,7 @@ public:
 
 private:
 	WaveFormType mType;
-	parameter_type mPhase; // 現在の位相
+	parameter_type mPhase; // 現在の位相 [0, 1)
 	parameter_type mDutyRate;	// デューティー比
 	parameter_type mSamplePerPhase; // 1サンプル当たりの位相角(rad)
 
