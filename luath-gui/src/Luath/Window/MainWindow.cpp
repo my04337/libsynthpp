@@ -124,10 +124,25 @@ void MainWindow::onDropFile(const SDL_DropEvent& ev)
 }
 void MainWindow::onKeyDown(const SDL_KeyboardEvent& ev)
 {
-	if (ev.keysym.sym == SDLK_UP) {
+	switch(ev.keysym.sym) {
+	case SDLK_UP:		
+		// ボリュームUp
 		mPostAmpVolume.store(mPostAmpVolume.load() * 1.5f);
-	} else if(ev.keysym.sym == SDLK_DOWN) {
+		break;
+	case SDLK_DOWN:	
+		// ボリュームDown
 		mPostAmpVolume.store(mPostAmpVolume.load() / 1.5f);
+		break;
+	case SDLK_SPACE:
+		// 一時停止/再開
+		if(mSequencer.isPlaying()) {
+			if(mSequencer.isPausing()) {
+				mSequencer.resume();
+			} else {
+				mSequencer.pause();
+			}
+		}
+		break;
 	}
 }
 void MainWindow::onDpiChanged(float scale)
