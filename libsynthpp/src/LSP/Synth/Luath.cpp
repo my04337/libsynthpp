@@ -156,7 +156,7 @@ Luath::Statistics Luath::statistics()const
 }
 std::vector<MidiChannel::Info> Luath::channelInfo()const
 {
-	std::lock_guard lock(mMutex);
+	std::shared_lock lock(mMutex);
 	std::vector<MidiChannel::Info> ret;
 	ret.reserve(mMidiChannels.size());
 	for (auto& ch : mMidiChannels) {

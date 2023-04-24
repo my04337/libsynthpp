@@ -7,6 +7,7 @@
 #include <LSP/Threading/TaskDispatcher.hpp>
 
 #include <array>
+#include <shared_mutex>
 
 namespace LSP::Synth
 {
@@ -62,7 +63,7 @@ protected:
 	LSP::Signal<float> generate(size_t len);
 
 private:
-	mutable std::mutex mMutex;
+	mutable std::shared_mutex mMutex;
 	std::pmr::synchronized_pool_resource mMem;
 	std::deque<std::pair<clock::time_point, std::shared_ptr<const LSP::MIDI::Message>>> mMessageQueue;
 	LSP::Threading::TaskDispatcher mTaskDispatcher;
