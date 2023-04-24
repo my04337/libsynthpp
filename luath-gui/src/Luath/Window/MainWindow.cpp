@@ -226,12 +226,20 @@ void MainWindow::drawingThreadMain()
 
 		// 演奏情報
 		{
+			const wchar_t* systemType = L"";
+			switch(synthDigest.systemType) {
+			case LSP::MIDI::SystemType::GM1:	systemType = L"GM1";	break;
+			case LSP::MIDI::SystemType::GM2:	systemType = L"GM2";	break;
+			case LSP::MIDI::SystemType::GS:		systemType = L"GS";		break;
+			}
+
 			textRenderer.draw(150 * s, 0, FORMAT_STRING(L"生成サンプル数 : " << tgStatistics.created_samples << L" (" << (tgStatistics.created_samples * 1000ull / SAMPLE_FREQ)
 				<< L"[msec])  failed : " << tgStatistics.failed_samples * 1000ull / SAMPLE_FREQ
 				<< L"[msec]  buffered : " << std::setfill(L'0') << std::right << std::setw(4) << mOutput.getBufferedFrameCount() * 1000 / SAMPLE_FREQ << "[msec]"));
 			textRenderer.draw(150 * s, 15 * s, FORMAT_STRING(L"演奏負荷 : " << std::setfill(L'0') << std::right << std::setw(3) << (int)(100 * tgStatistics.rendering_load_average()) << L"[%]"));
 			textRenderer.draw(150 * s, 30 * s, FORMAT_STRING(L"PostAmp : " << std::fixed << std::setprecision(3) << mPostAmpVolume.load()));
 			textRenderer.draw(280 * s, 15 * s, FORMAT_STRING(L"同時発音数 : " << std::setfill(L'0') << std::right << std::setw(2) << polyCount));
+			textRenderer.draw(420 * s, 15 * s, FORMAT_STRING(L"MIDIリセット : " << std::setfill(L'0') << systemType));
 		}
 
 		// チャネル情報
