@@ -18,15 +18,15 @@ Voice::Voice(size_t sampleFreq, const EnvelopeGenerator& eg, uint32_t noteNo, fl
 Voice::~Voice() = default;
 
 
-Voice::Info Voice::info()const noexcept
+Voice::Digest Voice::digest()const noexcept
 {
-	Info info;
+	Digest digest;
 
-	info.freq = mCalculatedFreq;
-	info.envelope = mEG.envelope();
-	info.state = mEG.state();
+	digest.freq = mCalculatedFreq;
+	digest.envelope = mEG.envelope();
+	digest.state = mEG.state();
 
-	return info;
+	return digest;
 }
 uint32_t Voice::noteNo()const noexcept
 {

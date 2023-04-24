@@ -154,15 +154,17 @@ Luath::Statistics Luath::statistics()const
 {
 	return mThreadSafeStatistics;
 }
-std::vector<MidiChannel::Info> Luath::channelInfo()const
+Luath::Digest Luath::digest()const
 {
 	std::shared_lock lock(mMutex);
-	std::vector<MidiChannel::Info> ret;
-	ret.reserve(mMidiChannels.size());
+	Digest digest;
+	digest.systemType = mSystemType;
+
+	digest.channels.reserve(mMidiChannels.size());
 	for (auto& ch : mMidiChannels) {
-		ret.push_back(ch.info());
+		digest.channels.push_back(ch.digest());
 	}
-	return ret;
+	return digest;
 }
 void Luath::dispatchMessage(const std::shared_ptr<const MIDI::Message>& msg)
 {

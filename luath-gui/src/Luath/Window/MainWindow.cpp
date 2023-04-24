@@ -209,9 +209,11 @@ void MainWindow::drawingThreadMain()
 
 		// 各種情報取得
 		const auto tgStatistics = mSynthesizer.statistics();
-		const auto channelInfo = mSynthesizer.channelInfo();
+		const auto synthDigest = mSynthesizer.digest();
+		const auto& channelDigests = synthDigest.channels;
+
 		int polyCount = 0;
-		for(auto& info : channelInfo) polyCount += info.poly;
+		for(auto& cd : channelDigests) polyCount += cd.poly;
 
 
 		// 描画情報
@@ -263,26 +265,26 @@ void MainWindow::drawingThreadMain()
 				textRenderer.draw(col(), y, L"Drm");
 				textRenderer.draw(col(), y, L"Poly");
 			}
-			for(const auto& info : channelInfo) {
+			for(const auto& cd : channelDigests) {
 				y += 15 * s;
 				x = ofsX;
 				ci = 0;
 
-				const auto bgColor = CHANNEL_COLOR[info.ch];
+				const auto bgColor = CHANNEL_COLOR[cd.ch];
 				SDL_SetRenderDrawColor(renderer, bgColor.r, bgColor.g, bgColor.b, bgColor.a / 2);
 				SDL_FRect bgRect{ x, y, width, height };
 				SDL_RenderFillRectF(renderer, &bgRect);
 
-				textRenderer.draw(col(), y, FORMAT_STRING(std::setfill(L'0') << std::setw(2) << info.ch));
-				textRenderer.draw(col(), y, FORMAT_STRING(std::setfill(L'0') << std::setw(3) << info.progId << L":" << std::setw(3) << info.bankSelectMSB << L"." << std::setw(3) << info.bankSelectLSB));
-				textRenderer.draw(col(), y, FORMAT_STRING(std::setfill(L'0') << std::fixed << std::setprecision(3) << info.volume));
-				textRenderer.draw(col(), y, FORMAT_STRING(std::setfill(L'0') << std::fixed << std::setprecision(3) << info.expression));
-				textRenderer.draw(col(), y, FORMAT_STRING((info.pitchBend >= 0 ? L"+" : L"-") << std::fixed << std::setprecision(4) << std::abs(info.pitchBend)));
-				textRenderer.draw(col(), y, FORMAT_STRING(std::setfill(L'0') << std::fixed << std::setprecision(2) << info.pan));
-				textRenderer.draw(col(), y, FORMAT_STRING(std::setfill(L'0') << std::setw(3) << info.attackTime << L"." << std::setw(3) << info.decayTime << L"." << std::setw(3) << info.releaseTime));
-				textRenderer.draw(col(), y, FORMAT_STRING((info.pedal ? L"on" : L"off")));
-				textRenderer.draw(col(), y, FORMAT_STRING((info.drum ? L"on" : L"off")));
-				textRenderer.draw(col(), y, FORMAT_STRING(std::setfill(L'0') << std::setw(2) << info.poly));
+				textRenderer.draw(col(), y, FORMAT_STRING(std::setfill(L'0') << std::setw(2) << cd.ch));
+				textRenderer.draw(col(), y, FORMAT_STRING(std::setfill(L'0') << std::setw(3) << cd.progId << L":" << std::setw(3) << cd.bankSelectMSB << L"." << std::setw(3) << cd.bankSelectLSB));
+				textRenderer.draw(col(), y, FORMAT_STRING(std::setfill(L'0') << std::fixed << std::setprecision(3) << cd.volume));
+				textRenderer.draw(col(), y, FORMAT_STRING(std::setfill(L'0') << std::fixed << std::setprecision(3) << cd.expression));
+				textRenderer.draw(col(), y, FORMAT_STRING((cd.pitchBend >= 0 ? L"+" : L"-") << std::fixed << std::setprecision(4) << std::abs(cd.pitchBend)));
+				textRenderer.draw(col(), y, FORMAT_STRING(std::setfill(L'0') << std::fixed << std::setprecision(2) << cd.pan));
+				textRenderer.draw(col(), y, FORMAT_STRING(std::setfill(L'0') << std::setw(3) << cd.attackTime << L"." << std::setw(3) << cd.decayTime << L"." << std::setw(3) << cd.releaseTime));
+				textRenderer.draw(col(), y, FORMAT_STRING((cd.pedal ? L"on" : L"off")));
+				textRenderer.draw(col(), y, FORMAT_STRING((cd.drum ? L"on" : L"off")));
+				textRenderer.draw(col(), y, FORMAT_STRING(std::setfill(L'0') << std::setw(2) << cd.poly));
 			}
 		}
 
@@ -292,34 +294,34 @@ void MainWindow::drawingThreadMain()
 			const int ofsY = 50 * s;
 
 			// 全チャネルのボイス情報を統合
-			std::unordered_map<VoiceId, std::pair</*ch*/uint8_t, LSP::Synth::Voice::Info>> unsortedVoiceInfo;
-			for(const auto& ci : channelInfo) {
-				for(const auto& [vid, vi] : ci.voiceInfo) {
-					unsortedVoiceInfo.emplace(vid, std::make_pair(ci.ch, vi));
+			std::unordered_map<VoiceId, std::pair</*ch*/uint8_t, LSP::Synth::Voice::Digest>> unsortedVoiceDigests;
+			for(const auto& cd : channelDigests) {
+				for(const auto& [vid, vd] : cd.voices) {
+					unsortedVoiceDigests.emplace(vid, std::make_pair(cd.ch, vd));
 				}
 			}
 			// 前回の描画位置を維持しながら描画順を決定する
-			std::vector<std::tuple<VoiceId, /*ch*/uint8_t, LSP::Synth::Voice::Info>> voiceInfo;
-			voiceInfo.resize(std::max(unsortedVoiceInfo.size(), prevVoiceEndPos));
+			std::vector<std::tuple<VoiceId, /*ch*/uint8_t, LSP::Synth::Voice::Digest>> voiceDigests;
+			voiceDigests.resize(std::max(unsortedVoiceDigests.size(), prevVoiceEndPos));
 			for(auto& [vid, pos] : prevVoicePosMap) {
-				auto found = unsortedVoiceInfo.find(vid);
-				if(found != unsortedVoiceInfo.end()) {
-					voiceInfo[pos] = std::make_tuple(found->first, std::get<0>(found->second), std::get<1>(found->second));
-					unsortedVoiceInfo.erase(found);
+				auto found = unsortedVoiceDigests.find(vid);
+				if(found != unsortedVoiceDigests.end()) {
+					voiceDigests[pos] = std::make_tuple(found->first, std::get<0>(found->second), std::get<1>(found->second));
+					unsortedVoiceDigests.erase(found);
 				}
 			}
-			for(size_t i = 0; i < voiceInfo.size() && !unsortedVoiceInfo.empty(); ++i) {
-				if(!std::get<0>(voiceInfo[i]).empty()) continue;
-				auto found = unsortedVoiceInfo.begin();
-				voiceInfo[i] = std::make_tuple(found->first, std::get<0>(found->second), std::get<1>(found->second));
-				unsortedVoiceInfo.erase(found);
+			for(size_t i = 0; i < voiceDigests.size() && !unsortedVoiceDigests.empty(); ++i) {
+				if(!std::get<0>(voiceDigests[i]).empty()) continue;
+				auto found = unsortedVoiceDigests.begin();
+				voiceDigests[i] = std::make_tuple(found->first, std::get<0>(found->second), std::get<1>(found->second));
+				unsortedVoiceDigests.erase(found);
 			}
-			lsp_assert(unsortedVoiceInfo.empty());
+			lsp_assert(unsortedVoiceDigests.empty());
 			prevVoiceEndPos = 0;
 			prevVoicePosMap.clear();
-			for(size_t i = 0; i < voiceInfo.size(); ++i) {
-				if(std::get<0>(voiceInfo[i]).empty()) continue;
-				prevVoicePosMap[std::get<0>(voiceInfo[i])] = i;
+			for(size_t i = 0; i < voiceDigests.size(); ++i) {
+				if(std::get<0>(voiceDigests[i]).empty()) continue;
+				prevVoicePosMap[std::get<0>(voiceDigests[i])] = i;
 				prevVoiceEndPos = i + 1;
 			}
 
@@ -355,7 +357,7 @@ void MainWindow::drawingThreadMain()
 				textRenderer.draw(col(), y, L"Envelope");
 				textRenderer.draw(col(), y, L"State");
 			}
-			for(const auto& [vid, ch, info] : voiceInfo) {
+			for(const auto& [vid, ch, vd] : voiceDigests) {
 				y += 15 * s;
 				x = ofsX;
 				ci = 0;
@@ -363,15 +365,15 @@ void MainWindow::drawingThreadMain()
 				if(vid.empty()) continue;
 
 				const auto bgColor = CHANNEL_COLOR[ch];
-				SDL_SetRenderDrawColor(renderer, bgColor.r, bgColor.g, bgColor.b, static_cast<Uint8>(bgColor.a * 0.5f * info.envelope));
+				SDL_SetRenderDrawColor(renderer, bgColor.r, bgColor.g, bgColor.b, static_cast<Uint8>(bgColor.a * 0.5f * vd.envelope));
 				SDL_Rect bgRect{ x, y, width, height };
 				SDL_RenderFillRect(renderer, &bgRect);
 
 				textRenderer.draw(col(), y, FORMAT_STRING(std::setfill(L'0') << std::setw(8) << vid.id()));
 				textRenderer.draw(col(), y, FORMAT_STRING(std::setfill(L'0') << std::setw(2) << ch));
-				textRenderer.draw(col(), y, FORMAT_STRING(std::setfill(L'0') << std::fixed << std::setprecision(4) << info.freq));
-				textRenderer.draw(col(), y, FORMAT_STRING(std::setfill(L'0') << std::fixed << std::setprecision(3) << info.envelope));
-				textRenderer.draw(col(), y, FORMAT_STRING(state2text(info.state)));
+				textRenderer.draw(col(), y, FORMAT_STRING(std::setfill(L'0') << std::fixed << std::setprecision(4) << vd.freq));
+				textRenderer.draw(col(), y, FORMAT_STRING(std::setfill(L'0') << std::fixed << std::setprecision(3) << vd.envelope));
+				textRenderer.draw(col(), y, FORMAT_STRING(state2text(vd.state)));
 			}
 		}
 

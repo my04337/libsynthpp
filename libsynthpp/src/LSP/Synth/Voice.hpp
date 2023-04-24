@@ -20,7 +20,7 @@ public:
 	using EnvelopeGenerator = LSP::Filter::EnvelopeGenerator<float>;
 	using EnvelopeState = LSP::Filter::EnvelopeState;
 
-	struct Info {
+	struct Digest {
 		float freq = 0; // 基本周波数
 		float envelope = 0; // エンベロープジェネレータ出力
 		LSP::Filter::EnvelopeState state = LSP::Filter::EnvelopeState::Free; // エンベロープジェネレータ ステート
@@ -32,7 +32,7 @@ public:
 
 	virtual float update() = 0;
 
-	Info info()const noexcept;
+	Digest digest()const noexcept;
 
 	uint32_t noteNo()const noexcept;
 

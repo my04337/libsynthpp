@@ -33,6 +33,11 @@ public:
 			}
 		}
 	};
+	struct Digest {
+		LSP::MIDI::SystemType systemType;
+
+		std::vector<MidiChannel::Digest> channels;
+	};
 
 public:
 	Luath(uint32_t sampleFreq, LSP::MIDI::SystemType defaultSystemType = LSP::MIDI::SystemType::GS);
@@ -48,8 +53,8 @@ public:
 
 	// 統計情報を取得します
 	Statistics statistics()const;
-	// チャネル情報を取得します
-	std::vector<MidiChannel::Info> channelInfo()const;
+	// 現在の内部状態のダイジェストを取得します
+	Digest digest()const;
 
 protected:
 	void playingThreadMain();

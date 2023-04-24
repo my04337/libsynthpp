@@ -13,7 +13,7 @@ class MidiChannel
 	: non_copy
 {
 public:
-	struct Info {
+	struct Digest {
 		uint8_t ch = 0; // チャネル
 		uint8_t progId = 0; // プログラムID
 		uint8_t bankSelectMSB = 0; // バンクセレクト
@@ -29,7 +29,7 @@ public:
 		bool pedal = false; // ペダルOn/Off
 		bool drum = false; // ドラムか否か
 
-		std::unordered_map<VoiceId, Voice::Info> voiceInfo;
+		std::unordered_map<VoiceId, Voice::Digest> voices;
 	};
 
 	MidiChannel(uint32_t sampleFreq, uint8_t ch, const WaveTable& waveTable);
@@ -48,7 +48,7 @@ public:
 	// ---
 	StereoFrame update();
 	// ---
-	Info info()const;
+	Digest digest()const;
 	// ---
 
 private:

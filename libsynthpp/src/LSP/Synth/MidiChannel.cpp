@@ -243,30 +243,30 @@ StereoFrame MidiChannel::update()
 
 	return ret;
 }
-MidiChannel::Info MidiChannel::info()const
+MidiChannel::Digest MidiChannel::digest()const
 {
-	Info info;
+	Digest digest;
 
-	info.ch = mMidiCh;
-	info.progId = mProgId;
-	info.bankSelectMSB = ccBankSelectMSB;
-	info.bankSelectLSB = ccBankSelectLSB;
-	info.volume = ccVolume; 
-	info.expression = ccExpression;
-	info.pan = ccPan;
-	info.pitchBend = mCalculatedPitchBend;
-	info.attackTime = ccAttackTime;
-	info.decayTime = ccDecayTime;
-	info.releaseTime = ccReleaseTime;
-	info.poly = mVoices.size();
-	info.pedal = ccPedal;
-	info.drum = mIsDrumPart;
+	digest.ch = mMidiCh;
+	digest.progId = mProgId;
+	digest.bankSelectMSB = ccBankSelectMSB;
+	digest.bankSelectLSB = ccBankSelectLSB;
+	digest.volume = ccVolume; 
+	digest.expression = ccExpression;
+	digest.pan = ccPan;
+	digest.pitchBend = mCalculatedPitchBend;
+	digest.attackTime = ccAttackTime;
+	digest.decayTime = ccDecayTime;
+	digest.releaseTime = ccReleaseTime;
+	digest.poly = mVoices.size();
+	digest.pedal = ccPedal;
+	digest.drum = mIsDrumPart;
 
 	for (auto& kvp : mVoices) {
-		info.voiceInfo.emplace(kvp.first, kvp.second->info());
+		digest.voices.emplace(kvp.first, kvp.second->digest());
 	}
 
-	return info;
+	return digest;
 }
 std::unique_ptr<LSP::Synth::Voice> MidiChannel::createVoice(uint8_t noteNo, uint8_t vel)
 {
