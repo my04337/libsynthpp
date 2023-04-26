@@ -10,11 +10,11 @@
 
 // assertマクロ(記述しやすいようあえて小文字化)
 #define lsp_assert(expr) \
-    if(!(expr)) { \
+    if(!(expr)) [[unlikely]] { \
         LSP::Log::f(LOGF(LSP::file_macro_to_filename(__FILE__) << ":" << __LINE__ << " - assert" << "(" << DELAY_MACRO(#expr) << ") failed.")); \
     }
 #define lsp_assert_desc(expr, ...) \
-    if(!(expr)) { \
+    if(!(expr)) [[unlikely]] { \
         LSP::Log::f(LOGF(LSP::file_macro_to_filename(__FILE__) << ":" << __LINE__ << " - assert" << "(" << DELAY_MACRO(#expr) << ") failed " << __VA_ARGS__ ; _ << "].")); \
     }
 
