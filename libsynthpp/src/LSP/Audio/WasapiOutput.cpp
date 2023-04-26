@@ -257,7 +257,12 @@ size_t WasapiOutput::getDeviceBufferFrameCount()const noexcept
 size_t WasapiOutput::getBufferedFrameCount()const noexcept
 {
 	std::lock_guard<decltype(mAudioBufferMutex)> lock(mAudioBufferMutex);
-	return mAudioBuffer.size() / mWaveFormatEx->nChannels;
+	if(mWaveFormatEx) [[likely]] {
+		return mAudioBuffer.size() / mWaveFormatEx->nChannels;
+	} else {
+		return 0;
+	}
+	
 }
 
 // ----------------------------------------------------------------------------

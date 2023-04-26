@@ -46,7 +46,6 @@ MainWindow::MainWindow()
 	, mOutput(SAMPLE_FREQ, 2, Audio::SDLOutput::SampleFormat::Float32)
 #endif
 {
-	lsp_assert(mOutput.start());
 	mSynthesizer.setRenderingCallback([this](LSP::Signal<float>&& sig){onRenderedSignal(std::move(sig));});
 
 	mOscilloScopeWidget.setParam(SAMPLE_FREQ, 2, SAMPLE_FREQ * 250e-4);
@@ -106,6 +105,15 @@ bool MainWindow::initialize()
 	midi_path.append("assets/sample_midi/brambles_vsc3.mid"); // 試験用MIDIファイル
 	loadMidi(midi_path);
 
+	// オーディオ出力 初期化
+	if(!mOutput.start()) {
+		SDL_ShowSimpleMessageBox(
+			SDL_MESSAGEBOX_WARNING,
+			reinterpret_cast<const char*>(u8"オーディオ エラー"),
+			reinterpret_cast<const char*>(u8"出力デバイスのオープンに失敗しました。"),
+			window
+			);
+	}
 	// 生成OK
 	mWindow = window;
 	fail_act_destroy.reset();
