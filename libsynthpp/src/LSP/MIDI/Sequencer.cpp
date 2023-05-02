@@ -1,6 +1,5 @@
 ﻿#include <LSP/MIDI/Sequencer.hpp>
 #include <LSP/MIDI/MessageReceiver.hpp>
-#include <LSP/MIDI/Messages/BasicMessage.hpp>
 #include <LSP/MIDI/Messages/SysExMessage.hpp>
 #include <LSP/Threading/Thread.hpp>
 #include <LSP/Threading/EventSignal.hpp>
@@ -76,7 +75,6 @@ std::optional<uint32_t> read_variable(std::istream& s)
 Sequencer::Sequencer(MessageReceiver& receiver)
 	: mReceiver(receiver)
 	, mPlayThreadAbortFlag(false)
-	, mPlayThreadPausingFlag(false)
 {
 }
 
@@ -93,7 +91,6 @@ void Sequencer::load(Body&& body)
 void Sequencer::start()
 {
 	stop();
-	mPlayThreadPausingFlag = false;
 	mPlayThreadAbortFlag = false;
 
 	Threading::EventSignal sig;
@@ -107,15 +104,6 @@ void Sequencer::start()
 	Threading::setThreadPriority(mPlayThread, Threading::Priority::AboveNormal);
 	sig.wait();
 }
-void Sequencer::pause()
-{
-	mPlayThreadPausingFlag = true;
-}
-
-void Sequencer::resume()
-{
-	mPlayThreadPausingFlag = false;
-}
 
 void Sequencer::stop() 
 {
@@ -128,12 +116,6 @@ bool Sequencer::isPlaying()const
 {
 	return !mPlayThreadAbortFlag;
 }
-
-bool Sequencer::isPausing()const
-{
-	return mPlayThreadPausingFlag;
-}
-
 void Sequencer::reset(SystemType type)
 {
 	std::shared_ptr<Message> msg;
@@ -149,7 +131,7 @@ void Sequencer::reset(SystemType type)
 		break;
 	}
 	if (msg) {
-		mReceiver.onMidiMessageReceived(clock::time_point::min(), msg);
+		mReceiver.onMidiMessageReceived(std::chrono::steady_clock::time_point::min(), msg);
 	}
 }
 
@@ -157,33 +139,11 @@ void Sequencer::playThreadMain(const Body& smfBody)
 {
 	static constexpr std::chrono::milliseconds max_sleep_duration{ 100 };
 
-	std::optional<clock::time_point> pause_begin_time;
 	auto start_time = clock::now();
 	auto next_message_iter = smfBody.cbegin();
 
 	while (true) {
 		if(mPlayThreadAbortFlag) break;
-
-		// 再生中断が指示された場合、再開までメッセージは処理しない
-		if(mPlayThreadPausingFlag) {
-			if(!pause_begin_time.has_value()) {
-				pause_begin_time = clock::now();
-			}
-
-			// 待機中は オールサウンドオフを継続的に投げて音を切っておく
-			// TODO 若干非効率なため、もうすこし効率的な方法を探す
-			for(uint8_t ch = 0; ch <= 0x0F; ++ch) {
-				auto msg = std::make_shared< MIDI::Messages::ControlChange>(ch, 120, 0); // All Sound Off
-				mReceiver.onMidiMessageReceived(clock::time_point::min(), msg);
-			}
-			std::this_thread::sleep_for(max_sleep_duration);
-			continue;
-		}
-		// 再生が再開された場合、中断された時刻からの経過時間を現在の再生位置から巻き戻す
-		if(pause_begin_time.has_value()) {
-			start_time += clock::now() - pause_begin_time.value();
-			pause_begin_time.reset();
-		}
 
 		// 処理時間が現在より手前のメッセージを処理する
 		clock::time_point next_message_time;

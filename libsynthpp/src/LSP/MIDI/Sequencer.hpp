@@ -19,23 +19,14 @@ public:
 	// SMFを開きます
 	void load(Body&& body);
 
-	// 先頭から再生を開始
+	// 先頭から再生を開始/再開します
 	void start();
-
-	// 再生を中断します
-	void pause();
-
-	// 再生を再開します
-	void resume();
 
 	// 再生を停止します
 	void stop();
 
 	// 再生中か否かを取得します
 	bool isPlaying()const;
-
-	// 再生が中断中か否かを返します。
-	bool isPausing()const;
 
 	// システムリセットを送信します
 	void reset(SystemType type);
@@ -46,7 +37,6 @@ private:
 private:
 	MessageReceiver& mReceiver;
 	std::thread mPlayThread;
-	std::atomic_bool mPlayThreadPausingFlag;
 	std::atomic_bool mPlayThreadAbortFlag;
 	Body mSmfBody;
 
