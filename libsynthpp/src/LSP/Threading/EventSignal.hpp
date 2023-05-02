@@ -10,12 +10,20 @@ class EventSignal final
 	: non_copy_move
 {
 public:
+	struct NoLockPolicy{};
+	static inline NoLockPolicy NoLock{};
+
+public:
 	EventSignal() : mReady(false), mDispose(false){}
 
 	void dispose();
 	void set();
-	std::unique_lock<std::mutex> wait();
-	std::pair<std::unique_lock<std::mutex>, bool> try_wait();
+
+	[[nodicard]] std::unique_lock<std::mutex> wait();
+	void wait(NoLockPolicy);
+
+	[[nodicard]] std::pair<std::unique_lock<std::mutex>, bool> try_wait();
+	bool try_wait(NoLockPolicy);
 
 private:
 	// 要求通知イベント

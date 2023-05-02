@@ -102,7 +102,7 @@ void Sequencer::start()
 		mPlayThreadAbortFlag = true;
 	});
 	Threading::setThreadPriority(mPlayThread, Threading::Priority::AboveNormal);
-	sig.wait();
+	sig.wait(Threading::EventSignal::NoLock);
 }
 
 void Sequencer::stop() 
