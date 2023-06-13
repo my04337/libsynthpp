@@ -56,8 +56,8 @@ void SpectrumAnalyzer::draw(SDL_Renderer* renderer, int left_, int top_, int wid
 	const SDL_Rect rect{ left_, top_, width_, height_ };
 
 	// よく使う値を先に計算
-	static const float log_min_freq = std::log10(20); // Hz
-	static const float log_max_freq = std::log10(20000); // Hz
+	static const float log_min_freq = std::log10f(20); // Hz
+	static const float log_max_freq = std::log10f(20000); // Hz
 	static const float log_min_dbfs = -20; // dbFS(power)
 	static const float log_max_dbfs = +60; // dbFS(power)
 	const int left = rect.x;
@@ -71,35 +71,35 @@ void SpectrumAnalyzer::draw(SDL_Renderer* renderer, int left_, int top_, int wid
 	const int mid_y = (top + bottom) / 2;
 
 	const uint32_t buffer_length = mBufferLength;
-	const float frequency_resolution = mSampleFreq / mBufferLength; // 周波数分解能
+	const float frequency_resolution = static_cast<float>(mSampleFreq) / static_cast<float>(mBufferLength); // 周波数分解能
 
 
 	// 対数軸への変換関数
 	auto freq2horz = [&](float freq)->int {
-		if (freq < 1.0e-8) freq = 1.0e-8; // オーバーフロー対策の補正
+		if (freq < 1.0e-8f) freq = 1.0e-8f; // オーバーフロー対策の補正
 		float f = std::log10(freq);
 
-		return std::clamp<int>((f - log_min_freq) / (log_max_freq - log_min_freq) * width, 0, width-1);
+		return std::clamp<int>(static_cast<int>((f - log_min_freq) / (log_max_freq - log_min_freq) * width), 0, width-1);
 	};
 	auto power2vert = [&](float power)->int {
-		if (power < 1.0e-8) power = 1.0e-8; // オーバーフロー対策の補正
-		float dbfs = 10*std::log10(power);
+		if (power < 1.0e-8f) power = 1.0e-8f; // オーバーフロー対策の補正
+		float dbfs = 10*std::log10f(power);
 
-		return std::clamp<int>(height - (dbfs - log_min_dbfs) / (log_max_dbfs - log_min_dbfs) * height, 0, height-1);
+		return std::clamp<int>(static_cast<int>(height - (dbfs - log_min_dbfs) / (log_max_dbfs - log_min_dbfs) * height), 0, height-1);
 	};
 
 
 	// グラフ目盛り描画
 	SDL_SetRenderDrawColor(renderer, 0x80, 0xFF, 0x20, 255);
-	for (int digit = 1; digit < 5; ++digit) {
-		float base_freq = std::pow(10, digit);
+	for (float digit = 1; digit < 5; ++digit) {
+		float base_freq = std::powf(10, digit);
 		for (int i = 0; i < 10; ++i) {
 			int x = left + freq2horz(base_freq * i);
 			SDL_RenderDrawLine(renderer, x, top, x, bottom-1);
 		}
 	}
-	for (int digit = log_min_dbfs/10; digit < log_max_dbfs/10; ++digit) {
-		float base_v = std::pow(10, digit);
+	for (float digit = log_min_dbfs/10; digit < log_max_dbfs/10; ++digit) {
+		float base_v = std::powf(10, digit);
 		for (int i = 0; i < 10; ++i) {
 			int y = top + power2vert(base_v * i);
 			SDL_RenderDrawLine(renderer, left, y, right-1, y);
@@ -120,7 +120,7 @@ void SpectrumAnalyzer::draw(SDL_Renderer* renderer, int left_, int top_, int wid
 		for (size_t i = 0; i < real.size(); ++i) {
 			real[i] = buffer[i] * LSP::Util::FFT::HammingWf(i / (float)real.size());
 		}
-		LSP::Util::FFT::fft1d<float>(real, image, buffer.size(), 0, false);
+		LSP::Util::FFT::fft1d<float>(real, image, static_cast<int>(buffer.size()), 0, false);
 
 		// 各点の位置を求める
 		int num = 0;

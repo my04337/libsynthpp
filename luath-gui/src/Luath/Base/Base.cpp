@@ -44,8 +44,8 @@ Text Text::make(SDL_Renderer* renderer, TTF_Font* font, const std::wstring& text
 	Text text;
 	text.mRenderer = renderer;
 	text.mTexture = SDL_CreateTextureFromSurface(renderer, surface);
-	text.mWidth = surface->w;
-	text.mHeight = surface->h;
+	text.mWidth = static_cast<float>(surface->w);
+	text.mHeight = static_cast<float>(surface->h);
 	return text; // NRVO
 }
 void Text::dispose()
@@ -55,7 +55,7 @@ void Text::dispose()
 		mTexture = nullptr;
 	}
 }
-void Text ::draw(float x, float y)
+void Text::draw(float x, float y)
 {
 	if (!mRenderer || !mTexture) return;
 

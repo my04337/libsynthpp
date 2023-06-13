@@ -48,8 +48,8 @@ MainWindow::MainWindow()
 {
 	mSynthesizer.setRenderingCallback([this](LSP::Signal<float>&& sig){onRenderedSignal(std::move(sig));});
 
-	mOscilloScopeWidget.setParam(SAMPLE_FREQ, 2, SAMPLE_FREQ * 250e-4);
-	mLissajousWidget.setParam(SAMPLE_FREQ, 2, SAMPLE_FREQ * 250e-4);
+	mOscilloScopeWidget.setParam(SAMPLE_FREQ, 2, static_cast<uint32_t>(SAMPLE_FREQ * 250e-4f));
+	mLissajousWidget.setParam(SAMPLE_FREQ, 2, static_cast<uint32_t>(SAMPLE_FREQ * 250e-4f));
 	mSpectrumAnalyzerWidget.setParam(SAMPLE_FREQ, 2, 4096);
 }
 
@@ -90,8 +90,10 @@ bool MainWindow::initialize()
 	// ウィンドウ生成
 	auto window = SDL_CreateWindow(
 		"luath - LibSynth++ Sample MIDI Synthesizer",
-		SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-		SCREEN_WIDTH * mDrawingScale, SCREEN_HEIGHT * mDrawingScale,
+		SDL_WINDOWPOS_UNDEFINED, 
+		SDL_WINDOWPOS_UNDEFINED,
+		static_cast<int>(SCREEN_WIDTH * mDrawingScale), 
+		static_cast<int>(SCREEN_HEIGHT * mDrawingScale),
 		SDL_WINDOW_OPENGL
 	);
 	if(!window) {
@@ -127,7 +129,7 @@ void MainWindow::onDropFile(const SDL_DropEvent& ev)
 {
 	// シーケンサセットアップ
 	if (!ev.file) return;
-	auto midi_path = std::filesystem::u8path(ev.file);
+	auto midi_path = std::filesystem::path(reinterpret_cast<const char8_t*>(ev.file));
 	loadMidi(midi_path);
 }
 void MainWindow::onKeyDown(const SDL_KeyboardEvent& ev)
@@ -141,7 +143,7 @@ void MainWindow::onKeyDown(const SDL_KeyboardEvent& ev)
 void MainWindow::onDpiChanged(float scale)
 {
 	mDrawingScale = scale;
-	SDL_SetWindowSize(mWindow, SCREEN_WIDTH * scale, SCREEN_HEIGHT * scale);
+	SDL_SetWindowSize(mWindow, static_cast<int>(SCREEN_WIDTH * scale), static_cast<int>(SCREEN_HEIGHT * scale));
 }
 void MainWindow::loadMidi(const std::filesystem::path& midi_path) {
 	mSequencer.stop();
@@ -151,7 +153,7 @@ void MainWindow::loadMidi(const std::filesystem::path& midi_path) {
 		auto parsed = MIDI::Parser::parse(midi_path);
 		mSequencer.load(std::move(parsed.second));
 		mSequencer.start();
-	} catch (const MIDI::decoding_exception& e) {
+	} catch (const MIDI::decoding_exception&) {
 		// ロード失敗
 		SDL_ShowSimpleMessageBox(
 			SDL_MESSAGEBOX_ERROR,
@@ -205,7 +207,7 @@ void MainWindow::drawingThreadMain()
 		if(auto new_scale = mDrawingScale.load(); s != new_scale) {
 			s = new_scale;
 
-			auto default_font = app.fontCache().get(12 * s);
+			auto default_font = app.fontCache().get(static_cast<int>(12 * s));
 			textRenderer = FastTextRenderer(renderer, default_font);
 		}
 
