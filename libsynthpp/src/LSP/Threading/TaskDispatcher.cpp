@@ -61,7 +61,7 @@ std::function<void()> TaskDispatcher::deque()
 
 		// 無ければタスクが供給されるまで待機
 		lock.unlock();
-		mStatusChangedEvent.wait();
+		mStatusChangedEvent.wait(EventSignal::NoLock);
 
 		// 待機終了後、abortされていれば中断,そうでなければリトライ
 		if(mAborted) return {};

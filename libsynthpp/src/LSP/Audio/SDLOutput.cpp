@@ -72,7 +72,7 @@ void SDLOutput::initialize(uint32_t sampleFreq, uint32_t channels, SampleFormat 
 void SDLOutput::_write(void* data, size_t len)
 {
 	lsp_assert(valid());
-	SDL_QueueAudio(mAudioDeviceID, data, len);
+	SDL_QueueAudio(mAudioDeviceID, data, static_cast<Uint32>(len));
 }
 bool SDLOutput::start()
 {

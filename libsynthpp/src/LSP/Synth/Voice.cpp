@@ -3,7 +3,7 @@
 using namespace LSP;
 using namespace LSP::Synth;
 
-Voice::Voice(size_t sampleFreq, const EnvelopeGenerator& eg, uint32_t noteNo, float pitchBend, float volume, bool hold)
+Voice::Voice(uint32_t sampleFreq, const EnvelopeGenerator& eg, uint32_t noteNo, float pitchBend, float volume, bool hold)
 	: mSampleFreq(sampleFreq)
 	, mEG(eg)
 	, mNoteNo(noteNo)

@@ -19,10 +19,10 @@ public:
 	void dispose();
 	void set();
 
-	[[nodicard]] std::unique_lock<std::mutex> wait();
+	[[nodiscard]] std::unique_lock<std::mutex> wait();
 	void wait(NoLockPolicy);
 
-	[[nodicard]] std::pair<std::unique_lock<std::mutex>, bool> try_wait();
+	[[nodiscard]] std::pair<std::unique_lock<std::mutex>, bool> try_wait();
 	bool try_wait(NoLockPolicy);
 
 private:

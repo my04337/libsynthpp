@@ -217,7 +217,7 @@ StereoFrame MidiChannel::update()
 				pan = pan * (vpan * 2);
 			} else {
 				// vpan=0.5 : 元のpan, vpan=1.0 : 右
-				pan = 1.0f - (1.0f - pan) * ((1.0 - vpan) * 2);
+				pan = 1.0f - (1.0f - pan) * ((1.0f - vpan) * 2);
 			}
 		}
 

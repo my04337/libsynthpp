@@ -27,7 +27,7 @@ public:
 	};
 
 public:
-	Voice(size_t sampleFreq, const EnvelopeGenerator& eg, uint32_t noteNo, float pitchBend, float volume, bool hold);
+	Voice(uint32_t sampleFreq, const EnvelopeGenerator& eg, uint32_t noteNo, float pitchBend, float volume, bool hold);
 	virtual ~Voice();
 
 	virtual float update() = 0;
@@ -52,7 +52,7 @@ protected:
 	void updateFreq()noexcept;
 
 protected:
-	const size_t mSampleFreq;
+	const uint32_t mSampleFreq;
 	EnvelopeGenerator mEG;
 	uint32_t mNoteNo;
 	bool mPendingNoteOff = false;
@@ -73,7 +73,7 @@ public:
 
 
 public:
-	WaveTableVoice(size_t sampleFreq, const WaveTableGenerator& wg, const EnvelopeGenerator& eg, uint32_t noteNo, float pitchBend, float volume, bool hold)
+	WaveTableVoice(uint32_t sampleFreq, const WaveTableGenerator& wg, const EnvelopeGenerator& eg, uint32_t noteNo, float pitchBend, float volume, bool hold)
 		: Voice(sampleFreq, eg, noteNo, pitchBend, volume, hold)
 		, mWG(wg)
 	{}
