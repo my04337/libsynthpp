@@ -12,6 +12,12 @@ add_library(
 	${srcs}
 )
 
+target_compile_options(
+	libsynthpp PRIVATE
+	$<$<CXX_COMPILER_ID:MSVC>: /W3>
+)
+
+
 target_include_directories(
              libsynthpp
              PUBLIC  src

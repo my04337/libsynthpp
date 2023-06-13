@@ -18,6 +18,11 @@ target_include_directories(
              PUBLIC  src
             )
 
+target_compile_options(
+	luath-gui PRIVATE
+	$<$<CXX_COMPILER_ID:MSVC>: /W3>
+)
+
 target_link_libraries(luath-gui libsynthpp SDL2main SDL2_ttf.lib)
 add_dependencies(luath-gui SDL2_ttf UmeFont)
 
