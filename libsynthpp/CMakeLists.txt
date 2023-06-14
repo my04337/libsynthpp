@@ -24,4 +24,3 @@ target_include_directories(
             )
 			
 target_link_libraries(libsynthpp SDL2.lib)
-add_dependencies(libsynthpp SDL2)

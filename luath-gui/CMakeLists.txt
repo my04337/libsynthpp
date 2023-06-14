@@ -24,7 +24,6 @@ target_compile_options(
 )
 
 target_link_libraries(luath-gui libsynthpp SDL2main SDL2_ttf.lib)
-add_dependencies(luath-gui SDL2_ttf UmeFont)
 
 get_property(LUATH_BINARY_DIR TARGET luath-gui PROPERTY BINARY_DIR )
 get_property(LUATH_SOURCEY_DIR TARGET luath-gui PROPERTY SOURCE_DIR )

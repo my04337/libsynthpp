@@ -14,9 +14,7 @@ set(LSP_SAMPLE_MIDI_PATH "${CMAKE_CURRENT_LIST_DIR}/test/files")
 
 # ---
 
-include(CMakeLists-SDL.txt)
-include(CMakeLists-SDL_ttf.txt)
-include(CMakeLists-UmeFont.txt)
+include(depends.cmake)
 
 # ---
 
