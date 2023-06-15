@@ -10,18 +10,10 @@ FetchContent_Declare(
 	URL_HASH SHA1=f040c352af677161200ec07463efe8d1325135e4
 )
 FetchContent_MakeAvailable(sdl2)
-
-# - include
-set(SDL2_INCLUDE_DIRS ${sdl2_SOURCE_DIR}/include)
-include_directories(${SDL2_INCLUDE_DIRS})
-
-# - lib
-if(${CMAKE_SIZEOF_VOID_P} EQUAL 8)  
-	set(SDL2_LIB_DIRS ${sdl2_SOURCE_DIR}/lib/x64)
-else() 
-	set(SDL2_LIB_DIRS ${sdl2_SOURCE_DIR}/lib/x86)
-endif()
-link_directories(${SDL2_LIB_DIRS})
+find_package(
+	SDL2 REQUIRED
+	HINTS ${sdl2_SOURCE_DIR}
+)
 
 
 ###########################################################
@@ -32,18 +24,10 @@ FetchContent_Declare(
 	URL_HASH SHA1=dee48e9c5184c139aa8bcab34a937d1b3df4f503
 )
 FetchContent_MakeAvailable(sdl2_ttf)
-
-# - include
-set(SDL2_ttf_INCLUDE_DIRS ${sdl2_ttf_SOURCE_DIR}/include)
-
-# - lib
-include_directories(${SDL2_ttf_INCLUDE_DIRS})
-if(${CMAKE_SIZEOF_VOID_P} EQUAL 8)  
-	set(SDL2_ttf_LIB_DIRS ${sdl2_ttf_SOURCE_DIR}/lib/x64)
-else() 
-	set(SDL2_ttf_LIB_DIRS ${sdl2_ttf_SOURCE_DIR}/lib/x86)
-endif()
-link_directories(${SDL2_ttf_LIB_DIRS})
+find_package(
+	SDL2_ttf REQUIRED
+	HINTS ${sdl2_ttf_SOURCE_DIR}
+)
 
 
 ###########################################################

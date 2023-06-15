@@ -13,14 +13,16 @@ add_library(
 )
 
 target_compile_options(
-	libsynthpp PRIVATE
-	$<$<CXX_COMPILER_ID:MSVC>: /W3>
+	libsynthpp 
+	PRIVATE	$<$<CXX_COMPILER_ID:MSVC>: /W3>
 )
 
-
 target_include_directories(
-             libsynthpp
-             PUBLIC  src
-            )
+    libsynthpp
+    PUBLIC src
+)
 			
-target_link_libraries(libsynthpp SDL2.lib)
+target_link_libraries(
+	libsynthpp 
+	PRIVATE	SDL2::SDL2
+)
