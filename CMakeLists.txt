@@ -10,6 +10,11 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zc:rvalueCast /Zc:strictStrings /Zc:inl
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Gy /Gw")
 
+find_program(CPPLINT_EXE cpplint)
+if(NOT CPPLINT_EXE STREQUAL "CPPLINT_EXE-NOTFOUND") 
+	#set(CMAKE_CXX_CPPLINT ${CPPLINT_EXE})
+endif()
+
 set(LSP_SAMPLE_MIDI_PATH "${CMAKE_CURRENT_LIST_DIR}/test/files")
 
 # ---
