@@ -65,7 +65,7 @@ MainWindow::~MainWindow()
 void MainWindow::dispose() 
 {
 	// 再生停止
-	mOutput.stop();
+	auto isOutputStopped = mOutput.stop();
 
 	// シーケンサ停止
 	mSequencer.stop();
@@ -190,7 +190,7 @@ void MainWindow::drawingThreadMain()
 	size_t drawing_time_index = 0;
 
 	// 前回のボイス表示位置 (素直に順番に描画するとちらついて見づらいため表示を揃える)
-	std::unordered_map<VoiceId, int> prevVoicePosMap;
+	std::unordered_map<VoiceId, size_t> prevVoicePosMap;
 	size_t prevVoiceEndPos = 0;
 
 	// 描画ループ開始
@@ -222,7 +222,7 @@ void MainWindow::drawingThreadMain()
 		const auto synthDigest = mSynthesizer.digest();
 		const auto& channelDigests = synthDigest.channels;
 
-		int polyCount = 0;
+		size_t polyCount = 0;
 		for(auto& cd : channelDigests) polyCount += cd.poly;
 
 
@@ -257,15 +257,16 @@ void MainWindow::drawingThreadMain()
 			const float ofsX = 300 * s;
 			const float ofsY = 50 * s;
 
-			constexpr std::array<int, 10> columnWidth{ 25, 75, 40, 40, 60, 35, 75, 25, 25, 25 };
-			float x = ofsX, ci = 0;
+			constexpr std::array<float, 10> columnWidth{ 25, 75, 40, 40, 60, 35, 75, 25, 25, 25 };
+			float x = ofsX;
+			size_t ci = 0;
 			auto col = [&] {
-				int ret = x;
+				float ret = x;
 				x += columnWidth[ci++] * s;
 				return ret;
 			};
-			int y = ofsY;
-			constexpr float unscaled_width = std::accumulate(columnWidth.begin(), columnWidth.end(), 0);
+			float y = ofsY;
+			constexpr float unscaled_width = std::accumulate(columnWidth.begin(), columnWidth.end(), 0.f);
 			const float width = unscaled_width * s;
 			const float height = 15 * s;
 
@@ -308,8 +309,8 @@ void MainWindow::drawingThreadMain()
 
 		// ボイス情報
 		{
-			const int ofsX = 10 * s;
-			const int ofsY = 50 * s;
+			const float ofsX = 10 * s;
+			const float ofsY = 50 * s;
 
 			// 全チャネルのボイス情報を統合
 			std::unordered_map<VoiceId, std::pair</*ch*/uint8_t, LSP::Synth::Voice::Digest>> unsortedVoiceDigests;
@@ -344,10 +345,11 @@ void MainWindow::drawingThreadMain()
 			}
 
 			// 描画
-			constexpr std::array<int, 5> columnWidth{ 60, 25, 60, 50, 40 };
-			int x = ofsX, ci = 0;
+			constexpr std::array<float, 5> columnWidth{ 60, 25, 60, 50, 40 };
+			float x = ofsX;
+			size_t ci = 0;
 			auto col = [&] {
-				int ret = x;
+				float ret = x;
 				x += columnWidth[ci++] * s;
 				return ret;
 			};
@@ -362,10 +364,10 @@ void MainWindow::drawingThreadMain()
 				default: return L"Unknown";
 				}
 			};
-			int y = ofsY;
-			constexpr int unscaled_width = std::accumulate(columnWidth.begin(), columnWidth.end(), 0);
-			const int width = unscaled_width * s;
-			const int height = 15 * s;
+			float y = ofsY;
+			constexpr float unscaled_width = std::accumulate(columnWidth.begin(), columnWidth.end(), 0.f);
+			const float width = unscaled_width * s;
+			const float height = 15 * s;
 			{
 				x = ofsX;
 				ci = 0;
@@ -384,8 +386,8 @@ void MainWindow::drawingThreadMain()
 
 				const auto bgColor = CHANNEL_COLOR[ch];
 				SDL_SetRenderDrawColor(renderer, bgColor.r, bgColor.g, bgColor.b, static_cast<Uint8>(bgColor.a * 0.5f * vd.envelope));
-				SDL_Rect bgRect{ x, y, width, height };
-				SDL_RenderFillRect(renderer, &bgRect);
+				SDL_FRect bgRect{ x, y, width, height };
+				SDL_RenderFillRectF(renderer, &bgRect);
 
 				textRenderer.draw(col(), y, FORMAT_STRING(std::setfill(L'0') << std::setw(8) << vid.id()));
 				textRenderer.draw(col(), y, FORMAT_STRING(std::setfill(L'0') << std::setw(2) << ch));
@@ -399,10 +401,28 @@ void MainWindow::drawingThreadMain()
 
 		// 波形情報
 		{
-			const int margin = 5; // unsecaled
-			mLissajousWidget.draw(renderer, (350 + margin)*s, (340 + margin)* s, (150 - margin * 2)* s, (150 - margin * 2)* s);
-			mOscilloScopeWidget.draw(renderer, (500 + margin)* s, (340 + margin)* s, (300 - margin * 2)* s, (150 - margin * 2)* s);
-			mSpectrumAnalyzerWidget.draw(renderer, (350 + margin)* s, (490 + margin)* s, (450 - margin * 2)* s, (150 - margin * 2)* s);
+			const float margin = 5; // unsecaled
+			mLissajousWidget.draw(
+				renderer, 
+				static_cast<int>((350 + margin)* s),
+				static_cast<int>((340 + margin)* s),
+				static_cast<int>((150 - margin * 2) * s), 
+				static_cast<int>((150 - margin * 2) * s)
+			);
+			mOscilloScopeWidget.draw(
+				renderer, 
+				static_cast<int>((500 + margin)* s), 
+				static_cast<int>((340 + margin)* s),
+				static_cast<int>((300 - margin * 2) * s),
+				static_cast<int>((150 - margin * 2) * s)
+			);
+			mSpectrumAnalyzerWidget.draw(
+				renderer, 
+				static_cast<int>((350 + margin)* s), 
+				static_cast<int>((490 + margin)* s),
+				static_cast<int>((450 - margin * 2)* s),
+				static_cast<int>((150 - margin * 2)* s)
+			);
 		}
 
 		// 描画終了
