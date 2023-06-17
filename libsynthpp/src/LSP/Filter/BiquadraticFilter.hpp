@@ -68,9 +68,9 @@ public:
 
 
 	// パラメータ設定 : ローパスフィルタ
-	void setLopassParam(parameter_type sampleFreq, parameter_type cutOffFreq, parameter_type Q)
+	void setLopassParam(uint32_t sampleFreq, parameter_type cutOffFreq, parameter_type Q)
 	{
-		const parameter_type w0    = 2 * Math::PI<parameter_type> * cutOffFreq / sampleFreq;
+		const parameter_type w0    = 2 * Math::PI<parameter_type> * cutOffFreq / static_cast<parameter_type>(sampleFreq);
 		const parameter_type sinw0 = sin(w0);
 		const parameter_type cosw0 = cos(w0);
 		const parameter_type alpha = sinw0 / (2 * Q);
@@ -82,13 +82,13 @@ public:
 		a1 = -2 * cosw0;
 		a2 = 1 - alpha;
 	}
-	static BiquadraticFilter MakeLopass(parameter_type sampleFreq, parameter_type cutOffFreq, parameter_type Q)
+	static BiquadraticFilter MakeLopass(uint32_t sampleFreq, parameter_type cutOffFreq, parameter_type Q)
 	{
 		BiquadraticFilter bqf; bqf.setLopassParam(sampleFreq, cutOffFreq, Q); return bqf;
 	}
 
 	// パラメータ設定 : ハイパスフィルタ
-	void setHighpassParam(parameter_type sampleFreq, parameter_type cutOffFreq, parameter_type Q)
+	void setHighpassParam(uint32_t sampleFreq, parameter_type cutOffFreq, parameter_type Q)
 	{
 		const parameter_type w0    = 2 * Math::PI<parameter_type> * cutOffFreq / sampleFreq;
 		const parameter_type sinw0 = sin(w0);
@@ -102,15 +102,15 @@ public:
 		a1 = -2 * cosw0;
 		a2 = 1 - alpha;
 	}
-	static BiquadraticFilter MakeHighpass(parameter_type sampleFreq, parameter_type cutOffFreq, parameter_type Q)
+	static BiquadraticFilter MakeHighpass(uint32_t sampleFreq, parameter_type cutOffFreq, parameter_type Q)
 	{
 		BiquadraticFilter bqf; bqf.setHighpassParam(sampleFreq, cutOffFreq, Q); return bqf;
 	}
 
 	// パラメータ設定 : バンドパス1
-	void setBandpass1Param(parameter_type sampleFreq, parameter_type centerFreq, parameter_type BW)
+	void setBandpass1Param(uint32_t sampleFreq, parameter_type centerFreq, parameter_type BW)
 	{
-		const parameter_type w0    = 2 * Math::PI<parameter_type> * centerFreq / sampleFreq;
+		const parameter_type w0    = 2 * Math::PI<parameter_type> * centerFreq / static_cast<parameter_type>(sampleFreq);
 		const parameter_type sinw0 = sin(w0);
 		const parameter_type cosw0 = cos(w0);
 		const parameter_type alpha = 2 * sinw0 / BW;
@@ -124,9 +124,9 @@ public:
 	}
 
 	// パラメータ設定 : バンドパス2
-	void setBandpass2Param(parameter_type sampleFreq, parameter_type centerFreq, parameter_type BW)
+	void setBandpass2Param(uint32_t sampleFreq, parameter_type centerFreq, parameter_type BW)
 	{
-		const parameter_type w0    = 2 * Math::PI<parameter_type> * centerFreq / sampleFreq;
+		const parameter_type w0    = 2 * Math::PI<parameter_type> * centerFreq / static_cast<parameter_type>(sampleFreq);
 		const parameter_type sinw0 = sin(w0);
 		const parameter_type cosw0 = cos(w0);
 		const parameter_type log2  = log((parameter_type)2);
@@ -141,9 +141,9 @@ public:
 	}
 
 	// パラメータ設定 : バンドストップ
-	void setBandstopParam(parameter_type sampleFreq, parameter_type centerFreq, parameter_type BW)
+	void setBandstopParam(uint32_t sampleFreq, parameter_type centerFreq, parameter_type BW)
 	{
-		const parameter_type w0    = 2 * Math::PI<parameter_type> * centerFreq / sampleFreq;
+		const parameter_type w0    = 2 * Math::PI<parameter_type> * centerFreq / static_cast<parameter_type>(sampleFreq);
 		const parameter_type sinw0 = sin(w0);
 		const parameter_type cosw0 = cos(w0);
 		const parameter_type log2  = log((parameter_type)2);
@@ -158,9 +158,9 @@ public:
 	}
 
 	// パラメータ設定 : オールパス
-	void setAllpassParam(parameter_type sampleFreq, parameter_type cutOffFreq, parameter_type BW)
+	void setAllpassParam(uint32_t sampleFreq, parameter_type cutOffFreq, parameter_type BW)
 	{
-		const parameter_type w0    = 2 * Math::PI<parameter_type> * cutOffFreq / sampleFreq;
+		const parameter_type w0    = 2 * Math::PI<parameter_type> * cutOffFreq / static_cast<parameter_type>(sampleFreq);
 		const parameter_type sinw0 = sin(w0);
 		const parameter_type cosw0 = cos(w0);
 		const parameter_type log2  = log((parameter_type)2);
@@ -175,9 +175,9 @@ public:
 	}
 
 	// パラメータ設定 : ピーキング
-	void setPeakingParam(parameter_type sampleFreq, parameter_type centerFreq, parameter_type BW, parameter_type gain)
+	void setPeakingParam(uint32_t sampleFreq, parameter_type centerFreq, parameter_type BW, parameter_type gain)
 	{
-		const parameter_type w0    = 2 * Math::PI<parameter_type> * centerFreq / sampleFreq;
+		const parameter_type w0    = 2 * Math::PI<parameter_type> * centerFreq / static_cast<parameter_type>(sampleFreq);
 		const parameter_type sinw0 = sin(w0);
 		const parameter_type cosw0 = cos(w0);
 		const parameter_type log2  = log((parameter_type)2);
@@ -193,9 +193,9 @@ public:
 	}
 
 	// パラメータ設定 : ローシェルフ
-	void setLoshelfParam(parameter_type sampleFreq, parameter_type cutOffFreq, parameter_type S, parameter_type gain)
+	void setLoshelfParam(uint32_t sampleFreq, parameter_type cutOffFreq, parameter_type S, parameter_type gain)
 	{
-		const parameter_type w0    = 2 * Math::PI<parameter_type> * cutOffFreq / sampleFreq;
+		const parameter_type w0    = 2 * Math::PI<parameter_type> * cutOffFreq / static_cast<parameter_type>(sampleFreq);
 		const parameter_type sinw0 = sin(w0);
 		const parameter_type cosw0 = cos(w0);
 		const parameter_type A     = sqrt(pow((parameter_type)10, gain / 20));
@@ -211,9 +211,9 @@ public:
 	}
 
 	// パラメータ設定 : ハイシェルフ
-	void setHighshelfParam(parameter_type sampleFreq, parameter_type cutOffFreq, parameter_type S, parameter_type gain)
+	void setHighshelfParam(uint32_t sampleFreq, parameter_type cutOffFreq, parameter_type S, parameter_type gain)
 	{
-		const parameter_type w0    = 2 * Math::PI<parameter_type> * cutOffFreq / sampleFreq;
+		const parameter_type w0    = 2 * Math::PI<parameter_type> * cutOffFreq / static_cast<parameter_type>(sampleFreq);
 		const parameter_type sinw0 = sin(w0);
 		const parameter_type cosw0 = cos(w0);
 		const parameter_type A     = sqrt(pow((parameter_type)10, gain / 20));
