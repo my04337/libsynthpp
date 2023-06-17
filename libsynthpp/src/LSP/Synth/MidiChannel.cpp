@@ -331,8 +331,9 @@ std::unique_ptr<LSP::Synth::Voice> MidiChannel::createVoice(uint8_t noteNo, uint
 		// MEMO 人間の聴覚ではボリュームは対数的な特性を持つため、ベロシティを指数的に補正する
 		// TODO sustain_levelで除算しているのは旧LibSynth++からの移植コード。 補正が不要になったら削除すること
 		float volume = powf(10.f, -20.f * (1.f - vel / 127.f) / 20.f) * preamp / ((sustain_level > 0.8f && sustain_level != 0.f) ? sustain_level : 0.8f);
+		float cutoff_level = 0.001f;
 
-		eg.setParam((float)mSampleFreq, curveExp3, attack_time, hold_time, decay_time, sustain_level, 0.f, release_time);
+		eg.setParam((float)mSampleFreq, curveExp3, attack_time, hold_time, decay_time, sustain_level, 0.f, release_time, cutoff_level);
 		auto wg = mWaveTable.get(WaveTable::Preset::SquareWave);
 		auto voice = std::make_unique<LSP::Synth::WaveTableVoice>(mSampleFreq, wg, eg, noteNo, mCalculatedPitchBend, volume, ccPedal);
 		return voice;
@@ -342,8 +343,9 @@ std::unique_ptr<LSP::Synth::Voice> MidiChannel::createVoice(uint8_t noteNo, uint
 		// MEMO 人間の聴覚ではボリュームは対数的な特性を持つため、ベロシティを指数的に補正する
 		// TODO sustain_levelで除算しているのは旧LibSynth++からの移植コード。 補正が不要になったら削除すること
 		float volume = powf(10.f, -20.f * (1.f - vel / 127.f) / 20.f);
+		float cutoff_level = 0.001f;
 
-		eg.setParam((float)mSampleFreq, curveExp3, 0.05f, 0.0f, 0.2f, 0.25f, -1.0f, 0.05f);
+		eg.setParam((float)mSampleFreq, curveExp3, 0.05f, 0.0f, 0.2f, 0.25f, -1.0f, 0.05f, cutoff_level);
 		auto wg = mWaveTable.get(WaveTable::Preset::WhiteNoise);
 		auto voice = std::make_unique<LSP::Synth::WaveTableVoice>(mSampleFreq, wg, eg, noteNo, mCalculatedPitchBend, volume, ccPedal);
 		voice->setPan(LSP::Synth::Instrument::getDefaultDrumPan(noteNo));

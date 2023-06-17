@@ -83,7 +83,7 @@ public:
 		float release_time				// sec
 	)
 	{
-		setParam(sampleFreq, {}, attack_time, 0, decay_time, sustain_level, 0, release_time);
+		setParam(sampleFreq, {}, attack_time, 0, decay_time, sustain_level, 0, release_time, std::numeric_limits<parameter_type>::epsilon());
 	}
 	void setParam(
 		uint32_t sampleFreq,			// Hz
@@ -93,7 +93,8 @@ public:
 		float decay_time,				// sec
 		parameter_type sustain_level,	// level
 		float fade_slope,				// Linear : level/sec, Exp : dBFS/sec
-		float release_time				// sec)
+		float release_time,				// sec
+		parameter_type cutoff_level		// level
 	)
 	{
 		// 各種パラメータの範囲調整 & サンプル単位に変換 
@@ -104,6 +105,7 @@ public:
 
 		mSustainLevel = std::clamp<parameter_type>(sustain_level, 0, 1);
 		mFadeSlope    = std::min<parameter_type>(fade_slope, 0) / sampleFreq; // 減衰率なので負の値
+		mCutOffLevel  = std::clamp<parameter_type>(cutoff_level, 0, 1);
 
 		mCurve = curve;
 	}
@@ -173,8 +175,6 @@ public:
 	// エンベロープを計算し、状態を更新します
 	parameter_type update()
 	{
-		constexpr auto epsilon = std::numeric_limits<parameter_type>::epsilon();
-
 		auto v = envelope();
 
 		++mTime;
@@ -209,17 +209,18 @@ public:
 			}
 		case EnvelopeState::Fade:
 			// フェード中
-			if (v < epsilon) {
-				// エンベロープ0 : ノートオフを待たずに止音
+			if (v <= mCutOffLevel) {
+				// 音量が規定値を下回った場合 : ノートオフを待たずに止音
 				switchToFree();
 			}
 			break;
 		case EnvelopeState::Release: 
 			// リリース中
-			if(mTime < mReleaseTime) {
-				break;
-			} else {
+			if(mTime >= mReleaseTime) {
 				// リリース時間終了 => 止音
+				switchToFree();
+			} else if(v <= mCutOffLevel) {
+				// 音量が規定値を下回った場合 : ノートオフを待たずに止音
 				switchToFree();
 			}
 			break;
@@ -301,6 +302,7 @@ private:
 	parameter_type mSustainLevel;	// level (0 <= x <= 1)
 	parameter_type mFadeSlope;		// Linear : level/sample, Exp : dBFS/sample
 	uint64_t mReleaseTime;			// sample
+	parameter_type mCutOffLevel;	// level (0 <= x <= 1)
 };
 
 
