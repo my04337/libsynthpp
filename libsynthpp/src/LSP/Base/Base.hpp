@@ -1,32 +1,33 @@
 ﻿#pragma once
 
 // --- 基本的なヘッダ類 ---
-#include <string>
-#include <string_view>
-#include <list>
-#include <vector>
-#include <tuple>
-#include <deque>
-#include <unordered_set>
-#include <unordered_map>
-#include <any>
-#include <variant>
-#include <optional>
-#include <chrono>
-#include <limits>
-#include <memory>
-#include <atomic>
-#include <mutex>
-#include <condition_variable>
-#include <memory_resource>
-#include <utility>
 #include <algorithm>
-#include <functional>
-#include <typeinfo>
-#include <typeindex>
-#include <type_traits>
-#include <filesystem>
+#include <any>
+#include <array>
+#include <atomic>
+#include <chrono>
 #include <concepts>
+#include <condition_variable>
+#include <deque>
+#include <filesystem>
+#include <functional>
+#include <limits>
+#include <list>
+#include <memory_resource>
+#include <memory>
+#include <mutex>
+#include <optional>
+#include <string_view>
+#include <string>
+#include <tuple>
+#include <type_traits>
+#include <typeindex>
+#include <typeinfo>
+#include <unordered_map>
+#include <unordered_set>
+#include <utility>
+#include <variant>
+#include <vector>
 
 
 // --- 基本的なマクロ類 ---

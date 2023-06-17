@@ -51,10 +51,10 @@ void MidiChannel::resetParameters()
 	ccDecayTime = 64;
 	ccReleaseTime = 64;
 
-	rpnNull = false;
-	rpnPitchBendSensitibity = 2;
-
 	resetParameterNumberState();
+
+	ccRPNs.clear();
+	ccNRPNs.clear();
 }
 
 void MidiChannel::resetParameterNumberState()
@@ -149,6 +149,7 @@ void MidiChannel::controlChange(uint8_t ctrlNo, uint8_t value)
 		break;
 	case 100: // RPN(LSB)
 		ccRPN_LSB = value;
+		apply_RPN_NRPN_state = true; // RPNヌルはこのタイミングで適用する
 		break;
 	case 101: // RPN(MSB)
 		resetParameterNumberState();
@@ -176,17 +177,36 @@ void MidiChannel::controlChange(uint8_t ctrlNo, uint8_t value)
 		break;
 	}
 
-	// RPN/NRPNの受付が禁止されている場合、適用しない
-	if (rpnNull) {
-		apply_RPN_NRPN_state = false;
-	}
-
 	// RPN/NRPN 適用
 	if (apply_RPN_NRPN_state) {
-		if (ccRPN_MSB == 0 && ccRPN_LSB == 0 && ccDE_MSB.has_value()) {
-			// ピッチベンドセンシティビティ: MSBのみ使用
-			rpnPitchBendSensitibity = ccDE_MSB.value();
-			updatePitchBend();
+		if(ccRPN_MSB == 0x7F && ccRPN_MSB == 0x7F) {
+			// RPNヌル
+			resetParameterNumberState();
+		}
+		else if(ccDE_MSB || ccDE_LSB) {
+			if(ccRPN_MSB && ccRPN_LSB) {
+				auto key = (static_cast<uint16_t>(*ccRPN_MSB) << 8) | *ccRPN_LSB;
+				if(ccDE_LSB) {
+					ccRPNs[key] = (0xFF00 & ccRPNs[key]) | static_cast<uint16_t>(*ccDE_MSB);
+				}
+				else {
+					ccRPNs[key] = static_cast<uint16_t>(*ccDE_MSB) << 8;
+				}
+			}
+			if(ccNRPN_MSB && ccNRPN_LSB) {
+				auto key = (static_cast<uint16_t>(*ccNRPN_MSB) << 8) | *ccNRPN_LSB;
+				if(ccDE_LSB) {
+					ccNRPNs[key] = (0xFF00 & ccNRPNs[key]) | static_cast<uint16_t>(*ccDE_MSB);
+				}
+				else {
+					ccNRPNs[key] = static_cast<uint16_t>(*ccDE_MSB) << 8;
+				}
+			}
+
+			// RPN(即時反映): ピッチベンドセンシティビティ
+			if(ccRPN_MSB == 0 && ccRPN_LSB == 0 && ccDE_MSB) {
+				updatePitchBend();
+			}
 		}
 	}
 
@@ -263,20 +283,24 @@ MidiChannel::Digest MidiChannel::digest()const
 	digest.pedal = ccPedal;
 	digest.drum = mIsDrumPart;
 
-	for (auto& kvp : mVoices) {
-		digest.voices.emplace(kvp.first, kvp.second->digest());
+	for (auto& [id, voice] : mVoices) {
+		auto& eg = voice->envolopeGenerator();
+		digest.voices.emplace(id, voice->digest());
 	}
 
 	return digest;
 }
 std::unique_ptr<LSP::Synth::Voice> MidiChannel::createVoice(uint8_t noteNo, uint8_t vel)
 {
-	const float volume = (vel / 127.0f);
 	static const LSP::Filter::EnvelopeGenerator<float>::Curve curveExp3(3.0f);
 	Voice::EnvelopeGenerator eg;
-	auto makeWaveTableVoice = [&](size_t waveTableId) {
-		auto wg = mWaveTable.get(waveTableId);
-		return std::make_unique<LSP::Synth::WaveTableVoice>(mSampleFreq, wg, eg, noteNo, mCalculatedPitchBend, volume, ccPedal);
+
+	auto adjustADR = [&](float& attack_time, float& decay_time, float& release_time) {
+		if(mSystemType != SystemType::GM1) {
+			attack_time  *= powf(10.0f, (ccAttackTime  / 127.f - 0.5f) * 4.556f);
+			decay_time   *= powf(10.0f, (ccDecayTime   / 127.f - 0.5f) * 4.556f);
+			release_time *= powf(10.0f, (ccReleaseTime / 127.f - 0.5f) * 4.556f);
+		}
 	};
 
 	/*
@@ -289,127 +313,38 @@ std::unique_ptr<LSP::Synth::Voice> MidiChannel::createVoice(uint8_t noteNo, uint
 	*	release_time	// sec)
 	*/
 	
+
 	if (!mIsDrumPart) {
 		// 参考 : http://www2u.biglobe.ne.jp/~rachi/midinst.htm
-		if (mProgId >= 0 && mProgId <= 7) {
-			// ピアノ系
-			eg.setParam((float)mSampleFreq, curveExp3, 0.02f, 0.0f, 0.2f, 0.4f, -15.0f, 0.05f);
-			return makeWaveTableVoice(WaveTable::Preset::SquareWave);
-		} else if(mProgId >= 8 && mProgId <= 15) {
-			// 音階付き打楽器系
-			eg.setParam((float)mSampleFreq, curveExp3, 0.01f, 0.0f, 0.2f, 0.3f, -10.0f, 0.05f);
-			return makeWaveTableVoice(WaveTable::Preset::SquareWave);
-		} else if (mProgId >= 16 && mProgId <= 23) {
-			// オルガン系
-			eg.setParam((float)mSampleFreq, curveExp3, 0.03f, 0.0f, 0.2f, 0.6f, -0.0f, 0.05f);
-			return makeWaveTableVoice(WaveTable::Preset::SquareWave);
-		} else if (mProgId >= 24 && mProgId <= 28) {
-			// ギター系 : 減衰早い
-			eg.setParam((float)mSampleFreq, curveExp3, 0.02f, 0.0f, 0.2f, 0.4f, -15.0f, 0.05f);
-			return makeWaveTableVoice(WaveTable::Preset::SquareWave);
-		} else if (mProgId >= 29 && mProgId <= 31) {
-			// ギター系 : 減衰遅い
-			eg.setParam((float)mSampleFreq, curveExp3, 0.02f, 0.0f, 0.2f, 0.4f, -10.0f, 0.05f);
-			return makeWaveTableVoice(WaveTable::Preset::SquareWave);
-		} else if (mProgId >= 32 && mProgId <= 38) {
-			// ベース系
-			eg.setParam((float)mSampleFreq, curveExp3, 0.02f, 0.0f, 0.2f, 0.4f, -10.0f, 0.05f);
-			return makeWaveTableVoice(WaveTable::Preset::SquareWave);
-		} else if (mProgId >= 40 && mProgId <= 47) {
-			// ストリングス系
-			eg.setParam((float)mSampleFreq, curveExp3, 0.05f, 0.0f, 0.2f, 0.6f, -0.0f, 0.05f);
-			return makeWaveTableVoice(WaveTable::Preset::SquareWave);
-		} else if (mProgId == 48 || mProgId >= 52 && mProgId <= 54) {
-			// アンサンブル系 : 立ち上がり早い
-			eg.setParam((float)mSampleFreq, curveExp3, 0.05f, 0.0f, 0.2f, 0.6f, -0.0f, 0.05f);
-			return makeWaveTableVoice(WaveTable::Preset::SquareWave);
-		} else if (mProgId >= 49 && mProgId <= 51) {
-			// アンサンブル系 : 立ち上がり遅い
-			eg.setParam((float)mSampleFreq, curveExp3, 0.30f, 0.0f, 0.2f, 0.6f, -0.0f, 0.20f);
-			return makeWaveTableVoice(WaveTable::Preset::SquareWave);
-		} else if (mProgId == 55) {
-			// アンサンブル系 : オーケストラヒット
-			eg.setParam((float)mSampleFreq, curveExp3, 0.10f, 0.0f, 0.2f, 0.4f, -30.0f, 0.05f);
-			return makeWaveTableVoice(WaveTable::Preset::SquareWave);
-		} else if (mProgId >= 64 && mProgId <= 71) {
-			// ブラス系
-			eg.setParam((float)mSampleFreq, curveExp3, 0.05f, 0.0f, 0.2f, 0.6f, -0.0f, 0.05f);
-			return makeWaveTableVoice(WaveTable::Preset::SquareWave);
-		} else if (mProgId >= 72 && mProgId <= 79) {
-			// リード系
-			eg.setParam((float)mSampleFreq, curveExp3, 0.05f, 0.0f, 0.2f, 0.6f, -0.0f, 0.05f);
-			return makeWaveTableVoice(WaveTable::Preset::SquareWave);
-		} else if (mProgId >= 72 && mProgId <= 79) {
-			// 笛系
-			eg.setParam((float)mSampleFreq, curveExp3, 0.05f, 0.0f, 0.2f, 0.6f, -0.0f, 0.05f);
-			return makeWaveTableVoice(WaveTable::Preset::SquareWave);
-		} else if (mProgId >= 80 && mProgId <= 87) {
-			// シンセサイザ系1
-			eg.setParam((float)mSampleFreq, curveExp3, 0.03f, 0.0f, 0.2f, 0.6f, -0.0f, 0.05f);
-			return makeWaveTableVoice(WaveTable::Preset::SquareWave);
-		} else if (mProgId == 88 || mProgId == 96 || mProgId == 98) {
-			// シンセサイザ系2/3 : 打楽器寄り
-			eg.setParam((float)mSampleFreq, curveExp3, 0.01f, 0.0f, 0.2f, 0.3f, -10.0f, 0.05f);
-			return makeWaveTableVoice(WaveTable::Preset::SquareWave);
-		} else if (mProgId == 89 || mProgId == 92 || mProgId == 93 || mProgId == 95 || mProgId == 97 || mProgId == 101) {
-			// シンセサイザ系2/3 : 立ち上がり遅い
-			eg.setParam((float)mSampleFreq, curveExp3, 0.30f, 0.0f, 0.2f, 0.6f, -0.0f, 0.20f);
-			return makeWaveTableVoice(WaveTable::Preset::SquareWave);
-		} else if (mProgId == 90 || mProgId == 94 || mProgId == 99 || mProgId == 100) {
-			// シンセサイザ系2/3 : ベース系音色
-			eg.setParam((float)mSampleFreq, curveExp3, 0.02f, 0.0f, 0.2f, 0.4f, -10.0f, 0.05f);
-			return makeWaveTableVoice(WaveTable::Preset::SquareWave);
-		} else if (mProgId == 91 || mProgId == 102 || mProgId == 103) {
-			// シンセサイザ系2/3 : ストリングス系
-			eg.setParam((float)mSampleFreq, curveExp3, 0.05f, 0.0f, 0.2f, 0.6f, -0.0f, 0.05f);
-			return makeWaveTableVoice(WaveTable::Preset::SquareWave);
-		} else if (mProgId >= 104 && mProgId <= 105) {
-			// 民族楽器 : ベース系 減衰遅い
-			eg.setParam((float)mSampleFreq, curveExp3, 0.02f, 0.0f, 0.2f, 0.4f, -10.0f, 0.05f);
-			return makeWaveTableVoice(WaveTable::Preset::SquareWave);
-		} else if (mProgId >= 106 && mProgId <= 108) {
-			// 民族楽器 : ベース系 : 減衰早い
-			eg.setParam((float)mSampleFreq, curveExp3, 0.02f, 0.0f, 0.2f, 0.4f, -20.0f, 0.05f);
-			return makeWaveTableVoice(WaveTable::Preset::SquareWave);
-		} else if (mProgId >= 109 && mProgId <= 111) {
-			// 民族楽器 : ストリングス, 笛系系
-			eg.setParam((float)mSampleFreq, curveExp3, 0.05f, 0.0f, 0.2f, 0.6f, -0.0f, 0.05f);
-			return makeWaveTableVoice(WaveTable::Preset::SquareWave);
-		} else if (mProgId == 112 || mProgId == 114 || mProgId >= 116 && mProgId <= 118) {
-			// 打楽器系 : 減衰早い
-			eg.setParam((float)mSampleFreq, curveExp3, 0.01f, 0.0f, 0.2f, 0.3f, -10.0f, 0.05f);
-			return makeWaveTableVoice(WaveTable::Preset::SquareWave);
-		} else if (mProgId == 113 || mProgId == 115) {
-			// 打楽器系 : 減衰とても早い
-			eg.setParam((float)mSampleFreq, curveExp3, 0.01f, 0.0f, 0.3f, 0.0f, -00.0f, 0.05f);
-			return makeWaveTableVoice(WaveTable::Preset::SquareWave);
-		} else if (mProgId == 119) {
-			// 打楽器系 : リバースシンバル
-			eg.setParam((float)mSampleFreq, curveExp3, 1.2f, 0.0f, 0.1f, 0.0f, -00.0f, 0.05f);
-			return makeWaveTableVoice(WaveTable::Preset::WhiteNoise);
-		} else if (mProgId == 120 || mProgId == 121 || mProgId == 127) {
-			// 効果音系 : ノイズ, 減衰とても早い
-			eg.setParam((float)mSampleFreq, curveExp3, 0.01f, 0.0f, 0.3f, 0.0f, -00.0f, 0.05f);
-			return makeWaveTableVoice(WaveTable::Preset::WhiteNoise);
-		} else if (mProgId >= 122 && mProgId <= 126) {
-			// 効果音系 : ノイズ とてもゆっくり
-			eg.setParam((float)mSampleFreq, curveExp3, 1.2f, 0.0f, 0.5f, 0.6f, -0.0f, 0.50f);
-			return makeWaveTableVoice(WaveTable::Preset::WhiteNoise);
-		} else {
-			eg.setParam((float)mSampleFreq, curveExp3, 0.05f, 0.0f, 0.2f, 0.25f, -1.0f, 0.05f);
-			return makeWaveTableVoice(WaveTable::Preset::SquareWave);
-		}
+		auto [preamp, attack_time, hold_time, decay_time, sustain_level, release_time] 
+			= LSP::Synth::Instrument::getDefaultMelodyEnvelopeParams(mProgId, 0);
+		adjustADR(attack_time, decay_time, release_time);
+
+		// MEMO 人間の聴覚ではボリュームは対数的な特性を持つため、ベロシティを指数的に補正する
+		// TODO sustain_levelで除算しているのは旧LibSynth++からの移植コード。 補正が不要になったら削除すること
+		float volume = powf(10.f, -20.f * (1.f - vel / 127.f) / 20.f) * preamp / ((sustain_level > 0.8f && sustain_level != 0.f) ? sustain_level : 0.8f);
+
+		eg.setParam((float)mSampleFreq, curveExp3, attack_time, hold_time, decay_time, sustain_level, 0.f, release_time);
+		auto wg = mWaveTable.get(WaveTable::Preset::SquareWave);
+		auto voice = std::make_unique<LSP::Synth::WaveTableVoice>(mSampleFreq, wg, eg, noteNo, mCalculatedPitchBend, volume, ccPedal);
+		return voice;
 	} else {
 		// TODO ドラム用音色を用意する
+		
+		// MEMO 人間の聴覚ではボリュームは対数的な特性を持つため、ベロシティを指数的に補正する
+		// TODO sustain_levelで除算しているのは旧LibSynth++からの移植コード。 補正が不要になったら削除すること
+		float volume = powf(10.f, -20.f * (1.f - vel / 127.f) / 20.f);
+
 		eg.setParam((float)mSampleFreq, curveExp3, 0.05f, 0.0f, 0.2f, 0.25f, -1.0f, 0.05f);
-		auto voice = makeWaveTableVoice(WaveTable::Preset::WhiteNoise);
+		auto wg = mWaveTable.get(WaveTable::Preset::WhiteNoise);
+		auto voice = std::make_unique<LSP::Synth::WaveTableVoice>(mSampleFreq, wg, eg, noteNo, mCalculatedPitchBend, volume, ccPedal);
 		voice->setPan(LSP::Synth::Instrument::getDefaultDrumPan(noteNo));
 		return voice;
 	}
 }
 void MidiChannel::updatePitchBend()
 {
-	mCalculatedPitchBend = rpnPitchBendSensitibity * (mRawPitchBend / 8192.0f);
+	mCalculatedPitchBend = rpnPitchBendSensitibity() * (mRawPitchBend / 8192.0f);
 	for (auto& kvp : mVoices) {
 		kvp.second->setPitchBend(mCalculatedPitchBend);
 	}
@@ -420,4 +355,9 @@ void MidiChannel::updateHold()
 		voice->setHold(ccPedal);
 	}
 
+}
+uint8_t MidiChannel::rpnPitchBendSensitibity()const noexcept
+{
+	auto found = ccRPNs.find(0x0000);
+	return found != ccRPNs.end() ? static_cast<uint8_t>(found->second >> 8) : /*デフォルト ピッチベンド*/2; 
 }

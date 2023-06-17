@@ -55,6 +55,8 @@ private:
 	// ボイスを生成します
 	std::unique_ptr<LSP::Synth::Voice> createVoice(uint8_t noteNo, uint8_t vel);
 
+	// RPN Values
+	uint8_t rpnPitchBendSensitibity()const noexcept;
 	void updatePitchBend();
 
 private:
@@ -101,9 +103,8 @@ private:
 	std::optional<uint8_t> ccDE_MSB;
 	std::optional<uint8_t> ccDE_LSB;
 
-	// RPN Values
-	int16_t rpnPitchBendSensitibity;
-	bool    rpnNull;
+	std::unordered_map<uint16_t, uint16_t> ccRPNs;
+	std::unordered_map<uint16_t, uint16_t> ccNRPNs;
 };
 
 }
