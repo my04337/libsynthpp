@@ -697,11 +697,11 @@ std::unique_ptr<LSP::Synth::Voice> LSP::Synth::MidiChannel::createMelodyVoice(ui
 	case 125:
 	case 126:
 	case 127:
-		waveTableId = WaveTable::Preset::WhiteNoise;
+		waveTableId = WaveTable::Preset::DrumNoise;
 		break;
 	}
 
-	int8_t noteNoAdjuster = 0;
+	float noteNoAdjuster = 0;
 	switch(mProgId) {
 	case 47:
 	case 121:

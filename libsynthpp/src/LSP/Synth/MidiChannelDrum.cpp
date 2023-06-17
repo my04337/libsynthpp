@@ -488,7 +488,7 @@ std::unique_ptr<LSP::Synth::Voice> LSP::Synth::MidiChannel::createDrumVoice(uint
 	case 81: pan = 0.19f; break;
 	}
 
-	int resolvedNoteNo = 64;
+	float resolvedNoteNo = 64;
 	switch(noteNo)
 	{
 	case 24:

@@ -29,14 +29,14 @@ public:
 	};
 
 public:
-	Voice(uint32_t sampleFreq, const EnvelopeGenerator& eg, uint32_t noteNo, float pitchBend, float volume, bool hold);
+	Voice(uint32_t sampleFreq, const EnvelopeGenerator& eg, float noteNo, float pitchBend, float volume, bool hold);
 	virtual ~Voice();
 
 	virtual float update() = 0;
 
 	Digest digest()const noexcept;
 
-	uint32_t noteNo()const noexcept;
+	float noteNo()const noexcept;
 	void noteOff()noexcept;
 	void noteCut()noexcept;
 
@@ -60,7 +60,7 @@ protected:
 	EnvelopeGenerator mEG;
 	BiquadraticFilter mCutOffFilter;
 	BiquadraticFilter mResonanceFilter;
-	uint32_t mNoteNo;
+	float mNoteNo;
 	bool mPendingNoteOff = false;
 	bool mHold = false;
 	float mPitchBend;
@@ -79,7 +79,7 @@ public:
 
 
 public:
-	WaveTableVoice(uint32_t sampleFreq, const WaveTableGenerator& wg, const EnvelopeGenerator& eg, uint32_t noteNo, float pitchBend, float volume, bool hold)
+	WaveTableVoice(uint32_t sampleFreq, const WaveTableGenerator& wg, const EnvelopeGenerator& eg, float noteNo, float pitchBend, float volume, bool hold)
 		: Voice(sampleFreq, eg, noteNo, pitchBend, volume, hold)
 		, mWG(wg)
 	{}

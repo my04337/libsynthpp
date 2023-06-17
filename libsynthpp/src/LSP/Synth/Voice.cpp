@@ -3,7 +3,7 @@
 using namespace LSP;
 using namespace LSP::Synth;
 
-Voice::Voice(uint32_t sampleFreq, const EnvelopeGenerator& eg, uint32_t noteNo, float pitchBend, float volume, bool hold)
+Voice::Voice(uint32_t sampleFreq, const EnvelopeGenerator& eg, float noteNo, float pitchBend, float volume, bool hold)
 	: mSampleFreq(sampleFreq)
 	, mEG(eg)
 	, mNoteNo(noteNo)
@@ -28,7 +28,7 @@ Voice::Digest Voice::digest()const noexcept
 
 	return digest;
 }
-uint32_t Voice::noteNo()const noexcept
+float Voice::noteNo()const noexcept
 {
 	return mNoteNo;
 }
@@ -86,5 +86,5 @@ const Voice::EnvelopeGenerator& Voice::envolopeGenerator()const noexcept
 void Voice::updateFreq()noexcept
 {
 	// TODO いずれ平均律以外にも対応したい
-	mCalculatedFreq = 440 * exp2((static_cast<float>(mNoteNo) + mPitchBend - 69.0f) / 12.0f);
+	mCalculatedFreq = 440 * exp2((mNoteNo + mPitchBend - 69.0f) / 12.0f);
 }

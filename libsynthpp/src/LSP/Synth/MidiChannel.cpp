@@ -328,7 +328,14 @@ std::optional<uint8_t> MidiChannel::getNRPN_LSB(uint8_t msb, uint8_t lsb)const n
 }
 void MidiChannel::updatePitchBend()
 {
-	mCalculatedPitchBend = getNRPN_MSB(0, 0).value_or(2) * (mRawPitchBend / 8192.0f);
+	auto pitchBendSensitivity = getNRPN_MSB(0, 0).value_or(2);
+	auto masterCourseTuning = getNRPN_MSB(0, 2).value_or(64) - 64;
+	auto masterFineTuning = ((getNRPN_MSB(0, 1).value_or(64) - 64) * 128 + (getNRPN_LSB(0, 1).value_or(64) - 64)) / 8192.f;
+	mCalculatedPitchBend 
+		= pitchBendSensitivity * (mRawPitchBend / 8192.0f)
+		+ masterCourseTuning
+		+ masterFineTuning;
+
 	for (auto& kvp : mVoices) {
 		kvp.second->setPitchBend(mCalculatedPitchBend);
 	}
