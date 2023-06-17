@@ -41,6 +41,7 @@ public:
 	// ---
 	void noteOn(uint32_t noteNo, uint8_t vel);
 	void noteOff(uint32_t noteNo);
+	void noteCut(uint32_t noteNo);
 	void programChange(uint8_t progId);
 	void controlChange(uint8_t ctrlNo, uint8_t value);
 	void pitchBend(int16_t pitch);

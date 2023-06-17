@@ -85,6 +85,14 @@ void MidiChannel::noteOff(uint32_t noteNo)
 		}
 	}
 }
+void MidiChannel::noteCut(uint32_t noteNo)
+{
+	for(auto& [id, voice] : mVoices) {
+		if(voice->noteNo() == noteNo) {
+			voice->noteCut();
+		}
+	}
+}
 // プログラムチェンジ
 void MidiChannel::programChange(uint8_t progId)
 {
@@ -165,7 +173,7 @@ void MidiChannel::controlChange(uint8_t ctrlNo, uint8_t value)
 		break;
 	case 123: // オールノートオフ
 		for (auto& kvp : mVoices) {
-			kvp.second->noteOff(true);
+			kvp.second->noteCut();
 		}
 		break;
 	// --- チャネルモードメッセージ : not implemented ---

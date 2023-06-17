@@ -33,14 +33,19 @@ uint32_t Voice::noteNo()const noexcept
 	return mNoteNo;
 }
 
-void Voice::noteOff(bool force)noexcept
+void Voice::noteOff()noexcept
 {
-	if (mHold && !force) {
+	if (mHold) {
 		mPendingNoteOff = true;
 	} else {
 		mPendingNoteOff = false;
 		mEG.noteOff();
 	}
+}
+void Voice::noteCut()noexcept
+{
+	mPendingNoteOff = false;
+	mEG.reset();
 }
 void Voice::setHold(bool hold)noexcept
 {

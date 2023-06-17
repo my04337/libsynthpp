@@ -35,8 +35,8 @@ public:
 	Digest digest()const noexcept;
 
 	uint32_t noteNo()const noexcept;
-
-	void noteOff(bool force = false)noexcept;
+	void noteOff()noexcept;
+	void noteCut()noexcept;
 
 	void setHold(bool hold)noexcept;
 
