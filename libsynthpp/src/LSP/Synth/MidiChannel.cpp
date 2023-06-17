@@ -1,6 +1,7 @@
 ﻿#include <LSP/Synth/MidiChannel.hpp>
 #include <LSP/Synth/WaveTable.hpp>
 #include <LSP/Synth/Voice.hpp>
+#include <LSP/Synth/Instrument.hpp>
 
 using namespace LSP;
 using namespace LSP::MIDI;
@@ -401,7 +402,9 @@ std::unique_ptr<LSP::Synth::Voice> MidiChannel::createVoice(uint8_t noteNo, uint
 	} else {
 		// TODO ドラム用音色を用意する
 		eg.setParam((float)mSampleFreq, curveExp3, 0.05f, 0.0f, 0.2f, 0.25f, -1.0f, 0.05f);
-		return makeWaveTableVoice(WaveTable::Preset::Ground);
+		auto voice = makeWaveTableVoice(WaveTable::Preset::WhiteNoise);
+		voice->setPan(LSP::Synth::Instrument::getDefaultDrumPan(noteNo));
+		return voice;
 	}
 }
 void MidiChannel::updatePitchBend()
