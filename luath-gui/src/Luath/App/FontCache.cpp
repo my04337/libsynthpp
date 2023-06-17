@@ -28,6 +28,7 @@ TTF_Font* FontCache::get(int ptsize)
 	if(found != mFontMap.end()) return found->second;
 
 	auto font = TTF_OpenFontRW(mFontRWops, 0, ptsize);
+	SDL_RWseek(mFontRWops, 0, RW_SEEK_SET);
 	lsp_assert_desc(font != nullptr, "font create failed : " << TTF_GetError());
 	mFontMap.emplace(ptsize, font);
 	return font;
