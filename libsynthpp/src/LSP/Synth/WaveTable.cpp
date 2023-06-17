@@ -1,5 +1,6 @@
 ﻿#include <LSP/Synth/WaveTable.hpp>
 #include <LSP/Generator/FunctionGenerator.hpp>
+#include <LSP/Filter/BiquadraticFilter.hpp>
 
 using namespace LSP;
 using namespace LSP::Synth;
@@ -8,22 +9,22 @@ WaveTable::WaveTable()
 {
 	reset();
 }
-size_t WaveTable::add(Signal<float>&& wav, float preAmp)
+size_t WaveTable::add(Signal<float>&& wav, float preAmp, float cycles)
 {
 	size_t id = mNextCustomWaveId++;
-	add(id, std::move(wav), preAmp);
+	add(id, std::move(wav), preAmp, cycles);
 	return id;
 }
-void WaveTable::add(size_t id, Signal<float>&& wav, float preAmp)
+void WaveTable::add(size_t id, Signal<float>&& wav, float preAmp, float cycles)
 {
 	lsp_assert(wav.channels() == 1);
 
 	if (preAmp < 0) {
 		// MEMO 実効値の2乗=パワーを用いて正規化すると、それらしい音量で揃う(ラウドネスは考慮していないので注意)
 		float rms = calcRMS(wav);
-		preAmp = mBaseRMS * mBaseRMS / (rms * rms + 1.0e-8f);
+		preAmp = mBaseRMS * mBaseRMS / (rms * rms + 1.0e-8f) * abs(preAmp);
 	}
-	mWaveTable.insert_or_assign(id, std::make_tuple(std::move(wav), preAmp));
+	mWaveTable.insert_or_assign(id, std::make_tuple(std::move(wav), preAmp, cycles));
 }
 
 LSP::Generator::WaveTableGenerator<float> WaveTable::get(size_t id)const
@@ -34,14 +35,15 @@ LSP::Generator::WaveTableGenerator<float> WaveTable::get(size_t id)const
 		lsp_assert(found != mWaveTable.end());
 	}
 
-	auto& [wave, preAmp] = found->second;
+	auto& [wave, preAmp, cycles] = found->second;
 
-	return LSP::Generator::WaveTableGenerator<float>(wave, preAmp);
+	return LSP::Generator::WaveTableGenerator<float>(wave, preAmp, cycles);
 }
 
 void WaveTable::reset()
 {
 	using FunctionGenerator = LSP::Generator::FunctionGenerator<float>;
+	using BiquadraticFilter = LSP::Filter::BiquadraticFilter<float>;
 	// Ground
 	{
 		auto sig = Signal<float>::allocate(1);
@@ -116,6 +118,22 @@ void WaveTable::reset()
 			sig.frame(i)[0] = fg.update();
 		}
 		add(Preset::BrownNoise, std::move(sig));
+	}
+	// DrumNoise : LSP用デフォルトドラム波形
+	{
+		int frames = 131072;
+		auto sig = Signal<float>::allocate(frames);
+		FunctionGenerator fg;
+		fg.setWhiteNoise();
+		BiquadraticFilter bqf;
+		bqf.setLopassParam(44100.f, 1000.f, 1.f);
+		for(size_t i = 0; i < frames; i++) {			
+			bqf.update(fg.update());// 波形が安定するまで読み捨てる
+		}
+		for(size_t i = 0; i < frames; ++i) {
+			sig.frame(i)[0] = bqf.update(fg.update());
+		}
+		add(Preset::DrumNoise, std::move(sig), -1.f, 62.5f);
 	}
 }
 

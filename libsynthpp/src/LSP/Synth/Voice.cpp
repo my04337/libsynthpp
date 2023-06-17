@@ -67,6 +67,17 @@ void Voice::setPitchBend(float pitchBend)noexcept
 	mPitchBend = pitchBend;
 	updateFreq();
 }
+
+void Voice::setCutOff(float freqRate, float cutOffGain)
+{
+	float freq = mCalculatedFreq * freqRate;
+	mCutOffFilter.setHighshelfParam(static_cast<float>(mSampleFreq), freq, 1.f, cutOffGain);
+}
+void Voice::setResonance(float freqRate, float overtoneGain)
+{
+	float freq = mCalculatedFreq * freqRate;
+	mResonanceFilter.setPeakingParam(static_cast<float>(mSampleFreq), freq, 1.f, overtoneGain);
+}
 const Voice::EnvelopeGenerator& Voice::envolopeGenerator()const noexcept
 {
 	return mEG;

@@ -422,7 +422,11 @@ std::unique_ptr<LSP::Synth::Voice> LSP::Synth::MidiChannel::createDrumVoice(uint
 	}
 	v *= 1.2f;
 
-	float pan = 0.5f;
+	float pan = 0.5;
+	if(auto panFromRPN = getNRPN_MSB(28, noteNo)) {
+		pan = panFromRPN.value_or(rand() % 128) / 127.f;
+	}
+
 	switch(noteNo) {
 	case 24: pan = 0.35f; break;
 	case 25: pan = 0.50f; break;
@@ -668,10 +672,20 @@ std::unique_ptr<LSP::Synth::Voice> LSP::Synth::MidiChannel::createDrumVoice(uint
 	float cutoff_level = 0.001f;
 	static const LSP::Filter::EnvelopeGenerator<float>::Curve curveExp3(3.0f);
 
+	float cutOffFreqRate = 2.f;
+	float cutOffGain = -10.f; // dB
+	float overtuneGain = 0.f; // dB
+	if(mSystemType != SystemType::GM1) {
+		cutOffFreqRate = getNRPN_MSB(1, 32).value_or(64) / 128.f * 2.f + 1.f;
+		overtuneGain = (getNRPN_MSB(1, 33).value_or(64) / 128.f - 0.5f) * 5.f;
+	}
+
 	Voice::EnvelopeGenerator eg;
 	eg.setParam((float)mSampleFreq, curveExp3, 0.05f, 0.0f, 0.2f, 0.25f, -1.0f, 0.05f, cutoff_level);
-	auto wg = mWaveTable.get(WaveTable::Preset::WhiteNoise);
+	auto wg = mWaveTable.get(WaveTable::Preset::DrumNoise);
 	auto voice = std::make_unique<LSP::Synth::WaveTableVoice>(mSampleFreq, wg, eg, noteNo, mCalculatedPitchBend, volume, ccPedal);
 	voice->setPan(pan);
+	voice->setCutOff(cutOffFreqRate, cutOffGain);
+	voice->setResonance(cutOffFreqRate, overtuneGain);
 	return voice;
 }

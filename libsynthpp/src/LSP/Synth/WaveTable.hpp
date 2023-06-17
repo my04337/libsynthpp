@@ -30,6 +30,9 @@ public:
 		static constexpr size_t WhiteNoise = 100;
 		// 波形 : ブラウンノイズ
 		static constexpr size_t BrownNoise = 101;
+
+		// 波形 : ドラム用ノイズ
+		static constexpr size_t DrumNoise = 200;
 	};
 
 public:
@@ -39,18 +42,18 @@ public:
 	void reset();
 
 	// カスタム波形を登録します
-	size_t add(Signal<float>&& wav, float preAmp = -1);
+	size_t add(Signal<float>&& wav, float preAmp = -1, float cycles = 1);
 
 	// 波形テーブルジェネレータを取得します
 	LSP::Generator::WaveTableGenerator<float> get(size_t id)const;
 
 
 private:
-	void add(size_t id, Signal<float>&& wav, float preAmp = -1);
+	void add(size_t id, Signal<float>&& wav, float preAmp = -1, float cycles = 1);
 	static float calcRMS(SignalView<float> wav);
 
 private:
-	std::unordered_map<size_t, std::tuple<Signal<float>, /*preAmp*/float>> mWaveTable;
+	std::unordered_map<size_t, std::tuple<Signal<float>, /*preAmp*/float, /*cycles*/float>> mWaveTable;
 	size_t mNextCustomWaveId = CustomWaveIdBegin;
 	float mBaseRMS; // 基準となる実効値
 };

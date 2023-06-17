@@ -3,6 +3,7 @@
 #include <LSP/Synth/Base.hpp>
 #include <LSP/Synth/WaveTable.hpp>
 #include <LSP/Filter/EnvelopeGenerator.hpp>
+#include <LSP/Filter/BiquadraticFilter.hpp>
 #include <LSP/Generator/WaveTableGenerator.hpp>
 
 namespace LSP::Synth
@@ -19,6 +20,7 @@ class Voice
 public:
 	using EnvelopeGenerator = LSP::Filter::EnvelopeGenerator<float>;
 	using EnvelopeState = LSP::Filter::EnvelopeState;
+	using BiquadraticFilter = LSP::Filter::BiquadraticFilter<float>;
 
 	struct Digest {
 		float freq = 0; // 基本周波数
@@ -46,14 +48,18 @@ public:
 	void setPitchBend(float pitchBend)noexcept;
 	const EnvelopeGenerator& envolopeGenerator()const noexcept;
 
+	void setCutOff(float freqRate, float cutOffGain);
+	void setResonance(float freqRate, float overtoneGain);
+
 
 protected:
-
 	void updateFreq()noexcept;
 
 protected:
 	const uint32_t mSampleFreq;
 	EnvelopeGenerator mEG;
+	BiquadraticFilter mCutOffFilter;
+	BiquadraticFilter mResonanceFilter;
 	uint32_t mNoteNo;
 	bool mPendingNoteOff = false;
 	bool mHold = false;
@@ -84,6 +90,8 @@ public:
 	virtual float update()override
 	{
 		auto v = mWG.update(mSampleFreq, mCalculatedFreq);
+		v = mCutOffFilter.update(v);
+		v = mResonanceFilter.update(v);
 		v *= mEG.update();
 		v *= mVolume;
 		return v;

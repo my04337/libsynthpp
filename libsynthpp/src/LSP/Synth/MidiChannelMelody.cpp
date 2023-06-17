@@ -725,9 +725,16 @@ std::unique_ptr<LSP::Synth::Voice> LSP::Synth::MidiChannel::createMelodyVoice(ui
 	float cutoffLevel = 0.001f;
 	static const LSP::Filter::EnvelopeGenerator<float>::Curve curveExp3(3.0f);
 
+	float overtuneGain = 0.f; // dB
+	if(mSystemType != SystemType::GM1) {
+		overtuneGain = (getNRPN_MSB(1, 33).value_or(64) / 128.f - 0.5f) * 5.f;
+	}
+
+
 	Voice::EnvelopeGenerator eg;
 	eg.setParam((float)mSampleFreq, curveExp3, a, h, d, s, f, r, cutoffLevel);
 	auto wg = mWaveTable.get(waveTableId);
 	auto voice = std::make_unique<LSP::Synth::WaveTableVoice>(mSampleFreq, wg, eg, noteNo + noteNoAdjuster, mCalculatedPitchBend, volume, ccPedal);
+	voice->setResonance(2.f, overtuneGain);
 	return voice;
 }
