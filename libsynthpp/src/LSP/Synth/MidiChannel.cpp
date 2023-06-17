@@ -1,7 +1,6 @@
 ﻿#include <LSP/Synth/MidiChannel.hpp>
 #include <LSP/Synth/WaveTable.hpp>
 #include <LSP/Synth/Voice.hpp>
-#include <LSP/Synth/Instrument.hpp>
 
 using namespace LSP;
 using namespace LSP::MIDI;
@@ -195,19 +194,19 @@ void MidiChannel::controlChange(uint8_t ctrlNo, uint8_t value)
 			if(ccRPN_MSB && ccRPN_LSB) {
 				auto key = (static_cast<uint16_t>(*ccRPN_MSB) << 8) | *ccRPN_LSB;
 				if(ccDE_LSB) {
-					ccRPNs[key] = (0xFF00 & ccRPNs[key]) | static_cast<uint16_t>(*ccDE_MSB);
+					ccRPNs[key].second = *ccDE_LSB;
 				}
 				else {
-					ccRPNs[key] = static_cast<uint16_t>(*ccDE_MSB) << 8;
+					ccRPNs[key].first = *ccDE_MSB;
 				}
 			}
 			if(ccNRPN_MSB && ccNRPN_LSB) {
 				auto key = (static_cast<uint16_t>(*ccNRPN_MSB) << 8) | *ccNRPN_LSB;
 				if(ccDE_LSB) {
-					ccNRPNs[key] = (0xFF00 & ccNRPNs[key]) | static_cast<uint16_t>(*ccDE_MSB);
+					ccNRPNs[key].second = *ccDE_LSB;
 				}
 				else {
-					ccNRPNs[key] = static_cast<uint16_t>(*ccDE_MSB) << 8;
+					ccNRPNs[key].first = *ccDE_MSB;
 				}
 			}
 
@@ -300,61 +299,36 @@ MidiChannel::Digest MidiChannel::digest()const
 }
 std::unique_ptr<LSP::Synth::Voice> MidiChannel::createVoice(uint8_t noteNo, uint8_t vel)
 {
-	static const LSP::Filter::EnvelopeGenerator<float>::Curve curveExp3(3.0f);
-	Voice::EnvelopeGenerator eg;
-
-	auto adjustADR = [&](float& attack_time, float& decay_time, float& release_time) {
-		if(mSystemType != SystemType::GM1) {
-			attack_time  *= powf(10.0f, (ccAttackTime  / 127.f - 0.5f) * 4.556f);
-			decay_time   *= powf(10.0f, (ccDecayTime   / 127.f - 0.5f) * 4.556f);
-			release_time *= powf(10.0f, (ccReleaseTime / 127.f - 0.5f) * 4.556f);
-		}
-	};
-
-	/*
-	* MEMO : EnvelopeGenerator::setParam(AHDSFR系)の引数
-	*	attack_time,	// sec
-	*	hold_time,		// sec
-	*	decay_time,		// sec
-	*	sustain_level,	// level
-	*	fade_slope,		// Linear : level/sec, Exp : dBFS/sec
-	*	release_time	// sec)
-	*/
-	
-
-	if (!mIsDrumPart) {
-		// 参考 : http://www2u.biglobe.ne.jp/~rachi/midinst.htm
-		auto [preamp, attack_time, hold_time, decay_time, sustain_level, release_time] 
-			= LSP::Synth::Instrument::getDefaultMelodyEnvelopeParams(mProgId, 0);
-		adjustADR(attack_time, decay_time, release_time);
-
-		// MEMO 人間の聴覚ではボリュームは対数的な特性を持つため、ベロシティを指数的に補正する
-		// TODO sustain_levelで除算しているのは旧LibSynth++からの移植コード。 補正が不要になったら削除すること
-		float volume = powf(10.f, -20.f * (1.f - vel / 127.f) / 20.f) * preamp / ((sustain_level > 0.8f && sustain_level != 0.f) ? sustain_level : 0.8f);
-		float cutoff_level = 0.001f;
-
-		eg.setParam((float)mSampleFreq, curveExp3, attack_time, hold_time, decay_time, sustain_level, 0.f, release_time, cutoff_level);
-		auto wg = mWaveTable.get(WaveTable::Preset::SquareWave);
-		auto voice = std::make_unique<LSP::Synth::WaveTableVoice>(mSampleFreq, wg, eg, noteNo, mCalculatedPitchBend, volume, ccPedal);
-		return voice;
-	} else {
-		// TODO ドラム用音色を用意する
-		
-		// MEMO 人間の聴覚ではボリュームは対数的な特性を持つため、ベロシティを指数的に補正する
-		// TODO sustain_levelで除算しているのは旧LibSynth++からの移植コード。 補正が不要になったら削除すること
-		float volume = powf(10.f, -20.f * (1.f - vel / 127.f) / 20.f);
-		float cutoff_level = 0.001f;
-
-		eg.setParam((float)mSampleFreq, curveExp3, 0.05f, 0.0f, 0.2f, 0.25f, -1.0f, 0.05f, cutoff_level);
-		auto wg = mWaveTable.get(WaveTable::Preset::WhiteNoise);
-		auto voice = std::make_unique<LSP::Synth::WaveTableVoice>(mSampleFreq, wg, eg, noteNo, mCalculatedPitchBend, volume, ccPedal);
-		voice->setPan(LSP::Synth::Instrument::getDefaultDrumPan(noteNo));
-		return voice;
+	if(mIsDrumPart) {
+		return createDrumVoice(noteNo, vel);
 	}
+	else {
+		return createMelodyVoice(noteNo, vel);
+	}
+}
+std::optional<uint8_t> MidiChannel::getRPN_MSB(uint8_t msb, uint8_t lsb)const noexcept
+{
+	auto found = ccRPNs.find((static_cast<uint16_t>(msb) << 8) | lsb);
+	return found != ccRPNs.end() ? std::make_optional<uint8_t>(found->second.first) : std::nullopt;
+}
+std::optional<uint8_t> MidiChannel::getRPN_LSB(uint8_t msb, uint8_t lsb)const noexcept
+{
+	auto found = ccRPNs.find((static_cast<uint16_t>(msb) << 8) | lsb);
+	return found != ccRPNs.end() ? found->second.second : std::nullopt;
+}
+std::optional<uint8_t> MidiChannel::getNRPN_MSB(uint8_t msb, uint8_t lsb)const noexcept
+{
+	auto found = ccNRPNs.find((static_cast<uint16_t>(msb) << 8) | lsb);
+	return found != ccNRPNs.end() ? std::make_optional<uint8_t>(found->second.first) : std::nullopt;
+}
+std::optional<uint8_t> MidiChannel::getNRPN_LSB(uint8_t msb, uint8_t lsb)const noexcept
+{
+	auto found = ccNRPNs.find((static_cast<uint16_t>(msb) << 8) | lsb);
+	return found != ccNRPNs.end() ? found->second.second : std::nullopt;
 }
 void MidiChannel::updatePitchBend()
 {
-	mCalculatedPitchBend = rpnPitchBendSensitibity() * (mRawPitchBend / 8192.0f);
+	mCalculatedPitchBend = getNRPN_MSB(0, 0).value_or(2) * (mRawPitchBend / 8192.0f);
 	for (auto& kvp : mVoices) {
 		kvp.second->setPitchBend(mCalculatedPitchBend);
 	}
@@ -364,10 +338,4 @@ void MidiChannel::updateHold()
 	for (auto& [id, voice] : mVoices) {
 		voice->setHold(ccPedal);
 	}
-
-}
-uint8_t MidiChannel::rpnPitchBendSensitibity()const noexcept
-{
-	auto found = ccRPNs.find(0x0000);
-	return found != ccRPNs.end() ? static_cast<uint8_t>(found->second >> 8) : /*デフォルト ピッチベンド*/2; 
 }

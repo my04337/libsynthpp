@@ -55,11 +55,18 @@ public:
 private:
 	// ボイスを生成します
 	std::unique_ptr<LSP::Synth::Voice> createVoice(uint8_t noteNo, uint8_t vel);
+	std::unique_ptr<LSP::Synth::Voice> createMelodyVoice(uint8_t noteNo, uint8_t vel);
+	std::unique_ptr<LSP::Synth::Voice> createDrumVoice(uint8_t noteNo, uint8_t vel);
 
-	// RPN Values
-	uint8_t rpnPitchBendSensitibity()const noexcept;
 	void updatePitchBend();
 
+	// RPN and NRPN
+	std::optional<uint8_t> getRPN_MSB(uint8_t msb, uint8_t lsb)const noexcept;
+	std::optional<uint8_t> getRPN_LSB(uint8_t msb, uint8_t lsb)const noexcept;
+
+	std::optional<uint8_t> getNRPN_MSB(uint8_t msb, uint8_t lsb)const noexcept;
+	std::optional<uint8_t> getNRPN_LSB(uint8_t msb, uint8_t lsb)const noexcept;
+	
 private:
 	// サンプリング周波数(実行時に動的にセット)
 	const uint32_t mSampleFreq;
@@ -104,8 +111,8 @@ private:
 	std::optional<uint8_t> ccDE_MSB;
 	std::optional<uint8_t> ccDE_LSB;
 
-	std::unordered_map<uint16_t, uint16_t> ccRPNs;
-	std::unordered_map<uint16_t, uint16_t> ccNRPNs;
+	std::unordered_map<uint16_t, std::pair<uint8_t, std::optional<int8_t>>> ccRPNs;
+	std::unordered_map<uint16_t, std::pair<uint8_t, std::optional<int8_t>>> ccNRPNs;
 };
 
 }
