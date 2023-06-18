@@ -200,7 +200,7 @@ std::unique_ptr<LSP::Synth::Voice> LSP::Synth::MidiChannel::createMelodyVoice(ui
 	voice->setResonance(2.f, overtuneGain);
 
 	auto& eg = voice->envolopeGenerator();
-	eg.setParam(
+	eg.setMelodyEnvelope(
 		(float)mSampleFreq, curveExp3,
 		std::max(0.005f, a),
 		h,

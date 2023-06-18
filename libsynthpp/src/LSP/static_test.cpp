@@ -79,7 +79,7 @@ namespace
 void unused_function_f_eg() {
 	Filter::EnvelopeGenerator<float> eg_float;
 	Filter::EnvelopeGenerator<double> eg_double;
-	eg_float.setParam(1, 0, 0, 0, 0);
+	eg_float.setMelodyEnvelope(1, 0, 0, 0, 0);
 	eg_float.noteOn();
 	eg_float.update();
 	eg_double.noteOff();

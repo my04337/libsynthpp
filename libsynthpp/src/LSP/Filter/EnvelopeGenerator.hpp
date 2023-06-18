@@ -15,11 +15,6 @@ enum class EnvelopeState
 	Fade,		// フェード中 : ディケイレベルに達した後、フェードスロープに従い徐々に音量を下げるフェーズ
 	Release,	// リリース中 : ノートオフ後、音量を0に向けて下げていくフェーズ
 	Free,		// 止音中 : エンベロープジェネレータは特に稼働しておらず、常に音量0を出力する
-
-	DrumAttack,		
-	DrumHold,		
-	DrumDecay,		
-
 };
 
 // AHDSFRエンベロープジェネレータ
@@ -29,6 +24,12 @@ template<
 class EnvelopeGenerator final
 {
 public:
+	// エンベロープモデル
+	enum class Model
+	{
+		Melody,	// メロディパート用 : AHDFSR
+		Drum,	// ドラムパート用 : ADR ※ノートオフ無視
+	}; 
 	// エンベロープ カーブ形状
 	enum class Shape
 	{
@@ -79,8 +80,8 @@ public:
 		switchToFree();
 	}
 
-	// エンベロープ形状パラメータを指定します
-	void setParam(
+	// エンベロープ形状パラメータを指定します (メロディ用)
+	void setMelodyEnvelope(
 		uint32_t sampleFreq,		    // Hz
 		float attack_time,				// sec
 		float decay_time,				// sec
@@ -88,9 +89,9 @@ public:
 		float release_time				// sec
 	)
 	{
-		setParam(sampleFreq, {}, attack_time, 0, decay_time, sustain_level, 0, release_time, std::numeric_limits<parameter_type>::epsilon());
+		setMelodyEnvelope(sampleFreq, {}, attack_time, 0, decay_time, sustain_level, 0, release_time, std::numeric_limits<parameter_type>::epsilon());
 	}
-	void setParam(
+	void setMelodyEnvelope(
 		uint32_t sampleFreq,			// Hz
 		Curve curve,					
 		float attack_time,				// sec
@@ -102,34 +103,51 @@ public:
 		parameter_type cutoff_level		// level
 	)
 	{
+		mModel = Model::Melody;
+		mCurve = curve;
+
 		// 各種パラメータの範囲調整 & サンプル単位に変換 
 		mAttackTime   = std::max<uint64_t>(0, static_cast<uint64_t>(sampleFreq * attack_time));
 		mHoldTime     = std::max<uint64_t>(0, static_cast<uint64_t>(sampleFreq * hold_time));
 		mDecayTime    = std::max<uint64_t>(0, static_cast<uint64_t>(sampleFreq * decay_time));
 		mReleaseTime  = std::max<uint64_t>(0, static_cast<uint64_t>(sampleFreq * release_time));
-
 		mSustainLevel = std::clamp<parameter_type>(sustain_level, 0, 1);
 		mFadeSlope    = std::min<parameter_type>(fade_slope, 0) / sampleFreq; // 減衰率なので負の値
 		mCutOffLevel  = std::clamp<parameter_type>(cutoff_level, 0, 1);
-
+	}
+	// エンベロープ形状パラメータを指定します (ドラム用)
+	void setDrumEnvelope(
+		uint32_t sampleFreq,			// Hz
+		Curve curve,
+		float attack_time,				// sec
+		float hold_time,				// sec
+		float decay_time,				// sec
+		parameter_type cutoff_level		// level
+	)
+	{
+		mModel = Model::Drum;
 		mCurve = curve;
+
+		// 各種パラメータの範囲調整 & サンプル単位に変換 
+		mAttackTime = std::max<uint64_t>(0, static_cast<uint64_t>(sampleFreq * attack_time));
+		mHoldTime = std::max<uint64_t>(0, static_cast<uint64_t>(sampleFreq * hold_time));
+		mDecayTime = std::max<uint64_t>(0, static_cast<uint64_t>(sampleFreq * decay_time));
+		mReleaseTime = 0; // unused
+		mSustainLevel = 0; // unused
+		mFadeSlope = 0; // unused
+		mCutOffLevel = std::clamp<parameter_type>(cutoff_level, 0, 1);
 	}
 
 	// ノートオン (Attackへ遷移)
-	void noteOn(bool isDrum = false)
+	void noteOn()
 	{
-		if(isDrum) {
-			switchToDrumAttack();
-		}
-		else {
-			switchToAttack();
-		}		
+		switchToAttack();
 	}
 
 	// ノートオフ (Releaseへ遷移)
 	void noteOff()
 	{
-		if(mState != EnvelopeState::DrumAttack && mState != EnvelopeState::DrumHold && mState != EnvelopeState::DrumDecay) {
+		if(mModel != Model::Drum) {
 			switchToRelease(envelope());
 		}
 	}
@@ -180,12 +198,6 @@ public:
 			return easing_slope();
 		case EnvelopeState::Free:
 			return 0;// 止音中
-		case EnvelopeState::DrumAttack:
-			return easing(mAttackTime);
-		case EnvelopeState::DrumHold:
-			return easing(mHoldTime);
-		case EnvelopeState::DrumDecay:
-			return easing(mDecayTime);
 		}
 		lsp_assert_desc(false, "invalid state");
 	}
@@ -220,11 +232,22 @@ public:
 			// ディケイ中
 			if (mTime < mDecayTime) {
 				break;
-			} else {
+			}
+			else if(mModel == Model::Drum) {
+				if(v <= mCutOffLevel) {
+					// ドラム : 音量が規定値を下回った場合 : ノートオフを待たずに止音
+					switchToFree();
+				}
+				else {
+					mTime -= mDecayTime;
+					switchToFree(); // ディケイ → リリース
+				}
+			}
+			else {
 				mTime -= mDecayTime;
 				switchToFade(); // ディケイ → フェード
-				[[fallthrough]];
 			}
+			[[fallthrough]];
 		case EnvelopeState::Fade:
 			// フェード中
 			if (v <= mCutOffLevel) {
@@ -246,39 +269,6 @@ public:
 			// 止音中
 			// do-nothing
 			break;
-		case EnvelopeState::DrumAttack:
-			// アタック中
-			if(mTime < mAttackTime) {
-				break;
-			}
-			else {
-				mTime -= mAttackTime;
-				switchToDrumHold(); // アタック → ホールド
-				[[fallthrough]];
-			}
-		case EnvelopeState::DrumHold:
-			// ホールド中
-			if(mTime < mHoldTime) {
-				break;
-			}
-			else {
-				mTime -= mHoldTime;
-				switchToDrumDecay(); // ホールド → ディケイ
-				[[fallthrough]];
-			}
-		case EnvelopeState::DrumDecay:
-			// ディケイ中
-			if(mTime < mDecayTime) {
-				break;
-			}
-			else if(v <= mCutOffLevel) {
-				// 音量が規定値を下回った場合 : ノートオフを待たずに止音
-				switchToFree();
-			}
-			else {
-				mTime -= mDecayTime;
-				switchToFree(); // ディケイ → リリース
-			}
 		}
 		return v;
 	}
@@ -338,29 +328,9 @@ protected:
 		mBeginLevel = 0;
 		mEndLevel = 0;
 	}
-	void switchToDrumAttack()
-	{
-		mState = EnvelopeState::DrumAttack;
-		mBeginLevel = 0;
-		mEndLevel = 1;
-
-		mTime = 0;
-	}
-	void switchToDrumHold()
-	{
-		mState = EnvelopeState::DrumHold;
-		mBeginLevel = 1;
-		mEndLevel = 1;
-	}
-	void switchToDrumDecay()
-	{
-		mState = EnvelopeState::DrumDecay;
-		mBeginLevel = 1;
-		mEndLevel = mSustainLevel;
-	}
-	
 
 private:	
+	Model mModel = Model::Melody;
 	EnvelopeState mState;			// 現在の状態
 	uint64_t mTime;					// 現在の時刻(ノートオン/ノートオフからの)
 	Curve mCurve;
