@@ -29,7 +29,7 @@ public:
 	};
 
 public:
-	Voice(uint32_t sampleFreq, const EnvelopeGenerator& eg, float noteNo, float pitchBend, float volume, bool hold);
+	Voice(uint32_t sampleFreq, float noteNo, float pitchBend, float volume, bool hold);
 	virtual ~Voice();
 
 	virtual float update() = 0;
@@ -46,7 +46,7 @@ public:
 	void setPan(float pan)noexcept;
 
 	void setPitchBend(float pitchBend)noexcept;
-	const EnvelopeGenerator& envolopeGenerator()const noexcept;
+	EnvelopeGenerator& envolopeGenerator() noexcept;
 
 	void setCutOff(float freqRate, float cutOffGain);
 	void setResonance(float freqRate, float overtoneGain);
@@ -79,8 +79,8 @@ public:
 
 
 public:
-	WaveTableVoice(uint32_t sampleFreq, const WaveTableGenerator& wg, const EnvelopeGenerator& eg, float noteNo, float pitchBend, float volume, bool hold)
-		: Voice(sampleFreq, eg, noteNo, pitchBend, volume, hold)
+	WaveTableVoice(uint32_t sampleFreq, const WaveTableGenerator& wg,float noteNo, float pitchBend, float volume, bool hold)
+		: Voice(sampleFreq, noteNo, pitchBend, volume, hold)
 		, mWG(wg)
 	{}
 

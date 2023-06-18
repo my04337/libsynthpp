@@ -15,6 +15,11 @@ enum class EnvelopeState
 	Fade,		// フェード中 : ディケイレベルに達した後、フェードスロープに従い徐々に音量を下げるフェーズ
 	Release,	// リリース中 : ノートオフ後、音量を0に向けて下げていくフェーズ
 	Free,		// 止音中 : エンベロープジェネレータは特に稼働しておらず、常に音量0を出力する
+
+	DrumAttack,		
+	DrumHold,		
+	DrumDecay,		
+
 };
 
 // AHDSFRエンベロープジェネレータ
@@ -111,15 +116,22 @@ public:
 	}
 
 	// ノートオン (Attackへ遷移)
-	void noteOn()
+	void noteOn(bool isDrum = false)
 	{
-		switchToAttack();
+		if(isDrum) {
+			switchToDrumAttack();
+		}
+		else {
+			switchToAttack();
+		}		
 	}
 
 	// ノートオフ (Releaseへ遷移)
 	void noteOff()
 	{
-		switchToRelease(envelope());
+		if(mState != EnvelopeState::DrumAttack && mState != EnvelopeState::DrumHold && mState != EnvelopeState::DrumDecay) {
+			switchToRelease(envelope());
+		}
 	}
 
 	// エンベロープを計算します
@@ -168,6 +180,12 @@ public:
 			return easing_slope();
 		case EnvelopeState::Free:
 			return 0;// 止音中
+		case EnvelopeState::DrumAttack:
+			return easing(mAttackTime);
+		case EnvelopeState::DrumHold:
+			return easing(mHoldTime);
+		case EnvelopeState::DrumDecay:
+			return easing(mDecayTime);
 		}
 		lsp_assert_desc(false, "invalid state");
 	}
@@ -228,6 +246,39 @@ public:
 			// 止音中
 			// do-nothing
 			break;
+		case EnvelopeState::DrumAttack:
+			// アタック中
+			if(mTime < mAttackTime) {
+				break;
+			}
+			else {
+				mTime -= mAttackTime;
+				switchToDrumHold(); // アタック → ホールド
+				[[fallthrough]];
+			}
+		case EnvelopeState::DrumHold:
+			// ホールド中
+			if(mTime < mHoldTime) {
+				break;
+			}
+			else {
+				mTime -= mHoldTime;
+				switchToDrumDecay(); // ホールド → ディケイ
+				[[fallthrough]];
+			}
+		case EnvelopeState::DrumDecay:
+			// ディケイ中
+			if(mTime < mDecayTime) {
+				break;
+			}
+			else if(v <= mCutOffLevel) {
+				// 音量が規定値を下回った場合 : ノートオフを待たずに止音
+				switchToFree();
+			}
+			else {
+				mTime -= mDecayTime;
+				switchToFree(); // ディケイ → リリース
+			}
 		}
 		return v;
 	}
@@ -286,6 +337,26 @@ protected:
 		mState = EnvelopeState::Free;
 		mBeginLevel = 0;
 		mEndLevel = 0;
+	}
+	void switchToDrumAttack()
+	{
+		mState = EnvelopeState::DrumAttack;
+		mBeginLevel = 0;
+		mEndLevel = 1;
+
+		mTime = 0;
+	}
+	void switchToDrumHold()
+	{
+		mState = EnvelopeState::DrumHold;
+		mBeginLevel = 1;
+		mEndLevel = 1;
+	}
+	void switchToDrumDecay()
+	{
+		mState = EnvelopeState::DrumDecay;
+		mBeginLevel = 1;
+		mEndLevel = mSustainLevel;
 	}
 	
 

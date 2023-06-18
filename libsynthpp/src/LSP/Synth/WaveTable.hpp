@@ -28,9 +28,6 @@ public:
 
 		// 波形 : ホワイトノイズ
 		static constexpr size_t WhiteNoise = 100;
-		// 波形 : ブラウンノイズ
-		static constexpr size_t BrownNoise = 101;
-
 		// 波形 : ドラム用ノイズ
 		static constexpr size_t DrumNoise = 200;
 	};

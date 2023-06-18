@@ -107,18 +107,6 @@ void WaveTable::reset()
 		}
 		add(Preset::WhiteNoise, std::move(sig));
 	}
-	// BrownNoise
-	{
-		// MEMO サンプリング周波数よりサンプル数を大きくしないと、金属音のような規則性のある音が混ざることに注意
-		constexpr size_t frames = 16384;
-		auto sig = Signal<float>::allocate(frames);
-		FunctionGenerator fg;
-		fg.setBrownNoise();
-		for (size_t i = 0; i < frames; ++i) {
-			sig.frame(i)[0] = fg.update();
-		}
-		add(Preset::BrownNoise, std::move(sig));
-	}
 	// DrumNoise : LSP用デフォルトドラム波形
 	{
 		int frames = 131072;

@@ -3,16 +3,14 @@
 using namespace LSP;
 using namespace LSP::Synth;
 
-Voice::Voice(uint32_t sampleFreq, const EnvelopeGenerator& eg, float noteNo, float pitchBend, float volume, bool hold)
+Voice::Voice(uint32_t sampleFreq, float noteNo, float pitchBend, float volume, bool hold)
 	: mSampleFreq(sampleFreq)
-	, mEG(eg)
 	, mNoteNo(noteNo)
 	, mPitchBend(pitchBend)
 	, mVolume(volume)
 	, mHold(hold)
 {
 	updateFreq();
-	mEG.noteOn();
 }
 
 Voice::~Voice() = default;
@@ -78,7 +76,7 @@ void Voice::setResonance(float freqRate, float overtoneGain)
 	float freq = mCalculatedFreq * freqRate;
 	mResonanceFilter.setPeakingParam(static_cast<float>(mSampleFreq), freq, 1.f, overtoneGain);
 }
-const Voice::EnvelopeGenerator& Voice::envolopeGenerator()const noexcept
+Voice::EnvelopeGenerator& Voice::envolopeGenerator() noexcept
 {
 	return mEG;
 }
