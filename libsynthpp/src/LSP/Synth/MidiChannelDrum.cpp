@@ -100,11 +100,10 @@ std::unique_ptr<LSP::Synth::Voice> LSP::Synth::MidiChannel::createDrumVoice(uint
 	// MEMO 人間の聴覚ではボリュームは対数的な特性を持つため、ベロシティを指数的に補正する
 	// TODO sustain_levelで除算しているのは旧LibSynth++からの移植コード。 補正が不要になったら削除すること
 	float volume = powf(10.f, -20.f * (1.f - vel / 127.f) / 20.f);
-	float cutoff_level = 0.001f;
+	float cutoff_level = 0.01f;
 	static const LSP::Filter::EnvelopeGenerator<float>::Curve curveExp3(3.0f);
 
 	float cutOffFreqRate = 2.f;
-	float cutOffGain = -10.f; // dB
 	float overtuneGain = 0.f; // dB
 	if(mSystemType != SystemType::GM1) {
 		cutOffFreqRate = getNRPN_MSB(1, 32).value_or(64) / 128.f * 2.f + 1.f;
@@ -114,7 +113,6 @@ std::unique_ptr<LSP::Synth::Voice> LSP::Synth::MidiChannel::createDrumVoice(uint
 	auto wg = mWaveTable.get(WaveTable::Preset::DrumNoise);
 	auto voice = std::make_unique<LSP::Synth::WaveTableVoice>(mSampleFreq, wg, resolvedNoteNo, mCalculatedPitchBend, volume, ccPedal);
 	voice->setPan(pan);
-	voice->setCutOff(cutOffFreqRate, cutOffGain);
 	voice->setResonance(cutOffFreqRate, overtuneGain);
 
 	auto& eg = voice->envolopeGenerator();

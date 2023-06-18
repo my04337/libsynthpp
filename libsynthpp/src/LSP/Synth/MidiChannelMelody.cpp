@@ -187,7 +187,7 @@ std::unique_ptr<LSP::Synth::Voice> LSP::Synth::MidiChannel::createMelodyVoice(ui
 	// MEMO 人間の聴覚ではボリュームは対数的な特性を持つため、ベロシティを指数的に補正する
 	// TODO sustain_levelで除算しているのは旧LibSynth++からの移植コード。 補正が不要になったら削除すること
 	float volume = powf(10.f, -20.f * (1.f - vel / 127.f) / 20.f) * v / ((s > 0.8f && s != 0.f) ? s : 0.8f);
-	float cutoffLevel = 0.001f;
+	float cutoffLevel = 0.01f;
 	static const LSP::Filter::EnvelopeGenerator<float>::Curve curveExp3(3.0f);
 
 	float overtuneGain = 0.f; // dB
@@ -202,12 +202,12 @@ std::unique_ptr<LSP::Synth::Voice> LSP::Synth::MidiChannel::createMelodyVoice(ui
 	auto& eg = voice->envolopeGenerator();
 	eg.setMelodyEnvelope(
 		(float)mSampleFreq, curveExp3,
-		std::max(0.005f, a),
+		std::max(0.001f, a),
 		h,
-		std::max(0.005f, d),
+		std::max(0.001f, d),
 		s,
 		f,
-		std::max(0.005f, r),
+		std::max(0.001f, r),
 		cutoffLevel
 	);
 	eg.noteOn();

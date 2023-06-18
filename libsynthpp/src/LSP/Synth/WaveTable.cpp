@@ -44,6 +44,10 @@ void WaveTable::reset()
 {
 	using FunctionGenerator = LSP::Generator::FunctionGenerator<float>;
 	using BiquadraticFilter = LSP::Filter::BiquadraticFilter<float>;
+
+	mNextCustomWaveId = CustomWaveIdBegin;
+	mWaveTable.clear();
+
 	// Ground
 	{
 		auto sig = Signal<float>::allocate(1);
@@ -113,15 +117,23 @@ void WaveTable::reset()
 		auto sig = Signal<float>::allocate(frames);
 		FunctionGenerator fg;
 		fg.setWhiteNoise();
-		BiquadraticFilter bqf;
-		bqf.setLopassParam(44100.f, 1000.f, 1.f);
-		for(size_t i = 0; i < frames; i++) {			
-			bqf.update(fg.update());// 波形が安定するまで読み捨てる
+		std::array<BiquadraticFilter, 5> bqfs;
+		bqfs[0].setLopassParam(44100.f, 4000.f, 0.5f); // 不要高周波を緩やかにカットオフ
+		bqfs[1].setLopassParam(44100.f, 4000.f, 0.5f); // (同上)
+		bqfs[2].setLopassParam(44100.f, 3000.f, 0.5f); // (同上)
+		bqfs[3].setLopassParam(44100.f, 2000.f, 0.5f); // (同上)
+		bqfs[4].setLopassParam(44100.f, 1000.f, 1.0f); // 基本となる音程
+		for(size_t i = 0; i < frames*2; i++) {		
+			// 波形が安定するまで読み捨てる
+			float s = fg.update();
+			for(auto& bqf : bqfs) s = bqf.update(s);
 		}
 		for(size_t i = 0; i < frames; ++i) {
-			sig.frame(i)[0] = bqf.update(fg.update());
+			float s = fg.update();
+			for(auto& bqf : bqfs) s = bqf.update(s);
+			sig.frame(i)[0] = s;
 		}
-		add(Preset::DrumNoise, std::move(sig), -1.f, 62.5f);
+		add(Preset::DrumNoise, std::move(sig), -0.30f, 62.5f);
 	}
 }
 

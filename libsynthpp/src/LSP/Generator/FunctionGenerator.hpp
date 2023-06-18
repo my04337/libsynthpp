@@ -17,7 +17,6 @@ enum class WaveFormType
 	Triangle,		// 三角波
 	Square,			// 矩形波
 	WhiteNoise,		// ホワイトノイズ
-	BrownNoise,		// ブラウンノイズ
 };
 
 // ファンクションジェネレータ : 複数種類の波形生成
@@ -77,12 +76,6 @@ public:
 		mType = WaveFormType::WhiteNoise;
 		mSamplePerPhase = 0;
 	}
-	void setBrownNoise()noexcept 
-	{
-		mType = WaveFormType::BrownNoise;
-		mSamplePerPhase = 0;
-		mBrownNoisePrevLevel = 0;
-	}
 
 
 	sample_type update() 
@@ -124,12 +117,6 @@ public:
 			// ホワイトノイズ
 			s = requantize<sample_type>(mUniDist(mRandomEngine));
 			break;
-		case WaveFormType::BrownNoise: {
-			// ブラウンノイズ
-			auto delta = mUniDist(mRandomEngine)/100; // 概ね20dB下げると丁度良い波形が生成できる。 理由は不明
-			mBrownNoisePrevLevel = normalize(mBrownNoisePrevLevel + delta);
-			s = requantize<sample_type>(mBrownNoisePrevLevel);
-		}	break;
 		}
 
 		mPhase = Math::floored_division(mPhase + mSamplePerPhase, period);
