@@ -55,7 +55,7 @@ void WavFileOutput::write(const Signal<sample_type>& sig)
 		Log::e(LOGF("WasapiOutput : write - failed (invalid)"));
 		return;
 	}
-	lsp_assert_desc(signal_channels == mChannels, "WasapiOutput : write - failed (channel count is mismatch)");
+	Assertion::require(signal_channels == mChannels, "WasapiOutput : write - failed (channel count is mismatch)");
 
 	const auto bitsPerSample = mBitsPerSample; 
 	const auto bytesPerSample = bitsPerSample/8;

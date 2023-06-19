@@ -21,8 +21,8 @@ public:
 		, mVolume(volume)
 		, mCycles(cycles)
 	{
-		lsp_assert(table.frames() > 0);
-		lsp_assert(table.channels() == 1);
+		Assertion::require(table.frames() > 0);
+		Assertion::require(table.channels() == 1);
 	}
 
 	sample_type update(uint32_t sampleFreq, parameter_type freq)

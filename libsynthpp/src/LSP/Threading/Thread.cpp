@@ -16,8 +16,7 @@ void LSP::Threading::setThreadPriority(std::thread& th, Priority p)
 	int nPriority = THREAD_PRIORITY_NORMAL;
 	switch (p) {
 	case Priority::Inherited:
-		lsp_assert(false);
-		break;
+		Assertion::unreachable();
 	case Priority::Lowest:	
 		nPriority = THREAD_PRIORITY_LOWEST;
 		break;

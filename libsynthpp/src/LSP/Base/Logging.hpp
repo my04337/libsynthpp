@@ -8,15 +8,6 @@
 // ログ用ユーティリティマクロ
 #define LOGF(...) [&](std::ostringstream& _)->void { _ << __VA_ARGS__; }
 
-// assertマクロ(記述しやすいようあえて小文字化)
-#define lsp_assert(expr) \
-    if(!(expr)) [[unlikely]] { \
-        LSP::Log::f(LOGF(LSP::file_macro_to_filename(__FILE__) << ":" << __LINE__ << " - assert" << "(" << DELAY_MACRO(#expr) << ") failed.")); \
-    }
-#define lsp_assert_desc(expr, ...) \
-    if(!(expr)) [[unlikely]] { \
-        LSP::Log::f(LOGF(LSP::file_macro_to_filename(__FILE__) << ":" << __LINE__ << " - assert" << "(" << DELAY_MACRO(#expr) << ") failed " << __VA_ARGS__ ; _ << "].")); \
-    }
 
 // 開発時用デバッグログ(コミット前に除去すること)
 #define lsp_debug_log(expr) \
@@ -106,11 +97,13 @@ public:
 	[[noreturn]]
 	static void f(const Writer& writer, const StackTrace* stacks=nullptr)noexcept;
 
+
 	// ログ フラッシュ [例外送出禁止]
 	static void flush()noexcept;
 
 	// 実際の書き込み処理 [例外送出禁止]
 	static void write(LogLevel level, const Writer& writer, const StackTrace* stacks=nullptr, bool isCritical=false)noexcept;
+
 
 	// 標準ログフォーマットで整形 [例外送出禁止]
 	static std::ostringstream& format_default(std::ostringstream& out, clock::time_point time, LogLevel level, std::string_view log, const Log::StackTrace* stacks)noexcept;
@@ -129,6 +122,66 @@ private:
 	static std::list<ILogger*> sLoggers;
 };
 
+// アサーション機構(static)
+class Assertion final
+	: non_copy_move
+{
+public:
+	// require : 引数チェック向け
+	inline static void require(bool succeeded, std::source_location location = std::source_location::current()) {
+		if(!succeeded) [[unlikely]] {
+			LSP::Log::f([location](auto& _) {_ << LSP::file_macro_to_filename(location.file_name()) << ":" << location.line() << " - illegal argument."; });
+		}
+	}
+	inline static void require(bool succeeded, std::string_view description, std::source_location location = std::source_location::current()) {
+		if(!succeeded) [[unlikely]] {
+			LSP::Log::f([description, location](auto& o) {o << LSP::file_macro_to_filename(location.file_name()) << ":" << location.line() << " - " << description; });
+		}
+	}
+	template<typename D>
+		requires std::invocable<D, std::ostringstream&>
+	inline static void require(bool succeeded, D&& description, std::source_location location = std::source_location::current()) {
+		if(!succeeded) [[unlikely]] {
+			LSP::Log::f([description = std::forward<D>(description), location](auto& o) {o << LSP::file_macro_to_filename(location.file_name()) << ":" << location.line() << " - "; description(o); });
+		}
+	}
+
+	// check : 関数の内部での状態チェック向け
+	inline static void check(bool succeeded, std::source_location location = std::source_location::current()) {
+		if(!succeeded) [[unlikely]] {
+			LSP::Log::f([location](auto& _) {_ << LSP::file_macro_to_filename(location.file_name()) << ":" << location.line() << " - illegal state."; });
+		}
+	}
+	inline static void check(bool succeeded, std::string_view description, std::source_location location = std::source_location::current()) {
+		if(!succeeded) [[unlikely]] {
+			LSP::Log::f([description, location](auto& o) {o << LSP::file_macro_to_filename(location.file_name()) << ":" << location.line() << description; });
+		}
+	}
+	template<typename D>
+		requires std::invocable<D, std::ostringstream&>
+	inline static void check(bool succeeded, D&& description, std::source_location location = std::source_location::current()) {
+		if(!succeeded) [[unlikely]] {
+			LSP::Log::f([description = std::forward<D>(description), location](auto& o) {o << LSP::file_macro_to_filename(location.file_name()) << ":" << location.line() << " - "; description(o); });
+		}
+	}
+
+	// unreachable : 到達不可能な箇所でのチェック向け
+	[[noreturn]]
+	inline static void unreachable(std::source_location location = std::source_location::current()) {
+		LSP::Log::f([location](auto& _) {_ << LSP::file_macro_to_filename(location.file_name()) << ":" << location.line() << " - illegal state."; });
+	}
+	[[noreturn]]
+	inline static void unreachable(std::string_view description, std::source_location location = std::source_location::current()) {
+		LSP::Log::f([description, location](auto& o) {o << LSP::file_macro_to_filename(location.file_name()) << ":" << location.line() << description; });
+	}
+	template<typename D>
+		requires std::invocable<D, std::ostringstream&>
+	[[noreturn]]
+	inline static void unreachable(D&& description, std::source_location location = std::source_location::current()) {
+		LSP::Log::f([description = std::forward<D>(description), location](auto& o) {o << LSP::file_macro_to_filename(location.file_name()) << ":" << location.line() << " - "; description(o); });
+	}
+
+};
 // ログ出力先インタフェース
 class ILogger
 	: non_copy_move

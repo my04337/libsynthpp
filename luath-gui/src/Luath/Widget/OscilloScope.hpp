@@ -41,7 +41,7 @@ void OscilloScope::write(const LSP::Signal<sample_type>& sig)
 	const auto signal_frames = sig.frames();
 	const auto buffer_length = mBufferLength;
 
-	lsp_assert_desc(signal_channels == mChannels, "WasapiOutput : write - failed (channel count is mismatch)");
+	LSP::Assertion::require(signal_channels == mChannels, "WasapiOutput : write - failed (channel count is mismatch)");
 
 
 	for (size_t ch=0; ch<signal_channels; ++ch) {

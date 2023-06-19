@@ -27,9 +27,9 @@ void SpectrumAnalyzer::setParam(uint32_t sampleFreq, uint32_t channels, uint32_t
 		mBufferLength = newBufferLength;
 	}
 
-	lsp_assert(channels >= 2);
-	lsp_assert(mBufferLength >= 1 && mBufferLength <= bufferLength);
-	lsp_assert(std::bitset<sizeof(bufferLength)*8>(mBufferLength).count() == 1);
+	LSP::Assertion::require(channels >= 1);
+	LSP::Assertion::require(mBufferLength >= 1 && mBufferLength <= bufferLength);
+	LSP::Assertion::require(std::bitset<sizeof(bufferLength)*8>(mBufferLength).count() == 1);
 
 	_reset();
 }
@@ -49,7 +49,7 @@ void SpectrumAnalyzer::_reset()
 
 void SpectrumAnalyzer::draw(SDL_Renderer* renderer, int left_, int top_, int width_, int height_)
 {
-	lsp_assert(renderer != nullptr);
+	LSP::Assertion::require(renderer != nullptr);
 
 	std::lock_guard lock(mMutex);
 

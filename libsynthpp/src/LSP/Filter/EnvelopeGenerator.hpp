@@ -170,7 +170,7 @@ public:
 				return mBeginLevel + (mEndLevel - mBeginLevel) * v;
 			}
 			}
-			lsp_assert_desc(false, "invalid shape");
+			Assertion::unreachable("invalid shape");
 		};
 		auto easing_slope = [this]()->parameter_type { 
 			switch(mCurve) {
@@ -182,7 +182,7 @@ public:
 				return static_cast<parameter_type>(mBeginLevel * std::pow(10, mFadeSlope/20 * mTime));
 			}
 			}
-			lsp_assert_desc(false, "invalid shape");
+			Assertion::unreachable("invalid shape");
 		};
 
 		switch (mState) {
@@ -199,7 +199,7 @@ public:
 		case EnvelopeState::Free:
 			return 0;// 止音中
 		}
-		lsp_assert_desc(false, "invalid state");
+		Assertion::unreachable("invalid state");
 	}
 
 	// エンベロープを計算し、状態を更新します

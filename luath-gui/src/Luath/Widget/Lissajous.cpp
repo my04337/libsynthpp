@@ -17,7 +17,7 @@ void Lissajous::setParam(uint32_t sampleFreq, uint32_t channels, uint32_t buffer
 	mChannels = channels;
 	mBufferLength = bufferLength;
 
-	lsp_assert(channels >= 2);
+	LSP::Assertion::require(channels >= 2);
 
 	_reset();
 }
@@ -37,7 +37,7 @@ void Lissajous::_reset()
 
 void Lissajous::draw(SDL_Renderer* renderer, int left_, int top_, int width_, int height_)
 {
-	lsp_assert(renderer != nullptr);
+	LSP::Assertion::require(renderer != nullptr);
 
 	std::lock_guard lock(mMutex);
 
@@ -93,5 +93,5 @@ void Lissajous::draw(SDL_Renderer* renderer, int left_, int top_, int width_, in
 
 	// クリッピング解除
 	fin_act.action();
-	lsp_assert(SDL_RenderIsClipEnabled(renderer) == is_clipped);
+	LSP::Assertion::check(SDL_RenderIsClipEnabled(renderer) == is_clipped);
 }

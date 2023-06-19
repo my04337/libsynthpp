@@ -63,6 +63,6 @@ int Application::exec(int argc, char** argv)
 
 FontCache& Application::fontCache()noexcept
 {
-	lsp_assert(mFontCache != nullptr);
+	Assertion::check(mFontCache != nullptr);
 	return *mFontCache;
 }

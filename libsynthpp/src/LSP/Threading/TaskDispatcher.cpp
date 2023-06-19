@@ -55,7 +55,7 @@ std::function<void()> TaskDispatcher::deque()
 			auto task = std::move(mWaitingQueue.front());
 			mWaitingQueue.pop_front();
 
-			lsp_assert(task);
+			Assertion::check(task != nullptr);
 			return task; // NRVO
 		}
 

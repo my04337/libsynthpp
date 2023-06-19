@@ -18,6 +18,7 @@
 #include <memory>
 #include <mutex>
 #include <optional>
+#include <source_location>
 #include <string_view>
 #include <string>
 #include <tuple>

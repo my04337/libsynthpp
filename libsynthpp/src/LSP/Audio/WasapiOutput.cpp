@@ -21,7 +21,7 @@ WasapiOutput::WasapiOutput()
 	, mSampleFormat(SampleFormat::Unknown)
 {
 	mAudioEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
-	lsp_assert(mAudioEvent != nullptr);
+	Assertion::check(mAudioEvent != nullptr);
 
 	initialize();
 }
@@ -79,7 +79,7 @@ void WasapiOutput::initialize()
 		Log::e(LOGF("WasapiOutput : initialize - failed (getting mix format)"));
 		return;
 	}
-	lsp_assert(pWaveFormatEx != nullptr);
+	Assertion::check(pWaveFormatEx != nullptr);
 	auto fin_act_freeMexedFormat = finally([&pWaveFormatEx]{CoTaskMemFree(pWaveFormatEx); pWaveFormatEx = nullptr;});
 
 	// フォーマットが扱える種類かを判定する
@@ -218,22 +218,22 @@ bool WasapiOutput::stop()
 
 uint32_t WasapiOutput::getDeviceSampleFreq()const noexcept
 {
-	lsp_assert(valid());
+	Assertion::check(valid());
 	return mWaveFormatEx->nSamplesPerSec;
 }
 uint32_t WasapiOutput::getDeviceChannels()const noexcept
 {
-	lsp_assert(valid());
+	Assertion::check(valid());
 	return mWaveFormatEx->nChannels;
 }
 WasapiOutput::SampleFormat WasapiOutput::getDeviceFormat()const noexcept
 {
-	lsp_assert(valid());
+	Assertion::check(valid());
 	return mSampleFormat;
 }
 std::string_view WasapiOutput::getDeviceFormatString()const noexcept
 {
-	lsp_assert(valid());
+	Assertion::check(valid());
 	return getDeviceFormatString(mSampleFormat);
 }
 std::string_view WasapiOutput::getDeviceFormatString(SampleFormat format)noexcept
@@ -246,11 +246,11 @@ std::string_view WasapiOutput::getDeviceFormatString(SampleFormat format)noexcep
 	case SampleFormat::Int32:	return "Int32";
 	case SampleFormat::Float32:	return "Float32";
 	}
-	lsp_assert(false);
+	Assertion::unreachable();
 }
 size_t WasapiOutput::getDeviceBufferFrameCount()const noexcept
 {
-	lsp_assert(valid());
+	Assertion::check(valid());
 	return mAudioBufferFrameCount;
 }
 
@@ -342,7 +342,7 @@ void WasapiOutput::playThreadMain()
 			Log::w(LOGF("WasapiOutput : playThread - failed (GetCurrentPadding)"));
 			continue;
 		}
-		lsp_assert(maxFrameCount >= paddingFrameCount);
+		Assertion::check(maxFrameCount >= paddingFrameCount);
 		UINT32 availableFrameCount = maxFrameCount - paddingFrameCount;
 		if(availableFrameCount == 0) {
 			// no data
@@ -369,8 +369,7 @@ void WasapiOutput::playThreadMain()
 		}
 		switch(sampleType) {
 		case SampleFormat::Unknown:
-			lsp_assert(false);
-			break;
+			Assertion::unreachable();
 		case SampleFormat::Int8:
 		case SampleFormat::Int16:
 		case SampleFormat::Int24:
