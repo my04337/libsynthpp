@@ -7,7 +7,6 @@
 #include <LSP/Synth/Luath.hpp>
 #include <LSP/MIDI/Sequencer.hpp>
 #include <LSP/Threading/EventSignal.hpp>
-#include <LSP/Audio/SDLOutput.hpp>
 
 // より低遅延なオーディオ出力APIが使える場合、それを使用する
 #ifdef WIN32
