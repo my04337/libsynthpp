@@ -1,6 +1,7 @@
 ﻿#pragma once
 
-// --- 基本的なヘッダ類 ---
+// #  基本的なヘッダおよびマクロ ---
+// プラットフォーム非依存
 #include <algorithm>
 #include <any>
 #include <array>
@@ -30,11 +31,16 @@
 #include <vector>
 
 
-// --- 基本的なマクロ類 ---
+// プラットフォーム依存 : Win32
 #ifdef WIN32
 #define WIN32_LEAN_AND_MEAN 
 #define STRICT 
 #define NOMINMAX 
+#include <sdkddkver.h>
+#include <Windows.h>
+#include <atlbase.h>
+#include <atlcom.h>
+
 #endif
 
 // マクロ展開遅延
