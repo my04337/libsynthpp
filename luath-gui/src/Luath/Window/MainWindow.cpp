@@ -8,6 +8,8 @@
 #include <map>
 #include <numeric>
 
+#define FORMAT_STRING(...) ((std::wostringstream() << __VA_ARGS__).str())
+
 using namespace LSP;
 using namespace Luath;
 using namespace Luath::Window;
@@ -83,11 +85,7 @@ MainWindow::MainWindow()
 	: mDrawingThreadAborted(false)
 	, mSynthesizer(SAMPLE_FREQ)
 	, mSequencer(mSynthesizer)
-#ifdef USE_WASAPI_OUTPUT
 	, mOutput()
-#else
-	, mOutput(SAMPLE_FREQ, 2, Audio::SDLOutput::SampleFormat::Float32)
-#endif
 {
 	mSynthesizer.setRenderingCallback([this](LSP::Signal<float>&& sig){onRenderedSignal(std::move(sig));});
 

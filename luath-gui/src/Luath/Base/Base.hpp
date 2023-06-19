@@ -8,8 +8,6 @@
 #include <sstream>
 #include <iomanip>
 
-#define FORMAT_STRING(...) ((std::wostringstream() << __VA_ARGS__).str())
-
 namespace Luath
 {
 // いくつかのLSPのクラスは便利なためusingしておく
