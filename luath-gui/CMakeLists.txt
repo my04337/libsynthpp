@@ -43,8 +43,8 @@ add_custom_command(TARGET luath-gui POST_BUILD
 	COMMAND ${CMAKE_COMMAND} -E make_directory ${LUATH_BINARY_DIR}/assets/font
 	COMMAND ${CMAKE_COMMAND} -E make_directory ${LUATH_BINARY_DIR}/assets/sample_midi
 
-	COMMAND ${CMAKE_COMMAND} -E copy ${UmeFont_ROOT_PATH}/ume-tgo4.ttf ${LUATH_BINARY_DIR}/assets/font
-	COMMAND ${CMAKE_COMMAND} -E copy ${UmeFont_ROOT_PATH}/license.html ${LUATH_BINARY_DIR}/assets/font
+	COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_LIST_DIR}/../third_party/UmeFont/ume-tgo4.ttf ${LUATH_BINARY_DIR}/assets/font
+	COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_LIST_DIR}/../third_party/UmeFont/license.html ${LUATH_BINARY_DIR}/assets/font
 
 	COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_LIST_DIR}/assets ${LUATH_BINARY_DIR}/assets
 )

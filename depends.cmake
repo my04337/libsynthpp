@@ -28,15 +28,3 @@ find_package(
 	SDL2_ttf REQUIRED
 	HINTS ${sdl2_ttf_SOURCE_DIR}
 )
-
-
-###########################################################
-### UmeFont
-FetchContent_Declare(
-	umefont	
-	URL https://ja.osdn.net/projects/ume-font/downloads/22212/umefont_670.7z/
-	URL_HASH SHA1=c0f1a0e079ef43dd4ca7756853a0b5fa43e39b2d
-)
-FetchContent_MakeAvailable(umefont)
-
-set(UmeFont_ROOT_PATH ${umefont_SOURCE_DIR})
