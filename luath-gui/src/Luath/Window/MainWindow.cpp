@@ -140,7 +140,7 @@ bool MainWindow::initialize()
 		SDL_WINDOW_OPENGL
 	);
 	if(!window) {
-		Log::e(LOGF("Main : could not create window :" << SDL_GetError()));
+		Log::e([](auto& _) {_ << "Main : could not create window :" << SDL_GetError(); });
 		return false;
 	}
 	auto fail_act_destroy = finally([&]{SDL_DestroyWindow(window);});

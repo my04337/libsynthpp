@@ -105,7 +105,7 @@ void WasapiOutput::write(const Signal<sample_type>& sig)
 	if(signal_frames == 0) return;
 
 	if (!valid()) {
-		Log::e(LOGF("WasapiOutput : write - failed (invalid)"));
+		Log::e("WasapiOutput : write - failed (invalid)");
 		return;
 	}
 	

@@ -64,7 +64,7 @@ bool WasapiOutput::valid() const noexcept
 void WasapiOutput::initialize()
 {
 	if(valid()) {
-		Log::e(LOGF("WasapiOutput : initialize - failed (already initialized)"));
+		Log::e("WasapiOutput : initialize - failed (already initialized)");
 		return;
 	}
 	HRESULT hr;
@@ -76,7 +76,7 @@ void WasapiOutput::initialize()
 	// デフォルトのフォーマット取得
 	WAVEFORMATEX* pWaveFormatEx = nullptr;
 	if (!SUCCEEDED(hr = pAudioClient->GetMixFormat(&pWaveFormatEx))) {
-		Log::e(LOGF("WasapiOutput : initialize - failed (getting mix format)"));
+		Log::e("WasapiOutput : initialize - failed (getting mix format)");
 		return;
 	}
 	Assertion::check(pWaveFormatEx != nullptr);
@@ -110,7 +110,7 @@ void WasapiOutput::initialize()
 		}
 	}
 	if (sampleFormat == SampleFormat::Unknown) {
-		Log::e(LOGF("WasapiOutput : initialize - failed (unsupported sample format)"));
+		Log::e("WasapiOutput : initialize - failed (unsupported sample format)");
 		return;
 	}
 
@@ -121,7 +121,7 @@ void WasapiOutput::initialize()
 	UINT32 minPeriodInFrames = 0;
 	UINT32 maxPeriodInFrame = 0;
 	if (!SUCCEEDED(hr = pAudioClient->GetSharedModeEnginePeriod(pWaveFormatEx, &defaultPeriodInFrames, &fundamentalPeriodInFrames, &minPeriodInFrames, &maxPeriodInFrame))) {
-		Log::e(LOGF("WasapiOutput : initialize - failed (Could not get default device period)"));
+		Log::e("WasapiOutput : initialize - failed (Could not get default device period)");
 		return;
 	}
 
@@ -133,27 +133,27 @@ void WasapiOutput::initialize()
 		NULL
 	); 
 	if (!SUCCEEDED(hr)) {
-		Log::e(LOGF("WasapiOutput : initialize - failed (initialize)"));
+		Log::e("WasapiOutput : initialize - failed (initialize)");
 		return;
 	}
 
 	// イベントセット
 	if (!(SUCCEEDED(hr = pAudioClient->SetEventHandle(mAudioEvent)))) {
-		Log::e(LOGF("WasapiOutput : initialize - failed (SetEventHandle)"));
+		Log::e("WasapiOutput : initialize - failed (SetEventHandle)");
 		return;
 	}
 
 	// レンダラ取得 (バッファクリア用)
 	CComPtr<IAudioRenderClient> pRenderClient;
 	if (!SUCCEEDED(hr = pAudioClient->GetService(__uuidof(IAudioRenderClient), (void**)&pRenderClient))) {
-		Log::e(LOGF("WasapiOutput : initialize - failed (IAudioRenderClient)"));
+		Log::e("WasapiOutput : initialize - failed (IAudioRenderClient)");
 		return;
 	}
 
 	// バッファの明示的ゼロクリア
 	UINT32 bufferFrameCount = 0;
 	if (!SUCCEEDED(hr = pAudioClient->GetBufferSize(&bufferFrameCount))) {
-		Log::e(LOGF("WasapiOutput : initialize - failed (GetBufferSize)"));
+		Log::e("WasapiOutput : initialize - failed (GetBufferSize)");
 		return;
 	}
 	LPBYTE pData;
@@ -165,7 +165,7 @@ void WasapiOutput::initialize()
 	// 最終準備 : 再生用スレッド初期化
 	auto hAudioThread = reinterpret_cast<HANDLE>(_beginthreadex(NULL, 0, &playThreadMainProxy, this, CREATE_SUSPENDED, nullptr));
 	if (!hAudioThread) {
-		Log::e(LOGF("WasapiOutput : initialize - failed (_beginthreadex)"));
+		Log::e("WasapiOutput : initialize - failed (_beginthreadex)");
 		return;
 	}
 	mAudioThreadHandle = hAudioThread;
@@ -179,22 +179,22 @@ void WasapiOutput::initialize()
 	fin_act_freeMexedFormat.reset();
 
 	// OK
-	Log::i(LOGF("WasapiOutput : initialized (shared mode)"));
-	Log::i(LOGF("  sample freq => " << pWaveFormatEx->nSamplesPerSec << "[Hz]"));
-	Log::i(LOGF("  channels    => " << pWaveFormatEx->nChannels));
-	Log::i(LOGF("  format      => " << getDeviceFormatString(sampleFormat)));
+	Log::i([&](auto& _) {_ << "WasapiOutput : initialized (shared mode)"; });
+	Log::i([&](auto& _) {_ << "  sample freq => " << pWaveFormatEx->nSamplesPerSec << "[Hz]"; });
+	Log::i([&](auto& _) {_ << "  channels    => " << pWaveFormatEx->nChannels; });
+	Log::i([&](auto& _) {_ << "  format      => " << getDeviceFormatString(sampleFormat); });
 	ResumeThread(hAudioThread); // 再生用スレッド始動
 }
 
 bool WasapiOutput::start()
 {
 	if (!valid()) {
-		Log::e(LOGF("WasapiOutput : start - failed (invalid)"));
+		Log::e("WasapiOutput : start - failed (invalid)");
 		return false;
 	}
 	HRESULT hr;
 	if (!(SUCCEEDED(hr = mAudioClient->Start()))) {
-		Log::e(LOGF("WasapiOutput : start - failed (Start)"));
+		Log::e("WasapiOutput : start - failed (Start)");
 		return false;
 	}
 	SetEvent(mAudioEvent);
@@ -204,12 +204,12 @@ bool WasapiOutput::start()
 bool WasapiOutput::stop()
 {
 	if (!valid()) {
-		Log::e(LOGF("WasapiOutput : stop - failed (invalid)"));
+		Log::e("WasapiOutput : stop - failed (invalid)");
 		return false;
 	}
 	HRESULT hr;
 	if (!(SUCCEEDED(hr = mAudioClient->Stop()))) {
-		Log::e(LOGF("WasapiOutput : stop - failed (Stop)"));
+		Log::e("WasapiOutput : stop - failed (Stop)");
 		return false;
 	}
 	SetEvent(mAudioEvent);
@@ -274,21 +274,21 @@ CComPtr<IAudioClient3> WasapiOutput::getDefaultAudioClient()
 	// マルチメディアデバイス列挙子
 	CComPtr<IMMDeviceEnumerator> pDeviceEnumerator;
 	if (!SUCCEEDED(hr = pDeviceEnumerator.CoCreateInstance(__uuidof(MMDeviceEnumerator), NULL, CLSCTX_ALL))) {
-		Log::e(LOGF("WasapiOutput : getDefaultAudioClient - failed (IMMDeviceEnumerator)"));
+		Log::e("WasapiOutput : getDefaultAudioClient - failed (IMMDeviceEnumerator)");
 		return {};
 	}
 
 	// デフォルトのデバイスを選択
 	CComPtr<IMMDevice> pDevice;
 	if (!SUCCEEDED(hr = pDeviceEnumerator->GetDefaultAudioEndpoint(eRender, eConsole, &pDevice))) {
-		Log::e(LOGF("WasapiOutput : getDefaultAudioClient - failed (IMMDevice)"));
+		Log::e("WasapiOutput : getDefaultAudioClient - failed (IMMDevice)");
 		return {};
 	}
 
 	// オーディオクライアントを取得
 	CComPtr<IAudioClient3> pAudioClient;
 	if (!SUCCEEDED(hr = pDevice->Activate(_uuidof(IAudioClient3), CLSCTX_ALL, nullptr, reinterpret_cast<void**>(&pAudioClient)))) {
-		Log::e(LOGF("WasapiOutput : getDefaultAudioClient - failed (IAudioClient3)"));
+		Log::e("WasapiOutput : getDefaultAudioClient - failed (IAudioClient3)");
 		return {};
 	}
 
@@ -304,13 +304,13 @@ unsigned WasapiOutput::playThreadMainProxy(void* this_)
 
 void WasapiOutput::playThreadMain()
 {
-	Log::d(LOGF("WasapiOutput : playThread begin"));
-	auto fin_act_thread_end = finally([]{ Log::d(LOGF("WasapiOutput : playThread end"));} );
+	Log::d("WasapiOutput : playThread begin");
+	auto fin_act_thread_end = finally([]{ Log::d("WasapiOutput : playThread end");} );
 
 	HRESULT hr;
 	CComPtr<IAudioRenderClient> pRenderClient;
 	if (!SUCCEEDED(mAudioClient->GetService(__uuidof(IAudioRenderClient), (void**)&pRenderClient))) {
-		Log::e(LOGF("WasapiOutput : playThread - failed (GetService:IAudioRenderClient)"));
+		Log::e("WasapiOutput : playThread - failed (GetService:IAudioRenderClient)");
 		return;
 	}
 
@@ -334,12 +334,12 @@ void WasapiOutput::playThreadMain()
 		// - 今回出力可能なバッファサイズを取得
 		UINT32 maxFrameCount = 0;
 		if (!SUCCEEDED(hr = mAudioClient->GetBufferSize(&maxFrameCount))) {
-			Log::w(LOGF("WasapiOutput : playThread - failed (GetBufferSize)"));
+			Log::w("WasapiOutput : playThread - failed (GetBufferSize)");
 			continue;
 		}
 		UINT32 paddingFrameCount = 0;
 		if (!SUCCEEDED(hr = mAudioClient->GetCurrentPadding(&paddingFrameCount))) {
-			Log::w(LOGF("WasapiOutput : playThread - failed (GetCurrentPadding)"));
+			Log::w("WasapiOutput : playThread - failed (GetCurrentPadding)");
 			continue;
 		}
 		Assertion::check(maxFrameCount >= paddingFrameCount);
@@ -364,7 +364,7 @@ void WasapiOutput::playThreadMain()
 		// 出力バッファへ書き出し
 		LPBYTE pBuffer = nullptr;
 		if (!SUCCEEDED(hr = pRenderClient->GetBuffer(writingFrameCount, &pBuffer))) {
-			Log::w(LOGF("WasapiOutput : playThread - failed (GetBuffer)"));
+			Log::w("WasapiOutput : playThread - failed (GetBuffer)");
 			continue;
 		}
 		switch(sampleType) {
@@ -397,8 +397,7 @@ void WasapiOutput::playThreadMain()
 			break;
 		}
 		hr = pRenderClient->ReleaseBuffer(writingFrameCount, 0);
-		Log::v(LOGF("WasapiOutput : playThread - wrote " << writingFrameCount << " samples"));
-
+		Log::v([&](auto& _) {_ << "WasapiOutput : playThread - wrote " << writingFrameCount << " samples"; });
 	}
 
 }

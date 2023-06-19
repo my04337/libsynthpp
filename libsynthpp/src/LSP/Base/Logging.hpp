@@ -4,19 +4,6 @@
 #include <LSP/Base/Id.hpp>
 #include <LSP/Base/StackTrace.hpp>
 
-
-// ログ用ユーティリティマクロ
-#define LOGF(...) [&](std::ostringstream& _)->void { _ << __VA_ARGS__; }
-
-
-// 開発時用デバッグログ(コミット前に除去すること)
-#define lsp_debug_log(expr) \
-	LSP::Log::w(LOGF(LSP::file_macro_to_filename(__FILE__) << ":" << __LINE__  << " - " << expr));
-
-#define lsp_dump_stacktrace() \
-	lsp_debug_log(""; LSP::Log::printStackTrace(_, LSP::Log::getStackTrace()));
-
-
 namespace LSP
 {
 class ILogger;

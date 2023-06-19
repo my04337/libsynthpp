@@ -6,18 +6,18 @@ using namespace LSP::Audio;
 WavFileOutput::WavFileOutput(uint32_t sampleFreq, uint32_t bitsPerSample, uint32_t channels, const std::filesystem::path& filePath)
 {
 	if(channels < 1 || channels > 2) {
-		Log::e(LOGF("WavFileOutput : initialize - failed (invalid channel num)"));
+		Log::e("WavFileOutput : initialize - failed (invalid channel num)");
 		return;
 	}
 	if(bitsPerSample != 16 && bitsPerSample != 32) {
-		Log::e(LOGF("WavFileOutput : initialize - failed (invalid bits per sampe)"));
+		Log::e("WavFileOutput : initialize - failed (invalid bits per sampe)");
 		return;
 	}
 
 	std::ofstream fs;
 	fs.open(filePath, std::ostream::out | std::ostream::trunc | std::ostream::binary);
 	if (!fs) {
-		Log::e(LOGF("WavFileOutput : initialize - failed (cannot open file)"));
+		Log::e("WavFileOutput : initialize - failed (cannot open file)");
 		return;
 	}
 
@@ -55,12 +55,12 @@ WavFileOutput::WavFileOutput(uint32_t sampleFreq, uint32_t bitsPerSample, uint32
 	// ---
 
 	if (!fs) {
-		Log::e(LOGF("WavFileOutput : initialize - failed (creating wav file header)"));
+		Log::e("WavFileOutput : initialize - failed (creating wav file header)");
 		return;
 	}
 
 	// OK
-	Log::i(LOGF("WavFileOutput : initialized"));
+	Log::i("WavFileOutput : initialized");
 	mFile = std::move(fs);
 	mSampleFreq = sampleFreq;
 	mBitsPerSample = bitsPerSample;
@@ -96,7 +96,7 @@ void WavFileOutput::close()noexcept
 
 	// ---
 	if(!mFile) {
-		Log::e(LOGF("WavFileOutput : finalize - failed (not valid)"));
+		Log::e("WavFileOutput : finalize - failed (not valid)");
 		return;
 	}
 
@@ -114,7 +114,7 @@ void WavFileOutput::close()noexcept
 	write_binary(uint32_t(riff_size));
 
 	if(!mFile) {
-		Log::e(LOGF("WavFileOutput : finalize - failed (file size)"));
+		Log::e("WavFileOutput : finalize - failed (file size)");
 		return;
 	}
 

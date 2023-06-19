@@ -9,10 +9,10 @@ Application::Application()
 {
 	// SDL 初期化
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0) {
-		Log::f(LOGF("Main : could not initialize SDL :" << SDL_GetError()));
+		Log::f([](auto& _) {_ << "Main : could not initialize SDL :" << SDL_GetError(); });
 	}
 	if (TTF_Init() < 0) {
-		Log::f(LOGF("Main : could not initialize SDL_ttf :" << TTF_GetError()));
+		Log::f([](auto& _) {_ << "Main : could not initialize SDL_ttf :" << TTF_GetError(); });
 	}
 
 	// 各種サービス初期化

@@ -52,7 +52,7 @@ void WavFileOutput::write(const Signal<sample_type>& sig)
 	if(signal_frames == 0) return;
 
 	if (fail()) {
-		Log::e(LOGF("WasapiOutput : write - failed (invalid)"));
+		Log::e("WasapiOutput : write - failed (invalid)");
 		return;
 	}
 	Assertion::require(signal_channels == mChannels, "WasapiOutput : write - failed (channel count is mismatch)");

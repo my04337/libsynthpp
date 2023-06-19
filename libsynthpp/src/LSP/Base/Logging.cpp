@@ -56,7 +56,7 @@ Log::StackTrace Log::getStackTrace(size_t skipFrames)noexcept
 
 #define LSP_IMPL_LOG_FUNC(level) \
     void Log::level(std::string_view text)noexcept \
-    { write(LogLevel::level, LOGF(text), nullptr);} \
+    { write(LogLevel::level, [text](auto&_){_ <<text;}, nullptr);} \
     void Log::level(const Writer& writer)noexcept \
     { write(LogLevel::level, writer, nullptr);}
 
@@ -66,7 +66,7 @@ LSP_IMPL_LOG_FUNC(i)
 LSP_IMPL_LOG_FUNC(w)
 LSP_IMPL_LOG_FUNC(e)
 [[noreturn]] void Log::f(std::string_view text, const StackTrace* stacks)noexcept
-{ write(LogLevel::f, LOGF(text), stacks, true); /*到達しないはず*/ std::terminate(); }
+{ write(LogLevel::f, [text](auto& _) {_ << text; }, stacks, true); /*到達しないはず*/ std::terminate(); }
 [[noreturn]] void Log::f(const Writer& writer, const StackTrace* stacks)noexcept
 { write(LogLevel::f, writer, stacks, true); /*到達しないはず*/ std::terminate();}
 
