@@ -1,7 +1,7 @@
 #include <lsp/base/math.hpp>
 #include <lsp/base/signal.hpp>
-#include <lsp/filter/biquadratic_filter.hpp>
-#include <lsp/filter/envelope_generator.hpp>
+#include <lsp/effector/biquadratic_filter.hpp>
+#include <lsp/effector/envelope_generator.hpp>
 #include <lsp/midi/message.hpp>
 #include <lsp/midi/parser.hpp>
 #include <lsp/midi/sequencer.hpp>
@@ -77,8 +77,8 @@ namespace
 {
 [[maybe_unused]]
 void unused_function_f_eg() {
-	filter::EnvelopeGenerator<float> eg_float;
-	filter::EnvelopeGenerator<double> eg_double;
+	effector::EnvelopeGenerator<float> eg_float;
+	effector::EnvelopeGenerator<double> eg_double;
 	eg_float.setMelodyEnvelope(1, 0, 0, 0, 0);
 	eg_float.noteOn();
 	eg_float.update();
@@ -93,8 +93,8 @@ namespace
 {
 [[maybe_unused]]
 void unused_function_f_bq() {
-	filter::BiquadraticFilter<float> bqf_float;
-	filter::BiquadraticFilter<double> bqf_double;
+	effector::BiquadraticFilter<float> bqf_float;
+	effector::BiquadraticFilter<double> bqf_double;
 }
 }
 

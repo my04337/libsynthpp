@@ -1,6 +1,6 @@
 ﻿#include <lsp/synth/wave_table.hpp>
 #include <lsp/generator/function_generator.hpp>
-#include <lsp/filter/biquadratic_filter.hpp>
+#include <lsp/effector/biquadratic_filter.hpp>
 
 using namespace lsp;
 using namespace lsp::synth;
@@ -43,7 +43,7 @@ lsp::generator::WaveTableGenerator<float> WaveTable::get(size_t id)const
 void WaveTable::reset()
 {
 	using FunctionGenerator = lsp::generator::FunctionGenerator<float>;
-	using BiquadraticFilter = lsp::filter::BiquadraticFilter<float>;
+	using BiquadraticFilter = lsp::effector::BiquadraticFilter<float>;
 
 	mNextCustomWaveId = CustomWaveIdBegin;
 	mWaveTable.clear();

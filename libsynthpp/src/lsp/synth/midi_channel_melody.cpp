@@ -188,7 +188,7 @@ std::unique_ptr<lsp::synth::Voice> lsp::synth::MidiChannel::createMelodyVoice(ui
 	// TODO sustain_levelで除算しているのは旧LibSynth++からの移植コード。 補正が不要になったら削除すること
 	float volume = powf(10.f, -20.f * (1.f - vel / 127.f) / 20.f) * v / ((s > 0.8f && s != 0.f) ? s : 0.8f);
 	float cutoffLevel = 0.01f;
-	static const lsp::filter::EnvelopeGenerator<float>::Curve curveExp3(3.0f);
+	static const lsp::effector::EnvelopeGenerator<float>::Curve curveExp3(3.0f);
 
 	float overtuneGain = 0.f; // dB
 	if(mSystemType != SystemType::GM1) {

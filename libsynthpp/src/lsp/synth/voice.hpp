@@ -1,8 +1,8 @@
 ﻿#pragma once
 
 #include <lsp/synth/wave_table.hpp>
-#include <lsp/filter/envelope_generator.hpp>
-#include <lsp/filter/biquadratic_filter.hpp>
+#include <lsp/effector/envelope_generator.hpp>
+#include <lsp/effector/biquadratic_filter.hpp>
 #include <lsp/Generator/wave_table_generator.hpp>
 
 namespace lsp::synth
@@ -17,14 +17,14 @@ class Voice
 	: non_copy_move
 {
 public:
-	using EnvelopeGenerator = lsp::filter::EnvelopeGenerator<float>;
-	using EnvelopeState = lsp::filter::EnvelopeState;
-	using BiquadraticFilter = lsp::filter::BiquadraticFilter<float>;
+	using EnvelopeGenerator = lsp::effector::EnvelopeGenerator<float>;
+	using EnvelopeState = lsp::effector::EnvelopeState;
+	using BiquadraticFilter = lsp::effector::BiquadraticFilter<float>;
 
 	struct Digest {
 		float freq = 0; // 基本周波数
 		float envelope = 0; // エンベロープジェネレータ出力
-		lsp::filter::EnvelopeState state = lsp::filter::EnvelopeState::Free; // エンベロープジェネレータ ステート
+		lsp::effector::EnvelopeState state = lsp::effector::EnvelopeState::Free; // エンベロープジェネレータ ステート
 	};
 
 public:

@@ -1,9 +1,9 @@
 ﻿#pragma once
 
 #include <lsp/base/base.hpp>
-#include <lsp/base/signal.hpp>
+#include <lsp/base/sample.hpp>
 
-namespace lsp::filter
+namespace lsp::effector
 {
 
 

@@ -1,10 +1,11 @@
 ﻿#pragma once
 
 #include <lsp/base/base.hpp>
+#include <lsp/base/sample.hpp>
 #include <lsp/base/math.hpp>
 
 
-namespace lsp::filter {
+namespace lsp::effector {
 
 // 双二次フィルタクラス
 //   参考URL : http://ufcpp.net/study/sp/digital_filter/biquad/
