@@ -6,7 +6,7 @@
 #include <fstream>
 #include <filesystem>
 
-namespace lsp::audio {
+namespace lsp::io {
 
 // WASAPI 出力
 class WavFileOutput final

@@ -8,7 +8,7 @@
 #include <lsp/midi/sequencer.hpp>
 #include <lsp/base/event_signal.hpp>
 
-#include <lsp/audio/wasapi_output.hpp>
+#include <lsp/io/wasapi_output.hpp>
 
 namespace luath_gui::window
 {
@@ -44,7 +44,7 @@ private:
 	std::atomic_bool mDrawingThreadAborted;
 
 	// 再生用ストリーム
-	lsp::audio::WasapiOutput mOutput;
+	lsp::io::WasapiOutput mOutput;
 
 	// 再生パラメータ
 	std::atomic<float> mPostAmpVolume = 1.0f;
