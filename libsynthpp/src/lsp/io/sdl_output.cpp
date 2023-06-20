@@ -1,9 +1,9 @@
-﻿#include <lsp/io/sdl_utput.hpp>
+﻿#include <lsp/io/sdl_output.hpp>
 #include <SDL_audio.h>
 
 
 using namespace lsp;
-using namespace lso::io;
+using namespace lsp::io;
 
 SDLOutput::SDLOutput(uint32_t sampleFreq, uint32_t channels, SampleFormat format)
 	: mAudioDeviceID(0)
@@ -26,7 +26,7 @@ bool SDLOutput::valid() const noexcept
 void SDLOutput::initialize(uint32_t sampleFreq, uint32_t channels, SampleFormat format)
 {
 	if(valid()) {
-		Log::e(LOGF("SDLOutput : initialize - failed (already initialized)"));
+		Log::e("SDLOutput : initialize - failed (already initialized)");
 		return;
 	}
 
@@ -54,7 +54,7 @@ void SDLOutput::initialize(uint32_t sampleFreq, uint32_t channels, SampleFormat 
 		0
 	);
 	if (deviceId == 0) {
-		Log::e(LOGF("SDLOutput : initialize - failed (openDevice)[" << SDL_GetError() << "]"));
+		Log::e([&](auto& o) {o << "SDLOutput : initialize - failed (openDevice)[" << SDL_GetError() << "]"; });
 		return;
 	}
 
@@ -63,21 +63,21 @@ void SDLOutput::initialize(uint32_t sampleFreq, uint32_t channels, SampleFormat 
 	mAudioSpec = std::make_unique<SDL_AudioSpec>(have);
 	mSampleFormat = format;
 	mBytesPerSample = bytePerSample;
-	Log::i(LOGF("SDLOutput : initialized"));
-	Log::i(LOGF("  sample freq => " << mAudioSpec->freq << "[Hz]"));
-	Log::i(LOGF("  channels    => " << mAudioSpec->channels));
-	Log::i(LOGF("  format      => " << getDeviceFormatString(mSampleFormat)));
+	Log::i("SDLOutput : initialized");
+	Log::i([&](auto& o) {o << "  sample freq => " << mAudioSpec->freq << "[Hz]"; });
+	Log::i([&](auto& o) {o << "  channels    => " << mAudioSpec->channels; });
+	Log::i([&](auto& o) {o << "  format      => " << getDeviceFormatString(mSampleFormat); });
 	SDL_PauseAudioDevice(mAudioDeviceID, 0);
 }
 void SDLOutput::_write(void* data, size_t len)
 {
-	lsp_assert(valid());
+	check(valid());
 	SDL_QueueAudio(mAudioDeviceID, data, static_cast<Uint32>(len));
 }
 bool SDLOutput::start()
 {
 	if (!valid()) {
-		Log::e(LOGF("SDLOutput : start - failed (invalid)"));
+		Log::e("SDLOutput : start - failed (invalid)");
 		return false;
 	}
 	SDL_PauseAudioDevice(mAudioDeviceID, 0);
@@ -87,7 +87,7 @@ bool SDLOutput::start()
 bool SDLOutput::stop()
 {
 	if (!valid()) {
-		Log::e(LOGF("SDLOutput : stop - failed (invalid)"));
+		Log::e("SDLOutput : stop - failed (invalid)");
 		return false;
 	}
 	SDL_PauseAudioDevice(mAudioDeviceID, 1);
@@ -95,23 +95,23 @@ bool SDLOutput::stop()
 }
 uint32_t SDLOutput::getDeviceSampleFreq()const noexcept
 {
-	lsp_assert(valid());
+	check(valid());
 	return static_cast<uint32_t>(mAudioSpec->freq);
 }
 uint32_t SDLOutput::getDeviceChannels()const noexcept
 {
-	lsp_assert(valid());
+	check(valid());
 	return static_cast<uint32_t>(mAudioSpec->channels);
 }
 
 SDLOutput::SampleFormat SDLOutput::getDeviceFormat()const noexcept
 {
-	lsp_assert(valid());
+	check(valid());
 	return mSampleFormat;
 }
 std::string_view SDLOutput::getDeviceFormatString()const noexcept
 {
-	lsp_assert(valid());
+	check(valid());
 	return getDeviceFormatString(mSampleFormat);
 }
 std::string_view SDLOutput::getDeviceFormatString(SampleFormat format)noexcept
@@ -123,18 +123,18 @@ std::string_view SDLOutput::getDeviceFormatString(SampleFormat format)noexcept
 	case SampleFormat::Int32:	return "Int32";
 	case SampleFormat::Float32:	return "Float32";
 	}
-	lsp_assert(false);
+	unreachable();
 }
 
 size_t SDLOutput::getDeviceBufferFrameCount()const noexcept
 {
-	lsp_assert(valid());
+	check(valid());
 	return static_cast<size_t>(mAudioSpec->samples);
 }
 
 size_t SDLOutput::getBufferedFrameCount()const noexcept
 {
-	lsp_assert(valid());
+	check(valid());
 	auto buffered_bytes = SDL_GetQueuedAudioSize(mAudioDeviceID);
 	return buffered_bytes / mBytesPerSample / mAudioSpec->channels;
 }

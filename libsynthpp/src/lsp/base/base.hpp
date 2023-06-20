@@ -12,6 +12,7 @@
 #include <deque>
 #include <filesystem>
 #include <functional>
+#include <latch>
 #include <limits>
 #include <list>
 #include <memory_resource>

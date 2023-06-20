@@ -87,7 +87,7 @@ void SDLOutput::write(const Signal<sample_type>& sig)
 	if(signal_frames == 0) return;
 
 	if (!valid()) {
-		Log::e(LOGF("WasapiOutput : write - failed (invalid)"));
+		Log::e("WasapiOutput : write - failed (invalid)");
 		return;
 	}
 
@@ -116,8 +116,7 @@ void SDLOutput::write(const Signal<sample_type>& sig)
 
 	switch (mSampleFormat) {
 	case SampleFormat::Unknown:
-		lsp_assert(false);
-		break;
+		unreachable();
 	case SampleFormat::Int8:
 		convAndWrite(int8_t(0));
 		break;
