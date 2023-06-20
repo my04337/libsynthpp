@@ -21,8 +21,8 @@ public:
 		, mVolume(volume)
 		, mCycles(cycles)
 	{
-		Assertion::require(table.frames() > 0);
-		Assertion::require(table.channels() == 1);
+		require(table.frames() > 0);
+		require(table.channels() == 1);
 	}
 
 	sample_type update(uint32_t sampleFreq, parameter_type freq)

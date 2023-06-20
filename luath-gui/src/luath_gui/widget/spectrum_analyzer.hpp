@@ -41,7 +41,7 @@ namespace luath_gui::widget
 		const auto signal_frames = sig.frames();
 		const auto buffer_length = mBufferLength;
 
-		lsp::Assertion::require(signal_channels == mChannels, "WasapiOutput : write - failed (channel count is mismatch)");
+		lsp::require(signal_channels == mChannels, "WasapiOutput : write - failed (channel count is mismatch)");
 
 
 		for (size_t ch = 0; ch < signal_channels; ++ch) {

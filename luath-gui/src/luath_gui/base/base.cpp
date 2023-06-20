@@ -33,9 +33,9 @@ Text::~Text()
 
 Text Text::make(SDL_Renderer* renderer, TTF_Font* font, const std::wstring& textW, SDL_Color color)
 {
-	Assertion::require(renderer != nullptr);
-	Assertion::require(font != nullptr);
-	Assertion::require(sizeof(wchar_t) == sizeof(Uint16));
+	require(renderer != nullptr);
+	require(font != nullptr);
+	require(sizeof(wchar_t) == sizeof(Uint16));
 	
 	auto surface = TTF_RenderUNICODE_Blended(font, reinterpret_cast<const Uint16 *>(textW.c_str()), color);
 	if(!surface) return {};
@@ -91,7 +91,7 @@ SDL_FRect FastTextRenderer::draw(float x, float y, const std::wstring& text)
 			text = &mCachedCharacters.emplace(ch, Text::make(mRenderer, mFont, ch, mColor)).first->second;
 		}
 
-		Assertion::check(text != nullptr);
+		check(text != nullptr);
 		text->draw(curX, y);
 		curX += text->width();
 		maxHeight = std::max(maxHeight, text->height());

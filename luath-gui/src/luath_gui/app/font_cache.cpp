@@ -10,7 +10,7 @@ FontCache::FontCache()
 	font_path.append("assets/font/ume-tgo4.ttf");
 
 	mFontRWops = SDL_RWFromFile(font_path.string().c_str(), "rb");
-	lsp::Assertion::check(mFontRWops != nullptr, [](auto& o) {o << "font file load failed : " << SDL_GetError(); });
+	lsp::check(mFontRWops != nullptr, [](auto& o) {o << "font file load failed : " << SDL_GetError(); });
 }
 FontCache::~FontCache()
 {
@@ -29,7 +29,7 @@ TTF_Font* FontCache::get(int ptsize)
 
 	auto font = TTF_OpenFontRW(mFontRWops, 0, ptsize);
 	SDL_RWseek(mFontRWops, 0, RW_SEEK_SET);
-	lsp::Assertion::check(font != nullptr, [](auto& o) {o << "font create failed : " << TTF_GetError(); });
+	lsp::check(font != nullptr, [](auto& o) {o << "font create failed : " << TTF_GetError(); });
 	mFontMap.emplace(ptsize, font);
 	return font;
 }

@@ -17,7 +17,7 @@ size_t WaveTable::add(Signal<float>&& wav, float preAmp, float cycles)
 }
 void WaveTable::add(size_t id, Signal<float>&& wav, float preAmp, float cycles)
 {
-	Assertion::require(wav.channels() == 1);
+	require(wav.channels() == 1);
 
 	if (preAmp < 0) {
 		// MEMO 実効値の2乗=パワーを用いて正規化すると、それらしい音量で揃う(ラウドネスは考慮していないので注意)
@@ -32,7 +32,7 @@ lsp::generator::WaveTableGenerator<float> WaveTable::get(size_t id)const
 	auto found = mWaveTable.find(id);
 	if (found == mWaveTable.end()) {
 		found = mWaveTable.find(Preset::Ground);
-		Assertion::check(found != mWaveTable.end());
+		check(found != mWaveTable.end());
 	}
 
 	auto& [wave, preAmp, cycles] = found->second;
@@ -139,7 +139,7 @@ void WaveTable::reset()
 
 float WaveTable::calcRMS(SignalView<float> wav)
 {
-	Assertion::require(wav.channels() == 1);
+	require(wav.channels() == 1);
 
 	// 信号の2乗平均値を取る
 	const size_t frames = wav.frames();

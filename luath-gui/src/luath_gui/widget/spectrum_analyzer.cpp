@@ -27,9 +27,9 @@ void SpectrumAnalyzer::setParam(uint32_t sampleFreq, uint32_t channels, uint32_t
 		mBufferLength = newBufferLength;
 	}
 
-	lsp::Assertion::require(channels >= 1);
-	lsp::Assertion::require(mBufferLength >= 1 && mBufferLength <= bufferLength);
-	lsp::Assertion::require(std::bitset<sizeof(bufferLength)*8>(mBufferLength).count() == 1);
+	lsp::require(channels >= 1);
+	lsp::require(mBufferLength >= 1 && mBufferLength <= bufferLength);
+	lsp::require(std::bitset<sizeof(bufferLength)*8>(mBufferLength).count() == 1);
 
 	_reset();
 }
@@ -49,7 +49,7 @@ void SpectrumAnalyzer::_reset()
 
 void SpectrumAnalyzer::draw(SDL_Renderer* renderer, int left_, int top_, int width_, int height_)
 {
-	lsp::Assertion::require(renderer != nullptr);
+	lsp::require(renderer != nullptr);
 
 	std::lock_guard lock(mMutex);
 
@@ -118,9 +118,9 @@ void SpectrumAnalyzer::draw(SDL_Renderer* renderer, int left_, int top_, int wid
 		// FFT実施
 		std::vector<float> real(buffer.size()), image(buffer.size());
 		for (size_t i = 0; i < real.size(); ++i) {
-			real[i] = buffer[i] * lsp::analysis::fft::HammingWf(i / (float)real.size());
+			real[i] = buffer[i] * lsp::fft::HammingWf(i / (float)real.size());
 		}
-		lsp::analysis::fft::fft1d<float>(real, image, static_cast<int>(buffer.size()), 0, false);
+		lsp::fft::fft1d<float>(real, image, static_cast<int>(buffer.size()), 0, false);
 
 		// 各点の位置を求める
 		int num = 0;

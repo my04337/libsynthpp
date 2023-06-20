@@ -35,7 +35,7 @@ void OscilloScope::_reset()
 
 void OscilloScope::draw(SDL_Renderer* renderer, int left_, int top_, int width_, int height_)
 {
-	lsp::Assertion::require(renderer != nullptr);
+	lsp::require(renderer != nullptr);
 
 	std::lock_guard lock(mMutex);
 

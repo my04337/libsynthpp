@@ -220,7 +220,7 @@ void MainWindow::drawingThreadMain()
 
 	// レンダラ生成
 	auto renderer = SDL_CreateRenderer(mWindow, -1, 0);
-	Assertion::check(renderer != nullptr);
+	check(renderer != nullptr);
 	auto fin_act_destroy_renderer = finally([&]{SDL_DestroyRenderer(renderer);});
 	FastTextRenderer defaultTextRenderer, smallTextRenderer;
 	SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
@@ -380,7 +380,7 @@ void MainWindow::drawingThreadMain()
 				voiceDigests[i] = std::make_tuple(found->first, std::get<0>(found->second), std::get<1>(found->second));
 				unsortedVoiceDigests.erase(found);
 			}
-			Assertion::check(unsortedVoiceDigests.empty());
+			check(unsortedVoiceDigests.empty());
 			prevVoiceEndPos = 0;
 			prevVoicePosMap.clear();
 			for(size_t i = 0; i < voiceDigests.size(); ++i) {

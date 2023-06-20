@@ -101,81 +101,6 @@ private:
 	// 書き込み先ロガー
 	static std::list<ILogger*> sLoggers;
 };
-
-// アサーション機構(static)
-class Assertion final
-	: non_copy_move
-{
-public:
-	// require : 引数チェック向け
-	inline static void require(bool succeeded, std::source_location location = std::source_location::current()) {
-		if(!succeeded) [[unlikely]] {
-			lsp::Log::f([location](auto& _) {_ << to_filename(location.file_name()) << ":" << location.line() << " - illegal argument."; });
-		}
-	}
-	inline static void require(bool succeeded, std::string_view description, std::source_location location = std::source_location::current()) {
-		if(!succeeded) [[unlikely]] {
-			lsp::Log::f([description, location](auto& o) {o << to_filename(location.file_name()) << ":" << location.line() << " - " << description; });
-		}
-	}
-	template<typename D>
-		requires std::invocable<D, std::ostringstream&>
-	inline static void require(bool succeeded, D&& description, std::source_location location = std::source_location::current()) {
-		if(!succeeded) [[unlikely]] {
-			lsp::Log::f([description = std::forward<D>(description), location](auto& o) {o << to_filename(location.file_name()) << ":" << location.line() << " - "; description(o); });
-		}
-	}
-
-	// check : 関数の内部での状態チェック向け
-	inline static void check(bool succeeded, std::source_location location = std::source_location::current()) {
-		if(!succeeded) [[unlikely]] {
-			lsp::Log::f([location](auto& _) {_ << to_filename(location.file_name()) << ":" << location.line() << " - illegal state."; });
-		}
-	}
-	inline static void check(bool succeeded, std::string_view description, std::source_location location = std::source_location::current()) {
-		if(!succeeded) [[unlikely]] {
-			lsp::Log::f([description, location](auto& o) {o << to_filename(location.file_name()) << ":" << location.line() << description; });
-		}
-	}
-	template<typename D>
-		requires std::invocable<D, std::ostringstream&>
-	inline static void check(bool succeeded, D&& description, std::source_location location = std::source_location::current()) {
-		if(!succeeded) [[unlikely]] {
-			lsp::Log::f([description = std::forward<D>(description), location](auto& o) {o << to_filename(location.file_name()) << ":" << location.line() << " - "; description(o); });
-		}
-	}
-
-	// unreachable : 到達不可能な箇所でのチェック向け
-	[[noreturn]]
-	inline static void unreachable(std::source_location location = std::source_location::current()) {
-		lsp::Log::f([location](auto& _) {_ << to_filename(location.file_name()) << ":" << location.line() << " - illegal state."; });
-	}
-	[[noreturn]]
-	inline static void unreachable(std::string_view description, std::source_location location = std::source_location::current()) {
-		lsp::Log::f([description, location](auto& o) {o << to_filename(location.file_name()) << ":" << location.line() << description; });
-	}
-	template<typename D>
-		requires std::invocable<D, std::ostringstream&>
-	[[noreturn]]
-	inline static void unreachable(D&& description, std::source_location location = std::source_location::current()) {
-		lsp::Log::f([description = std::forward<D>(description), location](auto& o) {o << to_filename(location.file_name()) << ":" << location.line() << " - "; description(o); });
-	}
-
-private:
-	// ファイルマクロ用 ファイル名
-	static constexpr std::string_view to_filename(const char* filepath)
-	{
-		std::string_view path(filepath);
-		auto sep = path.find_last_of("\\/");
-		if(sep != std::string_view::npos) {
-			return path.substr(sep + 1);
-		}
-		else {
-			return path;
-		}
-	}
-
-};
 // ログ出力先インタフェース
 class ILogger
 	: non_copy_move
@@ -203,7 +128,7 @@ class StdOutLogger final
 	: public ILogger
 {
 public:
-	StdOutLogger(bool showHeader=true);
+	StdOutLogger(bool showHeader = true);
 	virtual ~StdOutLogger();
 
 	// --- ILogger ---
@@ -213,33 +138,90 @@ public:
 
 	virtual bool isWritable(LogLevel level)const noexcept override { return true; }
 	virtual bool canOutputCriticalLog()const noexcept override { return true; }
-	
+
 private:
 	bool mShowHeader;
 };
 }
-
 #ifdef WIN32
 namespace lsp
 {
-/// ロガー : OutputDebugString用
-class OutputDebugStringLogger final
-	: public ILogger
-{
-public:
-	OutputDebugStringLogger(bool showHeader=true);
-	virtual ~OutputDebugStringLogger();
+	/// ロガー : OutputDebugString用
+	class OutputDebugStringLogger final
+		: public ILogger
+	{
+	public:
+		OutputDebugStringLogger(bool showHeader = true);
+		virtual ~OutputDebugStringLogger();
 
-	// --- ILogger ---
-	// ログ書き込み (stacks!=null:スタックトレース出力)
-	virtual void write(clock::time_point time, LogLevel level, std::string_view log, const std::stacktrace* stacks)noexcept override;
-	virtual void flush()noexcept override;
+		// --- ILogger ---
+		// ログ書き込み (stacks!=null:スタックトレース出力)
+		virtual void write(clock::time_point time, LogLevel level, std::string_view log, const std::stacktrace* stacks)noexcept override;
+		virtual void flush()noexcept override;
 
-	virtual bool isWritable(LogLevel level)const noexcept override { return true; }
-	virtual bool canOutputCriticalLog()const noexcept override { return true; }
+		virtual bool isWritable(LogLevel level)const noexcept override { return true; }
+		virtual bool canOutputCriticalLog()const noexcept override { return true; }
 
-private:
-	bool mShowHeader;
-};
+	private:
+		bool mShowHeader;
+	};
 }
 #endif
+
+// アサーション機構
+namespace lsp::inline assertion
+{
+// require : 引数チェック向け
+inline static void require(bool succeeded, std::source_location location = std::source_location::current()) {
+	if(!succeeded) [[unlikely]] {
+		lsp::Log::f([location](auto& _) {_ << location.file_name() << ":" << location.line() << " - illegal argument."; });
+	}
+}
+inline static void require(bool succeeded, std::string_view description, std::source_location location = std::source_location::current()) {
+	if(!succeeded) [[unlikely]] {
+		lsp::Log::f([description, location](auto& o) {o << location.file_name() << ":" << location.line() << " - " << description; });
+	}
+}
+template<typename D>
+	requires std::invocable<D, std::ostringstream&>
+inline static void require(bool succeeded, D&& description, std::source_location location = std::source_location::current()) {
+	if(!succeeded) [[unlikely]] {
+		lsp::Log::f([description = std::forward<D>(description), location](auto& o) {o << location.file_name() << ":" << location.line() << " - "; description(o); });
+	}
+}
+
+// check : 関数の内部での状態チェック向け
+inline static void check(bool succeeded, std::source_location location = std::source_location::current()) {
+	if(!succeeded) [[unlikely]] {
+		lsp::Log::f([location](auto& _) {_ << location.file_name() << ":" << location.line() << " - illegal state."; });
+	}
+}
+inline static void check(bool succeeded, std::string_view description, std::source_location location = std::source_location::current()) {
+	if(!succeeded) [[unlikely]] {
+		lsp::Log::f([description, location](auto& o) {o << location.file_name() << ":" << location.line() << description; });
+	}
+}
+template<typename D>
+	requires std::invocable<D, std::ostringstream&>
+inline static void check(bool succeeded, D&& description, std::source_location location = std::source_location::current()) {
+	if(!succeeded) [[unlikely]] {
+		lsp::Log::f([description = std::forward<D>(description), location](auto& o) {o << location.file_name() << ":" << location.line() << " - "; description(o); });
+	}
+}
+
+// unreachable : 到達不可能な箇所でのチェック向け
+[[noreturn]]
+inline static void unreachable(std::source_location location = std::source_location::current()) {
+	lsp::Log::f([location](auto& _) {_ << location.file_name() << ":" << location.line() << " - illegal state."; });
+}
+[[noreturn]]
+inline static void unreachable(std::string_view description, std::source_location location = std::source_location::current()) {
+	lsp::Log::f([description, location](auto& o) {o << location.file_name() << ":" << location.line() << description; });
+}
+template<typename D>
+	requires std::invocable<D, std::ostringstream&>
+[[noreturn]]
+inline static void unreachable(D&& description, std::source_location location = std::source_location::current()) {
+	lsp::Log::f([description = std::forward<D>(description), location](auto& o) {o << location.file_name() << ":" << location.line() << " - "; description(o); });
+}
+}
