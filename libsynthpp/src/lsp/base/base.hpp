@@ -20,6 +20,7 @@
 #include <numbers>
 #include <optional>
 #include <source_location>
+#include <stacktrace>
 #include <string_view>
 #include <string>
 #include <tuple>

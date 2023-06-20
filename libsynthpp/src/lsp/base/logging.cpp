@@ -48,11 +48,6 @@ void Log::removeLogger(ILogger *logger)
 	sLoggers.erase(found);
 }
 
-Log::StackTrace Log::getStackTrace(size_t skipFrames)noexcept
-{
-	return CppCallStack::getStackTrace(skipFrames);
-}
-
 
 #define LSP_IMPL_LOG_FUNC(level) \
     void Log::level(std::string_view text)noexcept \
@@ -65,15 +60,15 @@ LSP_IMPL_LOG_FUNC(d)
 LSP_IMPL_LOG_FUNC(i)
 LSP_IMPL_LOG_FUNC(w)
 LSP_IMPL_LOG_FUNC(e)
-[[noreturn]] void Log::f(std::string_view text, const StackTrace* stacks)noexcept
-{ write(LogLevel::f, [text](auto& _) {_ << text; }, stacks, true); /*到達しないはず*/ std::terminate(); }
-[[noreturn]] void Log::f(const Writer& writer, const StackTrace* stacks)noexcept
-{ write(LogLevel::f, writer, stacks, true); /*到達しないはず*/ std::terminate();}
+[[noreturn]] void Log::f(std::string_view text, const std::stacktrace& stacks)noexcept
+{ write(LogLevel::f, [text](auto& _) {_ << text; }, &stacks, true); /*到達しないはず*/ std::terminate(); }
+[[noreturn]] void Log::f(const Writer& writer, const std::stacktrace& stacks)noexcept
+{ write(LogLevel::f, writer, &stacks, true); /*到達しないはず*/ std::terminate();}
 
 #undef LSP_IMPL_LOG_FUNC
 
 
-void Log::write(LogLevel level, const Writer& writer, const StackTrace* stacks, bool isCritical)noexcept
+void Log::write(LogLevel level, const Writer& writer, const std::stacktrace* stacks, bool isCritical)noexcept
 {
 	// ロック取得
 	std::lock_guard<std::recursive_mutex> lock(sMutex);
@@ -98,11 +93,11 @@ void Log::write(LogLevel level, const Writer& writer, const StackTrace* stacks, 
 	// ログ生成
 	std::ostringstream oss;
 	writer(oss);
-	std::unique_ptr<StackTrace> tmpStackTrace;
+	std::unique_ptr<std::stacktrace> tmpStackTrace;
 	if(level >= LogLevel::Fatal) {
 		oss << std::endl;
 		if(!stacks) {
-			tmpStackTrace = std::make_unique<StackTrace>(getStackTrace());
+			tmpStackTrace = std::make_unique<std::stacktrace>(std::stacktrace::current());
 			stacks = tmpStackTrace.get();
 		}
 	}
@@ -142,7 +137,7 @@ void Log::flush()noexcept
 	}
 }
 
-std::ostringstream& Log::format_default(std::ostringstream& stream, clock::time_point time, LogLevel level, std::string_view log, const Log::StackTrace* stacks)noexcept
+std::ostringstream& Log::format_default(std::ostringstream& stream, clock::time_point time, LogLevel level, std::string_view log, const std::stacktrace* stacks)noexcept
 {
 	const std::thread::id thid = std::this_thread::get_id();
 
@@ -182,15 +177,7 @@ std::ostringstream& Log::format_default(std::ostringstream& stream, clock::time_
 	stream << log;
 
 	// スタックトレース
-	if(
-		stacks
-#ifdef WIN32
-		&& !IsDebuggerPresent() // デバッガ(CDB)がアタッチされていないときのみ有効 (低速なため)
-#endif
-		)
-	{
-		CppCallStack::printStackTrace(stream, *stacks);
-	}
+	if(stacks) stream << std::ends << *stacks;
 	
 	return stream;
 }
@@ -208,22 +195,14 @@ StdOutLogger::~StdOutLogger()
 	flush();
 }
 
-void StdOutLogger::write(clock::time_point time, LogLevel level, std::string_view log, const Log::StackTrace* stacks)noexcept
+void StdOutLogger::write(clock::time_point time, LogLevel level, std::string_view log, const std::stacktrace* stacks)noexcept
 {
 	std::ostringstream oss;
 	if(mShowHeader) {
 		Log::format_default(oss, time, level, log, stacks) << std::ends;
 	} else {
 		oss << log << std::ends;
-		if(
-			stacks
-#ifdef Q_OS_WIN
-			&& !IsDebuggerPresent() // デバッガ(CDB)がアタッチされていないときのみ有効 (低速なため)
-#endif
-			)
-		{
-			CppCallStack::printStackTrace(oss, *stacks);
-		}
+		if(stacks) oss << *stacks;
 	}
 	std::cout << oss.str() << std::endl; // ロガーの性質上、常にflushすべき
 }
@@ -248,22 +227,14 @@ OutputDebugStringLogger::~OutputDebugStringLogger()
 	flush();
 }
 
-void OutputDebugStringLogger::write(clock::time_point time, LogLevel level, std::string_view log, const Log::StackTrace* stacks)noexcept
+void OutputDebugStringLogger::write(clock::time_point time, LogLevel level, std::string_view log, const std::stacktrace* stacks)noexcept
 {
 	std::ostringstream oss;
 	if(mShowHeader) {
 		Log::format_default(oss, time, level, log, stacks) << std::ends;
 	} else {
 		oss << log << std::ends;
-		if(
-			stacks
-#ifdef Q_OS_WIN
-			&& !IsDebuggerPresent() // デバッガ(CDB)がアタッチされていないときのみ有効 (低速なため)
-#endif
-			)
-		{
-			CppCallStack::printStackTrace(oss, *stacks);
-		}
+		if(stacks) oss <<  *stacks;
 	}
 	OutputDebugString(oss.str().c_str());
 	OutputDebugString(TEXT("\r\n"));

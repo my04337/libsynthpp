@@ -2,7 +2,6 @@
 
 #include <lsp/base/base.hpp>
 #include <lsp/base/id.hpp>
-#include <lsp/base/stack_trace.hpp>
 
 namespace lsp
 {
@@ -47,9 +46,6 @@ class Log final
 public:
 	// ログ出力式
 	using Writer = std::function<void(std::ostringstream& o)>;
-	// スタックトレース
-	using StackTraceElement = CppCallStack::StackTraceElement;
-	using StackTrace = CppCallStack::StackTrace;
 
 public:
 	// グローバル ログレベル
@@ -80,23 +76,20 @@ public:
 	static void e(const Writer& writer)noexcept;
 
 	[[noreturn]]
-	static void f(std::string_view text, const StackTrace* stacks=nullptr)noexcept;
+	static void f(std::string_view text, const std::stacktrace& stacks = std::stacktrace::current())noexcept;
 	[[noreturn]]
-	static void f(const Writer& writer, const StackTrace* stacks=nullptr)noexcept;
+	static void f(const Writer& writer, const std::stacktrace& stacks = std::stacktrace::current())noexcept;
 
 
 	// ログ フラッシュ [例外送出禁止]
 	static void flush()noexcept;
 
 	// 実際の書き込み処理 [例外送出禁止]
-	static void write(LogLevel level, const Writer& writer, const StackTrace* stacks=nullptr, bool isCritical=false)noexcept;
+	static void write(LogLevel level, const Writer& writer, const std::stacktrace* stacks=nullptr, bool isCritical=false)noexcept;
 
 
 	// 標準ログフォーマットで整形 [例外送出禁止]
-	static std::ostringstream& format_default(std::ostringstream& out, clock::time_point time, LogLevel level, std::string_view log, const Log::StackTrace* stacks)noexcept;
-
-	// スタックトレースの取得 [常用禁止 : 使用するとデバッグ情報が大量に読み込まれメインメモリを圧迫するため]
-	static StackTrace getStackTrace(size_t skipFrames=0)noexcept;
+	static std::ostringstream& format_default(std::ostringstream& out, clock::time_point time, LogLevel level, std::string_view log, const std::stacktrace* stacks)noexcept;
 	
 private:
 	// 書き込みロック
@@ -196,7 +189,7 @@ public:
 	virtual bool isWritable(LogLevel level)const noexcept = 0;
 
 	// ログ書き込み (stacks!=null:スタックトレース出力)
-	virtual void write(clock::time_point time, LogLevel level, std::string_view log, const Log::StackTrace* stacks)noexcept = 0;
+	virtual void write(clock::time_point time, LogLevel level, std::string_view log, const std::stacktrace* stacks)noexcept = 0;
 
 	// 書き込み済みログのフラッシュ
 	virtual void flush()noexcept = 0;
@@ -215,7 +208,7 @@ public:
 
 	// --- ILogger ---
 	// ログ書き込み (stacks!=null:スタックトレース出力)
-	virtual void write(clock::time_point time, LogLevel level, std::string_view log, const Log::StackTrace* stacks)noexcept override;
+	virtual void write(clock::time_point time, LogLevel level, std::string_view log, const std::stacktrace* stacks)noexcept override;
 	virtual void flush()noexcept override;
 
 	virtual bool isWritable(LogLevel level)const noexcept override { return true; }
@@ -239,7 +232,7 @@ public:
 
 	// --- ILogger ---
 	// ログ書き込み (stacks!=null:スタックトレース出力)
-	virtual void write(clock::time_point time, LogLevel level, std::string_view log, const Log::StackTrace* stacks)noexcept override;
+	virtual void write(clock::time_point time, LogLevel level, std::string_view log, const std::stacktrace* stacks)noexcept override;
 	virtual void flush()noexcept override;
 
 	virtual bool isWritable(LogLevel level)const noexcept override { return true; }
