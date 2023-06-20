@@ -58,14 +58,16 @@ constexpr Tout requantize(Tin in) noexcept
 		return static_cast<Tout>(in);
 	} else if constexpr (std::is_integral_v<Tin> && std::is_integral_v<Tout>) {
 		// 整数同士はシフト演算のみで値域変換可能, クリッピング不要
+		// ただし、符号付整数のシフト演算は処理系依存の警告が出るため、乗算/除算で置き換える
+		// 最終的にはコンパイル時に最適化されるためパフォーマンスには影響なし
 		constexpr size_t in_bits = sizeof(Tin) * 8;
 		constexpr size_t out_bits = sizeof(Tout) * 8;
 		if constexpr (in_bits > out_bits) {
 			// ナローイング変換(右シフト)
-			return static_cast<Tout>(in >> (in_bits - out_bits));
+			return static_cast<Tout>(in / (1 << (in_bits - out_bits)));
 		} else {
 			// ワイドニング変換(左シフト)
-			return static_cast<Tout>(in) << (out_bits - in_bits);
+			return static_cast<Tout>(in * (1 << (out_bits - in_bits)));
 		}
 	} else if constexpr (std::is_floating_point_v<Tin> && std::is_integral_v<Tout>) {
 		// 浮動小数点数→整数 : ノーマライズしてから増幅

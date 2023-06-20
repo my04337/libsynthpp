@@ -118,11 +118,11 @@ void WaveTable::reset()
 		FunctionGenerator fg;
 		fg.setWhiteNoise();
 		std::array<BiquadraticFilter, 5> bqfs;
-		bqfs[0].setLopassParam(44100.f, 4000.f, 0.5f); // 不要高周波を緩やかにカットオフ
-		bqfs[1].setLopassParam(44100.f, 4000.f, 0.5f); // (同上)
-		bqfs[2].setLopassParam(44100.f, 3000.f, 0.5f); // (同上)
-		bqfs[3].setLopassParam(44100.f, 2000.f, 0.5f); // (同上)
-		bqfs[4].setLopassParam(44100.f, 1000.f, 1.0f); // 基本となる音程
+		bqfs[0].setLopassParam(44100, 4000.f, 0.5f); // 不要高周波を緩やかにカットオフ
+		bqfs[1].setLopassParam(44100, 4000.f, 0.5f); // (同上)
+		bqfs[2].setLopassParam(44100, 3000.f, 0.5f); // (同上)
+		bqfs[3].setLopassParam(44100, 2000.f, 0.5f); // (同上)
+		bqfs[4].setLopassParam(44100, 1000.f, 1.0f); // 基本となる音程
 		for(size_t i = 0; i < frames*2; i++) {		
 			// 波形が安定するまで読み捨てる
 			float s = fg.update();
