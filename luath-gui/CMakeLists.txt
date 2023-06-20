@@ -13,7 +13,7 @@ add_executable(
 	)
 target_sources(
 	luath-gui 
-	PRIVATE src/Luath/luath-gui.exe.manifest
+	PRIVATE src/luath_gui/luath-gui.exe.manifest
 )
 		
 target_include_directories(
