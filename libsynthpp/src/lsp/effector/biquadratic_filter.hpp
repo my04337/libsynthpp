@@ -12,7 +12,7 @@ namespace lsp::effector {
 //             http://www.musicdsp.org/files/Audio-EQ-Cookbook.txt
 template<
 	sample_typeable sample_type,
-	floating_sample_typeable parameter_type = std::conditional_t<floating_sample_typeable<sample_type>, sample_type, float>
+	std::floating_point parameter_type = std::conditional_t<std::is_floating_point_v<sample_type>, sample_type, float>
 >
 class BiquadraticFilter
 {

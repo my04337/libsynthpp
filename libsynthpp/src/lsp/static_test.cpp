@@ -22,16 +22,12 @@ static_assert(sample_typeable<int16_t>, "is_sample_type_v failed");
 static_assert(sample_typeable<int32_t>, "is_sample_type_v failed");
 static_assert(sample_typeable<float>,   "is_sample_type_v failed");
 static_assert(sample_typeable<double>,  "is_sample_type_v failed");
+static_assert(sample_typeable<long double>, "is_sample_type_v failed");
 
 static_assert(!sample_typeable<uint32_t>,    "is_sample_type_v failed");
-static_assert(!sample_typeable<long double>, "is_sample_type_v failed");
 
 static_assert( integral_sample_typeable<int32_t>, "is_integral_sample_type_v failed");
 static_assert(!integral_sample_typeable<double>,  "is_integral_sample_type_v failed");
-
-static_assert(!floating_sample_typeable<int32_t>, "is_floating_point_sample_type_v failed");
-static_assert( floating_sample_typeable<double>,  "is_floating_point_sample_type_v failed");
-
 
 static_assert(normalize(+2.0) == +1.0,  "Filter::Normalizer failed");
 static_assert(normalize(-2.0) == -1.0,  "Filter::Normalizer failed");

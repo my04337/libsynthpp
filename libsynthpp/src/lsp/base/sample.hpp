@@ -12,12 +12,7 @@ concept integral_sample_typeable
 	|| std::is_same_v<T, int32_t>
 	;
 template<typename T>
-concept floating_sample_typeable
-	=  std::is_same_v<T, float>
-	|| std::is_same_v<T, double>
-	;
-template<typename T>
-concept sample_typeable = integral_sample_typeable<T> || floating_sample_typeable<T>;
+concept sample_typeable = integral_sample_typeable<T> || std::floating_point<T>;
 
 /// サンプル型情報 
 template<sample_typeable sample_type> struct sample_traits {
@@ -44,17 +39,10 @@ template<> struct sample_traits<int32_t> {
 	static constexpr sample_type normalized_max = +abs_max;
 	static constexpr sample_type normalized_min = -abs_max;
 };
-template<> struct sample_traits<float> {
+template<std::floating_point T> struct sample_traits<T> {
 	using _sample_type_tag = void; // for SFINAE
-	using sample_type = float;
-	static constexpr sample_type abs_max = 1.0f;
-	static constexpr sample_type normalized_max = +abs_max;
-	static constexpr sample_type normalized_min = -abs_max;
-};
-template<> struct sample_traits<double> {
-	using _sample_type_tag = void; // for SFINAE
-	using sample_type = double;
-	static constexpr sample_type abs_max = 1.0;
+	using sample_type = T;
+	static constexpr sample_type abs_max = static_cast<T>(1.0);
 	static constexpr sample_type normalized_max = +abs_max;
 	static constexpr sample_type normalized_min = -abs_max;
 };

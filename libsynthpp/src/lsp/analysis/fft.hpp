@@ -8,7 +8,7 @@ namespace lsp::analysis::fft
 {
 // 各種窓関数
 template<
-	floating_sample_typeable parameter_type
+	std::floating_point parameter_type
 >
 parameter_type BlackmanWf(parameter_type pos)
 {
@@ -22,7 +22,7 @@ parameter_type BlackmanWf(parameter_type pos)
 	return a0 - a1 * std::cos(2 * math::PI<parameter_type> * pos) + a2 * std::cos(4 * math::PI<parameter_type> * pos);
 }
 template<
-	floating_sample_typeable parameter_type
+	std::floating_point parameter_type
 >
 parameter_type BlackmanHarrisWf(parameter_type pos)
 {
@@ -35,7 +35,7 @@ parameter_type BlackmanHarrisWf(parameter_type pos)
 	return a0 - a1 * std::cos(2 * math::PI<parameter_type> * pos) + a2 * std::cos(4 * math::PI<parameter_type> * pos) - a3 * std::cos(4 * math::PI<parameter_type> *pos);
 }
 template<
-	floating_sample_typeable parameter_type
+	std::floating_point parameter_type
 >
 parameter_type RectangularWf(parameter_type pos)
 {
@@ -43,7 +43,7 @@ parameter_type RectangularWf(parameter_type pos)
 	return 1;
 }
 template<
-	floating_sample_typeable parameter_type
+	std::floating_point parameter_type
 >
 parameter_type HannWf(parameter_type pos)
 {
@@ -54,7 +54,7 @@ parameter_type HannWf(parameter_type pos)
 	return a0 - a1 * (std::cos(2 * math::PI<parameter_type> *pos));
 }
 template<
-	floating_sample_typeable parameter_type
+	std::floating_point parameter_type
 >
 parameter_type HammingWf(parameter_type pos)
 {
@@ -65,7 +65,7 @@ parameter_type HammingWf(parameter_type pos)
 	return a0 - a1 * (std::cos(2 * math::PI<parameter_type> * pos));
 }
 
-template<floating_sample_typeable sample_type, subscript_operator_available<sample_type> container>
+template<std::floating_point sample_type, subscript_operator_available<sample_type> container>
 bool fft1d(container& ar, container& ai, int n, int iter, bool isIFFT)
 {
 	int i, it, j, j1, j2, k, xp, xp2;
