@@ -1,4 +1,4 @@
-﻿#include <LSP/Audio/WavFileOutput.hpp>
+﻿#include <lsp/audio/wav_file_output.hpp>
 
 using namespace LSP;
 using namespace LSP::Audio;

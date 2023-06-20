@@ -1,4 +1,4 @@
-﻿#include <LSP/Synth/Voice.hpp>
+﻿#include <lsp/synth/voice.hpp>
 
 using namespace LSP;
 using namespace LSP::Synth;

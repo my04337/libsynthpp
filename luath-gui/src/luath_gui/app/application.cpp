@@ -1,6 +1,6 @@
-﻿#include <Luath/App/Application.hpp>
-#include <Luath/App/FontCache.hpp>
-#include <Luath/Window/MainWindow.hpp>
+﻿#include <luath_gui/app/application.hpp>
+#include <luath_gui/app/font_cache.hpp>
+#include <luath_gui/window/main_window.hpp>
 
 using namespace LSP;
 using namespace Luath;

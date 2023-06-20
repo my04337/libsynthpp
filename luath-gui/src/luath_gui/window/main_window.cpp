@@ -1,7 +1,7 @@
-﻿#include <Luath/Window/MainWindow.hpp>
-#include <Luath/App/Application.hpp>
-#include <Luath/App/FontCache.hpp>
-#include <LSP/MIDI/Parser.hpp>
+﻿#include <luath_gui/window/main_window.hpp>
+#include <luath_gui/app/application.hpp>
+#include <luath_gui/app/font_cache.hpp>
+#include <lsp/midi/parser.hpp>
 
 #include <SDL_ttf.h>
 #include <array>

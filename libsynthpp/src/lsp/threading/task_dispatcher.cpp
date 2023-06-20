@@ -1,6 +1,6 @@
-﻿#include <LSP/Threading/TaskDispatcher.hpp>
+﻿#include <lsp/threading/task_dispatcher.hpp>
 
-#include <LSP/Base/Logging.hpp>
+#include <lsp/base/logging.hpp>
 
 using namespace LSP::Threading;
 

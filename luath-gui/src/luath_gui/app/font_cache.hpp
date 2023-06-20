@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-#include <Luath/Base/Base.hpp>
+#include <luath_gui/base/base.hpp>
 
 namespace Luath
 {

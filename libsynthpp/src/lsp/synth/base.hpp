@@ -1,7 +1,7 @@
 ﻿#pragma once
 
-#include <LSP/minimal.hpp>
-#include <LSP/MIDI/Message.hpp>
+#include <lsp/base/base.hpp>
+#include <lsp/midi/message.hpp>
 
 namespace LSP::Synth
 {

@@ -1,8 +1,8 @@
 ﻿#pragma once
 
-#include <LSP/Base/Base.hpp>
-#include <LSP/Threading/Thread.hpp>
-#include <LSP/Threading/EventSignal.hpp>
+#include <lsp/base/base.hpp>
+#include <lsp/threading/thread.hpp>
+#include <lsp/threading/event_signal.hpp>
 
 #include <future>
 

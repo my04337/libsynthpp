@@ -1,6 +1,6 @@
-﻿#include <LSP/Synth/Luath.hpp>
-#include <LSP/MIDI/Messages/BasicMessage.hpp>
-#include <LSP/MIDI/Messages/SysExMessage.hpp>
+﻿#include <lsp/synth/luath.hpp>
+#include <lsp/midi/messages/basic_message.hpp>
+#include <lsp/midi/messages/sysex_message.hpp>
 
 using namespace LSP;
 using namespace LSP::MIDI;

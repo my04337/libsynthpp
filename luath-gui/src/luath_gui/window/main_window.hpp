@@ -1,14 +1,14 @@
 ﻿#pragma once
 
-#include <Luath/Base/Base.hpp>
-#include <Luath/Widget/OscilloScope.hpp>
-#include <Luath/Widget/SpectrumAnalyzer.hpp>
-#include <Luath/Widget/Lissajous.hpp>
-#include <LSP/Synth/Luath.hpp>
-#include <LSP/MIDI/Sequencer.hpp>
-#include <LSP/Threading/EventSignal.hpp>
+#include <luath_gui/base/base.hpp>
+#include <luath_gui/widget/oscilloscope.hpp>
+#include <luath_gui/widget/spectrum_analyzer.hpp>
+#include <luath_gui/widget/lissajous.hpp>
+#include <lsp/synth/luath.hpp>
+#include <lsp/midi/sequencer.hpp>
+#include <lsp/threading/event_signal.hpp>
 
-#include <LSP/Audio/WasapiOutput.hpp>
+#include <lsp/audio/wasapi_output.hpp>
 
 namespace Luath::Window
 {

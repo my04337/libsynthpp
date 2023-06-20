@@ -1,4 +1,4 @@
-#include <LSP/Threading/EventSignal.hpp>
+#include <lsp/threading/event_signal.hpp>
 
 using namespace LSP::Threading;
 

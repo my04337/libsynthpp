@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-#include <LSP/Base/Base.hpp>
+#include <lsp/base/base.hpp>
 
 namespace LSP
 {

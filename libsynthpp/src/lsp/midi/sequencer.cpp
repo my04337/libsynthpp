@@ -1,9 +1,9 @@
-﻿#include <LSP/MIDI/Sequencer.hpp>
-#include <LSP/MIDI/MessageReceiver.hpp>
-#include <LSP/MIDI/Messages/SysExMessage.hpp>
-#include <LSP/Threading/Thread.hpp>
-#include <LSP/Threading/EventSignal.hpp>
-#include <LSP/Base/Logging.hpp>
+﻿#include <lsp/midi/sequencer.hpp>
+#include <lsp/midi/message_receiver.hpp>
+#include <lsp/midi/messages/sysex_message.hpp>
+#include <lsp/threading/thread.hpp>
+#include <lsp/threading/event_signal.hpp>
+#include <lsp/base/logging.hpp>
 
 using namespace LSP;
 using namespace LSP::MIDI;

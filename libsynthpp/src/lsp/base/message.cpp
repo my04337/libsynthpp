@@ -1,4 +1,4 @@
-﻿#include <LSP/Base/Message.hpp>
+﻿#include <lsp/base/message.hpp>
 
 using namespace LSP;
 

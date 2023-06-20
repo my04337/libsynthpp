@@ -1,10 +1,10 @@
-﻿#include <LSP/MIDI/Parser.hpp>
-#include <LSP/MIDI/Message.hpp>
-#include <LSP/MIDI/Messages/BasicMessage.hpp>
-#include <LSP/MIDI/Messages/ExtraMessage.hpp>
-#include <LSP/MIDI/Messages/SysExMessage.hpp>
-#include <LSP/MIDI/Messages/MetaEvents.hpp>
-#include <LSP/Base/Logging.hpp>
+﻿#include <lsp/midi/parser.hpp>
+#include <lsp/midi/message.hpp>
+#include <lsp/midi/messages/basic_message.hpp>
+#include <lsp/midi/messages/extra_message.hpp>
+#include <lsp/midi/messages/sysex_message.hpp>
+#include <lsp/midi/messages/meta_events.hpp>
+#include <lsp/base/Logging.hpp>
 
 #include <array>
 #include <fstream>

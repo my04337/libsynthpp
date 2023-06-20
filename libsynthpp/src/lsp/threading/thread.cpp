@@ -1,5 +1,5 @@
-﻿#include <LSP/Threading/Thread.hpp>
-#include <LSP/Base/Logging.hpp>
+﻿#include <lsp/threading/thread.hpp>
+#include <lsp/base/logging.hpp>
 
 #ifdef WIN32
 #include <Windows.h>

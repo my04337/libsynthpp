@@ -1,5 +1,5 @@
-﻿#include <Luath/Widget/SpectrumAnalyzer.hpp>
-#include <LSP/Util/fft.hpp>
+﻿#include <luath_gui/widget/spectrum_analyzer.hpp>
+#include <lsp/Util/fft.hpp>
 
 #include <bitset>
 #include <array>

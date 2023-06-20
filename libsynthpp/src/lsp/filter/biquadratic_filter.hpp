@@ -1,7 +1,7 @@
 ﻿#pragma once
 
-#include <LSP/Base/Base.hpp>
-#include <LSP/Base/Math.hpp>
+#include <lsp/base/base.hpp>
+#include <lsp/base/math.hpp>
 
 
 namespace LSP::Filter {

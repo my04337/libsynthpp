@@ -1,4 +1,4 @@
-﻿#include <Luath/Widget/OscilloScope.hpp>
+﻿#include <luath_gui/widget/oscilloscope.hpp>
 
 using namespace Luath;
 using namespace Luath::Widget;

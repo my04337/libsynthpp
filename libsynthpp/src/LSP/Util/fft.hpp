@@ -1,7 +1,8 @@
 ﻿#pragma once
 
-#include <LSP/Base/Base.hpp>
-#include <LSP/Base/Signal.hpp>
+#include <lsp/base/base.hpp>
+#include <lsp/base/signal.hpp>
+#include <lsp/base/math.hpp>
 
 namespace LSP::Util::FFT
 {

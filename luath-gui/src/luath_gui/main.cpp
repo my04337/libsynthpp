@@ -1,6 +1,4 @@
-﻿#include <LSP/minimal.hpp>
-#include <Luath/App/Application.hpp>
-#include <iostream>
+﻿#include <luath_gui/app/application.hpp>
 
 
 using namespace LSP;

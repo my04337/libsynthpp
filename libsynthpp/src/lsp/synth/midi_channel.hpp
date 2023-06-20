@@ -1,7 +1,7 @@
 ﻿#pragma once
 
-#include <LSP/Synth/Base.hpp>
-#include <LSP/Synth/Voice.hpp>
+#include <lsp/synth/base.hpp>
+#include <lsp/synth/voice.hpp>
 
 #include <array>
 

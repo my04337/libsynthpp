@@ -1,7 +1,7 @@
 ﻿#pragma once
 
-#include <LSP/Base/Base.hpp>
-#include <LSP/MIDI/Parser.hpp>
+#include <lsp/base/base.hpp>
+#include <lsp/midi/parser.hpp>
 
 
 namespace LSP::MIDI

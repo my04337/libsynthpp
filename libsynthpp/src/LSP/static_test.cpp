@@ -1,11 +1,11 @@
-#include <LSP/Base/Math.hpp>
-#include <LSP/Base/Signal.hpp>
-#include <LSP/Filter/BiquadraticFilter.hpp>
-#include <LSP/Filter/EnvelopeGenerator.hpp>
-#include <LSP/MIDI/Message.hpp>
-#include <LSP/MIDI/Parser.hpp>
-#include <LSP/MIDI/Sequencer.hpp>
-#include <LSP/Audio/WavFileOutput.hpp>
+#include <lsp/base/math.hpp>
+#include <lsp/base/signal.hpp>
+#include <lsp/filter/biquadratic_filter.hpp>
+#include <lsp/filter/envelope_generator.hpp>
+#include <lsp/midi/message.hpp>
+#include <lsp/midi/parser.hpp>
+#include <lsp/midi/sequencer.hpp>
+#include <lsp/audio/wav_file_output.hpp>
 
 using namespace LSP;
 

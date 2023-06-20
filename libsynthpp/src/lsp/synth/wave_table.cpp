@@ -1,6 +1,6 @@
-﻿#include <LSP/Synth/WaveTable.hpp>
-#include <LSP/Generator/FunctionGenerator.hpp>
-#include <LSP/Filter/BiquadraticFilter.hpp>
+﻿#include <lsp/synth/wave_table.hpp>
+#include <lsp/generator/function_generator.hpp>
+#include <lsp/filter/biquadratic_filter.hpp>
 
 using namespace LSP;
 using namespace LSP::Synth;

@@ -1,6 +1,8 @@
 ﻿#pragma once
 
-#include <LSP/minimal.hpp>
+#include <lsp/base/base.hpp>
+#include <lsp/base/signal.hpp>
+#include <lsp/base/logging.hpp>
 
 #include <SDL.h>
 #include <SDL_ttf.h>

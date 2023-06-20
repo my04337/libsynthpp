@@ -1,4 +1,4 @@
-﻿#include <LSP/Base/Logging.hpp>
+﻿#include <lsp/base/logging.hpp>
 #include <iostream>
 
 #ifdef WIN32

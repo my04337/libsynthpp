@@ -1,4 +1,4 @@
-﻿#include <LSP/Synth/MidiChannel.hpp>
+﻿#include <lsp/synth/midi_channel.hpp>
 
 using namespace LSP;
 using namespace LSP::MIDI;

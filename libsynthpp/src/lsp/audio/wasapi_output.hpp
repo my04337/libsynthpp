@@ -1,6 +1,7 @@
 ﻿#pragma once
 
-#include <LSP/minimal.hpp>
+#include <lsp/base/base.hpp>
+#include <lsp/base/signal.hpp>
 
 #ifndef WIN32
 #error unsupported platform

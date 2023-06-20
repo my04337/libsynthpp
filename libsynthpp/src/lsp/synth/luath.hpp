@@ -1,10 +1,10 @@
 ﻿#pragma once
 
-#include <LSP/Synth/Base.hpp>
-#include <LSP/MIDI/MessageReceiver.hpp>
-#include <LSP/Synth/MidiChannel.hpp>
-#include <LSP/Synth/WaveTable.hpp>
-#include <LSP/Threading/TaskDispatcher.hpp>
+#include <lsp/synth/base.hpp>
+#include <lsp/midi/message_receiver.hpp>
+#include <lsp/synth/midi_channel.hpp>
+#include <lsp/synth/wave_table.hpp>
+#include <lsp/threading/task_dispatcher.hpp>
 
 #include <array>
 #include <shared_mutex>

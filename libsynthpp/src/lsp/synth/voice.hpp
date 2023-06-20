@@ -1,10 +1,10 @@
 ﻿#pragma once
 
-#include <LSP/Synth/Base.hpp>
-#include <LSP/Synth/WaveTable.hpp>
-#include <LSP/Filter/EnvelopeGenerator.hpp>
-#include <LSP/Filter/BiquadraticFilter.hpp>
-#include <LSP/Generator/WaveTableGenerator.hpp>
+#include <lsp/synth/base.hpp>
+#include <lsp/synth/wave_table.hpp>
+#include <lsp/filter/envelope_generator.hpp>
+#include <lsp/filter/biquadratic_filter.hpp>
+#include <lsp/Generator/wave_table_generator.hpp>
 
 namespace LSP::Synth
 {
