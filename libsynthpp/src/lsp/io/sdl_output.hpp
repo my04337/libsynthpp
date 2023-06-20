@@ -2,7 +2,6 @@
 
 #include <lsp/base/base.hpp>
 #include <lsp/base/signal.hpp>
-#include <LSP/base/event_signal.hpp>
 
 struct SDL_AudioSpec;
 

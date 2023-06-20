@@ -6,7 +6,6 @@
 #include <luath_gui/widget/lissajous.hpp>
 #include <lsp/synth/luath.hpp>
 #include <lsp/midi/sequencer.hpp>
-#include <lsp/base/event_signal.hpp>
 
 #include <lsp/io/wasapi_output.hpp>
 
