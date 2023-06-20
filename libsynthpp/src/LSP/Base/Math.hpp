@@ -9,11 +9,7 @@ namespace LSP::Math
 
 //円周率
 template <std::floating_point T>
-static constexpr T PI    = static_cast<T>(3.14159265358979323846264338327950288419716939937510L);
-
-//√2
-template <std::floating_point T>
-static constexpr T Sqrt2 = static_cast<T>(1.41421356237309504880168872420969807856967187537694L);
+inline static constexpr T PI = std::numbers::pi_v<T>;
 
 
 // 被除数が0以上の場合、常に戻り値が0異常になるfmod(波形テーブル音源で位相が遡るような変化をする場合に有用)

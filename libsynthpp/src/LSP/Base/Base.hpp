@@ -17,6 +17,7 @@
 #include <memory_resource>
 #include <memory>
 #include <mutex>
+#include <numbers>
 #include <optional>
 #include <source_location>
 #include <string_view>
@@ -43,10 +44,6 @@
 #include <atlcom.h>
 
 #endif
-
-// マクロ展開遅延
-#define DELAY_MACRO(...)  DELAY_MACRO_(__VA_ARGS__)
-#define DELAY_MACRO_(...) __VA_ARGS__
 
 // --- 基本的な型 ---
 namespace LSP
@@ -106,17 +103,6 @@ std::string demangle(const std::type_info& type);
 std::string demangle(const std::type_index& type);
 std::string demangle(const char* mangled_name);
 
-// ファイルマクロ用 ファイル名
-constexpr std::string_view file_macro_to_filename(const char* filepath)
-{
-	std::string_view path(filepath);
-	auto sep = path.find_last_of("\\/");
-	if (sep != std::string_view::npos) {
-		return path.substr(sep+1);
-	}else {
-		return path;
-	}
-}
 
 // std::pmr_memory_holder メモリ管理簡単化機構
 template<class T>
