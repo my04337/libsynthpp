@@ -5,37 +5,14 @@
 
 namespace lsp
 {
-template<typename T>
-concept integral_sample_typeable
-	= std::is_same_v<T, int8_t>
-	|| std::is_same_v<T, int16_t>
-	|| std::is_same_v<T, int32_t>
-	;
-template<typename T>
-concept sample_typeable = integral_sample_typeable<T> || std::floating_point<T>;
-
 /// サンプル型情報 
-template<sample_typeable sample_type> struct sample_traits {
-	// MEMO abs(min) == abs(max)が成り立つようにすること
-};
-template<> struct sample_traits<int8_t> {
+template<class T> requires std::signed_integral<T> || std::floating_point<T>
+struct sample_traits {};
+
+template<std::signed_integral T> struct sample_traits<T> {
 	using _sample_type_tag = void; // for SFINAE
-	using sample_type = int8_t;
-	static constexpr sample_type abs_max = 0x7Fi8;
-	static constexpr sample_type normalized_max = +abs_max;
-	static constexpr sample_type normalized_min = -abs_max;
-};
-template<> struct sample_traits<int16_t> {
-	using _sample_type_tag = void; // for SFINAE
-	using sample_type = int16_t;
-	static constexpr sample_type abs_max = 0x7FFFi16; 
-	static constexpr sample_type normalized_max = +abs_max;
-	static constexpr sample_type normalized_min = -abs_max;
-};
-template<> struct sample_traits<int32_t> {
-	using _sample_type_tag = void; // for SFINAE
-	using sample_type = int32_t;
-	static constexpr sample_type abs_max = 0x7FFFFFFFi32;
+	using sample_type = T;
+	static constexpr sample_type abs_max = std::numeric_limits<T>::max(); // C++20より、整数値は2の補数であることが保証された。 そのため絶対値の小さい正の最大値を基準に用いる。
 	static constexpr sample_type normalized_max = +abs_max;
 	static constexpr sample_type normalized_min = -abs_max;
 };
@@ -50,9 +27,7 @@ template<std::floating_point T> struct sample_traits<T> {
 // ---
 
 // ノーマライズ : 値域を信号の標準的な幅に狭める
-template<
-	sample_typeable sample_type
->
+template<class sample_type> requires std::signed_integral<sample_type> || std::floating_point<sample_type>
 constexpr sample_type normalize(sample_type in) noexcept 
 {
 	// MEMO できるだけconstexprで解決し、実行時コストを純粋に変換処理のみとしたい。
@@ -66,9 +41,11 @@ constexpr sample_type normalize(sample_type in) noexcept
 
 // 再量子化 : サンプルのフォーマットを変更
 template<
-	sample_typeable Tout,
-	sample_typeable Tin
->
+	class Tout,
+	class Tin
+>requires 
+	(std::signed_integral<Tout> || std::floating_point<Tout>) &&
+	(std::signed_integral<Tin> || std::floating_point<Tin>)
 constexpr Tout requantize(Tin in) noexcept 
 {
 	// MEMO できるだけconstexprで解決し、実行時コストを純粋に変換処理のみとしたい。

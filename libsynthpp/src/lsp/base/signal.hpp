@@ -7,7 +7,7 @@ namespace lsp
 {
 
 // 信号 view
-template<sample_typeable sample_type>
+template<class sample_type> requires std::signed_integral<sample_type> || std::floating_point<sample_type>
 class SignalView
 {
 public:
@@ -35,7 +35,7 @@ private:
 };
 
 // 信号型
-template<sample_typeable sample_type>
+template<class sample_type> requires std::signed_integral<sample_type> || std::floating_point<sample_type>
 class Signal final
 	: non_copy
 {

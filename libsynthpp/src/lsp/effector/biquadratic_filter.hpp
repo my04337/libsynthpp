@@ -11,9 +11,9 @@ namespace lsp::effector {
 //   参考URL : http://ufcpp.net/study/sp/digital_filter/biquad/
 //             http://www.musicdsp.org/files/Audio-EQ-Cookbook.txt
 template<
-	sample_typeable sample_type,
+	class sample_type,
 	std::floating_point parameter_type = std::conditional_t<std::is_floating_point_v<sample_type>, sample_type, float>
->
+>requires std::signed_integral<sample_type> || std::floating_point<sample_type>
 class BiquadraticFilter
 {
 public:

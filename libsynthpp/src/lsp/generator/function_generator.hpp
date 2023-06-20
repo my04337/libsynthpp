@@ -21,9 +21,9 @@ enum class WaveFormType
 
 // ファンクションジェネレータ : 複数種類の波形生成
 template<
-	sample_typeable sample_type,
+	class sample_type,
 	std::floating_point parameter_type = std::conditional_t<std::is_floating_point_v<sample_type>, sample_type, float>
->
+>requires std::signed_integral<sample_type> || std::floating_point<sample_type>
 class FunctionGenerator final
 {
 public:
