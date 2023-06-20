@@ -5,7 +5,7 @@
 #include <Windows.h>
 #endif
 
-using namespace LSP;
+using namespace lsp;
 
 static clock::time_point sLogStartTime = clock::now();
 
@@ -237,18 +237,18 @@ void StdOutLogger::flush()noexcept
 
 // ---
 #ifdef WIN32
-Win32::OutputDebugStringLogger::OutputDebugStringLogger(bool showHeader)
+OutputDebugStringLogger::OutputDebugStringLogger(bool showHeader)
 	: mShowHeader(showHeader)
 {
 
 }
 
-Win32::OutputDebugStringLogger::~OutputDebugStringLogger()
+OutputDebugStringLogger::~OutputDebugStringLogger()
 {
 	flush();
 }
 
-void Win32::OutputDebugStringLogger::write(clock::time_point time, LogLevel level, std::string_view log, const Log::StackTrace* stacks)noexcept
+void OutputDebugStringLogger::write(clock::time_point time, LogLevel level, std::string_view log, const Log::StackTrace* stacks)noexcept
 {
 	std::ostringstream oss;
 	if(mShowHeader) {
@@ -270,7 +270,7 @@ void Win32::OutputDebugStringLogger::write(clock::time_point time, LogLevel leve
 }
 
 
-void Win32::OutputDebugStringLogger::flush()noexcept
+void OutputDebugStringLogger::flush()noexcept
 {
 	// do-nothing
 }

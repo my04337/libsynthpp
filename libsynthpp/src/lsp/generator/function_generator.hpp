@@ -6,7 +6,7 @@
 
 #include <random>
 
-namespace LSP::Generator {
+namespace lsp::generator {
 
 // 波形種別
 enum class WaveFormType
@@ -46,28 +46,28 @@ public:
 	{
 		auto freq_ = std::abs(freq);  // 負の位相はこの実装では対応不可
 		mType = WaveFormType::Sin;
-		mSamplePerPhase = 2.0f * Math::PI<parameter_type> * (freq_ / sampleFreq);
+		mSamplePerPhase = 2.0f * math::PI<parameter_type> * (freq_ / sampleFreq);
 		if(!keepPhase) mPhase = 0;
 	}
 	void setSawWave(uint32_t sampleFreq, parameter_type freq, bool keepPhase = false)noexcept
 	{
 		auto freq_ = std::abs(freq);  // 負の位相はこの実装では対応不可
 		mType = WaveFormType::Saw;
-		mSamplePerPhase = 2.0f * Math::PI<parameter_type> * (freq_ / sampleFreq);
+		mSamplePerPhase = 2.0f * math::PI<parameter_type> * (freq_ / sampleFreq);
 		if (!keepPhase) mPhase = 0;
 	}
 	void setTriangleWave(uint32_t sampleFreq, parameter_type freq, bool keepPhase = false)noexcept
 	{
 		auto freq_ = std::abs(freq);  // 負の位相はこの実装では対応不可
 		mType = WaveFormType::Triangle;
-		mSamplePerPhase = 2.0f * Math::PI<parameter_type> * (freq_ / sampleFreq);
+		mSamplePerPhase = 2.0f * math::PI<parameter_type> * (freq_ / sampleFreq);
 		if (!keepPhase) mPhase = 0;
 	}
-	void setSquareWave(uint32_t sampleFreq, parameter_type freq, parameter_type duty=Math::PI<parameter_type>, bool keepPhase = false)noexcept
+	void setSquareWave(uint32_t sampleFreq, parameter_type freq, parameter_type duty=math::PI<parameter_type>, bool keepPhase = false)noexcept
 	{
 		auto freq_ = std::abs(freq);  // 負の位相はこの実装では対応不可
 		mType = WaveFormType::Square;
-		mSamplePerPhase = 2.0f * Math::PI<parameter_type> * (freq_ / sampleFreq);
+		mSamplePerPhase = 2.0f * math::PI<parameter_type> * (freq_ / sampleFreq);
 		mDutyRate = duty;
 		if (!keepPhase) mPhase = 0;
 	}
@@ -80,8 +80,8 @@ public:
 
 	sample_type update() 
 	{
-		constexpr auto period = 2.0f * Math::PI<parameter_type>; // 一周期 : 2π
-		constexpr auto half_period = Math::PI<parameter_type>; // 一周期 : 2π
+		constexpr auto period = 2.0f * math::PI<parameter_type>; // 一周期 : 2π
+		constexpr auto half_period = math::PI<parameter_type>; // 一周期 : 2π
 
 		sample_type s = 0;
 		switch (mType) {
@@ -119,7 +119,7 @@ public:
 			break;
 		}
 
-		mPhase = Math::floored_division(mPhase + mSamplePerPhase, period);
+		mPhase = math::floored_division(mPhase + mSamplePerPhase, period);
 		return s;
 	}
 

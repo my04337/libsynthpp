@@ -21,7 +21,7 @@
 #   include <cxxabi.h>    // for __cxa_demangle
 #endif
 
-using namespace LSP;
+using namespace lsp;
 
 
 namespace {
@@ -251,8 +251,8 @@ void CppCallStack::printStackTrace(std::ostream& stream, const StackTrace& stack
 		if(strstr(name, "std::_Invoke_") == name) continue;
 		if(strstr(name, "std::_Invoker_") == name) continue;
 		// ログ出力関係も代わり映えがないため除外
-		if(strstr(name, "LSP::Log::") == name) continue;
-		if(strstr(name, "LSP::CppCallStack::") == name) continue;
+		if(strstr(name, "lsp::Log::") == name) continue;
+		if(strstr(name, "lsp::CppCallStack::") == name) continue;
 		// 処理系で予約されている名前も省略
 		if(name[0] == '_' && ('A' <= name[1] && name[1] <= 'Z')) continue;
 		// その他Win32Apiなどで頻出の名前も除外

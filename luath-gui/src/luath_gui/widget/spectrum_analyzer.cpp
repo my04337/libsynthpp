@@ -1,11 +1,11 @@
 ﻿#include <luath_gui/widget/spectrum_analyzer.hpp>
-#include <lsp/Util/fft.hpp>
+#include <lsp/analysis/fft.hpp>
 
 #include <bitset>
 #include <array>
 
-using namespace Luath;
-using namespace Luath::Widget;
+using namespace luath_gui;
+using namespace luath_gui::widget;
 
 SpectrumAnalyzer::SpectrumAnalyzer()
 {
@@ -27,9 +27,9 @@ void SpectrumAnalyzer::setParam(uint32_t sampleFreq, uint32_t channels, uint32_t
 		mBufferLength = newBufferLength;
 	}
 
-	LSP::Assertion::require(channels >= 1);
-	LSP::Assertion::require(mBufferLength >= 1 && mBufferLength <= bufferLength);
-	LSP::Assertion::require(std::bitset<sizeof(bufferLength)*8>(mBufferLength).count() == 1);
+	lsp::Assertion::require(channels >= 1);
+	lsp::Assertion::require(mBufferLength >= 1 && mBufferLength <= bufferLength);
+	lsp::Assertion::require(std::bitset<sizeof(bufferLength)*8>(mBufferLength).count() == 1);
 
 	_reset();
 }
@@ -49,7 +49,7 @@ void SpectrumAnalyzer::_reset()
 
 void SpectrumAnalyzer::draw(SDL_Renderer* renderer, int left_, int top_, int width_, int height_)
 {
-	LSP::Assertion::require(renderer != nullptr);
+	lsp::Assertion::require(renderer != nullptr);
 
 	std::lock_guard lock(mMutex);
 
@@ -118,9 +118,9 @@ void SpectrumAnalyzer::draw(SDL_Renderer* renderer, int left_, int top_, int wid
 		// FFT実施
 		std::vector<float> real(buffer.size()), image(buffer.size());
 		for (size_t i = 0; i < real.size(); ++i) {
-			real[i] = buffer[i] * LSP::Util::FFT::HammingWf(i / (float)real.size());
+			real[i] = buffer[i] * lsp::analysis::fft::HammingWf(i / (float)real.size());
 		}
-		LSP::Util::FFT::fft1d<float>(real, image, static_cast<int>(buffer.size()), 0, false);
+		lsp::analysis::fft::fft1d<float>(real, image, static_cast<int>(buffer.size()), 0, false);
 
 		// 各点の位置を求める
 		int num = 0;

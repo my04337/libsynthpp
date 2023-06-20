@@ -5,7 +5,7 @@
 #include <sstream>
 #include <iomanip>
 
-namespace LSP
+namespace lsp
 {
 
 // スタックトレース 取得or生成

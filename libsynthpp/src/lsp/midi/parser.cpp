@@ -9,8 +9,8 @@
 #include <array>
 #include <fstream>
 
-using namespace LSP;
-using namespace LSP::MIDI;
+using namespace lsp;
+using namespace lsp::midi;
 
 // 参考URL :
 //  http://eternalwindows.jp/winmm/midi/midi00.html
@@ -107,11 +107,11 @@ std::pair<Header, Body> Parser::parse(const std::filesystem::path& path)
 		uint64_t delta = tick - prev_tick; 
 		pos += time_per_tick * delta;
 
-		if (auto meta_event = dynamic_cast<const Messages::MetaEvent*>(msg.get())) {
+		if (auto meta_event = dynamic_cast<const messages::MetaEvent*>(msg.get())) {
 			// メタイベントは再生時には使用しない。 このタイミングで全て処理する
 			
 			// MEMO 対した数ではないので、ベタで分岐する
-			if (auto ev = dynamic_cast<const Messages::SetTempo*>(meta_event)) {
+			if (auto ev = dynamic_cast<const messages::SetTempo*>(meta_event)) {
 				time_per_tick = ev->timePerQuarterNote() / header.ticksPerQuarterNote; 
 			}
 
@@ -215,42 +215,42 @@ void Parser::stageTrack(std::vector<std::pair<uint64_t, std::unique_ptr<Message>
 			const uint8_t ch = event_state & 0x0F;
 			const uint8_t note = require(read_byte(s));
 			const uint8_t vel  = require(read_byte(s));
-			messages.emplace_back(tick_count, std::make_unique<Messages::NoteOff>(ch, note, vel));
+			messages.emplace_back(tick_count, std::make_unique<messages::NoteOff>(ch, note, vel));
 		}	break;
 		case 0x9: {	// ノートオン
 			const uint8_t ch = event_state & 0x0F;
 			const uint8_t note = require(read_byte(s));
 			const uint8_t vel  = require(read_byte(s));
-			messages.emplace_back(tick_count, std::make_unique<Messages::NoteOn>(ch, note, vel));
+			messages.emplace_back(tick_count, std::make_unique<messages::NoteOn>(ch, note, vel));
 		}	break;
 		case 0xA: {	// ポリフォニックキープレッシャー (アフタータッチ)
 			const uint8_t ch = event_state & 0x0F;
 			const uint8_t note = require(read_byte(s));
 			const uint8_t value  = require(read_byte(s));
-			messages.emplace_back(tick_count, std::make_unique<Messages::PolyphonicKeyPressure>(ch, note, value));
+			messages.emplace_back(tick_count, std::make_unique<messages::PolyphonicKeyPressure>(ch, note, value));
 		}	break;
 		case 0xB: {	// コントロールチェンジ
 			const uint8_t ch = event_state & 0x0F;
 			const uint8_t ctrl = require(read_byte(s));
 			const uint8_t value  = require(read_byte(s));
-			messages.emplace_back(tick_count, std::make_unique<Messages::ControlChange>(ch, ctrl, value));
+			messages.emplace_back(tick_count, std::make_unique<messages::ControlChange>(ch, ctrl, value));
 		}	break;
 		case 0xC: {	// プログラムチェンジ
 			const uint8_t ch = event_state & 0x0F;
 			const uint8_t prog = require(read_byte(s));
-			messages.emplace_back(tick_count, std::make_unique<Messages::ProgramChange>(ch, prog));
+			messages.emplace_back(tick_count, std::make_unique<messages::ProgramChange>(ch, prog));
 		}	break;
 		case 0xD: {	// チャネルプレッシャー (アフタータッチ)
 			const uint8_t ch = event_state & 0x0F;
 			const uint8_t value = require(read_byte(s));
-			messages.emplace_back(tick_count, std::make_unique<Messages::ChannelPressure>(ch, value));
+			messages.emplace_back(tick_count, std::make_unique<messages::ChannelPressure>(ch, value));
 		}	break;
 		case 0xE: {	// ピッチベンド
 			const uint8_t ch = event_state & 0x0F;
 			const uint8_t lsb = require(read_byte(s)); // 7bit
 			const uint8_t msb = require(read_byte(s)); // 7bit
 			const int16_t pitch = ((uint16_t(lsb)&0x7F) | ((uint16_t(msb)&0x7F) << 7)) - 8192; // 0x0000 => -8192
-			messages.emplace_back(tick_count, std::make_unique<Messages::PitchBend>(ch, pitch));
+			messages.emplace_back(tick_count, std::make_unique<messages::PitchBend>(ch, pitch));
 		}	break;
 		case 0xF: {
 			switch (event_state & 0x0F) {
@@ -262,17 +262,17 @@ void Parser::stageTrack(std::vector<std::pair<uint64_t, std::unique_ptr<Message>
 					auto b = require(read_byte(s));
 					sysex_event_data.push_back(b);
 				}
-				messages.emplace_back(tick_count, std::make_unique<Messages::SysExMessage>(std::move(sysex_event_data)));
+				messages.emplace_back(tick_count, std::make_unique<messages::SysExMessage>(std::move(sysex_event_data)));
 			}	break;
 			case 0x2: {	// ソングポジション
 				const uint8_t lsb = require(read_byte(s)); // 7bit
 				const uint8_t msb = require(read_byte(s)); // 7bit
 				const int16_t pos = ((uint16_t(lsb)&0x7F) | ((uint16_t(msb)&0x7F) << 7));
-				messages.emplace_back(tick_count, std::make_unique<Messages::SongPosition>(pos));
+				messages.emplace_back(tick_count, std::make_unique<messages::SongPosition>(pos));
 			}	break;
 			case 0x3: {	// ソングセレクト
 				const uint8_t song = require(read_byte(s)); 
-				messages.emplace_back(tick_count, std::make_unique<Messages::SongSelect>(song));
+				messages.emplace_back(tick_count, std::make_unique<messages::SongSelect>(song));
 			}	break;
 			case 0x1: // 未定義(MIDIタイムコードクォーターフレーム)
 			case 0x4: // 未定義
@@ -282,22 +282,22 @@ void Parser::stageTrack(std::vector<std::pair<uint64_t, std::unique_ptr<Message>
 				throw decoding_exception("invalid track chunk");
 				break;
 			case 0x6: {	// チューンリクエスト
-				messages.emplace_back(tick_count, std::make_unique<Messages::TuneRequest>());
+				messages.emplace_back(tick_count, std::make_unique<messages::TuneRequest>());
 			}	break;
 			case 0x8: {	// タイミングクロック
-				messages.emplace_back(tick_count, std::make_unique<Messages::TimingClock>());
+				messages.emplace_back(tick_count, std::make_unique<messages::TimingClock>());
 			}	break;
 			case 0xA: {	// スタート
-				messages.emplace_back(tick_count, std::make_unique<Messages::Start>());
+				messages.emplace_back(tick_count, std::make_unique<messages::Start>());
 			}	break;
 			case 0xB: {	// コンティニュー
-				messages.emplace_back(tick_count, std::make_unique<Messages::Continue>());
+				messages.emplace_back(tick_count, std::make_unique<messages::Continue>());
 			}	break;
 			case 0xC: {	// ストップ
-				messages.emplace_back(tick_count, std::make_unique<Messages::Stop>());
+				messages.emplace_back(tick_count, std::make_unique<messages::Stop>());
 			}	break;
 			case 0xE: {	// アクティブセンシング
-				messages.emplace_back(tick_count, std::make_unique<Messages::ActiveSensing>());
+				messages.emplace_back(tick_count, std::make_unique<messages::ActiveSensing>());
 			}	break;
 			case 0xF: {	// メタイベント
 				auto meta_event_type = require(read_variable(s));
@@ -306,13 +306,13 @@ void Parser::stageTrack(std::vector<std::pair<uint64_t, std::unique_ptr<Message>
 				case 0x51:{ // Set Tempo (03 tt tt tt)
 					expect(meta_event_len, 3);
 					auto microseconds_per_quarter_note = std::chrono::microseconds(require(read_big<uint32_t>(s, 3)));
-					messages.emplace_back(tick_count, std::make_unique<Messages::SetTempo>(microseconds_per_quarter_note));
+					messages.emplace_back(tick_count, std::make_unique<messages::SetTempo>(microseconds_per_quarter_note));
 				}	break;
 				default: {
 					for(uint32_t i=0; i< meta_event_len; ++i) {
 						require(read_byte(s)); // skip
 					}
-					messages.emplace_back(tick_count, std::make_unique<Messages::GeneralMetaEvent>(meta_event_type));
+					messages.emplace_back(tick_count, std::make_unique<messages::GeneralMetaEvent>(meta_event_type));
 				}	break;
 				}
 				

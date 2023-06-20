@@ -1,8 +1,8 @@
 ﻿#include <lsp/synth/midi_channel.hpp>
 
-using namespace LSP;
-using namespace LSP::MIDI;
-using namespace LSP::Synth;
+using namespace lsp;
+using namespace lsp::midi;
+using namespace lsp::synth;
 
 
 static const std::unordered_map<
@@ -146,7 +146,7 @@ static const std::unordered_map<
 	{127, { 2.50, 0.03, 0.00, 1.50,  0.00, 0.00, 1.50 }},
 };
 
-std::unique_ptr<LSP::Synth::Voice> LSP::Synth::MidiChannel::createMelodyVoice(uint8_t noteNo, uint8_t vel)
+std::unique_ptr<lsp::synth::Voice> lsp::synth::MidiChannel::createMelodyVoice(uint8_t noteNo, uint8_t vel)
 {
 	float v = 1.f; // volume(adjuster)
 	float a = 0.f; // sec
@@ -188,7 +188,7 @@ std::unique_ptr<LSP::Synth::Voice> LSP::Synth::MidiChannel::createMelodyVoice(ui
 	// TODO sustain_levelで除算しているのは旧LibSynth++からの移植コード。 補正が不要になったら削除すること
 	float volume = powf(10.f, -20.f * (1.f - vel / 127.f) / 20.f) * v / ((s > 0.8f && s != 0.f) ? s : 0.8f);
 	float cutoffLevel = 0.01f;
-	static const LSP::Filter::EnvelopeGenerator<float>::Curve curveExp3(3.0f);
+	static const lsp::filter::EnvelopeGenerator<float>::Curve curveExp3(3.0f);
 
 	float overtuneGain = 0.f; // dB
 	if(mSystemType != SystemType::GM1) {
@@ -196,7 +196,7 @@ std::unique_ptr<LSP::Synth::Voice> LSP::Synth::MidiChannel::createMelodyVoice(ui
 	}
 
 	auto wg = mWaveTable.get(waveTableId);
-	auto voice = std::make_unique<LSP::Synth::WaveTableVoice>(mSampleFreq, wg, noteNo + noteNoAdjuster, mCalculatedPitchBend, volume, ccPedal);
+	auto voice = std::make_unique<lsp::synth::WaveTableVoice>(mSampleFreq, wg, noteNo + noteNoAdjuster, mCalculatedPitchBend, volume, ccPedal);
 	voice->setResonance(2.f, overtuneGain);
 
 	auto& eg = voice->envolopeGenerator();

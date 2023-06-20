@@ -1,35 +1,34 @@
-﻿#include <lsp/threading/thread.hpp>
+﻿#include <lsp/base/thread_util.hpp>
 #include <lsp/base/logging.hpp>
 
 #ifdef WIN32
 #include <Windows.h>
 #endif
 
-using namespace LSP;
-using namespace LSP::Threading;
+using namespace lsp;
 
-void LSP::Threading::setThreadPriority(std::thread& th, Priority p)
+void lsp::setThreadPriority(std::thread& th, ThreadPriority p)
 {
-	if(p == Priority::Inherited) return; // do-nothing
+	if(p == ThreadPriority::Inherited) return; // do-nothing
 
 #if defined(WIN32)
 	int nPriority = THREAD_PRIORITY_NORMAL;
 	switch (p) {
-	case Priority::Inherited:
+	case ThreadPriority::Inherited:
 		Assertion::unreachable();
-	case Priority::Lowest:	
+	case ThreadPriority::Lowest:
 		nPriority = THREAD_PRIORITY_LOWEST;
 		break;
-	case Priority::BelowNormal:
+	case ThreadPriority::BelowNormal:
 		nPriority = THREAD_PRIORITY_BELOW_NORMAL;
 		break;
-	case Priority::Normal:
+	case ThreadPriority::Normal:
 		nPriority = THREAD_PRIORITY_NORMAL;
 		break;
-	case Priority::AboveNormal:
+	case ThreadPriority::AboveNormal:
 		nPriority = THREAD_PRIORITY_ABOVE_NORMAL;
 		break;
-	case Priority::Highest:
+	case ThreadPriority::Highest:
 		nPriority = THREAD_PRIORITY_HIGHEST;
 		break;
 	}

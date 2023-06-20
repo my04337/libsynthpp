@@ -1,7 +1,7 @@
 ﻿#include <lsp/synth/voice.hpp>
 
-using namespace LSP;
-using namespace LSP::Synth;
+using namespace lsp;
+using namespace lsp::synth;
 
 Voice::Voice(uint32_t sampleFreq, float noteNo, float pitchBend, float volume, bool hold)
 	: mSampleFreq(sampleFreq)

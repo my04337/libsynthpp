@@ -2,7 +2,7 @@
 
 #include <lsp/base/base.hpp>
 
-namespace LSP::MIDI
+namespace lsp::midi
 {
 
 // MIDI システム種別

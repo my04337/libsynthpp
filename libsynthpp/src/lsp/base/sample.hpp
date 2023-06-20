@@ -3,7 +3,7 @@
 #include <lsp/base/base.hpp>
 #include <lsp/base/logging.hpp>
 
-namespace LSP
+namespace lsp
 {
 template<typename T>
 concept integral_sample_typeable

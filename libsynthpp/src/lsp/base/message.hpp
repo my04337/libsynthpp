@@ -3,7 +3,7 @@
 #include <lsp/base/base.hpp>
 #include <lsp/base/id.hpp>
 
-namespace LSP
+namespace lsp
 {
 	 
 // 制御メッセージ

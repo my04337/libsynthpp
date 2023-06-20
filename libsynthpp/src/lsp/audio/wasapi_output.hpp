@@ -6,9 +6,6 @@
 #ifndef WIN32
 #error unsupported platform
 #endif
-#ifndef WIN32
-#error unsupported platform
-#endif
 
 #include <Windows.h>
 #include <Mmreg.h>
@@ -17,7 +14,7 @@
 
 struct IAudioClient3;
 
-namespace LSP::Audio {
+namespace lsp::audio {
 
 // WASAPI 出力
 class WasapiOutput final

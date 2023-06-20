@@ -3,11 +3,11 @@
 #include <lsp/base/base.hpp>
 #include <lsp/base/Id.hpp>
 
-namespace LSP::Threading
+namespace lsp
 {
 
 // スレッドの優先度
-enum class Priority
+enum class ThreadPriority
 {
 	Inherited, // default:do-nothing
 
@@ -19,6 +19,6 @@ enum class Priority
 };
 
 // スレッド優先度を指定します
-void setThreadPriority(std::thread& th, Priority p);
+void setThreadPriority(std::thread& th, ThreadPriority p);
 
 }

@@ -6,7 +6,7 @@
 
 #include <random>
 
-namespace LSP::Generator {
+namespace lsp::generator {
 
 // 波形テーブルジェネレータ
 template<
@@ -29,7 +29,7 @@ public:
 	{
 		parameter_type phaseDelta = freq / sampleFreq / mCycles;
 		sample_type v = peek(mPhase);
-		mPhase = Math::floored_division< parameter_type>(mPhase + phaseDelta, 1);
+		mPhase = math::floored_division< parameter_type>(mPhase + phaseDelta, 1);
 		return v;
 	}
 

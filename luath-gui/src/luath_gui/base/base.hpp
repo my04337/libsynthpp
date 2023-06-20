@@ -10,12 +10,12 @@
 #include <sstream>
 #include <iomanip>
 
-namespace Luath
+namespace luath_gui
 {
 // いくつかのLSPのクラスは便利なためusingしておく
-using clock = LSP::clock;
-using non_copy = LSP::non_copy;
-using non_copy_move = LSP::non_copy_move;
+using clock = lsp::clock;
+using non_copy = lsp::non_copy;
+using non_copy_move = lsp::non_copy_move;
 
 // 前方宣言
 class Application;

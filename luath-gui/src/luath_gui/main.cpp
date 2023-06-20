@@ -1,16 +1,18 @@
 ﻿#include <luath_gui/app/application.hpp>
 
 
-using namespace LSP;
-
 int main(int argc, char** argv)
 {
 	// ログ出力機構 セットアップ
-	Win32::OutputDebugStringLogger logger;
-	Log::addLogger(&logger);
-	auto fin_act_logger = finally([&]{ Log::removeLogger(&logger); });
-	Log::setLogLevel(LogLevel::Debug);
+#ifdef WIN32
+	lsp::OutputDebugStringLogger logger;
+#else
+	StdOutLogger logger;
+#endif
+	lsp::Log::addLogger(&logger);
+	auto fin_act_logger = lsp::finally([&]{ lsp::Log::removeLogger(&logger); });
+	lsp::Log::setLogLevel(lsp::LogLevel::Debug);
 	
 	// スタート
-	return Luath::Application::instance().exec(argc, argv);
+	return luath_gui::Application::instance().exec(argc, argv);
 }

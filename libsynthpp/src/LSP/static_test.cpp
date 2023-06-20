@@ -7,13 +7,13 @@
 #include <lsp/midi/sequencer.hpp>
 #include <lsp/audio/wav_file_output.hpp>
 
-using namespace LSP;
+using namespace lsp;
 
 // ############################################################################
 // ### Base/Math
-static_assert(Math::PI<float>       != 0,  "Math::PI<>failed");
-static_assert(Math::PI<double>      != 0,  "Math::PI<> failed");
-static_assert(Math::PI<long double> != 0,  "Math::PI<> failed");
+static_assert(math::PI<float>       != 0,  "math::PI<>failed");
+static_assert(math::PI<double>      != 0,  "math::PI<> failed");
+static_assert(math::PI<long double> != 0,  "math::PI<> failed");
 
 // ############################################################################
 // ### Base/Signal 
@@ -77,8 +77,8 @@ namespace
 {
 [[maybe_unused]]
 void unused_function_f_eg() {
-	Filter::EnvelopeGenerator<float> eg_float;
-	Filter::EnvelopeGenerator<double> eg_double;
+	filter::EnvelopeGenerator<float> eg_float;
+	filter::EnvelopeGenerator<double> eg_double;
 	eg_float.setMelodyEnvelope(1, 0, 0, 0, 0);
 	eg_float.noteOn();
 	eg_float.update();
@@ -93,8 +93,8 @@ namespace
 {
 [[maybe_unused]]
 void unused_function_f_bq() {
-	Filter::BiquadraticFilter<float> bqf_float;
-	Filter::BiquadraticFilter<double> bqf_double;
+	filter::BiquadraticFilter<float> bqf_float;
+	filter::BiquadraticFilter<double> bqf_double;
 }
 }
 
@@ -104,7 +104,7 @@ namespace
 {
 [[maybe_unused]]
 void unused_function_a_wfo() {
-	Audio::WavFileOutput out(44100, 16, 2, "");
+	audio::WavFileOutput out(44100, 16, 2, "");
 	out.write(Signal<int8_t>());
 	out.write(Signal<int32_t>());
 	out.write(Signal<float>());

@@ -1,12 +1,12 @@
 ﻿#include <lsp/midi/sequencer.hpp>
 #include <lsp/midi/message_receiver.hpp>
 #include <lsp/midi/messages/sysex_message.hpp>
-#include <lsp/threading/thread.hpp>
-#include <lsp/threading/event_signal.hpp>
+#include <lsp/base/thread_util.hpp>
+#include <lsp/base/event_signal.hpp>
 #include <lsp/base/logging.hpp>
 
-using namespace LSP;
-using namespace LSP::MIDI;
+using namespace lsp;
+using namespace lsp::midi;
 
 // 参考URL :
 //  http://eternalwindows.jp/winmm/midi/midi00.html
@@ -93,7 +93,7 @@ void Sequencer::start()
 	stop();
 	mPlayThreadAbortFlag = false;
 
-	Threading::EventSignal sig;
+	EventSignal sig;
 	mPlayThread = std::thread([this, &sig]
 	{
 		auto body = mSmfBody; // copy
@@ -101,8 +101,8 @@ void Sequencer::start()
 		playThreadMain(body);
 		mPlayThreadAbortFlag = true;
 	});
-	Threading::setThreadPriority(mPlayThread, Threading::Priority::AboveNormal);
-	sig.wait(Threading::EventSignal::NoLock);
+	setThreadPriority(mPlayThread, ThreadPriority::AboveNormal);
+	sig.wait(EventSignal::NoLock);
 }
 
 void Sequencer::stop() 
@@ -121,13 +121,13 @@ void Sequencer::reset(SystemType type)
 	std::shared_ptr<Message> msg;
 	switch (type) {
 	case SystemType::GM1:
-		msg = std::make_shared<Messages::SysExMessage>(std::vector<uint8_t>{ 0x7E, 0x7F, 0x09, 0x01 });
+		msg = std::make_shared<messages::SysExMessage>(std::vector<uint8_t>{ 0x7E, 0x7F, 0x09, 0x01 });
 		break;
 	case SystemType::GM2:
-		msg = std::make_shared<Messages::SysExMessage>(std::vector<uint8_t>{ 0x7E, 0x7F, 0x09, 0x03 });
+		msg = std::make_shared<messages::SysExMessage>(std::vector<uint8_t>{ 0x7E, 0x7F, 0x09, 0x03 });
 		break;
 	case SystemType::GS:
-		msg = std::make_shared<Messages::SysExMessage>(std::vector<uint8_t>{ 0x7E, 0x7F, 0x09, 0x02 });
+		msg = std::make_shared<messages::SysExMessage>(std::vector<uint8_t>{ 0x7E, 0x7F, 0x09, 0x02 });
 		break;
 	}
 	if (msg) {

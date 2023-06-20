@@ -4,7 +4,7 @@
 #include <lsp/midi/parser.hpp>
 
 
-namespace LSP::MIDI
+namespace lsp::midi
 {
 class MessageReceiver;
 

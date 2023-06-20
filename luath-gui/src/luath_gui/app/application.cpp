@@ -2,8 +2,8 @@
 #include <luath_gui/app/font_cache.hpp>
 #include <luath_gui/window/main_window.hpp>
 
-using namespace LSP;
-using namespace Luath;
+using namespace lsp;
+using namespace luath_gui;
 
 Application::Application()
 {
@@ -35,7 +35,7 @@ int Application::exec(int argc, char** argv)
 {
 
 	// ウィンドウ生成
-	Luath::Window::MainWindow main_window;
+	luath_gui::window::MainWindow main_window;
 	if(!main_window.initialize()) {
 		return 1;
 	}

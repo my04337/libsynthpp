@@ -2,7 +2,7 @@
 
 #include <luath_gui/base/base.hpp>
 
-namespace Luath::Widget
+namespace luath_gui::widget
 {
 
 class Lissajous
@@ -16,7 +16,7 @@ public:
 
 	// 表示波形を書き込みます
 	template<typename sample_type>
-	void write(const LSP::Signal<sample_type>& sig);
+	void write(const lsp::Signal<sample_type>& sig);
 
 
 	// リサージュ曲線を描画を描画します
@@ -33,7 +33,7 @@ private:
 };
 
 template<typename sample_type>
-void Lissajous::write(const LSP::Signal<sample_type>& sig)
+void Lissajous::write(const lsp::Signal<sample_type>& sig)
 {
 	std::lock_guard lock(mMutex);
 
@@ -41,7 +41,7 @@ void Lissajous::write(const LSP::Signal<sample_type>& sig)
 	const auto signal_frames = sig.frames();
 	const auto buffer_length = mBufferLength;
 
-	LSP::Assertion::require(signal_channels == mChannels, "WasapiOutput : write - failed (channel count is mismatch)");
+	lsp::Assertion::require(signal_channels == mChannels, "WasapiOutput : write - failed (channel count is mismatch)");
 
 
 	for (size_t ch=0; ch<signal_channels; ++ch) {

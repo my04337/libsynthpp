@@ -1,8 +1,8 @@
 ﻿#include <luath_gui/base/base.hpp>
 
 
-using namespace LSP;
-using namespace Luath;
+using namespace lsp;
+using namespace luath_gui;
 
 Text::Text()noexcept
 {

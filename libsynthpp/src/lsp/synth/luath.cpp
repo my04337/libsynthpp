@@ -2,10 +2,10 @@
 #include <lsp/midi/messages/basic_message.hpp>
 #include <lsp/midi/messages/sysex_message.hpp>
 
-using namespace LSP;
-using namespace LSP::MIDI;
-using namespace LSP::MIDI::Messages;
-using namespace LSP::Synth;
+using namespace lsp;
+using namespace lsp::midi;
+using namespace lsp::midi::messages;
+using namespace lsp::synth;
 
 Luath::Luath(uint32_t sampleFreq, SystemType defaultSystemType)
 	: mSampleFreq(sampleFreq)
@@ -28,9 +28,6 @@ Luath::~Luath()
 void Luath::dispose()
 {
 	std::lock_guard lock(mMutex);
-
-	// 全タスク停止
-	mTaskDispatcher.abort();
 
 	// コールバック破棄
 	mRenderingCallback = nullptr;
@@ -112,11 +109,11 @@ void Luath::reset(SystemType type)
 }
 
 
-LSP::Signal<float> Luath::generate(size_t len)
+lsp::Signal<float> Luath::generate(size_t len)
 {
 	constexpr float MASTER_VOLUME = 0.125f;
 
-	auto sig = LSP::Signal<float>::allocate(&mMem, 2, len);
+	auto sig = lsp::Signal<float>::allocate(&mMem, 2, len);
 
 	for (size_t i = 0; i < len; ++i) {
 		auto frame = sig.frame(i);
@@ -138,7 +135,7 @@ LSP::Signal<float> Luath::generate(size_t len)
 }
 
 // MIDIメッセージ受信コールバック
-void Luath::onMidiMessageReceived(clock::time_point msg_time, const std::shared_ptr<const MIDI::Message>& msg)
+void Luath::onMidiMessageReceived(clock::time_point msg_time, const std::shared_ptr<const midi::Message>& msg)
 {
 	std::lock_guard lock(mMutex);
 	mMessageQueue.emplace_back(msg_time, msg);
@@ -166,7 +163,7 @@ Luath::Digest Luath::digest()const
 	}
 	return digest;
 }
-void Luath::dispatchMessage(const std::shared_ptr<const MIDI::Message>& msg)
+void Luath::dispatchMessage(const std::shared_ptr<const midi::Message>& msg)
 {
 	if (auto m = std::dynamic_pointer_cast<const NoteOn>(msg)) {
 		auto& midich = mMidiChannels[m->channel()];

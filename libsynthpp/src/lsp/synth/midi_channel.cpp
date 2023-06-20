@@ -2,16 +2,16 @@
 #include <lsp/synth/wave_table.hpp>
 #include <lsp/synth/voice.hpp>
 
-using namespace LSP;
-using namespace LSP::MIDI;
-using namespace LSP::Synth;
+using namespace lsp;
+using namespace lsp::midi;
+using namespace lsp::synth;
 
 MidiChannel::MidiChannel(uint32_t sampleFreq, uint8_t ch, const WaveTable& waveTable)
 	: mSampleFreq(sampleFreq)
 	, mMidiCh(ch)
 	, mWaveTable(waveTable)
 {
-	reset(LSP::MIDI::SystemType::GM1);
+	reset(lsp::midi::SystemType::GM1);
 }
 // チャネル毎パラメータ類 リセット
 void MidiChannel::reset(SystemType type)
@@ -297,7 +297,7 @@ MidiChannel::Digest MidiChannel::digest()const
 
 	return digest;
 }
-std::unique_ptr<LSP::Synth::Voice> MidiChannel::createVoice(uint8_t noteNo, uint8_t vel)
+std::unique_ptr<lsp::synth::Voice> MidiChannel::createVoice(uint8_t noteNo, uint8_t vel)
 {
 	if(mIsDrumPart) {
 		return createDrumVoice(noteNo, vel);

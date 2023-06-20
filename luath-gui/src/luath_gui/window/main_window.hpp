@@ -6,11 +6,11 @@
 #include <luath_gui/widget/lissajous.hpp>
 #include <lsp/synth/luath.hpp>
 #include <lsp/midi/sequencer.hpp>
-#include <lsp/threading/event_signal.hpp>
+#include <lsp/base/event_signal.hpp>
 
 #include <lsp/audio/wasapi_output.hpp>
 
-namespace Luath::Window
+namespace luath_gui::window
 {
 
 class MainWindow final
@@ -30,7 +30,7 @@ public:
 protected:
 	void loadMidi(const std::filesystem::path& path);
 	void drawingThreadMain();
-	void onRenderedSignal(LSP::Signal<float>&& sig);
+	void onRenderedSignal(lsp::Signal<float>&& sig);
 
 private:
 	SDL_Window* mWindow = nullptr;
@@ -44,19 +44,19 @@ private:
 	std::atomic_bool mDrawingThreadAborted;
 
 	// 再生用ストリーム
-	LSP::Audio::WasapiOutput mOutput;
+	lsp::audio::WasapiOutput mOutput;
 
 	// 再生パラメータ
 	std::atomic<float> mPostAmpVolume = 1.0f;
 
 	// シーケンサ,シンセサイザ
-	LSP::Synth::Luath mSynthesizer;
-	LSP::MIDI::Sequencer mSequencer;
+	lsp::synth::Luath mSynthesizer;
+	lsp::midi::Sequencer mSequencer;
 
 	// 各種ウィジット
-	Luath::Widget::OscilloScope mOscilloScopeWidget;
-	Luath::Widget::SpectrumAnalyzer mSpectrumAnalyzerWidget;
-	Luath::Widget::Lissajous mLissajousWidget;
+	luath_gui::widget::OscilloScope mOscilloScopeWidget;
+	luath_gui::widget::SpectrumAnalyzer mSpectrumAnalyzerWidget;
+	luath_gui::widget::Lissajous mLissajousWidget;
 };
 
 }

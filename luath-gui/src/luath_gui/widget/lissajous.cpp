@@ -1,7 +1,7 @@
 ﻿#include <luath_gui/widget/lissajous.hpp>
 
-using namespace Luath;
-using namespace Luath::Widget;
+using namespace luath_gui;
+using namespace luath_gui::widget;
 
 Lissajous::Lissajous()
 {
@@ -17,7 +17,7 @@ void Lissajous::setParam(uint32_t sampleFreq, uint32_t channels, uint32_t buffer
 	mChannels = channels;
 	mBufferLength = bufferLength;
 
-	LSP::Assertion::require(channels >= 2);
+	lsp::Assertion::require(channels >= 2);
 
 	_reset();
 }
@@ -37,7 +37,7 @@ void Lissajous::_reset()
 
 void Lissajous::draw(SDL_Renderer* renderer, int left_, int top_, int width_, int height_)
 {
-	LSP::Assertion::require(renderer != nullptr);
+	lsp::Assertion::require(renderer != nullptr);
 
 	std::lock_guard lock(mMutex);
 
@@ -47,7 +47,7 @@ void Lissajous::draw(SDL_Renderer* renderer, int left_, int top_, int width_, in
 	SDL_bool is_clipped = SDL_RenderIsClipEnabled(renderer);
 	SDL_Rect original_clip_rect;
 	if(is_clipped) SDL_RenderGetClipRect(renderer, &original_clip_rect);
-	auto fin_act = LSP::finally([&] { SDL_RenderSetClipRect(renderer, is_clipped ? &original_clip_rect : nullptr); });
+	auto fin_act = lsp::finally([&] { SDL_RenderSetClipRect(renderer, is_clipped ? &original_clip_rect : nullptr); });
 	SDL_RenderSetClipRect(renderer, &rect);
 	
 	// よく使う値を先に計算
@@ -79,8 +79,8 @@ void Lissajous::draw(SDL_Renderer* renderer, int left_, int top_, int width_, in
 	SDL_SetRenderDrawColor(renderer, 0xFF, 0x00, 0x00, 0xFF);
 	int num = 0;
 	for (uint32_t i = 0; i < buffer_length; ++i) {
-		int x = mid_x + (int)(width / 2.0f * std::clamp(mBuffers[0][i], LSP::sample_traits<float>::normalized_min, LSP::sample_traits<float>::normalized_max));
-		int y = mid_y - (int)(height / 2.0f * std::clamp(mBuffers[1][i], LSP::sample_traits<float>::normalized_min, LSP::sample_traits<float>::normalized_max));
+		int x = mid_x + (int)(width / 2.0f * std::clamp(mBuffers[0][i], lsp::sample_traits<float>::normalized_min, lsp::sample_traits<float>::normalized_max));
+		int y = mid_y - (int)(height / 2.0f * std::clamp(mBuffers[1][i], lsp::sample_traits<float>::normalized_min, lsp::sample_traits<float>::normalized_max));
 		SDL_Point pt{x, y};
 		if(num > 0 && points[num-1].x == pt.x && points[num-1].y == pt.y) continue;
 		points[num++] = SDL_Point{x, y};
@@ -93,5 +93,5 @@ void Lissajous::draw(SDL_Renderer* renderer, int left_, int top_, int width_, in
 
 	// クリッピング解除
 	fin_act.action();
-	LSP::Assertion::check(SDL_RenderIsClipEnabled(renderer) == is_clipped);
+	lsp::Assertion::check(SDL_RenderIsClipEnabled(renderer) == is_clipped);
 }

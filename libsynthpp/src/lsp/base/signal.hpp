@@ -3,7 +3,7 @@
 #include <lsp/base/base.hpp>
 #include <lsp/base/sample.hpp>
 
-namespace LSP
+namespace lsp
 {
 
 // 信号 view

@@ -4,7 +4,7 @@
 #include <lsp/base/signal.hpp>
 #include <lsp/base/math.hpp>
 
-namespace LSP::Util::FFT
+namespace lsp::analysis::fft
 {
 // 各種窓関数
 template<
@@ -19,7 +19,7 @@ parameter_type BlackmanWf(parameter_type pos)
 	constexpr parameter_type a2 = alpha / 2.0f;
 
 	if (pos < 0 || pos > 1) return 0;
-	return a0 - a1 * std::cos(2 * Math::PI<parameter_type> * pos) + a2 * std::cos(4 * Math::PI<parameter_type> * pos);
+	return a0 - a1 * std::cos(2 * math::PI<parameter_type> * pos) + a2 * std::cos(4 * math::PI<parameter_type> * pos);
 }
 template<
 	floating_sample_typeable parameter_type
@@ -32,7 +32,7 @@ parameter_type BlackmanHarrisWf(parameter_type pos)
 	constexpr parameter_type a3 = 0.01168f;
 
 	if (pos < 0 || pos > 1) return 0;
-	return a0 - a1 * std::cos(2 * Math::PI<parameter_type> * pos) + a2 * std::cos(4 * Math::PI<parameter_type> * pos) - a3 * std::cos(4 * Math::PI<parameter_type> *pos);
+	return a0 - a1 * std::cos(2 * math::PI<parameter_type> * pos) + a2 * std::cos(4 * math::PI<parameter_type> * pos) - a3 * std::cos(4 * math::PI<parameter_type> *pos);
 }
 template<
 	floating_sample_typeable parameter_type
@@ -51,7 +51,7 @@ parameter_type HannWf(parameter_type pos)
 	constexpr parameter_type a1 = 1.0f - a0;
 
 	if (pos < 0 || pos > 1) return 0;
-	return a0 - a1 * (std::cos(2 * Math::PI<parameter_type> *pos));
+	return a0 - a1 * (std::cos(2 * math::PI<parameter_type> *pos));
 }
 template<
 	floating_sample_typeable parameter_type
@@ -62,7 +62,7 @@ parameter_type HammingWf(parameter_type pos)
 	constexpr parameter_type a1 = 1.0f - a0;
 
 	if (pos < 0 || pos > 1) return 0;
-	return a0 - a1 * (std::cos(2 * Math::PI<parameter_type> * pos));
+	return a0 - a1 * (std::cos(2 * math::PI<parameter_type> * pos));
 }
 
 template<floating_sample_typeable sample_type, subscript_operator_available<sample_type> container>
@@ -87,7 +87,7 @@ bool fft1d(container& ar, container& ai, int n, int iter, bool isIFFT)
 	{
 		return false;
 	}
-	w = (isIFFT ? Math::PI<sample_type> : -Math::PI<sample_type>) / (sample_type)n;
+	w = (isIFFT ? math::PI<sample_type> : -math::PI<sample_type>) / (sample_type)n;
 	xp2 = n;
 	for (it = 0; it < iter; it++)
 	{

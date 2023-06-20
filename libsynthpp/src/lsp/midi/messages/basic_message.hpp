@@ -3,7 +3,7 @@
 #include <lsp/base/base.hpp>
 #include <lsp/midi/message.hpp>
 
-namespace LSP::MIDI::Messages
+namespace lsp::midi::messages
 {
 
 /// ノートオン

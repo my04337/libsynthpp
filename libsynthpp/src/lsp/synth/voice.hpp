@@ -5,7 +5,7 @@
 #include <lsp/filter/biquadratic_filter.hpp>
 #include <lsp/Generator/wave_table_generator.hpp>
 
-namespace LSP::Synth
+namespace lsp::synth
 {
 // ボイス識別番号
 struct _voice_id_tag {};
@@ -17,14 +17,14 @@ class Voice
 	: non_copy_move
 {
 public:
-	using EnvelopeGenerator = LSP::Filter::EnvelopeGenerator<float>;
-	using EnvelopeState = LSP::Filter::EnvelopeState;
-	using BiquadraticFilter = LSP::Filter::BiquadraticFilter<float>;
+	using EnvelopeGenerator = lsp::filter::EnvelopeGenerator<float>;
+	using EnvelopeState = lsp::filter::EnvelopeState;
+	using BiquadraticFilter = lsp::filter::BiquadraticFilter<float>;
 
 	struct Digest {
 		float freq = 0; // 基本周波数
 		float envelope = 0; // エンベロープジェネレータ出力
-		LSP::Filter::EnvelopeState state = LSP::Filter::EnvelopeState::Free; // エンベロープジェネレータ ステート
+		lsp::filter::EnvelopeState state = lsp::filter::EnvelopeState::Free; // エンベロープジェネレータ ステート
 	};
 
 public:
@@ -74,7 +74,7 @@ class WaveTableVoice
 	: public Voice
 {
 public:
-	using WaveTableGenerator = LSP::Generator::WaveTableGenerator<float>;
+	using WaveTableGenerator = lsp::generator::WaveTableGenerator<float>;
 
 
 public:

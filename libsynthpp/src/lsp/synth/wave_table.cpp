@@ -2,8 +2,8 @@
 #include <lsp/generator/function_generator.hpp>
 #include <lsp/filter/biquadratic_filter.hpp>
 
-using namespace LSP;
-using namespace LSP::Synth;
+using namespace lsp;
+using namespace lsp::synth;
 
 WaveTable::WaveTable()
 {
@@ -27,7 +27,7 @@ void WaveTable::add(size_t id, Signal<float>&& wav, float preAmp, float cycles)
 	mWaveTable.insert_or_assign(id, std::make_tuple(std::move(wav), preAmp, cycles));
 }
 
-LSP::Generator::WaveTableGenerator<float> WaveTable::get(size_t id)const
+lsp::generator::WaveTableGenerator<float> WaveTable::get(size_t id)const
 {
 	auto found = mWaveTable.find(id);
 	if (found == mWaveTable.end()) {
@@ -37,13 +37,13 @@ LSP::Generator::WaveTableGenerator<float> WaveTable::get(size_t id)const
 
 	auto& [wave, preAmp, cycles] = found->second;
 
-	return LSP::Generator::WaveTableGenerator<float>(wave, preAmp, cycles);
+	return lsp::generator::WaveTableGenerator<float>(wave, preAmp, cycles);
 }
 
 void WaveTable::reset()
 {
-	using FunctionGenerator = LSP::Generator::FunctionGenerator<float>;
-	using BiquadraticFilter = LSP::Filter::BiquadraticFilter<float>;
+	using FunctionGenerator = lsp::generator::FunctionGenerator<float>;
+	using BiquadraticFilter = lsp::filter::BiquadraticFilter<float>;
 
 	mNextCustomWaveId = CustomWaveIdBegin;
 	mWaveTable.clear();
@@ -82,7 +82,7 @@ void WaveTable::reset()
 		constexpr size_t frames = 512;
 		auto sig = Signal<float>::allocate(frames);
 		FunctionGenerator fg;
-		fg.setSquareWave(frames, 1, Math::PI<float>/1.5f);
+		fg.setSquareWave(frames, 1, math::PI<float>/1.5f);
 		for (size_t i = 0; i < frames; ++i) {
 			sig.frame(i)[0] = fg.update();
 		}
@@ -93,7 +93,7 @@ void WaveTable::reset()
 		constexpr size_t frames = 512;
 		auto sig = Signal<float>::allocate(frames);
 		FunctionGenerator fg;
-		fg.setSquareWave(frames, 1, Math::PI<float>/2);
+		fg.setSquareWave(frames, 1, math::PI<float>/2);
 		for (size_t i = 0; i < frames; ++i) {
 			sig.frame(i)[0] = fg.update();
 		}

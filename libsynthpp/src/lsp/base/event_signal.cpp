@@ -1,6 +1,6 @@
-#include <lsp/threading/event_signal.hpp>
+#include <lsp/base/event_signal.hpp>
 
-using namespace LSP::Threading;
+using namespace lsp;
 
 
 void EventSignal::dispose()

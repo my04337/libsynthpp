@@ -46,7 +46,7 @@
 #endif
 
 // --- 基本的な型 ---
-namespace LSP
+namespace lsp
 {
 // クロック類
 using clock = std::chrono::steady_clock;

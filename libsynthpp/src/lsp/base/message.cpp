@@ -1,6 +1,6 @@
 ﻿#include <lsp/base/message.hpp>
 
-using namespace LSP;
+using namespace lsp;
 
 Message::Message()
 	: mPosition(0)

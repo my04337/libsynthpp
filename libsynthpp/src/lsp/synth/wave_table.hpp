@@ -2,7 +2,7 @@
 
 #include <lsp/generator/wave_table_generator.hpp>
 
-namespace LSP::Synth
+namespace lsp::synth
 {
 
 // 波形テーブル
@@ -41,7 +41,7 @@ public:
 	size_t add(Signal<float>&& wav, float preAmp = -1, float cycles = 1);
 
 	// 波形テーブルジェネレータを取得します
-	LSP::Generator::WaveTableGenerator<float> get(size_t id)const;
+	lsp::generator::WaveTableGenerator<float> get(size_t id)const;
 
 
 private:

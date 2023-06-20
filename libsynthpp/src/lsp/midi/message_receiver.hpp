@@ -1,7 +1,7 @@
 #include <lsp/base/base.hpp>
 #include <lsp/midi/message.hpp>
 
-namespace LSP::MIDI
+namespace lsp::midi
 {
 // MIDIメッセージ レシーバ
 class MessageReceiver

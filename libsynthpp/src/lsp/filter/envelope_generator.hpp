@@ -3,7 +3,7 @@
 #include <lsp/base/base.hpp>
 #include <lsp/base/signal.hpp>
 
-namespace LSP::Filter
+namespace lsp::filter
 {
 
 

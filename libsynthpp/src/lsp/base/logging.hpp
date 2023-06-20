@@ -4,7 +4,7 @@
 #include <lsp/base/id.hpp>
 #include <lsp/base/stack_trace.hpp>
 
-namespace LSP
+namespace lsp
 {
 class ILogger;
 
@@ -117,55 +117,55 @@ public:
 	// require : 引数チェック向け
 	inline static void require(bool succeeded, std::source_location location = std::source_location::current()) {
 		if(!succeeded) [[unlikely]] {
-			LSP::Log::f([location](auto& _) {_ << to_filename(location.file_name()) << ":" << location.line() << " - illegal argument."; });
+			lsp::Log::f([location](auto& _) {_ << to_filename(location.file_name()) << ":" << location.line() << " - illegal argument."; });
 		}
 	}
 	inline static void require(bool succeeded, std::string_view description, std::source_location location = std::source_location::current()) {
 		if(!succeeded) [[unlikely]] {
-			LSP::Log::f([description, location](auto& o) {o << to_filename(location.file_name()) << ":" << location.line() << " - " << description; });
+			lsp::Log::f([description, location](auto& o) {o << to_filename(location.file_name()) << ":" << location.line() << " - " << description; });
 		}
 	}
 	template<typename D>
 		requires std::invocable<D, std::ostringstream&>
 	inline static void require(bool succeeded, D&& description, std::source_location location = std::source_location::current()) {
 		if(!succeeded) [[unlikely]] {
-			LSP::Log::f([description = std::forward<D>(description), location](auto& o) {o << to_filename(location.file_name()) << ":" << location.line() << " - "; description(o); });
+			lsp::Log::f([description = std::forward<D>(description), location](auto& o) {o << to_filename(location.file_name()) << ":" << location.line() << " - "; description(o); });
 		}
 	}
 
 	// check : 関数の内部での状態チェック向け
 	inline static void check(bool succeeded, std::source_location location = std::source_location::current()) {
 		if(!succeeded) [[unlikely]] {
-			LSP::Log::f([location](auto& _) {_ << to_filename(location.file_name()) << ":" << location.line() << " - illegal state."; });
+			lsp::Log::f([location](auto& _) {_ << to_filename(location.file_name()) << ":" << location.line() << " - illegal state."; });
 		}
 	}
 	inline static void check(bool succeeded, std::string_view description, std::source_location location = std::source_location::current()) {
 		if(!succeeded) [[unlikely]] {
-			LSP::Log::f([description, location](auto& o) {o << to_filename(location.file_name()) << ":" << location.line() << description; });
+			lsp::Log::f([description, location](auto& o) {o << to_filename(location.file_name()) << ":" << location.line() << description; });
 		}
 	}
 	template<typename D>
 		requires std::invocable<D, std::ostringstream&>
 	inline static void check(bool succeeded, D&& description, std::source_location location = std::source_location::current()) {
 		if(!succeeded) [[unlikely]] {
-			LSP::Log::f([description = std::forward<D>(description), location](auto& o) {o << to_filename(location.file_name()) << ":" << location.line() << " - "; description(o); });
+			lsp::Log::f([description = std::forward<D>(description), location](auto& o) {o << to_filename(location.file_name()) << ":" << location.line() << " - "; description(o); });
 		}
 	}
 
 	// unreachable : 到達不可能な箇所でのチェック向け
 	[[noreturn]]
 	inline static void unreachable(std::source_location location = std::source_location::current()) {
-		LSP::Log::f([location](auto& _) {_ << to_filename(location.file_name()) << ":" << location.line() << " - illegal state."; });
+		lsp::Log::f([location](auto& _) {_ << to_filename(location.file_name()) << ":" << location.line() << " - illegal state."; });
 	}
 	[[noreturn]]
 	inline static void unreachable(std::string_view description, std::source_location location = std::source_location::current()) {
-		LSP::Log::f([description, location](auto& o) {o << to_filename(location.file_name()) << ":" << location.line() << description; });
+		lsp::Log::f([description, location](auto& o) {o << to_filename(location.file_name()) << ":" << location.line() << description; });
 	}
 	template<typename D>
 		requires std::invocable<D, std::ostringstream&>
 	[[noreturn]]
 	inline static void unreachable(D&& description, std::source_location location = std::source_location::current()) {
-		LSP::Log::f([description = std::forward<D>(description), location](auto& o) {o << to_filename(location.file_name()) << ":" << location.line() << " - "; description(o); });
+		lsp::Log::f([description = std::forward<D>(description), location](auto& o) {o << to_filename(location.file_name()) << ":" << location.line() << " - "; description(o); });
 	}
 
 private:
@@ -224,9 +224,10 @@ public:
 private:
 	bool mShowHeader;
 };
+}
 
 #ifdef WIN32
-namespace Win32
+namespace lsp
 {
 /// ロガー : OutputDebugString用
 class OutputDebugStringLogger final
@@ -249,5 +250,3 @@ private:
 };
 }
 #endif
-
-}

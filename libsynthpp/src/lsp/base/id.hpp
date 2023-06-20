@@ -2,7 +2,7 @@
 
 #include <lsp/base/base.hpp>
 
-namespace LSP
+namespace lsp
 {
 
 template<class T>
@@ -79,16 +79,16 @@ std::atomic<id_type_> issuable_id_base_t<T, id_type_, INITIAL_VALUE>::_cur(INITI
 }
 
 namespace std{
-template <class T, LSP::id_typeable id_type, id_type INITIAL_VALUE>
-struct hash<LSP::id_base_t<T, id_type, INITIAL_VALUE>>
+template <class T, lsp::id_typeable id_type, id_type INITIAL_VALUE>
+struct hash<lsp::id_base_t<T, id_type, INITIAL_VALUE>>
 {
-	constexpr std::size_t operator () (const LSP::id_base_t<T, id_type, INITIAL_VALUE>& key) const noexcept { return static_cast<size_t>(key.id()); }
+	constexpr std::size_t operator () (const lsp::id_base_t<T, id_type, INITIAL_VALUE>& key) const noexcept { return static_cast<size_t>(key.id()); }
 };
 }
 namespace std{
 template <class T>
-struct hash<LSP::issuable_id_base_t<T>>
+struct hash<lsp::issuable_id_base_t<T>>
 {
-	constexpr std::size_t operator () (const LSP::issuable_id_base_t<T>& key) const noexcept { return static_cast<size_t>(key.id()); }
+	constexpr std::size_t operator () (const lsp::issuable_id_base_t<T>& key) const noexcept { return static_cast<size_t>(key.id()); }
 };
 }

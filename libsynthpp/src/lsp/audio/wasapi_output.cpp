@@ -7,8 +7,8 @@
 
 
 
-using namespace LSP;
-using namespace LSP::Audio;
+using namespace lsp;
+using namespace lsp::audio;
 
 // 参考URL : https://charatsoft.sakura.ne.jp/develop/toaru2/index.php?did=7
 

@@ -1,7 +1,7 @@
 ﻿#include <lsp/audio/wav_file_output.hpp>
 
-using namespace LSP;
-using namespace LSP::Audio;
+using namespace lsp;
+using namespace lsp::audio;
 
 WavFileOutput::WavFileOutput(uint32_t sampleFreq, uint32_t bitsPerSample, uint32_t channels, const std::filesystem::path& filePath)
 {

@@ -2,7 +2,7 @@
 
 #include <luath_gui/base/base.hpp>
 
-namespace Luath
+namespace luath_gui
 {
 class Application final
 	: non_copy_move

@@ -10,9 +10,9 @@
 
 #define FORMAT_STRING(...) ((std::wostringstream() << __VA_ARGS__).str())
 
-using namespace LSP;
-using namespace Luath;
-using namespace Luath::Window;
+using namespace lsp;
+using namespace luath_gui;
+using namespace luath_gui::window;
 
 static constexpr int SCREEN_WIDTH = 800;
 static constexpr int SCREEN_HEIGHT = 640;
@@ -38,15 +38,15 @@ static constexpr std::array<SDL_Color, 16> CHANNEL_COLOR{
 };
 
 
-static constexpr const wchar_t* state2text(LSP::Synth::Voice::EnvelopeState state)
+static constexpr const wchar_t* state2text(lsp::synth::Voice::EnvelopeState state)
 {
 	switch(state) {
-	case LSP::Synth::Voice::EnvelopeState::Attack: return L"Attack";
-	case LSP::Synth::Voice::EnvelopeState::Hold:   return L"Hold";
-	case LSP::Synth::Voice::EnvelopeState::Decay:  return L"Decay";
-	case LSP::Synth::Voice::EnvelopeState::Fade:   return L"Fade";
-	case LSP::Synth::Voice::EnvelopeState::Release:return L"Release";
-	case LSP::Synth::Voice::EnvelopeState::Free:   return L"Free";
+	case lsp::synth::Voice::EnvelopeState::Attack: return L"Attack";
+	case lsp::synth::Voice::EnvelopeState::Hold:   return L"Hold";
+	case lsp::synth::Voice::EnvelopeState::Decay:  return L"Decay";
+	case lsp::synth::Voice::EnvelopeState::Fade:   return L"Fade";
+	case lsp::synth::Voice::EnvelopeState::Release:return L"Release";
+	case lsp::synth::Voice::EnvelopeState::Free:   return L"Free";
 	default: return L"Unknown";
 	}
 };
@@ -87,7 +87,7 @@ MainWindow::MainWindow()
 	, mSequencer(mSynthesizer)
 	, mOutput()
 {
-	mSynthesizer.setRenderingCallback([this](LSP::Signal<float>&& sig){onRenderedSignal(std::move(sig));});
+	mSynthesizer.setRenderingCallback([this](lsp::Signal<float>&& sig){onRenderedSignal(std::move(sig));});
 
 	mOscilloScopeWidget.setParam(SAMPLE_FREQ, 2, static_cast<uint32_t>(SAMPLE_FREQ * 250e-4f));
 	mLissajousWidget.setParam(SAMPLE_FREQ, 2, static_cast<uint32_t>(SAMPLE_FREQ * 250e-4f));
@@ -188,13 +188,13 @@ void MainWindow::onDpiChanged(float scale)
 }
 void MainWindow::loadMidi(const std::filesystem::path& midi_path) {
 	mSequencer.stop();
-	mSequencer.reset(MIDI::SystemType::GM1);
+	mSequencer.reset(midi::SystemType::GM1);
 
 	try {
-		auto parsed = MIDI::Parser::parse(midi_path);
+		auto parsed = midi::Parser::parse(midi_path);
 		mSequencer.load(std::move(parsed.second));
 		mSequencer.start();
-	} catch (const MIDI::decoding_exception&) {
+	} catch (const midi::decoding_exception&) {
 		// ロード失敗
 		SDL_ShowSimpleMessageBox(
 			SDL_MESSAGEBOX_ERROR,
@@ -207,7 +207,7 @@ void MainWindow::loadMidi(const std::filesystem::path& midi_path) {
 }
 void MainWindow::drawingThreadMain()
 {
-	using LSP::Synth::VoiceId;
+	using lsp::synth::VoiceId;
 
 	constexpr int FRAMES_PER_SECOND = 60;
 	constexpr std::chrono::microseconds FRAME_INTERVAL(1'000'000/FRAMES_PER_SECOND);
@@ -281,9 +281,9 @@ void MainWindow::drawingThreadMain()
 		{
 			const wchar_t* systemType = L"";
 			switch(synthDigest.systemType) {
-			case LSP::MIDI::SystemType::GM1:	systemType = L"GM1";	break;
-			case LSP::MIDI::SystemType::GM2:	systemType = L"GM2";	break;
-			case LSP::MIDI::SystemType::GS:		systemType = L"GS";		break;
+			case lsp::midi::SystemType::GM1:	systemType = L"GM1";	break;
+			case lsp::midi::SystemType::GM2:	systemType = L"GM2";	break;
+			case lsp::midi::SystemType::GS:		systemType = L"GS";		break;
 			}
 
 			defaultTextRenderer.draw(150 * s, 0, FORMAT_STRING(L"生成サンプル数 : " << tgStatistics.created_samples << L" (" << (tgStatistics.created_samples * 1000ull / SAMPLE_FREQ)
@@ -358,14 +358,14 @@ void MainWindow::drawingThreadMain()
 			const float height = 12 * s;
 
 			// 全チャネルのボイス情報を統合
-			std::unordered_map<VoiceId, std::pair</*ch*/uint8_t, LSP::Synth::Voice::Digest>> unsortedVoiceDigests;
+			std::unordered_map<VoiceId, std::pair</*ch*/uint8_t, lsp::synth::Voice::Digest>> unsortedVoiceDigests;
 			for(const auto& cd : channelDigests) {
 				for(const auto& [vid, vd] : cd.voices) {
 					unsortedVoiceDigests.emplace(vid, std::make_pair(cd.ch, vd));
 				}
 			}
 			// 前回の描画位置を維持しながら描画順を決定する
-			std::vector<std::tuple<VoiceId, /*ch*/uint8_t, LSP::Synth::Voice::Digest>> voiceDigests;
+			std::vector<std::tuple<VoiceId, /*ch*/uint8_t, lsp::synth::Voice::Digest>> voiceDigests;
 			voiceDigests.resize(std::max(unsortedVoiceDigests.size(), prevVoiceEndPos));
 			for(auto& [vid, pos] : prevVoicePosMap) {
 				auto found = unsortedVoiceDigests.find(vid);
@@ -470,7 +470,7 @@ void MainWindow::drawingThreadMain()
 		++frames;
 	}
 }
-void MainWindow::onRenderedSignal(LSP::Signal<float>&& sig)
+void MainWindow::onRenderedSignal(lsp::Signal<float>&& sig)
 {
 	// ポストアンプ適用
 	auto postAmpVolume = mPostAmpVolume.load();
