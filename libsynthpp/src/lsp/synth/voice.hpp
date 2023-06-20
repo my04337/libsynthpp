@@ -1,6 +1,5 @@
 ﻿#pragma once
 
-#include <lsp/synth/base.hpp>
 #include <lsp/synth/wave_table.hpp>
 #include <lsp/filter/envelope_generator.hpp>
 #include <lsp/filter/biquadratic_filter.hpp>

@@ -1,6 +1,5 @@
 ﻿#pragma once
 
-#include <lsp/synth/base.hpp>
 #include <lsp/midi/message_receiver.hpp>
 #include <lsp/synth/midi_channel.hpp>
 #include <lsp/synth/wave_table.hpp>

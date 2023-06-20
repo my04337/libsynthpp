@@ -1,13 +1,15 @@
 ﻿#pragma once
 
-#include <lsp/synth/base.hpp>
 #include <lsp/synth/voice.hpp>
+#include <lsp/midi/message.hpp>
 
 #include <array>
 
 namespace LSP::Synth
 {
 class WaveTable;
+
+using StereoFrame = std::pair<float, float>;
 
 class MidiChannel
 	: non_copy

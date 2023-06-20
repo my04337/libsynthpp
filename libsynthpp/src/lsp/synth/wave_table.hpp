@@ -1,6 +1,5 @@
 ﻿#pragma once
 
-#include <lsp/synth/base.hpp>
 #include <lsp/generator/wave_table_generator.hpp>
 
 namespace LSP::Synth
