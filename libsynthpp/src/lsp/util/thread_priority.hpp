@@ -9,8 +9,6 @@ namespace lsp
 // スレッドの優先度
 enum class ThreadPriority
 {
-	Inherited, // default:do-nothing
-
 	Lowest,
 	BelowNormal,
 	Normal,

@@ -9,14 +9,9 @@ using namespace lsp;
 
 void lsp::this_thread::set_priority(ThreadPriority p)
 {
-	if(p == ThreadPriority::Inherited) return; // do-nothing
-
 #if defined(WIN32)
 	int nPriority = THREAD_PRIORITY_NORMAL;
 	switch (p) {
-	case ThreadPriority::Inherited:
-		Log::w("unsupported thread priority");
-		return;
 	case ThreadPriority::Lowest:
 		nPriority = THREAD_PRIORITY_LOWEST;
 		break;
