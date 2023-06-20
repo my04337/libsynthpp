@@ -1,7 +1,7 @@
 ﻿#include <lsp/midi/sequencer.hpp>
 #include <lsp/midi/message_receiver.hpp>
 #include <lsp/midi/messages/sysex_message.hpp>
-#include <lsp/base/thread_util.hpp>
+#include <lsp/util/thread_priority.hpp>
 #include <lsp/base/event_signal.hpp>
 #include <lsp/base/logging.hpp>
 
@@ -96,12 +96,13 @@ void Sequencer::start()
 	EventSignal sig;
 	mPlayThread = std::thread([this, &sig]
 	{
+		lsp::this_thread::set_priority(ThreadPriority::AboveNormal);
+
 		auto body = mSmfBody; // copy
 		sig.set();
 		playThreadMain(body);
 		mPlayThreadAbortFlag = true;
 	});
-	setThreadPriority(mPlayThread, ThreadPriority::AboveNormal);
 	sig.wait(EventSignal::NoLock);
 }
 

@@ -1,4 +1,4 @@
-﻿#include <lsp/base/thread_util.hpp>
+﻿#include <lsp/util/thread_priority.hpp>
 #include <lsp/base/logging.hpp>
 
 #ifdef WIN32
@@ -7,7 +7,7 @@
 
 using namespace lsp;
 
-void lsp::setThreadPriority(std::thread& th, ThreadPriority p)
+void lsp::this_thread::set_priority(ThreadPriority p)
 {
 	if(p == ThreadPriority::Inherited) return; // do-nothing
 
@@ -15,7 +15,8 @@ void lsp::setThreadPriority(std::thread& th, ThreadPriority p)
 	int nPriority = THREAD_PRIORITY_NORMAL;
 	switch (p) {
 	case ThreadPriority::Inherited:
-		Assertion::unreachable();
+		Log::w("unsupported thread priority");
+		return;
 	case ThreadPriority::Lowest:
 		nPriority = THREAD_PRIORITY_LOWEST;
 		break;
@@ -32,8 +33,7 @@ void lsp::setThreadPriority(std::thread& th, ThreadPriority p)
 		nPriority = THREAD_PRIORITY_HIGHEST;
 		break;
 	}
-	auto hThread = reinterpret_cast<HANDLE>(th.native_handle());
-	::SetThreadPriority(hThread, nPriority);
+	::SetThreadPriority(::GetCurrentThread(), nPriority);
 #else
 	// このプラットフォームでは未対応
 #endif

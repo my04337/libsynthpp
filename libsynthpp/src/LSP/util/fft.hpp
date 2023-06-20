@@ -4,7 +4,7 @@
 #include <lsp/base/signal.hpp>
 #include <lsp/base/math.hpp>
 
-namespace lsp::analysis::fft
+namespace lsp::fft
 {
 // 各種窓関数
 template<

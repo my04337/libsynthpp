@@ -17,8 +17,11 @@ enum class ThreadPriority
 	AboveNormal,
 	Highest,	
 };
+}
 
+namespace lsp::this_thread
+{
 // スレッド優先度を指定します
-void setThreadPriority(std::thread& th, ThreadPriority p);
+void set_priority(ThreadPriority p);
 
 }
