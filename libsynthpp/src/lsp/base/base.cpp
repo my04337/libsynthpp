@@ -1,15 +1,5 @@
 ﻿#include <lsp/base/base.hpp>
 
-std::string lsp::demangle(const std::type_info &v)
-{
-	return lsp::demangle(v.name());
-}
-
-std::string lsp::demangle(const std::type_index &v)
-{
-	return lsp::demangle(v.name());
-}
-
 std::string lsp::demangle(const char* mangled_name)
 {
 	std::string class_name;

@@ -99,9 +99,9 @@ template<typename F>
 _finally_action<F> finally(F&& f) { return {std::forward<F>(f)}; }
 
 /// 型名をデマングルした文字列に変換します
-std::string demangle(const std::type_info& type);
-std::string demangle(const std::type_index& type);
 std::string demangle(const char* mangled_name);
+inline std::string demangle(const std::type_info& v) { return lsp::demangle(v.name()); }
+inline std::string demangle(const std::type_index& v) { return lsp::demangle(v.name()); }
 
 
 // std::pmr_memory_holder メモリ管理簡単化機構
