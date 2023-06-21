@@ -21,8 +21,3 @@ target_include_directories(
     libsynthpp
     PUBLIC src
 )
-			
-target_link_libraries(
-	libsynthpp 
-	PRIVATE	SDL2::SDL2
-)
