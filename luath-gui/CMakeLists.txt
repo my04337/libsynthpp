@@ -31,7 +31,6 @@ target_link_libraries(
 	PRIVATE 
 		libsynthpp
 		SDL2::SDL2
-		SDL2::SDL2main
 		SDL2_ttf::SDL2_ttf
 )
 
