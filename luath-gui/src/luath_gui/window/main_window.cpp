@@ -17,7 +17,7 @@ using namespace luath_gui;
 using namespace luath_gui::window;
 
 static constexpr int SCREEN_WIDTH = 800;
-static constexpr int SCREEN_HEIGHT = 640;
+static constexpr int SCREEN_HEIGHT = 680;
 static constexpr uint32_t SAMPLE_FREQ = 44100;
 
 static constexpr std::array<D2D1_COLOR_F, 16> CHANNEL_COLOR{
@@ -230,6 +230,9 @@ std::optional<LRESULT> MainWindow::wndProc(HWND hWnd, UINT message, WPARAM wPara
 			onDropFile(paths);
 		}
 	}	return 0;
+	case WM_DPICHANGED:
+		onDpiChanged(LOWORD(wParam) / 96.f);
+		return 0;
 	case WM_PAINT:
 		onDraw();
 		return 0;
@@ -397,12 +400,15 @@ void MainWindow::onDraw()
 	)));
 
 	auto& renderer = *renderTarget;
+	auto drawingScale = mDrawingScale.load();
 	
 	// 描画開始
 	renderer.BeginDraw();
 	auto drawing_start_time = clock::now();
-	renderer.SetTransform(D2D1::Matrix3x2F::Identity());
 	renderer.Clear(D2D1::ColorF(D2D1::ColorF::White));
+
+	renderer.SetTransform(D2D1::Matrix3x2F::Scale(drawingScale, drawingScale));
+	renderer.SetTextAntialiasMode(D2D1_TEXT_ANTIALIAS_MODE_CLEARTYPE);
 
 	// 描画メイン
 	onDraw(renderer);
