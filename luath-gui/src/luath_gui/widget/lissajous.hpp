@@ -20,7 +20,7 @@ public:
 
 
 	// リサージュ曲線を描画を描画します
-	void draw(SDL_Renderer* renderer, int x, int y, int width, int height);
+	void draw(ID2D1RenderTarget& renderer, float x, float y, float width, float height);
 	
 private:
 	void _reset();

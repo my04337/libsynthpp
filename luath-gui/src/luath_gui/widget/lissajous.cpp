@@ -12,7 +12,6 @@ Lissajous::~Lissajous()
 }
 void Lissajous::setParam(uint32_t sampleFreq, uint32_t channels, uint32_t bufferLength)
 {
-	std::lock_guard lock(mMutex);
 	mSampleFreq = sampleFreq;
 	mChannels = channels;
 	mBufferLength = bufferLength;
@@ -35,63 +34,62 @@ void Lissajous::_reset()
 }
 
 
-void Lissajous::draw(SDL_Renderer* renderer, int left_, int top_, int width_, int height_)
+void Lissajous::draw(ID2D1RenderTarget& renderer, const float left, const float top, const float width, const float height)
 {
-	lsp::require(renderer != nullptr);
-
 	std::lock_guard lock(mMutex);
 
-	const SDL_Rect rect { left_, top_, width_, height_};
+	CComPtr<ID2D1Factory> factory;
+	renderer.GetFactory(&factory);
+	lsp::check(factory != nullptr);
 
-	// クリッピング	
-	SDL_bool is_clipped = SDL_RenderIsClipEnabled(renderer);
-	SDL_Rect original_clip_rect;
-	if(is_clipped) SDL_RenderGetClipRect(renderer, &original_clip_rect);
-	auto fin_act = lsp::finally([&] { SDL_RenderSetClipRect(renderer, is_clipped ? &original_clip_rect : nullptr); });
-	SDL_RenderSetClipRect(renderer, &rect);
-	
+	CComPtr<ID2D1SolidColorBrush> brush;
+	renderer.CreateSolidColorBrush({ 0.f, 0.f, 0.f, 1.f }, &brush);
+
+	// ステータス & クリッピング
+	CComPtr<ID2D1DrawingStateBlock> drawingState;
+	lsp::check(SUCCEEDED(factory->CreateDrawingStateBlock(&drawingState)));
+	renderer.SaveDrawingState(drawingState);
+
+	const D2D1_RECT_F  rect{ left, top, left + width, top + height };
+	renderer.PushAxisAlignedClip(rect, D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
+	auto fin_act = lsp::finally([&renderer, &drawingState] {
+		renderer.PopAxisAlignedClip();
+		renderer.RestoreDrawingState(drawingState);
+	});
+
 	// よく使う値を先に計算
-	const int left   = rect.x;
-	const int top    = rect.y;
-	const int right  = rect.x + rect.w;
-	const int bottom = rect.y + rect.h;
-	const int width  = rect.w;
-	const int height = rect.h;
+	const float right = rect.right;
+	const float bottom = rect.bottom;
 
-	const int mid_x = (left + right) / 2;
-	const int mid_y = (top + bottom) / 2;
+	const float mid_x = (left + right) / 2;
+	const float mid_y = (top + bottom) / 2;
 
 	const uint32_t buffer_length = mBufferLength;
 	const float sample_pitch = width / (float)mBufferLength;
 
-
 	// 罫線描画
-	SDL_SetRenderDrawColor(renderer, 0x80, 0xFF, 0x20, 255);
+	brush->SetColor({ 0.5f, 1.f, 0.125f, 1.f });
 	for (int i = 1; i <= 9; ++i) {
-		int x = left + int(width  * 0.1f * i);
-		int y = top  + int(height * 0.1f * i);
-		SDL_RenderDrawLine(renderer, left, y, right, y);
-		SDL_RenderDrawLine(renderer, x, top, x, bottom);
+		float x = left + width  * 0.1f * i;
+		float y = top  + height * 0.1f * i;
+		renderer.DrawLine({ left, y }, { right, y }, brush);
+		renderer.DrawLine({ x, top }, { x, bottom }, brush);
 	}
 
 	// 信号描画
-	std::vector<SDL_Point> points(buffer_length);
-	SDL_SetRenderDrawColor(renderer, 0xFF, 0x00, 0x00, 0xFF);
-	int num = 0;
+	brush->SetColor({ 1.f, 0.f, 0.f, 1.f });
+	D2D1_POINT_2F prev;
 	for (uint32_t i = 0; i < buffer_length; ++i) {
-		int x = mid_x + (int)(width / 2.0f * std::clamp(mBuffers[0][i], lsp::sample_traits<float>::normalized_min, lsp::sample_traits<float>::normalized_max));
-		int y = mid_y - (int)(height / 2.0f * std::clamp(mBuffers[1][i], lsp::sample_traits<float>::normalized_min, lsp::sample_traits<float>::normalized_max));
-		SDL_Point pt{x, y};
-		if(num > 0 && points[num-1].x == pt.x && points[num-1].y == pt.y) continue;
-		points[num++] = SDL_Point{x, y};
+		float x = mid_x + width / 2.0f * lsp::normalize(mBuffers[0][i]);
+		float y = mid_y - height / 2.0f * lsp::normalize(mBuffers[1][i]);
+		D2D1_POINT_2F pt{x, y};
+		if(i > 0 && (prev.x != pt.x || prev.y != pt.y)) {
+			renderer.DrawLine(prev, pt, brush);
+		}
+		prev = pt;
 	}
-	SDL_RenderDrawLines(renderer, &points[0], num);
 
 	// 枠描画
-	SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-	SDL_RenderDrawRect(renderer, &rect);
-
-	// クリッピング解除
-	fin_act.action();
-	lsp::check(SDL_RenderIsClipEnabled(renderer) == is_clipped);
+	brush->SetColor({ 0.f, 0.f, 0.f, 1.f });
+	renderer.DrawRectangle(rect, brush);
 }

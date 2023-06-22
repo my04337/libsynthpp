@@ -16,10 +16,9 @@ int WINAPI WinMain(
 	auto fin_act_logger = finally([&] { lsp::Log::removeLogger(&logger); });
 	Log::setLogLevel(lsp::LogLevel::Debug);
 
-	// COM初期化
-	check(SUCCEEDED(CoInitialize(NULL)));
-	auto fin_act_com = finally([] {CoUninitialize(); });
+	// アプリケーション初期化
+	Application app(__argc, __argv);
 
 	// アプリケーション起動
-	return Application::instance().exec(__argc, __argv);
+	return app.exec();
 }

@@ -8,17 +8,14 @@ class Application final
 	: non_copy_move
 {
 public:
-	static Application& instance();
-
-	int exec(int argc, char** argv);
-
-	FontCache& fontCache()noexcept;
-
-private:
-	Application();
+	Application(int argc, char** argv);
 	~Application();
 
-	std::unique_ptr<FontCache> mFontCache;
+	int exec();
+
+private:	
+	static LRESULT CALLBACK wndProcProxy(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
+	LRESULT wndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 };
 
 }

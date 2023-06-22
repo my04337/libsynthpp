@@ -236,8 +236,8 @@ void OutputDebugStringLogger::write(clock::time_point time, LogLevel level, std:
 		oss << log << std::ends;
 		if(stacks) oss <<  *stacks;
 	}
-	OutputDebugString(oss.str().c_str());
-	OutputDebugString(TEXT("\r\n"));
+	OutputDebugStringA(oss.str().c_str());
+	OutputDebugStringA("\r\n");
 }
 
 

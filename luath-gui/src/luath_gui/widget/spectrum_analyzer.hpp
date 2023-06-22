@@ -19,8 +19,8 @@ namespace luath_gui::widget
 		void write(const lsp::Signal<sample_type>& sig);
 
 
-		// リサージュ曲線を描画を描画します
-		void draw(SDL_Renderer* renderer, int x, int y, int width, int height);
+		// スペクトラム解析結果を描画を描画します
+		void draw(ID2D1RenderTarget& renderer, float x, float y, float width, float height);
 
 	private:
 		void _reset();

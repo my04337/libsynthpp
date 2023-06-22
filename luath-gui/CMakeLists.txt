@@ -30,8 +30,9 @@ target_link_libraries(
 	luath-gui 
 	PRIVATE 
 		libsynthpp
-		SDL2::SDL2
-		SDL2_ttf::SDL2_ttf
+		D2d1.lib
+		Dwrite.lib
+		Shell32.lib
 )
 
 get_property(LUATH_BINARY_DIR TARGET luath-gui PROPERTY BINARY_DIR )
@@ -47,13 +48,3 @@ add_custom_command(TARGET luath-gui POST_BUILD
 
 	COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_LIST_DIR}/assets ${LUATH_BINARY_DIR}/assets
 )
- 
-if(WIN32)
-	get_target_property(SDL2_DLL_PATH SDL2::SDL2 LOCATION)
-	get_target_property(SDL2_TTF_DLL_PATH SDL2_ttf::SDL2_ttf LOCATION)
-
-	add_custom_command(TARGET luath-gui POST_BUILD
-		COMMAND ${CMAKE_COMMAND} -E copy ${SDL2_DLL_PATH}		${LUATH_BINARY_DIR}
-		COMMAND ${CMAKE_COMMAND} -E copy ${SDL2_TTF_DLL_PATH}	${LUATH_BINARY_DIR}
-	) 
-endif()

@@ -21,26 +21,31 @@ public:
 
 	bool initialize();
 	void dispose();
-	void onKeyDown(const SDL_KeyboardEvent& ev);
-	void onDropFile(const SDL_DropEvent& ev);
+	bool onKeyDown(uint16_t key, bool shift, bool ctrl, bool alt);
+	void onDropFile(const std::vector<std::filesystem::path>& paths);
 	void onDpiChanged(float scale);
 
 
 protected:
 	void loadMidi(const std::filesystem::path& path);
-	void drawingThreadMain();
 	void onRenderedSignal(lsp::Signal<float>&& sig);
+	void onDraw();
+	void onDraw(ID2D1RenderTarget& renderer);
+
 
 private:
-	SDL_Window* mWindow = nullptr;
+	static LRESULT CALLBACK wndProcProxy(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+	std::optional<LRESULT> wndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+
+private:	
+	HWND mWindowHandle = nullptr;
 
 	// 描画スケール
 	std::atomic<float> mDrawingScale = 1.0f;
 
-	// 描画スレッド
-	std::thread mDrawingThread;
-	std::mutex mDrawingMutex;
-	std::atomic_bool mDrawingThreadAborted;
+	// 描画機構
+	struct DrawingContext;
+	std::unique_ptr<DrawingContext> mDrawingContext;
 
 	// 再生用ストリーム
 	lsp::io::WasapiOutput mOutput;
