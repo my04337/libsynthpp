@@ -11,8 +11,8 @@ namespace luath_gui::widget
 		SpectrumAnalyzer();
 		~SpectrumAnalyzer();
 
-		// 表示パラメータを設定します
-		void setParam(uint32_t sampleFreq, uint32_t channels, uint32_t bufferLength);
+		// 信号パラメータを設定します
+		void setSignalParams(uint32_t sampleFreq, uint32_t channels, uint32_t bufferLength);
 
 		// 表示波形を書き込みます
 		template<typename sample_type>

@@ -12,10 +12,6 @@ public:
 	~Application();
 
 	int exec();
-
-private:	
-	static LRESULT CALLBACK wndProcProxy(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
-	LRESULT wndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 };
 
 }

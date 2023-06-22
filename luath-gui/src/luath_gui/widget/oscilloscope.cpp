@@ -10,7 +10,7 @@ OscilloScope::OscilloScope()
 OscilloScope::~OscilloScope()
 {
 }
-void OscilloScope::setParam(uint32_t sampleFreq, uint32_t channels, uint32_t bufferLength)
+void OscilloScope::setSignalParams(uint32_t sampleFreq, uint32_t channels, uint32_t bufferLength)
 {
 	mSampleFreq = sampleFreq;
 	mChannels = channels;

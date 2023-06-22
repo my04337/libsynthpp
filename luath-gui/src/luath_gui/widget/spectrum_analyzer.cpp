@@ -14,7 +14,7 @@ SpectrumAnalyzer::SpectrumAnalyzer()
 SpectrumAnalyzer::~SpectrumAnalyzer()
 {
 }
-void SpectrumAnalyzer::setParam(uint32_t sampleFreq, uint32_t channels, uint32_t bufferLength)
+void SpectrumAnalyzer::setSignalParams(uint32_t sampleFreq, uint32_t channels, uint32_t bufferLength)
 {
 	mSampleFreq = sampleFreq;
 	mChannels = channels;

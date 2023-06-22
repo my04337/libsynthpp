@@ -89,9 +89,9 @@ MainWindow::MainWindow()
 {
 	mSynthesizer.setRenderingCallback([this](Signal<float>&& sig){onRenderedSignal(std::move(sig));});
 
-	mOscilloScopeWidget.setParam(SAMPLE_FREQ, 2, static_cast<uint32_t>(SAMPLE_FREQ * 250e-4f));
-	mLissajousWidget.setParam(SAMPLE_FREQ, 2, static_cast<uint32_t>(SAMPLE_FREQ * 250e-4f));
-	mSpectrumAnalyzerWidget.setParam(SAMPLE_FREQ, 2, 4096);
+	mOscilloScopeWidget.setSignalParams(SAMPLE_FREQ, 2, static_cast<uint32_t>(SAMPLE_FREQ * 250e-4f));
+	mLissajousWidget.setSignalParams(SAMPLE_FREQ, 2, static_cast<uint32_t>(SAMPLE_FREQ * 250e-4f));
+	mSpectrumAnalyzerWidget.setSignalParams(SAMPLE_FREQ, 2, 4096);
 }
 
 MainWindow::~MainWindow()
@@ -135,12 +135,6 @@ bool MainWindow::initialize()
 		wcex.lpszClassName = L"luath_main_window";
 		check(RegisterClassEx(&wcex) != 0);
 	});
-
-	// In terms of using the correct DPI, to create a window at a specific size
-	// like this, the procedure is to first create the window hidden. Then we get
-	// the actual DPI from the HWND (which will be assigned by whichever monitor
-	// the window is created on). Then we use SetWindowPos to resize it to the
-	// correct DPI-scaled size, then we use ShowWindow to show it.
 
 	// ウィンドウの生成
 	// - Step1 : まずは生成されるディスプレイを特定するため、サイズ0で作成する
@@ -387,36 +381,44 @@ struct MainWindow::DrawingContext
 void MainWindow::onDraw()
 {
 	auto& context = *mDrawingContext;
+	auto drawingScale = mDrawingScale.load();
 
 	// レンダリングターゲットの作成
 	RECT windowRect;
 	GetClientRect(mWindowHandle, &windowRect);
 
+	auto renderTargetProperties = D2D1::RenderTargetProperties();
+	renderTargetProperties.dpiX = drawingScale * 96.f;
+	renderTargetProperties.dpiY = drawingScale * 96.f;
+
+	auto renderHwndTargetProperties = D2D1::HwndRenderTargetProperties(mWindowHandle);
+	renderHwndTargetProperties.pixelSize.width = static_cast<UINT32>(windowRect.right - windowRect.left);
+	renderHwndTargetProperties.pixelSize.height = static_cast<UINT32>(windowRect.bottom - windowRect.top);
+	renderHwndTargetProperties.presentOptions = D2D1_PRESENT_OPTIONS_IMMEDIATELY;
+
 	CComPtr<ID2D1HwndRenderTarget> renderTarget;
 	check(SUCCEEDED(context.d2dFactory->CreateHwndRenderTarget(
-		D2D1::RenderTargetProperties(),
-		D2D1::HwndRenderTargetProperties(mWindowHandle, { static_cast<UINT32>(windowRect.right - windowRect.left), static_cast<UINT32>(windowRect.bottom - windowRect.top) }),
+		renderTargetProperties,
+		renderHwndTargetProperties,
 		&renderTarget
 	)));
 
 	auto& renderer = *renderTarget;
-	auto drawingScale = mDrawingScale.load();
 	
 	// 描画開始
-	renderer.BeginDraw();
 	auto drawing_start_time = clock::now();
-	renderer.Clear(D2D1::ColorF(D2D1::ColorF::White));
+	renderer.BeginDraw();
 
-	renderer.SetTransform(D2D1::Matrix3x2F::Scale(drawingScale, drawingScale));
 	renderer.SetTextAntialiasMode(D2D1_TEXT_ANTIALIAS_MODE_CLEARTYPE);
-
+	renderer.Clear(D2D1::ColorF(D2D1::ColorF::White));
+	
 	// 描画メイン
 	onDraw(renderer);
 
 
 	// 描画終了
-	auto drawing_end_time = clock::now();
 	renderer.EndDraw();
+	auto drawing_end_time = clock::now();
 
 	context.drawing_time_history[context.drawing_time_index] = std::chrono::duration_cast<std::chrono::microseconds>(drawing_end_time - drawing_start_time);
 	++context.drawing_time_index;

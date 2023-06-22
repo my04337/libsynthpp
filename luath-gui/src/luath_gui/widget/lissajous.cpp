@@ -10,7 +10,7 @@ Lissajous::Lissajous()
 Lissajous::~Lissajous()
 {
 }
-void Lissajous::setParam(uint32_t sampleFreq, uint32_t channels, uint32_t bufferLength)
+void Lissajous::setSignalParams(uint32_t sampleFreq, uint32_t channels, uint32_t bufferLength)
 {
 	mSampleFreq = sampleFreq;
 	mChannels = channels;
