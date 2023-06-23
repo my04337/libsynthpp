@@ -120,17 +120,16 @@ bool MainWindow::initialize()
 	using namespace std::string_literals;
 
 	// D2D描画関連初期化
-	mDrawingContext = std::make_unique<DrawingContext>();
-
-	// フォント類初期化
+	check(SUCCEEDED(D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, &mD2DFactory)));
 	mFontLoader.createFontCollection(L"UmeFont"s, std::filesystem::current_path().append(L"assets/font/ume-tgo4.ttf"s));
+	mDrawingContext = std::make_unique<DrawingContext>();
 
 	// ウィンドウクラス生成
 	static std::once_flag windowClassInitializeOnceFlag;
 	std::call_once(windowClassInitializeOnceFlag, [] {
 		WNDCLASSEX wcex = { sizeof(WNDCLASSEX) };
 		wcex.style = CS_HREDRAW | CS_VREDRAW;
-		wcex.lpfnWndProc = &wndProcProxy;
+		wcex.lpfnWndProc = &wndProc;
 		wcex.cbClsExtra = 0;
 		wcex.cbWndExtra = sizeof(LONG_PTR);
 		wcex.hInstance = static_cast<HINSTANCE>(GetModuleHandle(nullptr));
@@ -159,8 +158,7 @@ bool MainWindow::initialize()
 	check(mWindowHandle != nullptr);
 
 	// - Step2 : ウィンドウが所属するディスプレイが確定したため、このウィンドウのDPI値を用いてリサイズする
-	auto dpi = static_cast<float>(GetDpiForWindow(mWindowHandle));
-	onDpiChanged(dpi / 96.0f);
+	onDpiChanged(static_cast<float>(GetDpiForWindow(mWindowHandle)) / 96.0f);
 	ShowWindow(mWindowHandle, SW_SHOWNORMAL);
 	UpdateWindow(mWindowHandle);
 
@@ -180,18 +178,67 @@ bool MainWindow::initialize()
 	}
 	return true;
 }
-LRESULT MainWindow::wndProcProxy(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+LRESULT MainWindow::wndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	std::optional<LRESULT> result;
+
+	// 前処理 : 対象となるオブジェクトを解決できるようにプロパティをセットしておく
 	if(message == WM_CREATE) {
 		auto cs = reinterpret_cast<const CREATESTRUCT*>(lParam);
 		SetProp(hWnd, L"this_ptr", reinterpret_cast<HANDLE>(cs->lpCreateParams));
 	}
-	if(auto this_ = reinterpret_cast<MainWindow*>(GetProp(hWnd, L"this_ptr"))) {
-		result = this_->wndProc(hWnd, message, wParam, lParam);
-	}
-	if(!result) result = DefWindowProc(hWnd, message, wParam, lParam);
 
+	// thisが解決できる物のみハンドリングする
+	if(auto this_ = reinterpret_cast<MainWindow*>(GetProp(hWnd, L"this_ptr"))) {
+		switch(message) {
+		case WM_CREATE:
+			// D&Dを受け入れ許可
+			DragAcceptFiles(hWnd, TRUE);
+			result = 0;
+			break;
+		case WM_KEYDOWN: {
+			if(this_->onKeyDown(static_cast<uint16_t>(wParam), (GetKeyState(VK_SHIFT) & 0x8000), (GetKeyState(VK_CONTROL) & 0x8000), (GetKeyState(VK_MENU) & 0x8000))) {
+				result = 0;
+			}
+		}	break;
+		case WM_DROPFILES: {
+			auto hDrop = reinterpret_cast<HDROP>(wParam);
+			std::vector<std::filesystem::path> paths;
+			UINT files = DragQueryFile(hDrop, 0xFFFFFFFF, nullptr, 0);
+			for(size_t i = 0; i < files; ++i) {
+				std::vector<TCHAR> buff;
+				buff.resize(DragQueryFile(hDrop, static_cast<UINT>(i), nullptr, 0) + 1);
+				if(DragQueryFile(hDrop, static_cast<UINT>(i), buff.data(), static_cast<UINT>(buff.size())) > 0) {
+					buff.back() = _TEXT('\0');
+					paths.emplace_back(buff.data());
+				}
+			}
+			if(!paths.empty()) {
+				this_->onDropFile(paths);
+			}
+		}	result = 0;
+			break;
+		case WM_DPICHANGED:
+			this_->onDpiChanged(LOWORD(wParam) / 96.f);
+			result = 0;
+			break;
+		case WM_PAINT:
+			this_->onDraw();
+			result = 0;
+			break;
+		case WM_DESTROY:
+			PostQuitMessage(0);
+			result = 0;
+			break;
+		}
+	}
+
+	// ハンドリングされなかったメッセージはデフォルトのウィンドウプロシージャに任せる
+	if(!result) {
+		result = DefWindowProc(hWnd, message, wParam, lParam);
+	}
+
+	// 後処理 : 定義されたプロパティ類は明示的に解放する必要がある
 	if(message == WM_NCDESTROY) {
 		EnumPropsEx(hWnd, [](HWND hWnd, LPTSTR lpszString, HANDLE, ULONG_PTR)->BOOL {
 			RemoveProp(hWnd, lpszString);
@@ -201,46 +248,7 @@ LRESULT MainWindow::wndProcProxy(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
 
 	return *result;
 }
-std::optional<LRESULT> MainWindow::wndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
-{
-	switch(message) {
-	case WM_CREATE:
-		// D&Dを受け入れ
-		DragAcceptFiles(hWnd, TRUE);
-		return 0;
-	case WM_KEYDOWN: {
-		if(onKeyDown(static_cast<uint16_t>(wParam), (GetKeyState(VK_SHIFT) & 0x8000), (GetKeyState(VK_CONTROL) & 0x8000), (GetKeyState(VK_MENU) & 0x8000))) {
-			return 0;
-		}
-	}	break;
-	case WM_DROPFILES: {
-		auto hDrop = reinterpret_cast<HDROP>(wParam);
-		std::vector<std::filesystem::path> paths;
-		UINT files = DragQueryFile(hDrop, 0xFFFFFFFF, nullptr, 0);
-		for(size_t i = 0; i < files; ++i) {
-			std::vector<TCHAR> buff;
-			buff.resize(DragQueryFile(hDrop, static_cast<UINT>(i), nullptr, 0) + 1);
-			if(DragQueryFile(hDrop, static_cast<UINT>(i), buff.data(), static_cast<UINT>(buff.size())) > 0) {
-				buff.back() = _TEXT('\0');
-				paths.emplace_back(buff.data());
-			}
-		}
-		if(!paths.empty()) {
-			onDropFile(paths);
-		}
-	}	return 0;
-	case WM_DPICHANGED:
-		onDpiChanged(LOWORD(wParam) / 96.f);
-		return 0;
-	case WM_PAINT:
-		onDraw();
-		return 0;
-	case WM_DESTROY:
-		PostQuitMessage(0);
-		return 0;
-	}
-	return {};
-}
+
 void MainWindow::onDropFile(const std::vector<std::filesystem::path>& paths)
 {
 	// シーケンサセットアップ
@@ -248,6 +256,7 @@ void MainWindow::onDropFile(const std::vector<std::filesystem::path>& paths)
 	auto midi_path = std::filesystem::path(paths.front());
 	loadMidi(midi_path);
 }
+
 bool MainWindow::onKeyDown(uint16_t key, bool shift, bool ctrl, bool alt)
 {
 	if (key == VK_UP) {
@@ -261,9 +270,6 @@ bool MainWindow::onKeyDown(uint16_t key, bool shift, bool ctrl, bool alt)
 }
 void MainWindow::onDpiChanged(float scale)
 {
-	// 新しいスケールをセット
-	mDrawingScale = scale;
-
 	// ウィンドウの移動を実施
 	SetWindowPos(
 		mWindowHandle,
@@ -299,40 +305,21 @@ void MainWindow::loadMidi(const std::filesystem::path& midi_path) {
 
 struct MainWindow::DrawingContext
 {
-	// レンダラ関連
-	CComPtr<ID2D1Factory> d2dFactory;
-
 	// FPS計算,表示用
 	size_t frames = 0;
 	std::array<std::chrono::microseconds, 15> drawing_time_history = {};
 	size_t drawing_time_index = 0;
 
 	// 前回のボイス表示位置 (素直に順番に描画するとちらついて見づらいため表示を揃える)
-	std::unordered_map< synth::VoiceId, size_t> prevVoicePosMap;
+	std::unordered_map<synth::VoiceId, size_t> prevVoicePosMap;
 	size_t prevVoiceEndPos = 0;
-
-
-	// ---
-	DrawingContext()
-	{
-		// Direct2D, DirectWriteにてフォントをロードするには一手間必要
-		//   see https://deep-verdure.hatenablog.com/entry/2022/07/23/190449
-		
-		// レンダラ準備
-		check(SUCCEEDED(D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, &d2dFactory)));
-	}
-
-	~DrawingContext()
-	{
-
-	}
 };
 
 
 void MainWindow::onDraw()
 {
 	auto& context = *mDrawingContext;
-	auto drawingScale = mDrawingScale.load();
+	auto drawingScale = static_cast<float>(GetDpiForWindow(mWindowHandle)) / 96.f;
 
 	// レンダリングターゲットの作成
 	RECT windowRect;
@@ -348,7 +335,7 @@ void MainWindow::onDraw()
 	renderHwndTargetProperties.presentOptions = D2D1_PRESENT_OPTIONS_IMMEDIATELY;
 
 	CComPtr<ID2D1HwndRenderTarget> renderTarget;
-	check(SUCCEEDED(context.d2dFactory->CreateHwndRenderTarget(
+	check(SUCCEEDED(mD2DFactory->CreateHwndRenderTarget(
 		renderTargetProperties,
 		renderHwndTargetProperties,
 		&renderTarget

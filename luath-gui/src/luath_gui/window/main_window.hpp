@@ -35,18 +35,15 @@ protected:
 
 
 private:
-	static LRESULT CALLBACK wndProcProxy(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
-	std::optional<LRESULT> wndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+	static LRESULT CALLBACK wndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
 private:	
 	HWND mWindowHandle = nullptr;
 
-	// 描画スケール
-	std::atomic<float> mDrawingScale = 1.0f;
-
 	// 描画機構
 	struct DrawingContext;
 	std::unique_ptr<DrawingContext> mDrawingContext;
+	CComPtr<ID2D1Factory> mD2DFactory;
 	drawing::FontLoader mFontLoader;
 
 	// 再生用ストリーム
