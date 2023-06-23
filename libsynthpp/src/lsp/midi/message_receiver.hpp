@@ -1,3 +1,5 @@
+#pragma once
+
 #include <lsp/base/base.hpp>
 #include <lsp/midi/message.hpp>
 

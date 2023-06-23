@@ -8,21 +8,16 @@ file(GLOB_RECURSE srcs
 	)
 
 add_library(
-	libsynthpp STATIC
+	libsynth++ STATIC
 	${srcs}
 )
 
 target_compile_options(
-	libsynthpp 
+	libsynth++ 
 	PRIVATE	$<$<CXX_COMPILER_ID:MSVC>: /W3>
 )
 
 target_include_directories(
-    libsynthpp
+    libsynth++
     PUBLIC src
-)
-			
-target_link_libraries(
-	libsynthpp 
-	PRIVATE	SDL2::SDL2
 )

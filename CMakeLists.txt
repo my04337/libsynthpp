@@ -12,10 +12,12 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 #set(CMAKE_EXPERIMENTAL_CXX_MODULE_CMAKE_API "2182bf5c-ef0d-489a-91da-49dbc3090d2a") # for CMake 3.26
 #set(CMAKE_EXPERIMENTAL_CXX_MODULE_DYNDEP 1) # for MSVC
 
-
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zc:rvalueCast /Zc:strictStrings /Zc:inline")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Gy /Gw")
+if(MSVC)
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Zc:rvalueCast /Zc:strictStrings /Zc:inline")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Gy /Gw")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DUNICODE -D_UNICODE")
+endif()
 
 find_program(CPPLINT_EXE cpplint)
 if(NOT CPPLINT_EXE STREQUAL "CPPLINT_EXE-NOTFOUND") 
@@ -31,4 +33,4 @@ include(depends.cmake)
 # ---
 
 add_subdirectory(libsynthpp)
-add_subdirectory(luath-gui)
+add_subdirectory(luath)
