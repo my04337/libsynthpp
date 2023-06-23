@@ -143,7 +143,7 @@ private:
 	bool mShowHeader;
 };
 }
-#ifdef WIN32
+#ifdef _WIN32
 namespace lsp
 {
 	/// ロガー : OutputDebugString用

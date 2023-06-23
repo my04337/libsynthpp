@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\lsp\base\base.cpp" />
+    <ClCompile Include="src\lsp\base\logging.cpp" />
+    <ClCompile Include="src\lsp\io\wasapi_output.cpp" />
+    <ClCompile Include="src\lsp\io\wav_file_output.cpp" />
+    <ClCompile Include="src\lsp\midi\smf\parser.cpp" />
+    <ClCompile Include="src\lsp\midi\smf\sequencer.cpp" />
+    <ClCompile Include="src\lsp\midi\synth\midi_channel.cpp" />
+    <ClCompile Include="src\lsp\midi\synth\midi_channel_drum.cpp" />
+    <ClCompile Include="src\lsp\midi\synth\midi_channel_melody.cpp" />
+    <ClCompile Include="src\lsp\midi\synth\synthesizer.cpp" />
+    <ClCompile Include="src\lsp\midi\synth\voice.cpp" />
+    <ClCompile Include="src\lsp\midi\synth\wave_table.cpp" />
+    <ClCompile Include="src\lsp\static_test.cpp" />
+    <ClCompile Include="src\lsp\util\thread_priority.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\lsp\base\base.hpp" />
+    <ClInclude Include="src\lsp\base\id.hpp" />
+    <ClInclude Include="src\lsp\base\logging.hpp" />
+    <ClInclude Include="src\lsp\base\math.hpp" />
+    <ClInclude Include="src\lsp\base\sample.hpp" />
+    <ClInclude Include="src\lsp\base\signal.hpp" />
+    <ClInclude Include="src\lsp\effector\biquadratic_filter.hpp" />
+    <ClInclude Include="src\lsp\effector\envelope_generator.hpp" />
+    <ClInclude Include="src\lsp\generator\function_generator.hpp" />
+    <ClInclude Include="src\lsp\generator\wave_table_generator.hpp" />
+    <ClInclude Include="src\lsp\io\wasapi_output.hpp" />
+    <ClInclude Include="src\lsp\io\wav_file_output.hpp" />
+    <ClInclude Include="src\lsp\midi\message.hpp" />
+    <ClInclude Include="src\lsp\midi\messages\basic_message.hpp" />
+    <ClInclude Include="src\lsp\midi\messages\extra_message.hpp" />
+    <ClInclude Include="src\lsp\midi\messages\meta_events.hpp" />
+    <ClInclude Include="src\lsp\midi\messages\sysex_message.hpp" />
+    <ClInclude Include="src\lsp\midi\message_receiver.hpp" />
+    <ClInclude Include="src\lsp\midi\smf\parser.hpp" />
+    <ClInclude Include="src\lsp\midi\smf\sequencer.hpp" />
+    <ClInclude Include="src\lsp\midi\synth\midi_channel.hpp" />
+    <ClInclude Include="src\lsp\midi\synth\synthesizer.hpp" />
+    <ClInclude Include="src\lsp\midi\synth\voice.hpp" />
+    <ClInclude Include="src\lsp\midi\synth\wave_table.hpp" />
+    <ClInclude Include="src\lsp\util\fft.hpp" />
+    <ClInclude Include="src\lsp\util\thread_priority.hpp" />
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>16.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{de52ff9d-fabe-48f9-906f-41d1ac45e1d2}</ProjectGuid>
+    <RootNamespace>libsynthpp</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <OutDir>$(SolutionDir)out\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>out\$(Platform)\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>$(SolutionDir)out\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>out\$(Platform)\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <LanguageStandard_C>stdc17</LanguageStandard_C>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalIncludeDirectories>$(ProjectDir)src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>
+      </SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <LanguageStandard_C>stdc17</LanguageStandard_C>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalIncludeDirectories>$(ProjectDir)src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>
+      </SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

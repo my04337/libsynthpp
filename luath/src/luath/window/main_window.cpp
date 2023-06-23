@@ -85,8 +85,9 @@ static std::wstring freq2scale(float freq) {
 		return scales[roundedNoteNo];
 	}
 }
-MainWindow::MainWindow()
-	: mSynthesizer(SAMPLE_FREQ)
+MainWindow::MainWindow(Application& app)
+	: mApp(app)
+	, mSynthesizer(SAMPLE_FREQ)
 	, mSequencer(mSynthesizer)
 	, mOutput()
 {
@@ -124,7 +125,7 @@ bool MainWindow::initialize()
 
 	// D2D描画関連初期化
 	check(SUCCEEDED(D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, &mD2DFactory)));
-	mFontLoader.createFontCollection(L"UmeFont"s, std::filesystem::current_path().append(L"assets/font/ume-tgo4.ttf"s));
+	mFontLoader.createFontCollection(L"UmeFont"s, mApp.programPath() / std::filesystem::path(L"assets/font/ume-tgo4.ttf"s));
 	mDrawingContext = std::make_unique<DrawingContext>();
 
 	// ウィンドウクラス生成
@@ -166,8 +167,7 @@ bool MainWindow::initialize()
 	UpdateWindow(mWindowHandle);
 
 	// シーケンサセットアップ
-	auto midi_path = std::filesystem::current_path();
-	midi_path.append(L"assets/sample_midi/brambles_vsc3.mid"s); // 試験用MIDIファイル
+	auto midi_path = mApp.programPath() / L"assets/sample_midi/brambles_vsc3.mid"s; // 試験用MIDIファイル
 	loadMidi(midi_path);
 
 	// オーディオ出力 初期化
