@@ -1,7 +1,7 @@
 ﻿#include <lsp/util/thread_priority.hpp>
 #include <lsp/base/logging.hpp>
 
-#ifdef WIN32
+#ifdef _WIN32
 #include <Windows.h>
 #endif
 

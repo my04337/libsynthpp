@@ -37,7 +37,7 @@
 
 
 // プラットフォーム依存 : Win32
-#ifdef WIN32
+#ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN 
 #define STRICT 
 #define NOMINMAX 
@@ -45,7 +45,6 @@
 #include <Windows.h>
 #include <atlbase.h>
 #include <atlcom.h>
-
 #endif
 
 // --- 基本的な型 ---

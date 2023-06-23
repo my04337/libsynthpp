@@ -12,6 +12,11 @@ public:
 	~Application();
 
 	int exec();
+
+	const std::filesystem::path& programPath()const noexcept;
+
+private:
+	std::filesystem::path mProgramPath;
 };
 
 }
