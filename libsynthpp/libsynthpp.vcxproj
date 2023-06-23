@@ -10,50 +10,6 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="src\lsp\base\base.cpp" />
-    <ClCompile Include="src\lsp\base\logging.cpp" />
-    <ClCompile Include="src\lsp\io\wasapi_output.cpp" />
-    <ClCompile Include="src\lsp\io\wav_file_output.cpp" />
-    <ClCompile Include="src\lsp\midi\smf\parser.cpp" />
-    <ClCompile Include="src\lsp\midi\smf\sequencer.cpp" />
-    <ClCompile Include="src\lsp\midi\synth\midi_channel.cpp" />
-    <ClCompile Include="src\lsp\midi\synth\midi_channel_drum.cpp" />
-    <ClCompile Include="src\lsp\midi\synth\midi_channel_melody.cpp" />
-    <ClCompile Include="src\lsp\midi\synth\synthesizer.cpp" />
-    <ClCompile Include="src\lsp\midi\synth\voice.cpp" />
-    <ClCompile Include="src\lsp\midi\synth\wave_table.cpp" />
-    <ClCompile Include="src\lsp\static_test.cpp" />
-    <ClCompile Include="src\lsp\util\thread_priority.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="src\lsp\base\base.hpp" />
-    <ClInclude Include="src\lsp\base\id.hpp" />
-    <ClInclude Include="src\lsp\base\logging.hpp" />
-    <ClInclude Include="src\lsp\base\math.hpp" />
-    <ClInclude Include="src\lsp\base\sample.hpp" />
-    <ClInclude Include="src\lsp\base\signal.hpp" />
-    <ClInclude Include="src\lsp\effector\biquadratic_filter.hpp" />
-    <ClInclude Include="src\lsp\effector\envelope_generator.hpp" />
-    <ClInclude Include="src\lsp\generator\function_generator.hpp" />
-    <ClInclude Include="src\lsp\generator\wave_table_generator.hpp" />
-    <ClInclude Include="src\lsp\io\wasapi_output.hpp" />
-    <ClInclude Include="src\lsp\io\wav_file_output.hpp" />
-    <ClInclude Include="src\lsp\midi\message.hpp" />
-    <ClInclude Include="src\lsp\midi\messages\basic_message.hpp" />
-    <ClInclude Include="src\lsp\midi\messages\extra_message.hpp" />
-    <ClInclude Include="src\lsp\midi\messages\meta_events.hpp" />
-    <ClInclude Include="src\lsp\midi\messages\sysex_message.hpp" />
-    <ClInclude Include="src\lsp\midi\message_receiver.hpp" />
-    <ClInclude Include="src\lsp\midi\smf\parser.hpp" />
-    <ClInclude Include="src\lsp\midi\smf\sequencer.hpp" />
-    <ClInclude Include="src\lsp\midi\synth\midi_channel.hpp" />
-    <ClInclude Include="src\lsp\midi\synth\synthesizer.hpp" />
-    <ClInclude Include="src\lsp\midi\synth\voice.hpp" />
-    <ClInclude Include="src\lsp\midi\synth\wave_table.hpp" />
-    <ClInclude Include="src\lsp\util\fft.hpp" />
-    <ClInclude Include="src\lsp\util\thread_priority.hpp" />
-  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>

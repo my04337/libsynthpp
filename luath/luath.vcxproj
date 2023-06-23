@@ -118,26 +118,9 @@ copy /Y $(ProjectDir)assets\sample_midi\* $(OutputPath)assets\sample_midi\ &gt; 
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Resource.h" />
-    <ClInclude Include="src\luath\app\application.hpp" />
-    <ClInclude Include="src\luath\base\base.hpp" />
-    <ClInclude Include="src\luath\drawing\font_loader.hpp" />
-    <ClInclude Include="src\luath\widget\lissajous.hpp" />
-    <ClInclude Include="src\luath\widget\oscilloscope.hpp" />
-    <ClInclude Include="src\luath\widget\spectrum_analyzer.hpp" />
-    <ClInclude Include="src\luath\window\main_window.hpp" />
   </ItemGroup>
   <ItemGroup>
     <Manifest Include="src\luath\luath.exe.manifest" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="src\luath\app\application.cpp" />
-    <ClCompile Include="src\luath\base\base.cpp" />
-    <ClCompile Include="src\luath\drawing\font_loader.cpp" />
-    <ClCompile Include="src\luath\main.cpp" />
-    <ClCompile Include="src\luath\widget\lissajous.cpp" />
-    <ClCompile Include="src\luath\widget\oscilloscope.cpp" />
-    <ClCompile Include="src\luath\widget\spectrum_analyzer.cpp" />
-    <ClCompile Include="src\luath\window\main_window.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\libsynthpp\libsynthpp.vcxproj">
