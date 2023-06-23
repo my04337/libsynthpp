@@ -1,15 +1,12 @@
-﻿#pragma once
+﻿export module lsp.generator:wave_table_generator;
 
-#include <lsp/base/base.hpp>
-#include <lsp/base/signal.hpp>
-#include <lsp/base/math.hpp>
-
-#include <random>
+import std;
+import lsp.core;
 
 namespace lsp::generator {
 
 // 波形テーブルジェネレータ
-template<
+export template<
 	class sample_type,
 	std::floating_point parameter_type = std::conditional_t<std::is_floating_point_v<sample_type>, sample_type, float>
 > requires std::signed_integral<sample_type> || std::floating_point<sample_type>

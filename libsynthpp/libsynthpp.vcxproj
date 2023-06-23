@@ -11,15 +11,21 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="base.ixx" />
     <ClCompile Include="src\lsp.core\base.cpp" />
+    <ClCompile Include="src\lsp.core\base.ixx" />
     <ClCompile Include="src\lsp.core\id.ixx" />
     <ClCompile Include="src\lsp.core\logging.cpp" />
     <ClCompile Include="src\lsp.core\logging.ixx" />
-    <ClCompile Include="src\lsp.core\lsp.core.ixx" />
+    <ClCompile Include="src\lsp.core\_core.ixx" />
     <ClCompile Include="src\lsp.core\math.ixx" />
     <ClCompile Include="src\lsp.core\sample.ixx" />
     <ClCompile Include="src\lsp.core\signal.ixx" />
+    <ClCompile Include="src\lsp.effector\biquadratic_filter.ixx" />
+    <ClCompile Include="src\lsp.effector\envelope_generator.ixx" />
+    <ClCompile Include="src\lsp.effector\_effector.ixx" />
+    <ClCompile Include="src\lsp.generator\function_generator.ixx" />
+    <ClCompile Include="src\lsp.generator\wave_table_generator.ixx" />
+    <ClCompile Include="src\lsp.generator\_generator.ixx" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

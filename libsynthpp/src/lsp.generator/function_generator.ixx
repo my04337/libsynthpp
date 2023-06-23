@@ -1,15 +1,12 @@
-﻿#pragma once
+﻿export module lsp.generator:function_generator;
 
-#include <lsp/base/base.hpp>
-#include <lsp/base/signal.hpp>
-#include <lsp/base/math.hpp>
-
-#include <random>
+import std;
+import lsp.core;
 
 namespace lsp::generator {
 
 // 波形種別
-enum class WaveFormType
+export enum class WaveFormType
 {
 	Ground,			// 常に0を出力
 	Sin,			// 正弦波
@@ -20,7 +17,7 @@ enum class WaveFormType
 };
 
 // ファンクションジェネレータ : 複数種類の波形生成
-template<
+export template<
 	class sample_type,
 	std::floating_point parameter_type = std::conditional_t<std::is_floating_point_v<sample_type>, sample_type, float>
 >requires std::signed_integral<sample_type> || std::floating_point<sample_type>
@@ -42,28 +39,28 @@ public:
 		mType = WaveFormType::Ground;
 		mSamplePerPhase = 0;
 	}
-	void setSinWave(uint32_t sampleFreq, parameter_type freq, bool keepPhase = false)noexcept 
+	void setSinWave(std::uint32_t sampleFreq, parameter_type freq, bool keepPhase = false)noexcept 
 	{
 		auto freq_ = std::abs(freq);  // 負の位相はこの実装では対応不可
 		mType = WaveFormType::Sin;
 		mSamplePerPhase = 2.0f * math::PI<parameter_type> * (freq_ / sampleFreq);
 		if(!keepPhase) mPhase = 0;
 	}
-	void setSawWave(uint32_t sampleFreq, parameter_type freq, bool keepPhase = false)noexcept
+	void setSawWave(std::uint32_t sampleFreq, parameter_type freq, bool keepPhase = false)noexcept
 	{
 		auto freq_ = std::abs(freq);  // 負の位相はこの実装では対応不可
 		mType = WaveFormType::Saw;
 		mSamplePerPhase = 2.0f * math::PI<parameter_type> * (freq_ / sampleFreq);
 		if (!keepPhase) mPhase = 0;
 	}
-	void setTriangleWave(uint32_t sampleFreq, parameter_type freq, bool keepPhase = false)noexcept
+	void setTriangleWave(std::uint32_t sampleFreq, parameter_type freq, bool keepPhase = false)noexcept
 	{
 		auto freq_ = std::abs(freq);  // 負の位相はこの実装では対応不可
 		mType = WaveFormType::Triangle;
 		mSamplePerPhase = 2.0f * math::PI<parameter_type> * (freq_ / sampleFreq);
 		if (!keepPhase) mPhase = 0;
 	}
-	void setSquareWave(uint32_t sampleFreq, parameter_type freq, parameter_type duty=math::PI<parameter_type>, bool keepPhase = false)noexcept
+	void setSquareWave(std::uint32_t sampleFreq, parameter_type freq, parameter_type duty=math::PI<parameter_type>, bool keepPhase = false)noexcept
 	{
 		auto freq_ = std::abs(freq);  // 負の位相はこの実装では対応不可
 		mType = WaveFormType::Square;

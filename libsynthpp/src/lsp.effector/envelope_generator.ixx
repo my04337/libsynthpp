@@ -1,13 +1,13 @@
-﻿#pragma once
+﻿export module lsp.effector:envelope_generator;
 
-#include <lsp/base/base.hpp>
-#include <lsp/base/sample.hpp>
+import std;
+import lsp.core;
 
 namespace lsp::effector
 {
 
 
-enum class EnvelopeState
+export enum class EnvelopeState
 {
 	Attack,		// アタック中 : ノートオン直後、音量を0から最大音量へ上げるフェーズ
 	Hold,		// ホールド中 : アタック後、最大音量を維持するフェーズ
@@ -18,7 +18,7 @@ enum class EnvelopeState
 };
 
 // AHDSFRエンベロープジェネレータ
-template<
+export template<
 	std::floating_point parameter_type
 >
 class EnvelopeGenerator final
@@ -82,7 +82,7 @@ public:
 
 	// エンベロープ形状パラメータを指定します (メロディ用)
 	void setMelodyEnvelope(
-		uint32_t sampleFreq,		    // Hz
+		std::uint32_t sampleFreq,		// Hz
 		float attack_time,				// sec
 		float decay_time,				// sec
 		parameter_type sustain_level,	// level (0 <= x <= 1)
@@ -92,7 +92,7 @@ public:
 		setMelodyEnvelope(sampleFreq, {}, attack_time, 0, decay_time, sustain_level, 0, release_time, std::numeric_limits<parameter_type>::epsilon());
 	}
 	void setMelodyEnvelope(
-		uint32_t sampleFreq,			// Hz
+		std::uint32_t sampleFreq,		// Hz
 		Curve curve,					
 		float attack_time,				// sec
 		float hold_time,				// sec
@@ -332,17 +332,17 @@ protected:
 private:	
 	Model mModel = Model::Melody;
 	EnvelopeState mState;			// 現在の状態
-	uint64_t mTime;					// 現在の時刻(ノートオン/ノートオフからの)
+	std::uint64_t mTime;			// 現在の時刻(ノートオン/ノートオフからの)
 	Curve mCurve;
 	parameter_type mBeginLevel;		
 	parameter_type mEndLevel;		
 
-	uint64_t mAttackTime;			// sample
-	uint64_t mHoldTime;				// sample
-	uint64_t mDecayTime;			// sample
+	std::uint64_t mAttackTime;		// sample
+	std::uint64_t mHoldTime;		// sample
+	std::uint64_t mDecayTime;		// sample
 	parameter_type mSustainLevel;	// level (0 <= x <= 1)
 	parameter_type mFadeSlope;		// Linear : level/sample, Exp : dBFS/sample
-	uint64_t mReleaseTime;			// sample
+	std::uint64_t mReleaseTime;		// sample
 	parameter_type mCutOffLevel;	// level (0 <= x <= 1)
 };
 

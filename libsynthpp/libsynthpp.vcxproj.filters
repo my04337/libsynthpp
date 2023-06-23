@@ -4,12 +4,15 @@
     <Filter Include="lsp.core">
       <UniqueIdentifier>{c554d386-1f13-47a1-bab2-96ae8ef5bb41}</UniqueIdentifier>
     </Filter>
+    <Filter Include="lsp.effector">
+      <UniqueIdentifier>{b77bb48f-03a5-475b-a9ff-5f95bff43399}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lsp.generator">
+      <UniqueIdentifier>{81030f2a-ef77-4f76-b2b9-da48809613ea}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\lsp.core\lsp.core.ixx">
-      <Filter>lsp.core</Filter>
-    </ClCompile>
-    <ClCompile Include="base.ixx">
+    <ClCompile Include="src\lsp.core\_core.ixx">
       <Filter>lsp.core</Filter>
     </ClCompile>
     <ClCompile Include="src\lsp.core\base.cpp">
@@ -31,6 +34,27 @@
       <Filter>lsp.core</Filter>
     </ClCompile>
     <ClCompile Include="src\lsp.core\logging.cpp">
+      <Filter>lsp.core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\lsp.effector\_effector.ixx">
+      <Filter>lsp.effector</Filter>
+    </ClCompile>
+    <ClCompile Include="src\lsp.effector\biquadratic_filter.ixx">
+      <Filter>lsp.effector</Filter>
+    </ClCompile>
+    <ClCompile Include="src\lsp.effector\envelope_generator.ixx">
+      <Filter>lsp.effector</Filter>
+    </ClCompile>
+    <ClCompile Include="src\lsp.generator\wave_table_generator.ixx">
+      <Filter>lsp.generator</Filter>
+    </ClCompile>
+    <ClCompile Include="src\lsp.generator\function_generator.ixx">
+      <Filter>lsp.generator</Filter>
+    </ClCompile>
+    <ClCompile Include="src\lsp.generator\_generator.ixx">
+      <Filter>lsp.generator</Filter>
+    </ClCompile>
+    <ClCompile Include="src\lsp.core\base.ixx">
       <Filter>lsp.core</Filter>
     </ClCompile>
   </ItemGroup>
