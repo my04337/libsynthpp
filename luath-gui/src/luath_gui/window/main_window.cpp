@@ -39,15 +39,15 @@ static constexpr std::array<D2D1_COLOR_F, 16> CHANNEL_COLOR{
 	D2D1_COLOR_F{ 0.75f, 0.f, 0.3f, 1.f }, // カーマイン
 };
 
-static constexpr const wchar_t* state2text(synth::Voice::EnvelopeState state)
+static constexpr const wchar_t* state2text(Voice::EnvelopeState state)
 {
 	switch(state) {
-	case synth::Voice::EnvelopeState::Attack: return L"Attack";
-	case synth::Voice::EnvelopeState::Hold:   return L"Hold";
-	case synth::Voice::EnvelopeState::Decay:  return L"Decay";
-	case synth::Voice::EnvelopeState::Fade:   return L"Fade";
-	case synth::Voice::EnvelopeState::Release:return L"Release";
-	case synth::Voice::EnvelopeState::Free:   return L"Free";
+	case Voice::EnvelopeState::Attack: return L"Attack";
+	case Voice::EnvelopeState::Hold:   return L"Hold";
+	case Voice::EnvelopeState::Decay:  return L"Decay";
+	case Voice::EnvelopeState::Fade:   return L"Fade";
+	case Voice::EnvelopeState::Release:return L"Release";
+	case Voice::EnvelopeState::Free:   return L"Free";
 	default: return L"Unknown";
 	}
 };
@@ -311,7 +311,7 @@ struct MainWindow::DrawingContext
 	size_t drawing_time_index = 0;
 
 	// 前回のボイス表示位置 (素直に順番に描画するとちらついて見づらいため表示を揃える)
-	std::unordered_map<synth::VoiceId, size_t> prevVoicePosMap;
+	std::unordered_map<VoiceId, size_t> prevVoicePosMap;
 	size_t prevVoiceEndPos = 0;
 };
 
@@ -368,7 +368,6 @@ void MainWindow::onDraw()
 void MainWindow::onDraw(ID2D1RenderTarget& renderer)
 {
 	using namespace  std::string_literals;
-	using synth::VoiceId;
 	auto& context = *mDrawingContext;
 
 	
@@ -491,14 +490,14 @@ void MainWindow::onDraw(ID2D1RenderTarget& renderer)
 		const float height = 12;
 
 		// 全チャネルのボイス情報を統合
-		std::unordered_map<VoiceId, std::pair</*ch*/uint8_t, synth::Voice::Digest>> unsortedVoiceDigests;
+		std::unordered_map<VoiceId, std::pair</*ch*/uint8_t, Voice::Digest>> unsortedVoiceDigests;
 		for(const auto& cd : channelDigests) {
 			for(const auto& [vid, vd] : cd.voices) {
 				unsortedVoiceDigests.emplace(vid, std::make_pair(cd.ch, vd));
 			}
 		}
 		// 前回の描画位置を維持しながら描画順を決定する
-		std::vector<std::tuple<VoiceId, /*ch*/uint8_t, synth::Voice::Digest>> voiceDigests;
+		std::vector<std::tuple<VoiceId, /*ch*/uint8_t, Voice::Digest>> voiceDigests;
 		voiceDigests.resize(std::max(unsortedVoiceDigests.size(), context.prevVoiceEndPos));
 		for(auto& [vid, pos] : context.prevVoicePosMap) {
 			auto found = unsortedVoiceDigests.find(vid);

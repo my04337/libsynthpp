@@ -29,7 +29,8 @@ target_compile_options(
 target_link_libraries(
 	luath-gui 
 	PRIVATE 
-		libsynthpp
+		libsynth++
+		luath
 		D2d1.lib
 		Dwrite.lib
 		Shell32.lib

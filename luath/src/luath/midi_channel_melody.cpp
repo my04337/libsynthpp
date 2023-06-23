@@ -1,8 +1,6 @@
-﻿#include <lsp/synth/midi_channel.hpp>
+﻿#include <luath/midi_channel.hpp>
 
-using namespace lsp;
-using namespace lsp::midi;
-using namespace lsp::synth;
+using namespace luath;
 
 
 static const std::unordered_map<
@@ -146,7 +144,7 @@ static const std::unordered_map<
 	{127, { 2.50f, 0.03f, 0.00f,  1.50f, 0.00f, 0.00f, 1.50f }},
 };
 
-std::unique_ptr<lsp::synth::Voice> lsp::synth::MidiChannel::createMelodyVoice(uint8_t noteNo, uint8_t vel)
+std::unique_ptr<Voice> MidiChannel::createMelodyVoice(uint8_t noteNo, uint8_t vel)
 {
 	float v = 1.f; // volume(adjuster)
 	float a = 0.f; // sec
@@ -178,7 +176,7 @@ std::unique_ptr<lsp::synth::Voice> lsp::synth::MidiChannel::createMelodyVoice(ui
 	}
 
 
-	if(mSystemType != SystemType::GM1) {
+	if(mSystemType != midi::SystemType::GM1) {
 		a *= powf(10.0f, (ccAttackTime / 128.f - 0.5f) * 4.556f);
 		d *= powf(10.0f, (ccDecayTime / 128.f - 0.5f) * 4.556f);
 		r *= powf(10.0f, (ccReleaseTime / 128.f - 0.5f) * 4.556f);
@@ -188,15 +186,15 @@ std::unique_ptr<lsp::synth::Voice> lsp::synth::MidiChannel::createMelodyVoice(ui
 	// TODO sustain_levelで除算しているのは旧LibSynth++からの移植コード。 補正が不要になったら削除すること
 	float volume = powf(10.f, -20.f * (1.f - vel / 127.f) / 20.f) * v / ((s > 0.8f && s != 0.f) ? s : 0.8f);
 	float cutoffLevel = 0.01f;
-	static const lsp::effector::EnvelopeGenerator<float>::Curve curveExp3(3.0f);
+	static const effector::EnvelopeGenerator<float>::Curve curveExp3(3.0f);
 
 	float overtuneGain = 0.f; // dB
-	if(mSystemType != SystemType::GM1) {
+	if(mSystemType != midi::SystemType::GM1) {
 		overtuneGain = (getNRPN_MSB(1, 33).value_or(64) / 128.f - 0.5f) * 5.f;
 	}
 
 	auto wg = mWaveTable.get(waveTableId);
-	auto voice = std::make_unique<lsp::synth::WaveTableVoice>(mSampleFreq, wg, noteNo + noteNoAdjuster, mCalculatedPitchBend, volume, ccPedal);
+	auto voice = std::make_unique<WaveTableVoice>(mSampleFreq, wg, noteNo + noteNoAdjuster, mCalculatedPitchBend, volume, ccPedal);
 	voice->setResonance(2.f, overtuneGain);
 
 	auto& eg = voice->envolopeGenerator();

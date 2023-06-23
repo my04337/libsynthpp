@@ -4,6 +4,8 @@
 #include <lsp/base/signal.hpp>
 #include <lsp/base/logging.hpp>
 
+#include <luath/base.hpp>
+
 #include <d2d1.h>
 #include <d2d1helper.h>
 #include <dwrite_3.h>
@@ -13,10 +15,8 @@
 
 namespace luath_gui
 {
-// いくつかのLSPのクラスは便利なためusingしておく
-using clock = lsp::clock;
-using non_copy = lsp::non_copy;
-using non_copy_move = lsp::non_copy_move;
+// 実装をシンプルにするため、 luath名前空間のものをそのままluath名前空間に展開する
+using namespace luath;
 
 // 前方宣言
 class Application;

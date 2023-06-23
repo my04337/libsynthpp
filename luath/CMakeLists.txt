@@ -8,16 +8,22 @@ file(GLOB_RECURSE srcs
 	)
 
 add_library(
-	libsynthpp STATIC
+	luath STATIC
 	${srcs}
 )
 
 target_compile_options(
-	libsynthpp 
+	luath 
 	PRIVATE	$<$<CXX_COMPILER_ID:MSVC>: /W3>
 )
 
 target_include_directories(
-    libsynthpp
+    luath
     PUBLIC src
+)
+
+target_link_libraries(
+	luath
+	PRIVATE
+		libsynth++
 )

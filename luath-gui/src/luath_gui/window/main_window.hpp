@@ -5,9 +5,8 @@
 #include <luath_gui/widget/spectrum_analyzer.hpp>
 #include <luath_gui/widget/lissajous.hpp>
 #include <luath_gui/drawing/font_loader.hpp>
-#include <lsp/synth/luath.hpp>
+#include <luath/luath.hpp>
 #include <lsp/midi/sequencer.hpp>
-
 #include <lsp/io/wasapi_output.hpp>
 
 namespace luath_gui::window
@@ -53,13 +52,13 @@ private:
 	std::atomic<float> mPostAmpVolume = 1.0f;
 
 	// シーケンサ,シンセサイザ
-	lsp::synth::Luath mSynthesizer;
-	lsp::midi::Sequencer mSequencer;
+	Luath mSynthesizer;
+	midi::Sequencer mSequencer;
 
 	// 各種ウィジット
-	luath_gui::widget::OscilloScope mOscilloScopeWidget;
-	luath_gui::widget::SpectrumAnalyzer mSpectrumAnalyzerWidget;
-	luath_gui::widget::Lissajous mLissajousWidget;
+	widget::OscilloScope mOscilloScopeWidget;
+	widget::SpectrumAnalyzer mSpectrumAnalyzerWidget;
+	widget::Lissajous mLissajousWidget;
 };
 
 }

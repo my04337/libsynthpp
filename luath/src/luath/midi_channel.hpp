@@ -1,11 +1,13 @@
 ﻿#pragma once
 
-#include <lsp/synth/voice.hpp>
+#include <luath/base.hpp>
+#include <luath/voice.hpp>
+
 #include <lsp/midi/message.hpp>
 
 #include <array>
 
-namespace lsp::synth
+namespace luath
 {
 class WaveTable;
 
@@ -36,7 +38,7 @@ public:
 
 	MidiChannel(uint32_t sampleFreq, uint8_t ch, const WaveTable& waveTable);
 
-	void reset(lsp::midi::SystemType type);
+	void reset(midi::SystemType type);
 	void resetVoices();
 	void resetParameters();
 	void resetParameterNumberState();
@@ -56,9 +58,9 @@ public:
 
 private:
 	// ボイスを生成します
-	std::unique_ptr<lsp::synth::Voice> createVoice(uint8_t noteNo, uint8_t vel);
-	std::unique_ptr<lsp::synth::Voice> createMelodyVoice(uint8_t noteNo, uint8_t vel);
-	std::unique_ptr<lsp::synth::Voice> createDrumVoice(uint8_t noteNo, uint8_t vel);
+	std::unique_ptr<Voice> createVoice(uint8_t noteNo, uint8_t vel);
+	std::unique_ptr<Voice> createMelodyVoice(uint8_t noteNo, uint8_t vel);
+	std::unique_ptr<Voice> createDrumVoice(uint8_t noteNo, uint8_t vel);
 
 	void updatePitchBend();
 
@@ -78,10 +80,10 @@ private:
 	// 波形テーブル
 	const WaveTable& mWaveTable;
 	// 発音中のボイス
-	std::unordered_map<VoiceId, std::unique_ptr<lsp::synth::Voice>> mVoices;
+	std::unordered_map<VoiceId, std::unique_ptr<Voice>> mVoices;
 
 	// システムリセット種別
-	lsp::midi::SystemType mSystemType;
+	midi::SystemType mSystemType;
 		
 	// プログラムチェンジ
 	uint8_t mProgId; // プログラムId

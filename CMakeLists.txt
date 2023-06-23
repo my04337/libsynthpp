@@ -32,5 +32,6 @@ include(depends.cmake)
 
 # ---
 
-add_subdirectory(libsynthpp)
+add_subdirectory(lsp)
+add_subdirectory(luath)
 add_subdirectory(luath-gui)

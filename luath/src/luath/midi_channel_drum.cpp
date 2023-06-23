@@ -1,8 +1,6 @@
-﻿#include <lsp/synth/midi_channel.hpp>
+﻿#include <luath/midi_channel.hpp>
 
-using namespace lsp;
-using namespace lsp::midi;
-using namespace lsp::synth;
+using namespace luath;
 
 static const std::unordered_map<
 	uint8_t, std::tuple<
@@ -74,7 +72,7 @@ static const std::unordered_map<
 	{ 81, { 86, 0.70f, 0.00f, 0.10f, 0.20f, 0.19f}},
 };
 
-std::unique_ptr<lsp::synth::Voice> lsp::synth::MidiChannel::createDrumVoice(uint8_t noteNo, uint8_t vel)
+std::unique_ptr<Voice> MidiChannel::createDrumVoice(uint8_t noteNo, uint8_t vel)
 {
 	uint8_t pitch = 69;
 	float v = 1.f; // volume(adjuster)
@@ -101,17 +99,17 @@ std::unique_ptr<lsp::synth::Voice> lsp::synth::MidiChannel::createDrumVoice(uint
 	// TODO sustain_levelで除算しているのは旧LibSynth++からの移植コード。 補正が不要になったら削除すること
 	float volume = powf(10.f, -20.f * (1.f - vel / 127.f) / 20.f);
 	float cutoff_level = 0.01f;
-	static const lsp::effector::EnvelopeGenerator<float>::Curve curveExp3(3.0f);
+	static const effector::EnvelopeGenerator<float>::Curve curveExp3(3.0f);
 
 	float cutOffFreqRate = 2.f;
 	float overtuneGain = 0.f; // dB
-	if(mSystemType != SystemType::GM1) {
+	if(mSystemType != midi::SystemType::GM1) {
 		cutOffFreqRate = getNRPN_MSB(1, 32).value_or(64) / 128.f * 2.f + 1.f;
 		overtuneGain = (getNRPN_MSB(1, 33).value_or(64) / 128.f - 0.5f) * 5.f;
 	}
 
 	auto wg = mWaveTable.get(WaveTable::Preset::DrumNoise);
-	auto voice = std::make_unique<lsp::synth::WaveTableVoice>(mSampleFreq, wg, resolvedNoteNo, mCalculatedPitchBend, volume, ccPedal);
+	auto voice = std::make_unique<WaveTableVoice>(mSampleFreq, wg, resolvedNoteNo, mCalculatedPitchBend, volume, ccPedal);
 	voice->setPan(pan);
 	voice->setResonance(cutOffFreqRate, overtuneGain);
 

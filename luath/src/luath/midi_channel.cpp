@@ -1,20 +1,18 @@
-﻿#include <lsp/synth/midi_channel.hpp>
-#include <lsp/synth/wave_table.hpp>
-#include <lsp/synth/voice.hpp>
+﻿#include <luath/midi_channel.hpp>
+#include <luath/wave_table.hpp>
+#include <luath/voice.hpp>
 
-using namespace lsp;
-using namespace lsp::midi;
-using namespace lsp::synth;
+using namespace luath;
 
 MidiChannel::MidiChannel(uint32_t sampleFreq, uint8_t ch, const WaveTable& waveTable)
 	: mSampleFreq(sampleFreq)
 	, mMidiCh(ch)
 	, mWaveTable(waveTable)
 {
-	reset(lsp::midi::SystemType::GM1);
+	reset(midi::SystemType::GM1);
 }
 // チャネル毎パラメータ類 リセット
-void MidiChannel::reset(SystemType type)
+void MidiChannel::reset(midi::SystemType type)
 {
 	mSystemType = type;
 
@@ -297,7 +295,7 @@ MidiChannel::Digest MidiChannel::digest()const
 
 	return digest;
 }
-std::unique_ptr<lsp::synth::Voice> MidiChannel::createVoice(uint8_t noteNo, uint8_t vel)
+std::unique_ptr<Voice> MidiChannel::createVoice(uint8_t noteNo, uint8_t vel)
 {
 	if(mIsDrumPart) {
 		return createDrumVoice(noteNo, vel);
@@ -328,7 +326,7 @@ std::optional<uint8_t> MidiChannel::getNRPN_LSB(uint8_t msb, uint8_t lsb)const n
 }
 void MidiChannel::updatePitchBend()
 {
-	auto pitchBendSensitivity = getNRPN_MSB(0, 0).value_or(mSystemType == SystemType::GM1 ? 12 : 2 );
+	auto pitchBendSensitivity = getNRPN_MSB(0, 0).value_or(mSystemType == midi::SystemType::GM1 ? 12 : 2 );
 	auto masterCourseTuning = getNRPN_MSB(0, 2).value_or(64) - 64;
 	auto masterFineTuning = ((getNRPN_MSB(0, 1).value_or(64) - 64) * 128 + (getNRPN_LSB(0, 1).value_or(64) - 64)) / 8192.f;
 	mCalculatedPitchBend 

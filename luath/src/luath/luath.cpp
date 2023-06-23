@@ -1,13 +1,10 @@
-﻿#include <lsp/synth/luath.hpp>
+﻿#include <luath/luath.hpp>
 #include <lsp/midi/messages/basic_message.hpp>
 #include <lsp/midi/messages/sysex_message.hpp>
 
-using namespace lsp;
-using namespace lsp::midi;
-using namespace lsp::midi::messages;
-using namespace lsp::synth;
+using namespace luath;
 
-Luath::Luath(uint32_t sampleFreq, SystemType defaultSystemType)
+Luath::Luath(uint32_t sampleFreq, midi::SystemType defaultSystemType)
 	: mSampleFreq(sampleFreq)
 	, mPlayingThreadAborted(false)
 {
@@ -98,7 +95,7 @@ void Luath::playingThreadMain()
 }
 // ---
 // 各種パラメータ類 リセット
-void Luath::reset(SystemType type)
+void Luath::reset(midi::SystemType type)
 {
 	mSystemType = type;
 	mWaveTable.reset();
@@ -165,6 +162,7 @@ Luath::Digest Luath::digest()const
 }
 void Luath::dispatchMessage(const std::shared_ptr<const midi::Message>& msg)
 {
+	using namespace midi::messages;
 	if (auto m = std::dynamic_pointer_cast<const NoteOn>(msg)) {
 		auto& midich = mMidiChannels[m->channel()];
 		midich.noteOn(m->noteNo(), m->velocity());
@@ -215,22 +213,22 @@ void Luath::sysExMessage(const uint8_t* data, size_t len)
 
 		if (match({0x7F, 0x09, 0x01})) {
 			// GM1 System On
-			reset(SystemType::GM1);
+			reset(midi::SystemType::GM1);
 		} 
 		if(match({0x7F, 0x09, 0x03})) {
 			// GM2 System On
-			reset(SystemType::GM2);
+			reset(midi::SystemType::GM2);
 		}
 		if (match({0x7F, 0x09, 0x02})) {
 			// GM System Off → GS Reset
-			reset(SystemType::GS);
+			reset(midi::SystemType::GS);
 		}
 	} 
 	if (makerId = 0x41) {
 		// Roland
 		if (match({{/*dev:any*/}, 0x42, 0x12, 0x40, 0x00, 0x7F, 0x00, 0x41})) {
 			// GS Reset
-			reset(SystemType::GS);
+			reset(midi::SystemType::GS);
 		}
 	}
 }

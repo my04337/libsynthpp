@@ -1,8 +1,10 @@
 ﻿#pragma once
 
+#include <luath/base.hpp>
+
 #include <lsp/generator/wave_table_generator.hpp>
 
-namespace lsp::synth
+namespace luath
 {
 
 // 波形テーブル
@@ -41,7 +43,7 @@ public:
 	size_t add(Signal<float>&& wav, float preAmp = -1, float cycles = 1);
 
 	// 波形テーブルジェネレータを取得します
-	lsp::generator::WaveTableGenerator<float> get(size_t id)const;
+	generator::WaveTableGenerator<float> get(size_t id)const;
 
 
 private:

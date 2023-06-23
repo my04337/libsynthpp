@@ -1,9 +1,8 @@
-﻿#include <lsp/synth/wave_table.hpp>
+﻿#include <luath/wave_table.hpp>
 #include <lsp/generator/function_generator.hpp>
 #include <lsp/effector/biquadratic_filter.hpp>
 
-using namespace lsp;
-using namespace lsp::synth;
+using namespace luath;
 
 WaveTable::WaveTable()
 {
@@ -27,7 +26,7 @@ void WaveTable::add(size_t id, Signal<float>&& wav, float preAmp, float cycles)
 	mWaveTable.insert_or_assign(id, std::make_tuple(std::move(wav), preAmp, cycles));
 }
 
-lsp::generator::WaveTableGenerator<float> WaveTable::get(size_t id)const
+generator::WaveTableGenerator<float> WaveTable::get(size_t id)const
 {
 	auto found = mWaveTable.find(id);
 	if (found == mWaveTable.end()) {
@@ -37,13 +36,13 @@ lsp::generator::WaveTableGenerator<float> WaveTable::get(size_t id)const
 
 	auto& [wave, preAmp, cycles] = found->second;
 
-	return lsp::generator::WaveTableGenerator<float>(wave, preAmp, cycles);
+	return generator::WaveTableGenerator<float>(wave, preAmp, cycles);
 }
 
 void WaveTable::reset()
 {
-	using FunctionGenerator = lsp::generator::FunctionGenerator<float>;
-	using BiquadraticFilter = lsp::effector::BiquadraticFilter<float>;
+	using FunctionGenerator = generator::FunctionGenerator<float>;
+	using BiquadraticFilter = effector::BiquadraticFilter<float>;
 
 	mNextCustomWaveId = CustomWaveIdBegin;
 	mWaveTable.clear();

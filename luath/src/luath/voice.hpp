@@ -1,11 +1,13 @@
 ﻿#pragma once
 
-#include <lsp/synth/wave_table.hpp>
+#include <luath/base.hpp>
+#include <luath/wave_table.hpp>
+
 #include <lsp/effector/envelope_generator.hpp>
 #include <lsp/effector/biquadratic_filter.hpp>
 #include <lsp/Generator/wave_table_generator.hpp>
 
-namespace lsp::synth
+namespace luath
 {
 // ボイス識別番号
 struct _voice_id_tag {};
@@ -17,14 +19,14 @@ class Voice
 	: non_copy_move
 {
 public:
-	using EnvelopeGenerator = lsp::effector::EnvelopeGenerator<float>;
-	using EnvelopeState = lsp::effector::EnvelopeState;
-	using BiquadraticFilter = lsp::effector::BiquadraticFilter<float>;
+	using EnvelopeGenerator = effector::EnvelopeGenerator<float>;
+	using EnvelopeState = effector::EnvelopeState;
+	using BiquadraticFilter = effector::BiquadraticFilter<float>;
 
 	struct Digest {
 		float freq = 0; // 基本周波数
 		float envelope = 0; // エンベロープジェネレータ出力
-		lsp::effector::EnvelopeState state = lsp::effector::EnvelopeState::Free; // エンベロープジェネレータ ステート
+		effector::EnvelopeState state = effector::EnvelopeState::Free; // エンベロープジェネレータ ステート
 	};
 
 public:
@@ -74,7 +76,7 @@ class WaveTableVoice
 	: public Voice
 {
 public:
-	using WaveTableGenerator = lsp::generator::WaveTableGenerator<float>;
+	using WaveTableGenerator = generator::WaveTableGenerator<float>;
 
 
 public:
