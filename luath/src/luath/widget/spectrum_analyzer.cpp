@@ -121,9 +121,9 @@ void SpectrumAnalyzer::draw(ID2D1RenderTarget& renderer, const float left, const
 	for (uint32_t ch = 0; ch < mChannels; ++ch) {
 		auto& buffer = mBuffers[ch];
 		switch (ch) {
-		case 0:	brush->SetColor({ 1.f, 0.f, 0.f, 1.f }); break;
-		case 1:	brush->SetColor({ 0.f, 0.f, 1.f, 1.f }); break;
-		default:brush->SetColor({ 0.5f, 0.5f, 0.5f, 1.f }); break;
+		case 0:	brush->SetColor({ 1.f, 0.f, 0.f, 0.5f }); break;
+		case 1:	brush->SetColor({ 0.f, 0.f, 1.f, 0.5f }); break;
+		default:brush->SetColor({ 0.5f, 0.5f, 0.5f, 0.5f }); break;
 		}
 		// FFT実施
 		std::vector<float> real, image;
