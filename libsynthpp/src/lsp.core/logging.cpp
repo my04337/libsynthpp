@@ -1,5 +1,6 @@
-﻿#include <lsp/base/logging.hpp>
-#include <iostream>
+﻿import lsp.core;
+
+import std.compat;
 
 #ifdef _WIN32
 #include <Windows.h>

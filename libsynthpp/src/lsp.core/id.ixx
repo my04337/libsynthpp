@@ -1,15 +1,18 @@
-﻿#pragma once
+﻿export module lsp.core:id;
 
-#include <lsp/base/base.hpp>
+import std;
+
+import :base;
+
 
 namespace lsp
 {
 
-template<class T>
+export template<class T>
 concept id_typeable = std::is_arithmetic_v<T>;
 
 /// ID基本型
-template<class T, id_typeable id_type_ = uint64_t, id_type_ INITIAL_VALUE=static_cast<id_type_>(0)>
+export template<class T, id_typeable id_type_ = std::uint64_t, id_type_ INITIAL_VALUE=static_cast<id_type_>(0)>
 struct id_base_t final
 {
 	using id_type = id_type_;
@@ -43,7 +46,7 @@ private:
 };
 
 /// 発番可能ID基本型
-template<class T, id_typeable id_type_ = uint64_t, id_type_ INITIAL_VALUE=static_cast<id_type_>(0)>
+export template<class T, id_typeable id_type_ = std::uint64_t, id_type_ INITIAL_VALUE=static_cast<id_type_>(0)>
 struct issuable_id_base_t final
 {
 	using id_type = id_type_;
@@ -71,7 +74,7 @@ private:
 	static std::atomic<id_type> _cur;
 	id_type _v;
 };
-template<class T, id_typeable id_type_, id_type_ INITIAL_VALUE>
+export template<class T, id_typeable id_type_, id_type_ INITIAL_VALUE>
 std::atomic<id_type_> issuable_id_base_t<T, id_type_, INITIAL_VALUE>::_cur(INITIAL_VALUE);
 
 
@@ -79,14 +82,14 @@ std::atomic<id_type_> issuable_id_base_t<T, id_type_, INITIAL_VALUE>::_cur(INITI
 }
 
 namespace std{
-template <class T, lsp::id_typeable id_type, id_type INITIAL_VALUE>
+export template <class T, lsp::id_typeable id_type, id_type INITIAL_VALUE>
 struct hash<lsp::id_base_t<T, id_type, INITIAL_VALUE>>
 {
 	constexpr std::size_t operator () (const lsp::id_base_t<T, id_type, INITIAL_VALUE>& key) const noexcept { return static_cast<size_t>(key.id()); }
 };
 }
 namespace std{
-template <class T>
+export template <class T>
 struct hash<lsp::issuable_id_base_t<T>>
 {
 	constexpr std::size_t operator () (const lsp::issuable_id_base_t<T>& key) const noexcept { return static_cast<size_t>(key.id()); }

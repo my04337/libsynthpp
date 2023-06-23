@@ -10,6 +10,17 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="base.ixx" />
+    <ClCompile Include="src\lsp.core\base.cpp" />
+    <ClCompile Include="src\lsp.core\id.ixx" />
+    <ClCompile Include="src\lsp.core\logging.cpp" />
+    <ClCompile Include="src\lsp.core\logging.ixx" />
+    <ClCompile Include="src\lsp.core\lsp.core.ixx" />
+    <ClCompile Include="src\lsp.core\math.ixx" />
+    <ClCompile Include="src\lsp.core\sample.ixx" />
+    <ClCompile Include="src\lsp.core\signal.ixx" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
@@ -59,8 +70,9 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalIncludeDirectories>$(ProjectDir)src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <EnableModules>true</EnableModules>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -78,8 +90,9 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalIncludeDirectories>$(ProjectDir)src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <EnableModules>true</EnableModules>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>

@@ -1,22 +1,22 @@
-﻿#pragma once
+﻿export module lsp.core:sample;
 
-#include <lsp/base/base.hpp>
-#include <lsp/base/logging.hpp>
+import std;
+import :base;
 
 namespace lsp
 {
 /// サンプル型情報 
-template<class T> requires std::signed_integral<T> || std::floating_point<T>
+export template<class T> requires std::signed_integral<T> || std::floating_point<T>
 struct sample_traits {};
 
-template<std::signed_integral T> struct sample_traits<T> {
+export template<std::signed_integral T> struct sample_traits<T> {
 	using _sample_type_tag = void; // for SFINAE
 	using sample_type = T;
 	static constexpr sample_type abs_max = std::numeric_limits<T>::max(); // C++20より、整数値は2の補数であることが保証された。 そのため絶対値の小さい正の最大値を基準に用いる。
 	static constexpr sample_type normalized_max = +abs_max;
 	static constexpr sample_type normalized_min = -abs_max;
 };
-template<std::floating_point T> struct sample_traits<T> {
+export template<std::floating_point T> struct sample_traits<T> {
 	using _sample_type_tag = void; // for SFINAE
 	using sample_type = T;
 	static constexpr sample_type abs_max = static_cast<T>(1.0);
@@ -27,7 +27,7 @@ template<std::floating_point T> struct sample_traits<T> {
 // ---
 
 // ノーマライズ : 値域を信号の標準的な幅に狭める
-template<class sample_type> requires std::signed_integral<sample_type> || std::floating_point<sample_type>
+export template<class sample_type> requires std::signed_integral<sample_type> || std::floating_point<sample_type>
 constexpr sample_type normalize(sample_type in) noexcept 
 {
 	// MEMO できるだけconstexprで解決し、実行時コストを純粋に変換処理のみとしたい。
@@ -40,7 +40,7 @@ constexpr sample_type normalize(sample_type in) noexcept
 }
 
 // 再量子化 : サンプルのフォーマットを変更
-template<
+export template<
 	class Tout,
 	class Tin
 >requires 

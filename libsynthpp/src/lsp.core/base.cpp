@@ -1,4 +1,5 @@
-﻿#include <lsp/base/base.hpp>
+﻿import lsp.core;
+import std;
 
 std::string lsp::demangle(const char* mangled_name)
 {

@@ -1,23 +1,23 @@
-﻿#pragma once
+﻿export module lsp.core:signal;
 
-#include <lsp/base/base.hpp>
-#include <lsp/base/sample.hpp>
+import :base;
+import :sample;
 
 namespace lsp
 {
 
 // 信号 view
-template<class sample_type> requires std::signed_integral<sample_type> || std::floating_point<sample_type>
+export template<class sample_type> requires std::signed_integral<sample_type> || std::floating_point<sample_type>
 class SignalView
 {
 public:
 	constexpr SignalView()
 		: SignalView(nullptr, 1, 0) {}
-	constexpr SignalView(const sample_type* data, uint32_t channels, size_t frames)
+	constexpr SignalView(const sample_type* data, std::uint32_t channels, size_t frames)
 		: mData(data), mChannels(channels), mFrames(frames) {}
 
 	// チャネル数を取得します
-	constexpr uint32_t channels()const noexcept { return mChannels; }
+	constexpr std::uint32_t channels()const noexcept { return mChannels; }
 
 	// フレーム数を取得します
 	constexpr size_t frames()const noexcept { return mFrames; }
@@ -30,12 +30,12 @@ public:
 
 private:
 	const sample_type* mData;
-	uint32_t mChannels;
+	std::uint32_t mChannels;
 	size_t mFrames;
 };
 
 // 信号型
-template<class sample_type> requires std::signed_integral<sample_type> || std::floating_point<sample_type>
+export template<class sample_type> requires std::signed_integral<sample_type> || std::floating_point<sample_type>
 class Signal final
 	: non_copy
 {
@@ -80,7 +80,7 @@ protected:
 
 private:
 	std::unique_ptr<sample_type[], _memory_resource_deleter<sample_type>> mData;
-	uint32_t mChannels;
+	std::uint32_t mChannels;
 	size_t mFrames;
 };
 
