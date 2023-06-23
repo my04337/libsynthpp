@@ -1,13 +1,12 @@
-﻿#pragma once
+﻿export module lsp.threading;
 
-#include <lsp/base/base.hpp>
-#include <lsp/base/Id.hpp>
+import lsp.core;
 
 namespace lsp
 {
 
 // スレッドの優先度
-enum class ThreadPriority
+export enum class ThreadPriority
 {
 	Lowest,
 	BelowNormal,
@@ -20,6 +19,6 @@ enum class ThreadPriority
 namespace lsp::this_thread
 {
 // スレッド優先度を指定します
-void set_priority(ThreadPriority p);
+	export void set_priority(ThreadPriority p);
 
 }

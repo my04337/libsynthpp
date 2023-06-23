@@ -23,9 +23,12 @@
     <ClCompile Include="src\lsp.effector\biquadratic_filter.ixx" />
     <ClCompile Include="src\lsp.effector\envelope_generator.ixx" />
     <ClCompile Include="src\lsp.effector\_effector.ixx" />
+    <ClCompile Include="src\lsp.fft\fft.ixx" />
     <ClCompile Include="src\lsp.generator\function_generator.ixx" />
     <ClCompile Include="src\lsp.generator\wave_table_generator.ixx" />
     <ClCompile Include="src\lsp.generator\_generator.ixx" />
+    <ClCompile Include="src\lsp.threading\thread_priority.cpp" />
+    <ClCompile Include="src\lsp.threading\thread_priority.ixx" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

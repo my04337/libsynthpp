@@ -10,6 +10,12 @@
     <Filter Include="lsp.generator">
       <UniqueIdentifier>{81030f2a-ef77-4f76-b2b9-da48809613ea}</UniqueIdentifier>
     </Filter>
+    <Filter Include="lsp.fft">
+      <UniqueIdentifier>{63e719c9-2118-483e-9887-90466f106903}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="lsp.threading">
+      <UniqueIdentifier>{6b135c66-3d9e-4fe7-97bf-f94711c5d555}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\lsp.core\_core.ixx">
@@ -56,6 +62,15 @@
     </ClCompile>
     <ClCompile Include="src\lsp.core\base.ixx">
       <Filter>lsp.core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\lsp.fft\fft.ixx">
+      <Filter>lsp.fft</Filter>
+    </ClCompile>
+    <ClCompile Include="src\lsp.threading\thread_priority.ixx">
+      <Filter>lsp.threading</Filter>
+    </ClCompile>
+    <ClCompile Include="src\lsp.threading\thread_priority.cpp">
+      <Filter>lsp.threading</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

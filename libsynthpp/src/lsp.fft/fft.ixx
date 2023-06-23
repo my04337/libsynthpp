@@ -1,10 +1,9 @@
-﻿#pragma once
+﻿export module lsp.fft;
 
-#include <lsp/base/base.hpp>
-#include <lsp/base/signal.hpp>
-#include <lsp/base/math.hpp>
+import std;
+import lsp.core;
 
-namespace lsp::fft
+export namespace lsp::fft
 {
 // 各種窓関数
 template<
