@@ -4,6 +4,7 @@
 #include <luath_gui/widget/oscilloscope.hpp>
 #include <luath_gui/widget/spectrum_analyzer.hpp>
 #include <luath_gui/widget/lissajous.hpp>
+#include <luath_gui/drawing/font_loader.hpp>
 #include <lsp/synth/luath.hpp>
 #include <lsp/midi/sequencer.hpp>
 
@@ -46,6 +47,7 @@ private:
 	// 描画機構
 	struct DrawingContext;
 	std::unique_ptr<DrawingContext> mDrawingContext;
+	drawing::FontLoader mFontLoader;
 
 	// 再生用ストリーム
 	lsp::io::WasapiOutput mOutput;

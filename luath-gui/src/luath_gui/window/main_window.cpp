@@ -117,8 +117,13 @@ void MainWindow::dispose()
 }
 bool MainWindow::initialize()
 {
+	using namespace std::string_literals;
+
 	// D2D描画関連初期化
 	mDrawingContext = std::make_unique<DrawingContext>();
+
+	// フォント類初期化
+	mFontLoader.createFontCollection(L"UmeFont"s, std::filesystem::current_path().append(L"assets/font/ume-tgo4.ttf"s));
 
 	// ウィンドウクラス生成
 	static std::once_flag windowClassInitializeOnceFlag;
@@ -161,7 +166,7 @@ bool MainWindow::initialize()
 
 	// シーケンサセットアップ
 	auto midi_path = std::filesystem::current_path();
-	midi_path.append("assets/sample_midi/brambles_vsc3.mid"); // 試験用MIDIファイル
+	midi_path.append(L"assets/sample_midi/brambles_vsc3.mid"s); // 試験用MIDIファイル
 	loadMidi(midi_path);
 
 	// オーディオ出力 初期化
@@ -215,7 +220,7 @@ std::optional<LRESULT> MainWindow::wndProc(HWND hWnd, UINT message, WPARAM wPara
 		for(size_t i = 0; i < files; ++i) {
 			std::vector<TCHAR> buff;
 			buff.resize(DragQueryFile(hDrop, static_cast<UINT>(i), nullptr, 0) + 1);
-			if(DragQueryFile(hDrop, static_cast<UINT>(i), buff.data(), buff.size()) > 0) {
+			if(DragQueryFile(hDrop, static_cast<UINT>(i), buff.data(), static_cast<UINT>(buff.size())) > 0) {
 				buff.back() = _TEXT('\0');
 				paths.emplace_back(buff.data());
 			}
@@ -296,11 +301,6 @@ struct MainWindow::DrawingContext
 {
 	// レンダラ関連
 	CComPtr<ID2D1Factory> d2dFactory;
-	CComPtr<IDWriteFactory5> dwFactory;
-	CComPtr<IDWriteInMemoryFontFileLoader> dwInMemoryFontLoader;
-	CComPtr<IDWriteFontCollection1> dwFontCollection;
-	CComPtr<IDWriteTextFormat> dwTextFormatDefault;
-	CComPtr<IDWriteTextFormat> dwTextFormatSmall;
 
 	// FPS計算,表示用
 	size_t frames = 0;
@@ -320,59 +320,10 @@ struct MainWindow::DrawingContext
 		
 		// レンダラ準備
 		check(SUCCEEDED(D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, &d2dFactory)));
-		check(SUCCEEDED(DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(decltype(*dwFactory)), reinterpret_cast<IUnknown**>(&dwFactory))));
-
-
-		// フォントローダの準備 ※後ほど明示的に解放が必要
-		//   see https://deep-verdure.hatenablog.com/entry/2022/07/23/190449
-		check(SUCCEEDED(dwFactory->CreateInMemoryFontFileLoader(&dwInMemoryFontLoader)));
-		check(SUCCEEDED(dwFactory->RegisterFontFileLoader(dwInMemoryFontLoader)));
-
-		// フォントデータをメモリ上に展開
-		std::ifstream fontFileStream(std::filesystem::current_path().append("assets/font/ume-tgo4.ttf"), std::ios_base::in | std::ios_base::binary);
-		std::vector<char> fontData((std::istreambuf_iterator<char>(fontFileStream)), std::istreambuf_iterator<char>());
-		fontFileStream.close();
-		CComPtr<IDWriteFontFile> dwFontFile;
-		check(SUCCEEDED(dwInMemoryFontLoader->CreateInMemoryFontFileReference(dwFactory, fontData.data(), static_cast<UINT32>(fontData.size()), nullptr, &dwFontFile)));
-		fontData.clear();
-
-		// フォントコレクションの作成 ※IDWriteFontCollection1の第二引数に指定される
-		CComPtr<IDWriteFontSetBuilder1> dwFontSetBuilder;
-		check(SUCCEEDED(dwFactory->CreateFontSetBuilder(&dwFontSetBuilder)));
-		check(SUCCEEDED(dwFontSetBuilder->AddFontFile(dwFontFile)));
-		CComPtr<IDWriteFontSet> dwFontSet;
-		check(SUCCEEDED(dwFontSetBuilder->CreateFontSet(&dwFontSet)));
-		check(SUCCEEDED(dwFactory->CreateFontCollectionFromFontSet(dwFontSet, &dwFontCollection)));
-
-
-		// 主要なフォント情報の作り置き
-		check(SUCCEEDED(dwFactory->CreateTextFormat(
-			L"梅ゴシック",
-			dwFontCollection,
-			DWRITE_FONT_WEIGHT_NORMAL,
-			DWRITE_FONT_STYLE_NORMAL,
-			DWRITE_FONT_STRETCH_NORMAL,
-			12,
-			L"", //locale
-			&dwTextFormatDefault
-		)));
-		check(SUCCEEDED(dwFactory->CreateTextFormat(
-			L"梅ゴシック",
-			dwFontCollection,
-			DWRITE_FONT_WEIGHT_NORMAL,
-			DWRITE_FONT_STYLE_NORMAL,
-			DWRITE_FONT_STRETCH_NORMAL,
-			10,
-			L"", //locale
-			&dwTextFormatSmall
-		)));
 	}
 
 	~DrawingContext()
 	{
-		if(dwFactory && dwInMemoryFontLoader) {
-			dwFactory->UnregisterFontFileLoader(dwInMemoryFontLoader);
-		}
 
 	}
 };
@@ -429,6 +380,7 @@ void MainWindow::onDraw()
 }
 void MainWindow::onDraw(ID2D1RenderTarget& renderer)
 {
+	using namespace  std::string_literals;
 	using synth::VoiceId;
 	auto& context = *mDrawingContext;
 
@@ -440,15 +392,19 @@ void MainWindow::onDraw(ID2D1RenderTarget& renderer)
 	check(SUCCEEDED(renderer.CreateSolidColorBrush({ 0.f, 0.f, 0.f, 1.f }, &blackBrush)));
 	renderer.Clear({ 1.f, 1.f, 1.f, 1.f });
 
+
+	auto textFormatDefault = mFontLoader.createTextFormat(L"UmeFont"s, L"梅ゴシック"s, 12);
+	auto textFormatSmall = mFontLoader.createTextFormat(L"UmeFont"s, L"梅ゴシック"s, 10);
+
 	auto drawText = [&](float x, float y, std::wstring_view str) {
 		renderer.DrawText(
-			str.data(), static_cast<UINT32>(str.size()), context.dwTextFormatDefault,
+			str.data(), static_cast<UINT32>(str.size()), textFormatDefault,
 			{x, y, 65536.f, 65536.f},blackBrush
 			);
 	};
 	auto drawSmallText = [&](float x, float y, std::wstring_view str) {
 		renderer.DrawText(
-			str.data(), static_cast<UINT32>(str.size()), context.dwTextFormatSmall,
+			str.data(), static_cast<UINT32>(str.size()), textFormatSmall,
 			{ x, y, 65536.f, 65536.f }, blackBrush
 		);
 	};
