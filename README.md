@@ -16,14 +16,16 @@ https://ja.osdn.net/projects/libsynthpp/
     * Windows 10 以降
 * 音声バックエンド
     * WASAPI or ASIO
+* 描画バックエンド
+    * Direct2D, DirectWrite
 * プロジェクト構成
-    * Visual Studio 2022 プロジェクト
-    * CMakeは検討したものの、C++ Modules への対応に暫くかかりそうなため見送り
+    * CMakeプロジェクト
 * その他コンセプト
     * C++ 23の全面的な活用
-    * C++ Modulesを利用
     * 簡潔で使いやすいAPI
     * 並列性が高く、レイテンシの少ない信号処理機構
+    * 将来的にC++ Modulesを利用
+        * VS2022 17.6時点ではWindows.hやatlbase.hのインクルードに失敗するため見送り
 
 
 ## MIDIシンセサイザ部分が目指しているもの
