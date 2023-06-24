@@ -1,7 +1,7 @@
 ﻿#include <lsp/base/logging.hpp>
 #include <iostream>
 
-#ifdef _WIN32
+#ifdef WIN32
 #include <Windows.h>
 #endif
 
@@ -215,7 +215,7 @@ void StdOutLogger::flush()noexcept
 
 
 // ---
-#ifdef _WIN32
+#ifdef WIN32
 OutputDebugStringLogger::OutputDebugStringLogger(bool showHeader)
 	: mShowHeader(showHeader)
 {

@@ -37,7 +37,6 @@
 # Build directory and intermediate file
 build/*
 .vs/*
-*.user
 CppProperties.json
 out
 out

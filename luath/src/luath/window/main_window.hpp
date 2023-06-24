@@ -16,7 +16,7 @@ class MainWindow final
 	: non_copy_move
 {
 public:
-	MainWindow(Application& app);
+	MainWindow();
 	~MainWindow();
 
 	bool initialize();
@@ -37,7 +37,6 @@ private:
 	static LRESULT CALLBACK wndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
 private:	
-	Application& mApp;
 	HWND mWindowHandle = nullptr;
 
 	// 描画機構

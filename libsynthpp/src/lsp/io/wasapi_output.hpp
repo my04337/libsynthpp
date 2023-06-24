@@ -3,7 +3,7 @@
 #include <lsp/base/base.hpp>
 #include <lsp/base/signal.hpp>
 
-#ifndef _WIN32
+#ifndef WIN32
 #error unsupported platform
 #endif
 
