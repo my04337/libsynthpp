@@ -1,19 +1,28 @@
-﻿#include <lsp/io/wasapi_output.hpp>
-#include <lsp/base/math.hpp>
+﻿import lsp.audio;
 
-#include <Mmdeviceapi.h>
+//#include <Mmdeviceapi.h>
 #include <Audioclient.h>
-#include <ksmedia.h>
-
-
+//#include <ksmedia.h>
 
 using namespace lsp;
-using namespace lsp::io;
+using namespace lsp::audio;
 
 // 参考URL : https://charatsoft.sakura.ne.jp/develop/toaru2/index.php?did=7
 
+
+struct WasapiOutput::Impl
+{
+	com_ptr<IAudioClient3> mAudioClient;
+	HANDLE mAudioEvent;
+	HANDLE mAudioThreadHandle;
+
+	// --- valid時のみ有効 ---
+	WAVEFORMATEX* mWaveFormatEx; // TODO CoTaskMemFreeでの解放
+};
+
 WasapiOutput::WasapiOutput()
-	: mAudioEvent(nullptr)
+	: mImpl(std::make_unique<Impl>())
+	, mAudioEvent(nullptr)
 	, mAudioThreadHandle(nullptr)
 	, mAbort(false)
 	, mWaveFormatEx(nullptr)
@@ -184,6 +193,10 @@ void WasapiOutput::initialize()
 	Log::i([&](auto& _) {_ << "  channels    => " << pWaveFormatEx->nChannels; });
 	Log::i([&](auto& _) {_ << "  format      => " << getDeviceFormatString(sampleFormat); });
 	ResumeThread(hAudioThread); // 再生用スレッド始動
+}
+void WasapiOutput::setAudioEvent() 
+{
+	SetEvent(mAudioEvent);
 }
 
 bool WasapiOutput::start()

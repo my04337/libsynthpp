@@ -1,7 +1,8 @@
-﻿#include <lsp/io/wav_file_output.hpp>
+﻿import lsp.audio;
 
 using namespace lsp;
-using namespace lsp::io;
+using namespace lsp::audio;
+
 
 WavFileOutput::WavFileOutput(uint32_t sampleFreq, uint32_t bitsPerSample, uint32_t channels, const std::filesystem::path& filePath)
 {
@@ -27,25 +28,25 @@ WavFileOutput::WavFileOutput(uint32_t sampleFreq, uint32_t bitsPerSample, uint32
 
 
 	// TODO リトルエンディアンのPC専用
-	const uint32_t bytesPerSample = bitsPerSample / 8;
-	const uint32_t blockSize = bytesPerSample * channels;
-	const uint32_t bytesPerSec = sampleFreq * blockSize;
+	const std::uint32_t bytesPerSample = bitsPerSample / 8;
+	const std::uint32_t blockSize = bytesPerSample * channels;
+	const std::uint32_t bytesPerSec = sampleFreq * blockSize;
 
 	// --- RIFF ファイルヘッダ ---
 	fs << "RIFF";
 	auto riff_size_pos = fs.tellp();
-	write_binary(uint32_t(0)); // [プレースホルダ] これ以降のファイルサイズ
+	write_binary(std::uint32_t(0)); // [プレースホルダ] これ以降のファイルサイズ
 	fs << "WAVE";
 
 	// --- fmtチャンク ---
 	fs << "fmt ";
-	write_binary(uint32_t(16)); // fmtチャンク バイト数
-	write_binary(uint16_t(0x01)); // PCMフォーマット
-	write_binary(uint16_t(channels)); // チャネル数
-	write_binary(uint32_t(sampleFreq)); // サンプリングレート
-	write_binary(uint32_t(bytesPerSec)); // データ速度
-	write_binary(uint16_t(blockSize)); // ブロックサイズ
-	write_binary(uint16_t(bitsPerSample)); // サンプル当たりのビット数
+	write_binary(std::uint32_t(16)); // fmtチャンク バイト数
+	write_binary(std::uint16_t(0x01)); // PCMフォーマット
+	write_binary(std::uint16_t(channels)); // チャネル数
+	write_binary(std::uint32_t(sampleFreq)); // サンプリングレート
+	write_binary(std::uint32_t(bytesPerSec)); // データ速度
+	write_binary(std::uint16_t(blockSize)); // ブロックサイズ
+	write_binary(std::uint16_t(bitsPerSample)); // サンプル当たりのビット数
 
 	// --- dataチャンク ---
 	fs << "data";

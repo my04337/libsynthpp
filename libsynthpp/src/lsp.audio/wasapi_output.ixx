@@ -1,23 +1,15 @@
-﻿#pragma once
+﻿export module lsp.audio:wasapi_output;
 
-#include <lsp/base/base.hpp>
-#include <lsp/base/signal.hpp>
 
-#ifndef _WIN32
-#error unsupported platform
-#endif
-
-#include <Windows.h>
-#include <Mmreg.h>
-#include <atlbase.h>
-#include <atlcom.h>
+import std;
+import lsp.core;
 
 struct IAudioClient3;
 
-namespace lsp::io {
+namespace lsp::audio {
 
 // WASAPI 出力
-class WasapiOutput final
+export class WasapiOutput final
 	: non_copy_move
 {
 public:
@@ -48,10 +40,10 @@ public:
 	bool stop();
 
 	// デバイスのサンプリング周波数を取得します
-	uint32_t getDeviceSampleFreq()const noexcept;
+	std::uint32_t getDeviceSampleFreq()const noexcept;
 
 	// デバイスのチャネル数を取得します
-	uint32_t getDeviceChannels()const noexcept;
+	std::uint32_t getDeviceChannels()const noexcept;
 
 	// デバイスのサンプルフォーマットを取得します
 	SampleFormat getDeviceFormat()const noexcept;
@@ -72,28 +64,26 @@ protected:
 	static unsigned __stdcall playThreadMainProxy(void*);
 	void playThreadMain();
 
-	static CComPtr<IAudioClient3> getDefaultAudioClient();
+	static com_ptr<IAudioClient3> getDefaultAudioClient();
 	void initialize();
+	void setAudioEvent();
 
 private:
-	CComPtr<IAudioClient3> mAudioClient;
-	HANDLE mAudioEvent;
-	HANDLE mAudioThreadHandle;
+	struct Impl;
+	std::unique_ptr<Impl> mImpl;
 	std::atomic_bool mAbort;
 
 	mutable std::mutex mAudioBufferMutex;
-	std::deque<std::variant<int32_t, float>>  mAudioBuffer; // 簡単化のため、内部的には最大サイズで保持する
+	std::deque<std::variant<std::int32_t, float>>  mAudioBuffer; // 簡単化のため、内部的には最大サイズで保持する
 
 	// --- valid時のみ有効 ---
-	WAVEFORMATEX* mWaveFormatEx; // TODO CoTaskMemFreeでの解放
-	uint32_t mAudioBufferFrameCount;
+	std::uint32_t mAudioBufferFrameCount;
 	SampleFormat mSampleFormat;
-
 };
 
 // ---
 
-template<typename sample_type>
+export template<typename sample_type>
 void WasapiOutput::write(const Signal<sample_type>& sig)
 {
 	const auto signal_channels = sig.channels();
@@ -143,7 +133,7 @@ void WasapiOutput::write(const Signal<sample_type>& sig)
 		}
 		break;
 	}
-	SetEvent(mAudioEvent);
+	setAudioEvent();
 }
 
 }

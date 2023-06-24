@@ -16,6 +16,9 @@
     <Filter Include="lsp.threading">
       <UniqueIdentifier>{6b135c66-3d9e-4fe7-97bf-f94711c5d555}</UniqueIdentifier>
     </Filter>
+    <Filter Include="lsp.audio">
+      <UniqueIdentifier>{e5a92497-5f11-4456-9cce-cecabf185ec3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\lsp.core\_core.ixx">
@@ -72,5 +75,31 @@
     <ClCompile Include="src\lsp.threading\thread_priority.cpp">
       <Filter>lsp.threading</Filter>
     </ClCompile>
+    <ClCompile Include="src\lsp.audio\wasapi_output.ixx">
+      <Filter>lsp.audio</Filter>
+    </ClCompile>
+    <ClCompile Include="src\lsp.audio\wav_file_output.cpp">
+      <Filter>lsp.audio</Filter>
+    </ClCompile>
+    <ClCompile Include="src\lsp.audio\wav_file_output.ixx">
+      <Filter>lsp.audio</Filter>
+    </ClCompile>
+    <ClCompile Include="src\lsp.audio\wasapi_output.cpp">
+      <Filter>lsp.audio</Filter>
+    </ClCompile>
+    <ClCompile Include="src\lsp.audio\_audio.ixx">
+      <Filter>lsp.audio</Filter>
+    </ClCompile>
+    <ClCompile Include="src\lsp.core\win32_com_ptr.ixx">
+      <Filter>lsp.core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\lsp.core\win32_com_ptr.cpp">
+      <Filter>lsp.core</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\lsp.core\win32_headers.h">
+      <Filter>lsp.core</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

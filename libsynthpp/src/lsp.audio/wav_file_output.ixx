@@ -1,19 +1,16 @@
-﻿#pragma once
+﻿export module lsp.audio:wav_file_output;
 
-#include <lsp/base/base.hpp>
-#include <lsp/base/signal.hpp>
+import std;
+import lsp.core;
 
-#include <fstream>
-#include <filesystem>
-
-namespace lsp::io {
+namespace lsp::audio {
 
 // WASAPI 出力
-class WavFileOutput final
+export class WavFileOutput final
 	: non_copy_move
 {
 public:
-	WavFileOutput(uint32_t sampleFreq, uint32_t bitsPerSample, uint32_t channels, const std::filesystem::path& filePath);
+	WavFileOutput(std::uint32_t sampleFreq, std::uint32_t bitsPerSample, uint32_t channels, const std::filesystem::path& filePath);
 	~WavFileOutput();
 
 	// ファイルへの出力を終了します
@@ -31,19 +28,18 @@ public:
 
 private:
 	// --- valid時のみ有効 ---
-	uint32_t mSampleFreq;
-	uint32_t mBitsPerSample;
-	uint32_t mChannels;
+	std::uint32_t mSampleFreq;
+	std::uint32_t mBitsPerSample;
+	std::uint32_t mChannels;
 	
 	std::ofstream mFile;
 	std::ofstream::pos_type mFilePos_RiffSize;
 	std::ofstream::pos_type mFilePos_DataSize;
-
 };
 
 // ---
 
-template<typename sample_type>
+export template<typename sample_type>
 void WavFileOutput::write(const Signal<sample_type>& sig)
 {
 	const auto signal_channels = sig.channels();
@@ -65,7 +61,7 @@ void WavFileOutput::write(const Signal<sample_type>& sig)
 		auto in_frame = sig.frame(i);
 		for (size_t ch=0; ch< signal_channels; ++ch) {
 			// 32bit整数型に変換
-			auto s = requantize<int32_t>(in_frame[ch]);
+			auto s = requantize<std::int32_t>(in_frame[ch]);
 
 			// 32bitで記録しているので、必要サイズに併せて切り詰める
 			// MEMO リトルエンディアン前提コード, 下位側から必要バイト分を転写
