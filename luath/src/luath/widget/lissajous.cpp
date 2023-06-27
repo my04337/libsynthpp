@@ -3,56 +3,64 @@
 using namespace luath;
 using namespace luath::widget;
 
-Lissajous::Lissajous()
+Lissajous::Lissajous(uint32_t sampleFreq, uint32_t bufferLength)
+	: mSampleFreq(sampleFreq)
+	, mBufferLength(bufferLength)
 {
+	require(sampleFreq > 0);
+	require(bufferLength > 0);
+
+	mInputBuffer.resize(mBufferLength, std::make_pair(0.f, 0.f));
+	mDrawingBuffer.resize(mBufferLength, std::make_pair(0.f, 0.f));
 }
 
 Lissajous::~Lissajous()
 {
 }
-void Lissajous::setSignalParams(uint32_t sampleFreq, uint32_t channels, uint32_t bufferLength)
+
+void Lissajous::write(const Signal<float>& sig)
 {
-	mSampleFreq = sampleFreq;
-	mChannels = channels;
-	mBufferLength = bufferLength;
+	std::lock_guard lock(mInputMutex);
 
-	lsp::require(channels >= 2);
+	const auto signal_channels = sig.channels();
+	const auto signal_frames = sig.frames();
 
-	_reset();
-}
-void Lissajous::_reset()
-{
-	mBuffers.clear();
-	mBuffers.resize(mChannels);
+	require(signal_channels == 2, "Lissajous : write - failed (channel count is mismatch)");
 
-	for (uint32_t ch = 0; ch < mChannels; ++ch) {
-		auto& buffer = mBuffers[ch];
-		for (uint32_t i = 0; i < mBufferLength; ++i) {
-			buffer.emplace_back(0.0f);
-		}
+	// バッファ末尾に追記
+	for(size_t i = 0; i < signal_frames; ++i) {
+		auto frame = sig.frame(i);
+		mInputBuffer.emplace_back(frame[0], frame[1]);
 	}
-}
 
+	// リングバッファとして振る舞うため、先頭から同じサイズを削除
+	mInputBuffer.erase(mInputBuffer.begin(), mInputBuffer.begin() + signal_frames);
+}
 
 void Lissajous::draw(ID2D1RenderTarget& renderer, const float left, const float top, const float width, const float height)
 {
-	std::lock_guard lock(mMutex);
+	// 信号出力をブロックしないように描画用信号バッファへコピー
+	{
+		std::lock_guard lock(mInputMutex);
+		std::copy(mInputBuffer.begin(), mInputBuffer.end(), mDrawingBuffer.begin());
+	}
 
+	// 描画開始
 	CComPtr<ID2D1Factory> factory;
 	renderer.GetFactory(&factory);
-	lsp::check(factory != nullptr);
+	check(factory != nullptr);
 
 	CComPtr<ID2D1SolidColorBrush> brush;
 	renderer.CreateSolidColorBrush({ 0.f, 0.f, 0.f, 1.f }, &brush);
 
 	// ステータス & クリッピング
 	CComPtr<ID2D1DrawingStateBlock> drawingState;
-	lsp::check(SUCCEEDED(factory->CreateDrawingStateBlock(&drawingState)));
+	check(SUCCEEDED(factory->CreateDrawingStateBlock(&drawingState)));
 	renderer.SaveDrawingState(drawingState);
 
 	const D2D1_RECT_F  rect{ left, top, left + width, top + height };
 	renderer.PushAxisAlignedClip(rect, D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
-	auto fin_act = lsp::finally([&renderer, &drawingState] {
+	auto fin_act = finally([&renderer, &drawingState] {
 		renderer.PopAxisAlignedClip();
 		renderer.RestoreDrawingState(drawingState);
 	});
@@ -79,10 +87,11 @@ void Lissajous::draw(ID2D1RenderTarget& renderer, const float left, const float 
 	// 信号描画
 	brush->SetColor({ 1.f, 0.f, 0.f, 1.f });
 	D2D1_POINT_2F prev;
-	for (uint32_t i = 0; i < buffer_length; ++i) {
-		float x = mid_x + width / 2.0f * lsp::normalize(mBuffers[0][i]);
-		float y = mid_y - height / 2.0f * lsp::normalize(mBuffers[1][i]);
-		D2D1_POINT_2F pt{x, y};
+	for(uint32_t i = 0; i < buffer_length; ++i) {
+		auto [ch1, ch2] = mDrawingBuffer[i];
+		float x = mid_x + width / 2.0f * normalize(ch1);
+		float y = mid_y - height / 2.0f * normalize(ch2);
+		D2D1_POINT_2F pt{ x, y };
 		if(i > 0 && (prev.x != pt.x || prev.y != pt.y)) {
 			renderer.DrawLine(prev, pt, brush);
 		}

@@ -86,15 +86,15 @@ static std::wstring freq2scale(float freq) {
 	}
 }
 MainWindow::MainWindow()
-	: mSynthesizer(SAMPLE_FREQ)
-	, mSequencer(mSynthesizer)
+	: mSequencer(mSynthesizer)
+	, mSynthesizer(SAMPLE_FREQ)
 	, mOutput()
+	, mLissajousWidget(SAMPLE_FREQ, static_cast<uint32_t>(SAMPLE_FREQ * 250e-4f))
+	, mOscilloScopeWidget(SAMPLE_FREQ, static_cast<uint32_t>(SAMPLE_FREQ * 250e-4f))
+	, mSpectrumAnalyzerWidget(SAMPLE_FREQ, 4096)
 {
 	mSynthesizer.setRenderingCallback([this](Signal<float>&& sig){onRenderedSignal(std::move(sig));});
 
-	mOscilloScopeWidget.setSignalParams(SAMPLE_FREQ, 2, static_cast<uint32_t>(SAMPLE_FREQ * 250e-4f));
-	mLissajousWidget.setSignalParams(SAMPLE_FREQ, 2, static_cast<uint32_t>(SAMPLE_FREQ * 250e-4f));
-	mSpectrumAnalyzerWidget.setSignalParams(SAMPLE_FREQ, 2, 4096);
 }
 
 MainWindow::~MainWindow()

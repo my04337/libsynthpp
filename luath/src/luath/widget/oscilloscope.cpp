@@ -3,54 +3,69 @@
 using namespace luath;
 using namespace luath::widget;
 
-OscilloScope::OscilloScope()
+OscilloScope::OscilloScope(uint32_t sampleFreq, uint32_t bufferLength)
+	: mSampleFreq(sampleFreq)
+	, mBufferLength(bufferLength)
 {
+	require(sampleFreq > 0);
+	require(bufferLength > 0);
+
+	mInputBuffer1ch.resize(mBufferLength, 0.f);
+	mInputBuffer2ch.resize(mBufferLength, 0.f);
+	mDrawingBuffer1ch.resize(mBufferLength, 0.f);
+	mDrawingBuffer2ch.resize(mBufferLength, 0.f);
 }
 
 OscilloScope::~OscilloScope()
 {
 }
-void OscilloScope::setSignalParams(uint32_t sampleFreq, uint32_t channels, uint32_t bufferLength)
-{
-	mSampleFreq = sampleFreq;
-	mChannels = channels;
-	mBufferLength = bufferLength;
 
-	_reset();
-}
-void OscilloScope::_reset()
+void OscilloScope::write(const Signal<float>& sig)
 {
-	mBuffers.clear();
-	mBuffers.resize(mChannels);
+	std::lock_guard lock(mInputMutex);
 
-	for (uint32_t ch = 0; ch < mChannels; ++ch) {
-		auto& buffer = mBuffers[ch];
-		for (uint32_t i = 0; i < mBufferLength; ++i) {
-			buffer.emplace_back(0.0f);
-		}
+	const auto signal_channels = sig.channels();
+	const auto signal_frames = sig.frames();
+
+	require(signal_channels == 2, "OscilloScope : write - failed (channel count is mismatch)");
+
+	// バッファ末尾に追記
+	for(size_t i = 0; i < signal_frames; ++i) {
+		auto frame = sig.frame(i);
+		mInputBuffer1ch.emplace_back(frame[0]);
+		mInputBuffer2ch.emplace_back(frame[1]);
 	}
-}
 
+	// リングバッファとして振る舞うため、先頭から同じサイズを削除
+	mInputBuffer1ch.erase(mInputBuffer1ch.begin(), mInputBuffer1ch.begin() + signal_frames);
+	mInputBuffer2ch.erase(mInputBuffer2ch.begin(), mInputBuffer2ch.begin() + signal_frames);
+}
 
 void OscilloScope::draw(ID2D1RenderTarget& renderer, const float left, const float top, const float width, const float height)
 {
-	std::lock_guard lock(mMutex);
+	// 信号出力をブロックしないように描画用信号バッファへコピー
+	{
+		std::lock_guard lock(mInputMutex);
+		std::copy(mInputBuffer1ch.begin(), mInputBuffer1ch.end(), mDrawingBuffer1ch.begin());
+		std::copy(mInputBuffer2ch.begin(), mInputBuffer2ch.end(), mDrawingBuffer2ch.begin());
+	}
 
+	// 描画開始
 	CComPtr<ID2D1Factory> factory;
 	renderer.GetFactory(&factory);
-	lsp::check(factory != nullptr);
+	check(factory != nullptr);
 
 	CComPtr<ID2D1SolidColorBrush> brush;
 	renderer.CreateSolidColorBrush({ 0.f, 0.f, 0.f, 1.f }, &brush);
 
 	// ステータス & クリッピング
 	CComPtr<ID2D1DrawingStateBlock> drawingState;
-	lsp::check(SUCCEEDED(factory->CreateDrawingStateBlock(&drawingState)));
+	check(SUCCEEDED(factory->CreateDrawingStateBlock(&drawingState)));
 	renderer.SaveDrawingState(drawingState);
 
 	const D2D1_RECT_F  rect{ left, top, left + width, top + height };
 	renderer.PushAxisAlignedClip(rect, D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
-	auto fin_act= lsp::finally([&renderer, &drawingState] {
+	auto fin_act= finally([&renderer, &drawingState] {
 		renderer.PopAxisAlignedClip(); 
 		renderer.RestoreDrawingState(drawingState);
 	});
@@ -75,24 +90,22 @@ void OscilloScope::draw(ID2D1RenderTarget& renderer, const float left, const flo
 	}
 
 	// 信号描画
-	for (uint32_t ch = 0; ch < mChannels; ++ch) {
-		switch (ch) {
-		case 0:	brush->SetColor({1.f, 0.f, 0.f, 0.5f}); break;
-		case 1:	brush->SetColor({0.f, 0.f, 1.f, 0.5f}); break;
-		default:brush->SetColor({0.5f, 0.5f, 0.5f, 0.5f}); break;
-		}
-		auto& buffer = mBuffers[ch];
-		D2D1_POINT_2F prev;
-		for (uint32_t i = 0; i < buffer_length; ++i) {
-			float x = left + i * sample_pitch;
-			float y = mid_y - height/2.0f * lsp::normalize(buffer[i]);
-			D2D1_POINT_2F pt{x, y};
-			if(i > 0 && (prev.x != pt.x || prev.y != pt.y)) {
+	auto drawSignal = [&](const D2D1_COLOR_F& color, const std::vector<float>& buffer) {
+		brush->SetColor(color);
+		auto getPoint = [&](size_t pos) -> D2D1_POINT_2F {
+			return { left + pos * sample_pitch , mid_y - height / 2.0f * normalize(buffer[pos]) };
+		};
+		auto prev = getPoint(0);
+		for(uint32_t i = 1; i < buffer_length; ++i) {
+			auto pt = getPoint(i);
+			if(prev.x != pt.x || prev.y != pt.y) {
 				renderer.DrawLine(prev, pt, brush);
 			}
 			prev = pt;
 		}
-	}
+	};
+	drawSignal({ 1.f, 0.f, 0.f, 0.5f }, mDrawingBuffer1ch);
+	drawSignal({ 0.f, 0.f, 1.f, 0.5f }, mDrawingBuffer2ch);
 
 	// 枠描画
 	brush->SetColor({ 0.f, 0.f, 0.f, 1.f });
