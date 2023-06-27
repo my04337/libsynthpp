@@ -1,18 +1,18 @@
-#pragma once
+ï»¿#pragma once
 
 #include <lsp/core/core.hpp>
 #include <lsp/midi/message.hpp>
 
 namespace lsp::midi
 {
-// MIDIƒƒbƒZ[ƒW ƒŒƒV[ƒo
+// MIDIãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ ãƒ¬ã‚·ãƒ¼ãƒ
 class MessageReceiver
 	: non_copy_move
 {
 public:
 	virtual ~MessageReceiver() {}
 
-	// MIDIƒƒbƒZ[ƒWóMƒR[ƒ‹ƒoƒbƒN : ƒƒbƒZ[ƒW—Ş‚Í’~Ï‚³‚ê‚é
+	// MIDIãƒ¡ãƒƒã‚»ãƒ¼ã‚¸å—ä¿¡ã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯ : ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸é¡ã¯è“„ç©ã•ã‚Œã‚‹
 	virtual void onMidiMessageReceived(clock::time_point msg_time, const std::shared_ptr<const Message>& msg) = 0;
 };
 

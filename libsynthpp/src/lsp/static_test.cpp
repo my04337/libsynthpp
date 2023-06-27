@@ -1,4 +1,4 @@
-#include <lsp/core/core.hpp>
+﻿#include <lsp/core/core.hpp>
 #include <lsp/effector/biquadratic_filter.hpp>
 #include <lsp/effector/envelope_generator.hpp>
 #include <lsp/midi/message.hpp>

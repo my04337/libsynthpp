@@ -121,7 +121,7 @@ void WasapiOutput::write(const Signal<sample_type>& sig)
 
 	switch (mSampleFormat) {
 	case SampleFormat::Unknown:
-		unreachable();
+		std::unreachable();
 	case SampleFormat::Int8:
 	case SampleFormat::Int16:
 	case SampleFormat::Int24:

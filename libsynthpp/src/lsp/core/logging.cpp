@@ -49,25 +49,6 @@ void Log::removeLogger(ILogger *logger)
 }
 
 
-#define LSP_IMPL_LOG_FUNC(level) \
-    void Log::level(std::string_view text)noexcept \
-    { write(LogLevel::level, [text](auto&_){_ <<text;}, nullptr);} \
-    void Log::level(const Writer& writer)noexcept \
-    { write(LogLevel::level, writer, nullptr);}
-
-LSP_IMPL_LOG_FUNC(v)
-LSP_IMPL_LOG_FUNC(d)
-LSP_IMPL_LOG_FUNC(i)
-LSP_IMPL_LOG_FUNC(w)
-LSP_IMPL_LOG_FUNC(e)
-[[noreturn]] void Log::f(std::string_view text, const std::stacktrace& stacks)noexcept
-{ write(LogLevel::f, [text](auto& _) {_ << text; }, &stacks, true); /*到達しないはず*/ std::terminate(); }
-[[noreturn]] void Log::f(const Writer& writer, const std::stacktrace& stacks)noexcept
-{ write(LogLevel::f, writer, &stacks, true); /*到達しないはず*/ std::terminate();}
-
-#undef LSP_IMPL_LOG_FUNC
-
-
 void Log::write(LogLevel level, const Writer& writer, const std::stacktrace* stacks, bool isCritical)noexcept
 {
 	// ロック取得

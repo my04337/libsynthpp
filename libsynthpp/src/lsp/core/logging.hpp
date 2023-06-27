@@ -60,25 +60,43 @@ public:
 
 	// ログ書き込み [例外送出禁止]
 	
-	static void v(std::string_view text)noexcept;
-	static void v(const Writer& writer)noexcept;
+	static void v(std::string_view text)noexcept 
+	{ write(LogLevel::v, [text](std::ostringstream& o) {o << text; }); }
+	template<typename... Args>
+	static void v(std::format_string<Args...> s, Args&&... args)noexcept 
+	{ write(LogLevel::v, [&](std::ostringstream& o) {o << std::format(s, std::forward<Args...>(args)...); }); }
 
-	static void d(std::string_view text)noexcept;
-	static void d(const Writer& writer)noexcept;
+	static void d(std::string_view text)noexcept
+	{ write(LogLevel::d, [text](std::ostringstream& o) {o << text; }); }
+	template<typename... Args>
+	static void d(std::format_string<Args...> s, Args&&... args)noexcept 
+	{ write(LogLevel::d, [&](std::ostringstream& o) {o << std::format(s, std::forward<Args...>(args)...); }); }
 
-	static void i(std::string_view text)noexcept;
-	static void i(const Writer& writer)noexcept;
+	static void i(std::string_view text)noexcept 
+	{ write(LogLevel::i, [text](std::ostringstream& o) {o << text; }); }
+	template<typename... Args>
+	static void i(std::format_string<Args...> s, Args&&... args)noexcept 
+	{ write(LogLevel::i, [&](std::ostringstream& o) {o << std::format(s, std::forward<Args...>(args)...); }); }
 
-	static void w(std::string_view text)noexcept;
-	static void w(const Writer& writer)noexcept;
+	static void w(std::string_view text)noexcept 
+	{ write(LogLevel::w, [text](std::ostringstream& o) {o << text; }); }
+	template<typename... Args>
+	static void w(std::format_string<Args...> s, Args&&... args)noexcept 
+	{ write(LogLevel::w, [&](std::ostringstream& o) {o << std::format(s, std::forward<Args...>(args)...); }); }
 
-	static void e(std::string_view text)noexcept;
-	static void e(const Writer& writer)noexcept;
+	static void e(std::string_view text)noexcept
+	{ write(LogLevel::e, [text](std::ostringstream& o) {o << text; }); }
+	template<typename... Args>
+	static void e(std::format_string<Args...> s, Args&&... args)noexcept 
+	{ write(LogLevel::e, [&](std::ostringstream& o) {o << std::format(s, std::forward<Args...>(args)...); }); }
 
 	[[noreturn]]
-	static void f(std::string_view text, const std::stacktrace& stacks = std::stacktrace::current())noexcept;
+	static void f(std::string_view text, const std::stacktrace& stacks = std::stacktrace::current())noexcept
+	{ write(LogLevel::f, [text](std::ostringstream& o) {o << text; }, &stacks, true); std::unreachable(); }
+	template<typename... Args>
 	[[noreturn]]
-	static void f(const Writer& writer, const std::stacktrace& stacks = std::stacktrace::current())noexcept;
+	static void f(const std::stacktrace& stacks, std::format_string<Args...> s, Args&&... args)noexcept
+	{ write(LogLevel::f, [&](std::ostringstream& o) {o << std::format(s, std::forward<Args...>(args)...); }, &stacks, true); std::unreachable(); }
 
 
 	// ログ フラッシュ [例外送出禁止]
@@ -174,54 +192,32 @@ namespace lsp::inline assertion
 // require : 引数チェック向け
 inline static void require(bool succeeded, std::source_location location = std::source_location::current()) {
 	if(!succeeded) [[unlikely]] {
-		lsp::Log::f([location](auto& _) {_ << location.file_name() << ":" << location.line() << " - illegal argument."; });
+		auto stacks = std::stacktrace::current(1);
+		lsp::Log::write(LogLevel::f, [&](std::ostringstream& o) { o << std::format("{}:{} - illegal argument.", location.file_name(), location.line()); }, &stacks, true);
+		std::unreachable();
 	}
 }
 inline static void require(bool succeeded, std::string_view description, std::source_location location = std::source_location::current()) {
 	if(!succeeded) [[unlikely]] {
-		lsp::Log::f([description, location](auto& o) {o << location.file_name() << ":" << location.line() << " - " << description; });
-	}
-}
-template<typename D>
-	requires std::invocable<D, std::ostringstream&>
-inline static void require(bool succeeded, D&& description, std::source_location location = std::source_location::current()) {
-	if(!succeeded) [[unlikely]] {
-		lsp::Log::f([description = std::forward<D>(description), location](auto& o) {o << location.file_name() << ":" << location.line() << " - "; description(o); });
+		auto stacks = std::stacktrace::current(1);
+		lsp::Log::write(LogLevel::f, [&](std::ostringstream& o) { o << std::format("{}:{} - {}", location.file_name(), location.line(), description); }, &stacks, true);
+		std::unreachable();
 	}
 }
 
 // check : 関数の内部での状態チェック向け
 inline static void check(bool succeeded, std::source_location location = std::source_location::current()) {
 	if(!succeeded) [[unlikely]] {
-		lsp::Log::f([location](auto& _) {_ << location.file_name() << ":" << location.line() << " - illegal state."; });
+		auto stacks = std::stacktrace::current(1);
+		lsp::Log::write(LogLevel::f, [&](std::ostringstream& o) { o << std::format("{}:{} - illegal state.", location.file_name(), location.line()); }, &stacks, true);
+		std::unreachable();
 	}
 }
 inline static void check(bool succeeded, std::string_view description, std::source_location location = std::source_location::current()) {
 	if(!succeeded) [[unlikely]] {
-		lsp::Log::f([description, location](auto& o) {o << location.file_name() << ":" << location.line() << description; });
+		auto stacks = std::stacktrace::current(1);
+		lsp::Log::write(LogLevel::f, [&](std::ostringstream& o) { o << std::format("{}:{} - {}", location.file_name(), location.line(), description); }, &stacks, true);
+		std::unreachable();
 	}
-}
-template<typename D>
-	requires std::invocable<D, std::ostringstream&>
-inline static void check(bool succeeded, D&& description, std::source_location location = std::source_location::current()) {
-	if(!succeeded) [[unlikely]] {
-		lsp::Log::f([description = std::forward<D>(description), location](auto& o) {o << location.file_name() << ":" << location.line() << " - "; description(o); });
-	}
-}
-
-// unreachable : 到達不可能な箇所でのチェック向け
-[[noreturn]]
-inline static void unreachable(std::source_location location = std::source_location::current()) {
-	lsp::Log::f([location](auto& _) {_ << location.file_name() << ":" << location.line() << " - illegal state."; });
-}
-[[noreturn]]
-inline static void unreachable(std::string_view description, std::source_location location = std::source_location::current()) {
-	lsp::Log::f([description, location](auto& o) {o << location.file_name() << ":" << location.line() << description; });
-}
-template<typename D>
-	requires std::invocable<D, std::ostringstream&>
-[[noreturn]]
-inline static void unreachable(D&& description, std::source_location location = std::source_location::current()) {
-	lsp::Log::f([description = std::forward<D>(description), location](auto& o) {o << location.file_name() << ":" << location.line() << " - "; description(o); });
 }
 }

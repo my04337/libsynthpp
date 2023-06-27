@@ -1,5 +1,6 @@
 ﻿#include <lsp/core/base.hpp>
 
+/// 型名をデマングルした文字列に変換します
 std::string lsp::demangle(const char* mangled_name)
 {
 	std::string class_name;

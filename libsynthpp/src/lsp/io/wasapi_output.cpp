@@ -178,10 +178,10 @@ void WasapiOutput::initialize()
 	fin_act_freeMexedFormat.reset();
 
 	// OK
-	Log::i([&](auto& _) {_ << "WasapiOutput : initialized (shared mode)"; });
-	Log::i([&](auto& _) {_ << "  sample freq => " << pWaveFormatEx->nSamplesPerSec << "[Hz]"; });
-	Log::i([&](auto& _) {_ << "  channels    => " << pWaveFormatEx->nChannels; });
-	Log::i([&](auto& _) {_ << "  format      => " << getDeviceFormatString(sampleFormat); });
+	Log::i("WasapiOutput : initialized (shared mode)");
+	Log::i("  sample freq => {}[Hz]", pWaveFormatEx->nSamplesPerSec);
+	Log::i("  channels    => {}", pWaveFormatEx->nChannels);
+	Log::i("  format      => {}", getDeviceFormatString(sampleFormat));
 	ResumeThread(hAudioThread); // 再生用スレッド始動
 }
 
@@ -245,7 +245,7 @@ std::string_view WasapiOutput::getDeviceFormatString(SampleFormat format)noexcep
 	case SampleFormat::Int32:	return "Int32";
 	case SampleFormat::Float32:	return "Float32";
 	}
-	unreachable();
+	std::unreachable();
 }
 size_t WasapiOutput::getDeviceBufferFrameCount()const noexcept
 {
@@ -368,7 +368,7 @@ void WasapiOutput::playThreadMain()
 		}
 		switch(sampleType) {
 		case SampleFormat::Unknown:
-			unreachable();
+			std::unreachable();
 		case SampleFormat::Int8:
 		case SampleFormat::Int16:
 		case SampleFormat::Int24:
@@ -396,7 +396,7 @@ void WasapiOutput::playThreadMain()
 			break;
 		}
 		hr = pRenderClient->ReleaseBuffer(writingFrameCount, 0);
-		Log::v([&](auto& _) {_ << "WasapiOutput : playThread - wrote " << writingFrameCount << " samples"; });
+		Log::v("WasapiOutput : playThread - wrote {}  samples", writingFrameCount);
 	}
 
 }

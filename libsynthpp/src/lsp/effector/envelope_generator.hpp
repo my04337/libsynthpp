@@ -169,7 +169,7 @@ public:
 				return mBeginLevel + (mEndLevel - mBeginLevel) * v;
 			}
 			}
-			unreachable("invalid shape");
+			std::unreachable();
 		};
 		auto easing_slope = [this]()->parameter_type { 
 			switch(mCurve) {
@@ -181,7 +181,7 @@ public:
 				return static_cast<parameter_type>(mBeginLevel * std::pow(10, mFadeSlope/20 * mTime));
 			}
 			}
-			unreachable("invalid shape");
+			std::unreachable();
 		};
 
 		switch (mState) {
@@ -198,7 +198,7 @@ public:
 		case EnvelopeState::Free:
 			return 0;// 止音中
 		}
-		unreachable("invalid state");
+		std::unreachable();
 	}
 
 	// エンベロープを計算し、状態を更新します
