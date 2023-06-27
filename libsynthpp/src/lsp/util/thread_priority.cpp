@@ -1,5 +1,4 @@
 ﻿#include <lsp/util/thread_priority.hpp>
-#include <lsp/base/logging.hpp>
 
 #ifdef WIN32
 #include <Windows.h>

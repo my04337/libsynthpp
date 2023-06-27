@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-#include <luath/base/base.hpp>
+#include <luath/core/core.hpp>
 #include <luath/widget/oscilloscope.hpp>
 #include <luath/widget/spectrum_analyzer.hpp>
 #include <luath/widget/lissajous.hpp>

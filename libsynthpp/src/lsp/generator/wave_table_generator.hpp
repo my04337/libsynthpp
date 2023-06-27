@@ -1,8 +1,6 @@
 ﻿#pragma once
 
-#include <lsp/base/base.hpp>
-#include <lsp/base/signal.hpp>
-#include <lsp/base/math.hpp>
+#include <lsp/core/core.hpp>
 
 #include <random>
 

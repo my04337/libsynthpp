@@ -2,7 +2,6 @@
 #include <lsp/midi/message_receiver.hpp>
 #include <lsp/midi/messages/sysex_message.hpp>
 #include <lsp/util/thread_priority.hpp>
-#include <lsp/base/logging.hpp>
 
 using namespace lsp;
 using namespace lsp::midi::smf;
