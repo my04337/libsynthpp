@@ -4,7 +4,6 @@
 #include <lsp/midi/messages/extra_message.hpp>
 #include <lsp/midi/messages/sysex_message.hpp>
 #include <lsp/midi/messages/meta_events.hpp>
-#include <lsp/base/Logging.hpp>
 
 #include <array>
 #include <fstream>

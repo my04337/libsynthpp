@@ -1,8 +1,6 @@
 ﻿#pragma once
 
-#include <lsp/base/base.hpp>
-#include <lsp/base/signal.hpp>
-#include <lsp/base/logging.hpp>
+#include <lsp/core/core.hpp>
 
 #include <d2d1.h>
 #include <d2d1helper.h>

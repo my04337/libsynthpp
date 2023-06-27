@@ -1,11 +1,11 @@
 ﻿#pragma once
 
-#include <lsp/base/base.hpp>
+#include <lsp/core/core.hpp>
 #include <lsp/midi/synth/wave_table.hpp>
 
 #include <lsp/effector/envelope_generator.hpp>
 #include <lsp/effector/biquadratic_filter.hpp>
-#include <lsp/Generator/wave_table_generator.hpp>
+#include <lsp/generator/wave_table_generator.hpp>
 
 namespace lsp::midi::synth
 {

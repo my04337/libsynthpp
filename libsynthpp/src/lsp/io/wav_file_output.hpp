@@ -1,7 +1,6 @@
 ﻿#pragma once
 
-#include <lsp/base/base.hpp>
-#include <lsp/base/signal.hpp>
+#include <lsp/core/core.hpp>
 
 #include <fstream>
 #include <filesystem>

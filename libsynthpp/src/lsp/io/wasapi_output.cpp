@@ -1,5 +1,4 @@
 ﻿#include <lsp/io/wasapi_output.hpp>
-#include <lsp/base/math.hpp>
 
 #include <Mmdeviceapi.h>
 #include <Audioclient.h>

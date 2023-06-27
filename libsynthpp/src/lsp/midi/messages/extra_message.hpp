@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-#include <lsp/base/base.hpp>
+#include <lsp/core/core.hpp>
 #include <lsp/midi/message.hpp>
 
 namespace lsp::midi::messages

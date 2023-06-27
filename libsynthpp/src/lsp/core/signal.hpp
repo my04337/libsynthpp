@@ -1,7 +1,7 @@
 ﻿#pragma once
 
-#include <lsp/base/base.hpp>
-#include <lsp/base/sample.hpp>
+#include <lsp/core/base.hpp>
+#include <lsp/core/sample.hpp>
 
 namespace lsp
 {
