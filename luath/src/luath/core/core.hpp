@@ -7,8 +7,6 @@
 #include <dwrite_3.h>
 #include <wincodec.h>
 
-#include <sstream>
-
 namespace luath
 {
 // 利便性のため、lsp名前空間をusing指定する

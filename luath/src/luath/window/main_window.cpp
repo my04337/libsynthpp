@@ -10,8 +10,6 @@
 #include <numeric>
 #include <fstream>
 
-#define FORMAT_STRING(...) ((std::wostringstream() << __VA_ARGS__).str())
-
 using namespace lsp;
 using namespace luath;
 using namespace luath::window;
@@ -408,9 +406,9 @@ void MainWindow::onDraw(ID2D1RenderTarget& renderer)
 
 	// 描画情報
 	{
-		drawText(0, 0, FORMAT_STRING(L"描画フレーム数 : " << context.frames));
+		drawText(0, 0, std::format(L"描画フレーム数 : {}", context.frames));
 		auto average_time = std::accumulate(context.drawing_time_history.cbegin(), context.drawing_time_history.cend(), std::chrono::microseconds(0)) / context.drawing_time_history.size();
-		drawText(0, 15, FORMAT_STRING(L"描画時間 : "<< std::fixed << std::setprecision(2) << average_time.count()/1000.f << L"[msec]"));
+		drawText(0, 15, std::format(L"描画時間 : {:0.2f}[msec]", average_time.count()/1000.f));
 	}
 
 	// 演奏情報
@@ -422,13 +420,15 @@ void MainWindow::onDraw(ID2D1RenderTarget& renderer)
 		case midi::SystemType::GS:		systemType = L"GS";		break;
 		}
 
-		drawText(150, 0, FORMAT_STRING(L"生成サンプル数 : " << tgStatistics.created_samples << L" (" << (tgStatistics.created_samples * 1000ull / SAMPLE_FREQ)
-			<< L"[msec])  failed : " << tgStatistics.failed_samples * 1000ull / SAMPLE_FREQ
-			<< L"[msec]  buffered : " << std::setfill(L'0') << std::right << std::setw(4) << mOutput.getBufferedFrameCount() * 1000 / SAMPLE_FREQ << "[msec]"));
-		drawText(150, 15, FORMAT_STRING(L"演奏負荷 : " << std::setfill(L'0') << std::right << std::setw(3) << (int)(100 * tgStatistics.rendering_load_average()) << L"[%]"));
-		drawText(150, 30, FORMAT_STRING(L"PostAmp : " << std::fixed << std::setprecision(3) << mPostAmpVolume.load()));
-		drawText(280, 15, FORMAT_STRING(L"同時発音数 : " << std::setfill(L'0') << std::right << std::setw(2) << polyCount));
-		drawText(420, 15, FORMAT_STRING(L"MIDIリセット : " << std::setfill(L'0') << systemType));
+		drawText(150, 0, std::format(L"生成時間 : {}[msec]  failed : {}[msec]  buffered : {:04}[msec]",
+			tgStatistics.created_samples * 1000ull / SAMPLE_FREQ,
+			tgStatistics.failed_samples * 1000ull / SAMPLE_FREQ,
+			mOutput.getBufferedFrameCount() * 1000 / SAMPLE_FREQ
+		));
+		drawText(150, 15, std::format(L"演奏負荷 : {:03}[%]", (int)(100 * tgStatistics.rendering_load_average())));
+		drawText(150, 30, std::format(L"PostAmp : {:.3f}", mPostAmpVolume.load()));
+		drawText(280, 15, std::format(L"同時発音数 : {:03}", polyCount));
+		drawText(420, 15, std::format(L"MIDIリセット : {}", systemType));
 	}
 
 	// チャネル情報
@@ -472,16 +472,16 @@ void MainWindow::onDraw(ID2D1RenderTarget& renderer)
 			brush->SetColor({ bgColor.r, bgColor.g, bgColor.b, bgColor.a / 2 });
 			renderer.FillRectangle({ x, y, x + width , y + height }, brush);
 
-			drawText(col(), y, FORMAT_STRING(std::setfill(L'0') << std::setw(2) << cd.ch));
-			drawText(col(), y, FORMAT_STRING(std::setfill(L'0') << std::setw(3) << cd.progId << L":" << std::setw(3) << cd.bankSelectMSB << L"." << std::setw(3) << cd.bankSelectLSB));
-			drawText(col(), y, FORMAT_STRING(std::setfill(L'0') << std::fixed << std::setprecision(3) << cd.volume));
-			drawText(col(), y, FORMAT_STRING(std::setfill(L'0') << std::fixed << std::setprecision(3) << cd.expression));
-			drawText(col(), y, FORMAT_STRING((cd.pitchBend >= 0 ? L"+" : L"-") << std::fixed << std::setprecision(4) << std::abs(cd.pitchBend)));
-			drawText(col(), y, FORMAT_STRING(std::setfill(L'0') << std::fixed << std::setprecision(2) << cd.pan));
-			drawText(col(), y, FORMAT_STRING(std::setfill(L'0') << std::setw(3) << cd.attackTime << L"." << std::setw(3) << cd.decayTime << L"." << std::setw(3) << cd.releaseTime));
-			drawText(col(), y, FORMAT_STRING((cd.pedal ? L"on" : L"off")));
-			drawText(col(), y, FORMAT_STRING((cd.drum ? L"on" : L"off")));
-			drawText(col(), y, FORMAT_STRING(std::setfill(L'0') << std::setw(2) << cd.poly));
+			drawText(col(), y, std::format(L"{:02}", cd.ch));
+			drawText(col(), y, std::format(L"{:03}:{:03}.{:03}", cd.progId, cd.bankSelectMSB, cd.bankSelectLSB));
+			drawText(col(), y, std::format(L"{:0.3f}", cd.volume));
+			drawText(col(), y, std::format(L"{:0.3f}", cd.expression));
+			drawText(col(), y, std::format(L"{:+0.4f}", cd.pitchBend));
+			drawText(col(), y, std::format(L"{:0.2f}", cd.pan));
+			drawText(col(), y, std::format(L"{:03}.{:03}.{:03}", cd.attackTime, cd.decayTime, cd.releaseTime));
+			drawText(col(), y, cd.pedal ? L"on" : L"off");
+			drawText(col(), y, cd.drum ? L"on" : L"off");
+			drawText(col(), y, std::format(L"{:02}", cd.poly));
 		}
 	}
 
@@ -553,10 +553,10 @@ void MainWindow::onDraw(ID2D1RenderTarget& renderer)
 			brush->SetColor({ bgColor.r, bgColor.g, bgColor.b, std::clamp(vd.envelope * 0.4f + 0.1f, 0.f, 1.f)});
 			renderer.FillRectangle({ x, y, x + width, y + height }, brush);
 
-			drawSmallText(col(), y, FORMAT_STRING(std::setfill(L'0') << std::setw(2) << ch));
-			drawSmallText(col(), y, FORMAT_STRING(freq2scale(vd.freq)));
-			drawSmallText(col(), y, FORMAT_STRING(std::fixed << std::setprecision(3) << vd.envelope));
-			drawSmallText(col(), y, FORMAT_STRING(state2text(vd.state)));
+			drawSmallText(col(), y, std::format(L"{:02}", ch));
+			drawSmallText(col(), y, freq2scale(vd.freq));
+			drawSmallText(col(), y, std::format(L"{:.3f}", vd.envelope));
+			drawSmallText(col(), y, state2text(vd.state));
 		}
 	}
 

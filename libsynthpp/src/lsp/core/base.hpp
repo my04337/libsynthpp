@@ -11,6 +11,7 @@
 #include <condition_variable>
 #include <deque>
 #include <filesystem>
+#include <format>
 #include <functional>
 #include <future>
 #include <latch>
