@@ -49,6 +49,7 @@ public:
 	void controlChange(uint8_t ctrlNo, uint8_t value);
 	void pitchBend(int16_t pitch);
 	void updateHold();
+	void setDrumMode(bool isDrumMode);
 	// ---
 	StereoFrame update();
 	// ---

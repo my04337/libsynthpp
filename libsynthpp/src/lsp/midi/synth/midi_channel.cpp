@@ -216,7 +216,7 @@ void MidiChannel::controlChange(uint8_t ctrlNo, uint8_t value)
 
 			// - NRPN(XG) : ドラムパートへ切替
 			if(mSystemType == SystemType::XG && ccNRPN_MSB == 127) {
-
+				setDrumMode(true);
 			}
 		}
 	}
@@ -348,5 +348,12 @@ void MidiChannel::updateHold()
 {
 	for (auto& [id, voice] : mVoices) {
 		voice->setHold(ccPedal);
+	}
+}
+void MidiChannel::setDrumMode(bool isDrum)
+{
+	if(mIsDrumPart != isDrum) {
+		mVoices.clear();
+		mIsDrumPart = isDrum;
 	}
 }
