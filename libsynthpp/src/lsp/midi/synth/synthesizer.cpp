@@ -166,6 +166,7 @@ void Synthesizer::dispatchMessage(const std::shared_ptr<const midi::Message>& ms
 	if (auto m = std::dynamic_pointer_cast<const NoteOn>(msg)) {
 		auto& midich = mMidiChannels[m->channel()];
 		midich.noteOn(m->noteNo(), m->velocity());
+		if(m->channel() == 9) Log::d("NoteOn:9ch - {}, {}", m->noteNo(), m->velocity());
 	} else if (auto m = std::dynamic_pointer_cast<const NoteOff>(msg)) {
 		// MEMO 一般に、MIDIではノートオフの代わりにvel=0のノートオンが使用されるため、呼ばれることは希である
 		auto& midich = mMidiChannels[m->channel()];
@@ -229,6 +230,13 @@ void Synthesizer::sysExMessage(const uint8_t* data, size_t len)
 		if (match({{/*dev:any*/}, 0x42, 0x12, 0x40, 0x00, 0x7F, 0x00, 0x41})) {
 			// GS Reset
 			reset(midi::SystemType::GS);
+		}
+	}
+	if(makerId = 0x43) {
+		// YAMAHA
+		if(match({ {/*dev:any*/}, 0x4C, 0x00, 0x00, 0x7E, 0x00 })) {
+			// XG Reset
+			reset(midi::SystemType::XG);
 		}
 	}
 }

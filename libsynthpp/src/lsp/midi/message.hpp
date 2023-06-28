@@ -11,6 +11,7 @@ enum class SystemType
 	GM1,
 	GM2,
 	GS,
+	XG,
 };
 
 /// MIDIメッセージ  抽象クラス

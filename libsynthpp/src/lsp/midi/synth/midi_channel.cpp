@@ -208,9 +208,15 @@ void MidiChannel::controlChange(uint8_t ctrlNo, uint8_t value)
 				}
 			}
 
-			// RPN(即時反映): ピッチベンドセンシティビティ
+			// RPN/ NRPN 即時反映系
+			// - RPN: ピッチベンドセンシティビティ
 			if(ccRPN_MSB == 0 && ccRPN_LSB == 0 && ccDE_MSB) {
 				updatePitchBend();
+			}
+
+			// - NRPN(XG) : ドラムパートへ切替
+			if(mSystemType == SystemType::XG && ccNRPN_MSB == 127) {
+
 			}
 		}
 	}

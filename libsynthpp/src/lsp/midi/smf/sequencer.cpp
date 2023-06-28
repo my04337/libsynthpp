@@ -129,6 +129,9 @@ void Sequencer::reset(SystemType type)
 	case SystemType::GS:
 		msg = std::make_shared<messages::SysExMessage>(std::vector<uint8_t>{ 0x7E, 0x7F, 0x09, 0x02 });
 		break;
+	case SystemType::XG:
+		msg = std::make_shared<messages::SysExMessage>(std::vector<uint8_t>{ 0x43, 0x10, 0x4C, 0x00, 0x00, 0x7E, 0x00 });
+		break;
 	}
 	if (msg) {
 		mReceiver.onMidiMessageReceived(std::chrono::steady_clock::time_point::min(), msg);

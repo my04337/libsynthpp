@@ -417,7 +417,8 @@ void MainWindow::onDraw(ID2D1RenderTarget& renderer)
 		switch(synthDigest.systemType) {
 		case midi::SystemType::GM1:	systemType = L"GM1";	break;
 		case midi::SystemType::GM2:	systemType = L"GM2";	break;
-		case midi::SystemType::GS:		systemType = L"GS";		break;
+		case midi::SystemType::GS:	systemType = L"GS";		break;
+		case midi::SystemType::XG:	systemType = L"XG";		break;
 		}
 
 		drawText(150, 0, std::format(L"生成時間 : {}[msec]  failed : {}[msec]  buffered : {:04}[msec]",
