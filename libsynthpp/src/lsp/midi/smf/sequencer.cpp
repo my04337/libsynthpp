@@ -1,4 +1,13 @@
-﻿#include <lsp/midi/smf/sequencer.hpp>
+﻿/**
+	libsynth++
+
+	Copyright(c) 2018 my04337
+
+	This software is released under the MIT License.
+	https://opensource.org/license/mit/
+*/
+
+#include <lsp/midi/smf/sequencer.hpp>
 #include <lsp/midi/message_receiver.hpp>
 #include <lsp/midi/messages/sysex_message.hpp>
 #include <lsp/util/thread_priority.hpp>

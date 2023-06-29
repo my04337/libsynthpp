@@ -1,4 +1,13 @@
-﻿#include <lsp/io/wav_file_output.hpp>
+﻿/**
+	libsynth++
+
+	Copyright(c) 2018 my04337
+
+	This software is released under the MIT License.
+	https://opensource.org/license/mit/
+*/
+
+#include <lsp/io/wav_file_output.hpp>
 
 using namespace lsp;
 using namespace lsp::io;

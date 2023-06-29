@@ -1,4 +1,13 @@
-﻿#include <lsp/core/logging.hpp>
+﻿/**
+	libsynth++
+
+	Copyright(c) 2018 my04337
+
+	This software is released under the MIT License.
+	https://opensource.org/license/mit/
+*/
+
+#include <lsp/core/logging.hpp>
 #include <iostream>
 
 #ifdef WIN32

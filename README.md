@@ -1,4 +1,4 @@
-# libsynthpp
+# libsynth++
 
 マルチプラットフォーム MIDIシンセサイザ ライブラリ  
 Multiplatoform MIDI synthesizer library.

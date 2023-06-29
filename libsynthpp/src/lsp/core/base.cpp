@@ -1,4 +1,13 @@
-﻿#include <lsp/core/base.hpp>
+﻿/**
+	libsynth++
+
+	Copyright(c) 2018 my04337
+
+	This software is released under the MIT License.
+	https://opensource.org/license/mit/
+*/
+
+#include <lsp/core/base.hpp>
 
 /// 型名をデマングルした文字列に変換します
 std::string lsp::demangle(const char* mangled_name)

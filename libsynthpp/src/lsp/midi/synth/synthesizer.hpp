@@ -1,4 +1,13 @@
-﻿#pragma once
+﻿/**
+	libsynth++
+
+	Copyright(c) 2018 my04337
+
+	This software is released under the MIT License.
+	https://opensource.org/license/mit/
+*/
+
+#pragma once
 
 #include <lsp/core/core.hpp>
 #include <lsp/midi/synth/midi_channel.hpp>

@@ -1,4 +1,13 @@
-﻿#include <lsp/midi/synth/wave_table.hpp>
+﻿/**
+	libsynth++
+
+	Copyright(c) 2018 my04337
+
+	This software is released under the MIT License.
+	https://opensource.org/license/mit/
+*/
+
+#include <lsp/midi/synth/wave_table.hpp>
 #include <lsp/generator/function_generator.hpp>
 #include <lsp/effector/biquadratic_filter.hpp>
 

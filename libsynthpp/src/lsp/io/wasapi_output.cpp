@@ -1,4 +1,13 @@
-﻿#include <lsp/io/wasapi_output.hpp>
+﻿/**
+	libsynth++
+
+	Copyright(c) 2018 my04337
+
+	This software is released under the MIT License.
+	https://opensource.org/license/mit/
+*/
+
+#include <lsp/io/wasapi_output.hpp>
 
 #include <Mmdeviceapi.h>
 #include <Audioclient.h>

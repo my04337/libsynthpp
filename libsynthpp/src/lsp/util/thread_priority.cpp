@@ -1,4 +1,13 @@
-﻿#include <lsp/util/thread_priority.hpp>
+﻿/**
+	libsynth++
+
+	Copyright(c) 2018 my04337
+
+	This software is released under the MIT License.
+	https://opensource.org/license/mit/
+*/
+
+#include <lsp/util/thread_priority.hpp>
 
 #ifdef WIN32
 #include <Windows.h>

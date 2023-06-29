@@ -1,4 +1,13 @@
-﻿#include <lsp/midi/synth/synthesizer.hpp>
+﻿/**
+	libsynth++
+
+	Copyright(c) 2018 my04337
+
+	This software is released under the MIT License.
+	https://opensource.org/license/mit/
+*/
+
+#include <lsp/midi/synth/synthesizer.hpp>
 #include <lsp/midi/messages/basic_message.hpp>
 #include <lsp/midi/messages/sysex_message.hpp>
 

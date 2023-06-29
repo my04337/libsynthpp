@@ -1,4 +1,13 @@
-﻿#include <lsp/midi/synth/voice.hpp>
+﻿/**
+	libsynth++
+
+	Copyright(c) 2018 my04337
+
+	This software is released under the MIT License.
+	https://opensource.org/license/mit/
+*/
+
+#include <lsp/midi/synth/voice.hpp>
 
 using namespace lsp::midi::synth;
 
