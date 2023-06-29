@@ -73,7 +73,7 @@ protected:
 	void sysExMessage(const uint8_t* data, size_t len);
 
 	// MIDIメッセージを元に演奏した結果を返します
-	Signal<float> generate(size_t len);
+	Signal<float> generate(int len);
 
 private:
 	mutable std::shared_mutex mMutex;

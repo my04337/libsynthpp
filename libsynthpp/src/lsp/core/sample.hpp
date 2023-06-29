@@ -35,6 +35,13 @@ template<std::floating_point T> struct sample_traits<T> {
 
 // ---
 
+// 信号型 ※juce::AudioBufferのエイリアス
+template<class T>
+	requires std::signed_integral<T> || std::floating_point<T>
+using Signal = juce::AudioBuffer<T>;
+
+// ---
+
 // ノーマライズ : 値域を信号の標準的な幅に狭める
 template<class sample_type> requires std::signed_integral<sample_type> || std::floating_point<sample_type>
 constexpr sample_type normalize(sample_type in) noexcept 

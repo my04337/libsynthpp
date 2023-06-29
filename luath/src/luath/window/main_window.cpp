@@ -593,10 +593,11 @@ void MainWindow::onRenderedSignal(Signal<float>&& sig)
 {
 	// ポストアンプ適用
 	auto postAmpVolume = mPostAmpVolume.load();
-	size_t samples = sig.frames() * sig.channels();
-	auto p = sig.data();
-	for (size_t i = 0; i < samples; ++i) {
-		p[i] *= postAmpVolume;
+	for(int ch = 0; ch < sig.getNumChannels(); ++ch) {
+		auto frames = sig.getWritePointer(ch);
+		for(int i = 0; i < sig.getNumSamples(); ++i) {
+			frames[i] *= postAmpVolume;
+		}
 	}
 
 	// 各出力先に配送

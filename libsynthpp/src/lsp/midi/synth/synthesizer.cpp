@@ -88,10 +88,10 @@ void Synthesizer::playingThreadMain()
 	
 		// 信号生成
 		auto beginRendering = clock::now();
-		auto sig = generate(make_samples);
+		auto sig = generate(static_cast<int>(make_samples));
 		auto endRendering = clock::now();
 		mStatistics.rendering_time = endRendering - beginRendering;
-		mStatistics.created_samples += sig.frames();
+		mStatistics.created_samples += sig.getNumSamples();
 		mStatistics.failed_samples += (need_samples - make_samples);
 
 		if(mRenderingCallback) mRenderingCallback(std::move(sig));
@@ -115,27 +115,31 @@ void Synthesizer::reset(midi::SystemType type)
 }
 
 
-lsp::Signal<float> Synthesizer::generate(size_t len)
+lsp::Signal<float> Synthesizer::generate(int len)
 {
 	constexpr float MASTER_VOLUME = 0.125f;
 
-	auto sig = lsp::Signal<float>::allocate(&mMem, 2, len);
+	lsp::Signal<float> sig(2, len);
 
-	for (size_t i = 0; i < len; ++i) {
-		auto frame = sig.frame(i);
-		frame[0] = frame[1] = 0;
+	for (int i = 0; i < len; ++i) {
+		float lch = 0;
+		float rch = 0;
 
 		// チャネル毎の信号を生成する
 		for (size_t ch = 0; ch < MAX_CHANNELS; ++ch) {
 			auto& midich = mMidiChannels[ch];
 			auto v = midich.update();
-			frame[0] += v.first;
-			frame[1] += v.second;
+			lch += v.first;
+			rch += v.second;
 		}
 
 		// マスタボリューム適用
-		frame[0] *= MASTER_VOLUME;
-		frame[1] *= MASTER_VOLUME;
+		lch *= MASTER_VOLUME;
+		rch *= MASTER_VOLUME;
+
+		// 書き込み
+		sig.setSample(0, i, lch);
+		sig.setSample(1, i, rch);
 	}
 	return sig;
 }

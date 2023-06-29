@@ -35,21 +35,18 @@ void SpectrumAnalyzer::write(const Signal<float>& sig)
 {
 	std::lock_guard lock(mInputMutex);
 
-	const auto signal_channels = sig.channels();
-	const auto signal_frames = sig.frames();
+	const auto signal_channels = sig.getNumChannels();
+	const auto signal_samples = sig.getNumSamples();
 
 	require(signal_channels == 2, "SpectrumAnalyzer : write - failed (channel count is mismatch)");
 
 	// バッファ末尾に追記
-	for(size_t i = 0; i < signal_frames; ++i) {
-		auto frame = sig.frame(i);
-		mInputBuffer1ch.emplace_back(frame[0]);
-		mInputBuffer2ch.emplace_back(frame[1]);
-	}
+	mInputBuffer1ch.insert(mInputBuffer1ch.end(), sig.getReadPointer(0), sig.getReadPointer(0) + signal_samples);
+	mInputBuffer2ch.insert(mInputBuffer2ch.end(), sig.getReadPointer(1), sig.getReadPointer(1) + signal_samples);
 
 	// リングバッファとして振る舞うため、先頭から同じサイズを削除
-	mInputBuffer1ch.erase(mInputBuffer1ch.begin(), mInputBuffer1ch.begin() + signal_frames);
-	mInputBuffer2ch.erase(mInputBuffer2ch.begin(), mInputBuffer2ch.begin() + signal_frames);
+	mInputBuffer1ch.erase(mInputBuffer1ch.begin(), mInputBuffer1ch.begin() + signal_samples);
+	mInputBuffer2ch.erase(mInputBuffer2ch.begin(), mInputBuffer2ch.begin() + signal_samples);
 }
 
 void SpectrumAnalyzer::draw(ID2D1RenderTarget& renderer, const float left, const float top, const float width, const float height)

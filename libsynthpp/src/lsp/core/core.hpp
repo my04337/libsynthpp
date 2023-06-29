@@ -14,4 +14,3 @@
 #include <lsp/core/logging.hpp>
 #include <lsp/core/math.hpp>
 #include <lsp/core/sample.hpp>
-#include <lsp/core/signal.hpp>
