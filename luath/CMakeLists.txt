@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.24)
+﻿cmake_minimum_required(VERSION 3.24)
 
 file(GLOB_RECURSE srcs 
 	src/*.h
@@ -35,6 +35,22 @@ target_link_libraries(
 		Shell32.lib
 )
 
+# link JUCE modules
+unset(juce_modules)
+list(APPEND juce_modules juce_core)
+
+# JUCEのライブラリをそのままtarget_link_libraryすると、不要なwarningが表示されるので
+# warningレベルを調整している。
+# 
+# どうもtarget_link_libraryする対象毎にライブラリのobjをビルドしてリンクしているようなので、
+# リンクしている側での調整が必要
+foreach(juce_module IN LISTS juce_modules)
+	get_target_property(juce_module_sources ${juce_module} INTERFACE_SOURCES)
+	target_link_libraries(luath PRIVATE ${juce_module})
+	set_property(SOURCE ${juce_module_sources} APPEND PROPERTY COMPILE_OPTIONS /wd4996  /wd4819)
+endforeach()
+
+# assets
 get_property(LUATH_BINARY_DIR TARGET luath PROPERTY BINARY_DIR )
 get_property(LUATH_SOURCEY_DIR TARGET luath PROPERTY SOURCE_DIR )
 

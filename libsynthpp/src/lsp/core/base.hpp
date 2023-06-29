@@ -45,16 +45,31 @@
 #include <variant>
 #include <vector>
 
+// プラットフォーム非依存 : JUCE ※ICE License Only
+#ifndef JUCE_GLOBAL_MODULE_SETTINGS_INCLUDED
+	#define JUCE_GLOBAL_MODULE_SETTINGS_INCLUDED
+#endif
+#ifdef WIN32
+	#pragma pack(push)
+	#pragma warning(disable:4996)
+#endif
+#include <juce_core/juce_core.h>
+#include <juce_events/juce_events.h>
+#include <juce_audio_basics/juce_audio_basics.h>
+#include <juce_audio_devices/juce_audio_devices.h>
+#ifdef WIN32
+	#pragma pack(pop)
+#endif
 
 // プラットフォーム依存 : Win32
 #ifdef WIN32
-#define WIN32_LEAN_AND_MEAN 
-#define STRICT 
-#define NOMINMAX 
-#include <sdkddkver.h>
-#include <Windows.h>
-#include <atlbase.h>
-#include <atlcom.h>
+	#define WIN32_LEAN_AND_MEAN 
+	#define STRICT 
+	#define NOMINMAX 
+	#include <sdkddkver.h>
+	#include <Windows.h>
+	#include <atlbase.h>
+	#include <atlcom.h>
 
 #endif
 
