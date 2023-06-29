@@ -67,6 +67,9 @@ public:
 	// フレーム数を取得します
 	size_t frames()const noexcept { return mFrames; }
 
+	// メモリリソースを取得します
+	std::pmr::memory_resource* memory_resource()const noexcept { return mData.get_allocator().resource();  }
+
 	// 各フレームの先頭ポインタを取得します
 	sample_type* frame(size_t frame_index)noexcept { return mData.data() + mChannels * frame_index; }
 	const sample_type* frame(size_t frame_index)const noexcept { return mData.data() + mChannels * frame_index; }
