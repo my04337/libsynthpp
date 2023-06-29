@@ -154,7 +154,7 @@ public:
 	virtual void write(clock::time_point time, LogLevel level, std::string_view log, const std::stacktrace* stacks)noexcept override;
 	virtual void flush()noexcept override;
 
-	virtual bool isWritable(LogLevel level)const noexcept override { return true; }
+	virtual bool isWritable([[maybe_unused]] LogLevel level)const noexcept override { return true; }
 	virtual bool canOutputCriticalLog()const noexcept override { return true; }
 
 private:
@@ -177,7 +177,7 @@ namespace lsp
 		virtual void write(clock::time_point time, LogLevel level, std::string_view log, const std::stacktrace* stacks)noexcept override;
 		virtual void flush()noexcept override;
 
-		virtual bool isWritable(LogLevel level)const noexcept override { return true; }
+		virtual bool isWritable([[maybe_unused]] LogLevel level)const noexcept override { return true; }
 		virtual bool canOutputCriticalLog()const noexcept override { return true; }
 
 	private:

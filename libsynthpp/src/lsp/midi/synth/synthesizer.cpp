@@ -163,24 +163,24 @@ Synthesizer::Digest Synthesizer::digest()const
 void Synthesizer::dispatchMessage(const std::shared_ptr<const midi::Message>& msg)
 {
 	using namespace midi::messages;
-	if (auto m = std::dynamic_pointer_cast<const NoteOn>(msg)) {
-		auto& midich = mMidiChannels[m->channel()];
-		midich.noteOn(m->noteNo(), m->velocity());
-	} else if (auto m = std::dynamic_pointer_cast<const NoteOff>(msg)) {
+	if (auto noteOn = std::dynamic_pointer_cast<const NoteOn>(msg)) {
+		auto& midich = mMidiChannels[noteOn->channel()];
+		midich.noteOn(noteOn->noteNo(), noteOn->velocity());
+	} else if (auto noteOff = std::dynamic_pointer_cast<const NoteOff>(msg)) {
 		// MEMO 一般に、MIDIではノートオフの代わりにvel=0のノートオンが使用されるため、呼ばれることは希である
-		auto& midich = mMidiChannels[m->channel()];
-		midich.noteOff(m->noteNo());
-	} else if (auto m = std::dynamic_pointer_cast<const ProgramChange>(msg)) {
-		auto& midich = mMidiChannels[m->channel()];
-		midich.programChange(m->progId());
-	} else if (auto m = std::dynamic_pointer_cast<const ControlChange>(msg)) {
-		auto& midich = mMidiChannels[m->channel()];
-		midich.controlChange(m->ctrlNo(), m->value());
-	} else if (auto m = std::dynamic_pointer_cast<const PitchBend>(msg)) {
-		auto& midich = mMidiChannels[m->channel()];
-		midich.pitchBend(m->pitch());
-	} else if (auto m = std::dynamic_pointer_cast<const SysExMessage>(msg)) {
-		sysExMessage(&m->data()[0], m->data().size());
+		auto& midich = mMidiChannels[noteOff->channel()];
+		midich.noteOff(noteOff->noteNo());
+	} else if (auto programChange = std::dynamic_pointer_cast<const ProgramChange>(msg)) {
+		auto& midich = mMidiChannels[programChange->channel()];
+		midich.programChange(programChange->progId());
+	} else if (auto controlChange = std::dynamic_pointer_cast<const ControlChange>(msg)) {
+		auto& midich = mMidiChannels[controlChange->channel()];
+		midich.controlChange(controlChange->ctrlNo(), controlChange->value());
+	} else if (auto pitchBend = std::dynamic_pointer_cast<const PitchBend>(msg)) {
+		auto& midich = mMidiChannels[pitchBend->channel()];
+		midich.pitchBend(pitchBend->pitch());
+	} else if (auto sysEx = std::dynamic_pointer_cast<const SysExMessage>(msg)) {
+		sysExMessage(&sysEx->data()[0], sysEx->data().size());
 	}
 }
 // ---

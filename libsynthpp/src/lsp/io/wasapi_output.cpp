@@ -314,7 +314,7 @@ void WasapiOutput::playThreadMain()
 	}
 
 	// 各種定数群 (メンバ変数アクセスとするより高速にアクセス可能)
-	const uint32_t sampleFreq = mWaveFormatEx->nSamplesPerSec;
+	[[maybe_unused]] const uint32_t sampleFreq = mWaveFormatEx->nSamplesPerSec;
 	const uint32_t bitsPerSample = mWaveFormatEx->wBitsPerSample;
 	const uint32_t bytesPerSample = bitsPerSample / 8;
 	const uint32_t channels = mWaveFormatEx->nChannels;

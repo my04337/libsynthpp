@@ -295,7 +295,6 @@ MidiChannel::Digest MidiChannel::digest()const
 	digest.drum = mIsDrumPart;
 
 	for (auto& [id, voice] : mVoices) {
-		auto& eg = voice->envolopeGenerator();
 		digest.voices.emplace(id, voice->digest());
 	}
 
