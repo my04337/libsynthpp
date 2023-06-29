@@ -51,8 +51,7 @@ public:
 		return allocate<sample_type>(mem, 1, frames);
 	}
 	static Signal allocate(std::pmr::memory_resource* mem, uint32_t channels, size_t frames) {
-		auto data = allocate_memory<sample_type>(mem, channels*frames);
-		return Signal(std::move(data), channels, frames);
+		return Signal(mem, channels, frames);
 	}
 
 	Signal() : mData(), mChannels(1), mFrames(0) {}
@@ -60,7 +59,7 @@ public:
 	Signal(Signal&& d)noexcept = default;
 	Signal& operator=(Signal&& d)noexcept = default;
 
-	operator SignalView<sample_type> ()const noexcept { return SignalView<sample_type>(mData.get(), mChannels, mFrames); }
+	operator SignalView<sample_type> ()const noexcept { return SignalView<sample_type>(mData.data(), mChannels, mFrames); }
 
 	// チャネル数を取得します
 	uint32_t channels()const noexcept { return mChannels; }
@@ -69,17 +68,20 @@ public:
 	size_t frames()const noexcept { return mFrames; }
 
 	// 各フレームの先頭ポインタを取得します
-	sample_type* frame(size_t frame_index)const noexcept { return mData.get() + mChannels * frame_index; }
+	sample_type* frame(size_t frame_index)noexcept { return mData.data() + mChannels * frame_index; }
+	const sample_type* frame(size_t frame_index)const noexcept { return mData.data() + mChannels * frame_index; }
 
 	// 全データへのポインタを取得します
-	sample_type* data()const noexcept { return mData.get(); }
+	sample_type* data()noexcept { return mData.data(); }
+	const sample_type* data()const noexcept { return mData.data(); }
 
 protected:
-	Signal(std::unique_ptr<sample_type[], _memory_resource_deleter<sample_type>>&& data, uint32_t channels, size_t frames) 
-		: mData(std::move(data)), mChannels(channels), mFrames(frames) {}
+	Signal(std::pmr::memory_resource* mem, uint32_t channels, size_t frames)
+		: mData(channels * frames, mem), mChannels(channels), mFrames(frames) {
+	}
 
 private:
-	std::unique_ptr<sample_type[], _memory_resource_deleter<sample_type>> mData;
+	std::pmr::vector<sample_type> mData;
 	uint32_t mChannels;
 	size_t mFrames;
 };
