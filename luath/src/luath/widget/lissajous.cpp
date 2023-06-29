@@ -22,14 +22,14 @@ void Lissajous::write(const Signal<float>& sig)
 {
 	std::lock_guard lock(mInputMutex);
 
-	const auto signal_channels = sig.getNumChannels();
-	const auto signal_samples = sig.getNumSamples();
+	const auto signal_channels = sig.channels();
+	const auto signal_samples = sig.samples();
 
 	require(signal_channels == 2, "Lissajous : write - failed (channel count is mismatch)");
 
 	// バッファ末尾に追記
-	for(int i = 0; i < signal_samples; ++i) {
-		mInputBuffer.emplace_back(sig.getSample(0, i), sig.getSample(1, i));
+	for(size_t i = 0; i < signal_samples; ++i) {
+		mInputBuffer.emplace_back(sig.data(0, i), sig.data(1, i));
 	}
 
 	// リングバッファとして振る舞うため、先頭から同じサイズを削除

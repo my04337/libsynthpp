@@ -26,11 +26,11 @@ size_t WaveTable::add(Signal<float>&& wav, float preAmp, float cycles)
 }
 void WaveTable::add(size_t id, Signal<float>&& wav, float preAmp, float cycles)
 {
-	require(wav.getNumChannels() == 1);
+	require(wav.channels() == 1);
 
 	if (preAmp < 0) {
 		// MEMO 実効値の2乗=パワーを用いて正規化すると、それらしい音量で揃う(ラウドネスは考慮していないので注意)
-		float rms = wav.getRMSLevel(0, 0, wav.getNumSamples());
+		float rms = wav.getRMSLevel(0);
 		preAmp = mBaseRMS * mBaseRMS / (rms * rms + 1.0e-8f) * abs(preAmp);
 	}
 	mWaveTable.insert_or_assign(id, std::make_tuple(std::move(wav), preAmp, cycles));
@@ -59,71 +59,77 @@ void WaveTable::reset()
 
 	// Ground
 	{
-		Signal<float> sig(1, 1);
-		sig.setSample(0, 0, 0.f);
+		auto sig = Signal<float>::allocate(1);
+		*sig.mutableData(0) = 0;
 		add(Preset::Ground, std::move(sig), 0);
 	}
 	// SinWave
 	{
-		constexpr int samples = 512;
-		Signal<float> sig(1, samples);
+		constexpr size_t samples = 512;
+		auto sig = Signal<float>::allocate(samples);
+		auto data = sig.mutableData(0);
 		FunctionGenerator fg;
 		fg.setSinWave(samples, 1);
-		for(int i = 0; i < samples; ++i) {
-			sig.setSample(0, i, fg.update());
+		for (size_t i = 0; i < samples; ++i) {
+			data[i] = fg.update();
 		}
-		mBaseRMS = sig.getRMSLevel(0, 0, sig.getNumSamples());
+		mBaseRMS = sig.getRMSLevel(0);
 		add(Preset::SinWave, std::move(sig), 1);
 	}
 	// SquareWave50
 	{
-		constexpr int samples = 512;
-		Signal<float> sig(1, samples);
+		constexpr size_t samples = 512;
+		auto sig = Signal<float>::allocate(samples);
+		auto data = sig.mutableData(0);
 		FunctionGenerator fg;
 		fg.setSquareWave(samples, 1);
-		for (int i = 0; i < samples; ++i) {
-			sig.setSample(0, i, fg.update());
+		for (size_t i = 0; i < samples; ++i) {
+			data[i] = fg.update();
 		}
 		add(Preset::SquareWave50, std::move(sig));
 	}
 	// SquareWave33
 	{
-		constexpr int samples = 512;
-		Signal<float> sig(1, samples);
+		constexpr size_t samples = 512;
+		auto sig = Signal<float>::allocate(samples);
+		auto data = sig.mutableData(0);
 		FunctionGenerator fg;
 		fg.setSquareWave(samples, 1, math::PI<float>/1.5f);
-		for (int i = 0; i < samples; ++i) {
-			sig.setSample(0, i, fg.update());
+		for (size_t i = 0; i < samples; ++i) {
+			data[i] = fg.update();
 		}
 		add(Preset::SquareWave33, std::move(sig));
 	}
 	// SquareWave25
 	{
-		constexpr int samples = 512;
-		Signal<float> sig(1, samples);
+		constexpr size_t samples = 512;
+		auto sig = Signal<float>::allocate(samples);
+		auto data = sig.mutableData(0);
 		FunctionGenerator fg;
 		fg.setSquareWave(samples, 1, math::PI<float>/2);
-		for (int i = 0; i < samples; ++i) {
-			sig.setSample(0, i, fg.update());
+		for (size_t i = 0; i < samples; ++i) {
+			data[i] = fg.update();
 		}
 		add(Preset::SquareWave25, std::move(sig));
 	}
 	// WhiteNoise
 	{
 		// MEMO サンプリング周波数よりサンプル数を大きくしないと、金属音のような規則性のある音が混ざることに注意
-		constexpr int samples = 512;
-		Signal<float> sig(1, samples);
+		constexpr size_t samples = 16384; 
+		auto sig = Signal<float>::allocate(samples);
+		auto data = sig.mutableData(0);
 		FunctionGenerator fg;
 		fg.setWhiteNoise();
-		for (int i = 0; i < samples; ++i) {
-			sig.setSample(0, i, fg.update());
+		for (size_t i = 0; i < samples; ++i) {
+			data[i] = fg.update();
 		}
 		add(Preset::WhiteNoise, std::move(sig));
 	}
 	// DrumNoise : LSP用デフォルトドラム波形
 	{
-		constexpr int samples = 131072;
-		Signal<float> sig(1, samples);
+		int samples = 131072;
+		auto sig = Signal<float>::allocate(samples);
+		auto data = sig.mutableData(0);
 		FunctionGenerator fg;
 		fg.setWhiteNoise();
 		std::array<BiquadraticFilter, 5> bqfs;
@@ -132,15 +138,15 @@ void WaveTable::reset()
 		bqfs[2].setLopassParam(44100, 3000.f, 0.5f); // (同上)
 		bqfs[3].setLopassParam(44100, 2000.f, 0.5f); // (同上)
 		bqfs[4].setLopassParam(44100, 1000.f, 1.0f); // 基本となる音程
-		for(int i = 0; i < samples*2; i++) {		
+		for(size_t i = 0; i < samples*2; i++) {		
 			// 波形が安定するまで読み捨てる
 			float s = fg.update();
 			for(auto& bqf : bqfs) s = bqf.update(s);
 		}
-		for(int i = 0; i < samples; ++i) {
+		for(size_t i = 0; i < samples; ++i) {
 			float s = fg.update();
 			for(auto& bqf : bqfs) s = bqf.update(s);
-			sig.setSample(0, i, s);
+			data[i] = s;
 		}
 		add(Preset::DrumNoise, std::move(sig), -0.30f, 62.5f);
 	}

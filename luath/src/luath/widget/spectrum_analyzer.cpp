@@ -35,14 +35,14 @@ void SpectrumAnalyzer::write(const Signal<float>& sig)
 {
 	std::lock_guard lock(mInputMutex);
 
-	const auto signal_channels = sig.getNumChannels();
-	const auto signal_samples = sig.getNumSamples();
+	const auto signal_channels = sig.channels();
+	const auto signal_samples = sig.samples();
 
 	require(signal_channels == 2, "SpectrumAnalyzer : write - failed (channel count is mismatch)");
 
 	// バッファ末尾に追記
-	mInputBuffer1ch.insert(mInputBuffer1ch.end(), sig.getReadPointer(0), sig.getReadPointer(0) + signal_samples);
-	mInputBuffer2ch.insert(mInputBuffer2ch.end(), sig.getReadPointer(1), sig.getReadPointer(1) + signal_samples);
+	mInputBuffer1ch.insert(mInputBuffer1ch.end(), sig.data(0), sig.data(0) + signal_samples);
+	mInputBuffer2ch.insert(mInputBuffer2ch.end(), sig.data(1), sig.data(1) + signal_samples);
 
 	// リングバッファとして振る舞うため、先頭から同じサイズを削除
 	mInputBuffer1ch.erase(mInputBuffer1ch.begin(), mInputBuffer1ch.begin() + signal_samples);

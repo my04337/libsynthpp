@@ -104,8 +104,8 @@ private:
 template<typename sample_type>
 void WasapiOutput::write(const Signal<sample_type>& sig)
 {
-	const auto signal_channels = sig.getNumChannels();
-	const auto signal_samples = sig.getNumSamples();
+	const auto signal_channels = sig.channels();
+	const auto signal_samples = sig.samples();
 
 	if(signal_channels == 0) return;
 	if(signal_samples == 0) return;
@@ -115,13 +115,13 @@ void WasapiOutput::write(const Signal<sample_type>& sig)
 		return;
 	}
 	
-	const auto device_channels = static_cast<int>(getDeviceChannels());
+	const auto device_channels = getDeviceChannels();
 
 	std::lock_guard<decltype(mAudioBufferMutex)> lock(mAudioBufferMutex);
 
-	auto safeGetSample = [&](int ch, int i)->sample_type {
+	auto safeGetSample = [&](uint32_t ch, size_t i)->sample_type {
 		if (ch < signal_channels) {
-			return sig.getSample(ch, i);
+			return sig.data(ch, i);
 		} else {
 			return static_cast<sample_type>(0);
 		}
@@ -134,16 +134,16 @@ void WasapiOutput::write(const Signal<sample_type>& sig)
 	case SampleFormat::Int16:
 	case SampleFormat::Int24:
 	case SampleFormat::Int32:
-		for(int i=0; i< signal_samples; ++i) {
-			for (int ch=0; ch<device_channels; ++ch) {
+		for(size_t i=0; i< signal_samples; ++i) {
+			for (uint32_t ch=0; ch<device_channels; ++ch) {
 				auto s = requantize<int32_t>(safeGetSample(ch, i));
 				mAudioBuffer.push_back(s);
 			}
 		}
 		break;
 	case SampleFormat::Float32:
-		for(int i=0; i< signal_samples; ++i) {
-			for (int ch=0; ch<device_channels; ++ch) {
+		for(size_t i=0; i< signal_samples; ++i) {
+			for (uint32_t ch=0; ch<device_channels; ++ch) {
 				auto s = requantize<float>(safeGetSample(ch, i));
 				mAudioBuffer.push_back(s);
 			}

@@ -54,8 +54,8 @@ private:
 template<typename sample_type>
 void WavFileOutput::write(const Signal<sample_type>& sig)
 {
-	const auto signal_channels = sig.getNumChannels();
-	const auto signal_samples = sig.getNumSamples();
+	const auto signal_channels = sig.channels();
+	const auto signal_samples = sig.samples();
 
 	if(signal_channels == 0) return;
 	if(signal_samples == 0) return;
@@ -69,10 +69,10 @@ void WavFileOutput::write(const Signal<sample_type>& sig)
 	const auto bitsPerSample = mBitsPerSample; 
 	const auto bytesPerSample = bitsPerSample/8;
 	
-	for(int i=0; i<signal_channels; ++i) {
-		for (int ch=0; ch< signal_channels; ++ch) {
+	for(size_t i=0; i< signal_samples; ++i) {
+		for (uint32_t ch=0; ch< signal_channels; ++ch) {
 			// 32bit整数型に変換
-			auto s = requantize<int32_t>(sig.getSample(ch, i));
+			auto s = requantize<int32_t>(sig.data(ch, i));
 
 			// 32bitで記録しているので、必要サイズに併せて切り詰める
 			// MEMO リトルエンディアン前提コード, 下位側から必要バイト分を転写

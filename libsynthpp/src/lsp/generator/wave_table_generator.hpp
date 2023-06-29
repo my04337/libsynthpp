@@ -24,13 +24,13 @@ class WaveTableGenerator final
 
 {
 public:
-	WaveTableGenerator(const juce::AudioBuffer<sample_type>& table, parameter_type volume = 1.0f, parameter_type cycles = 1.0f)
+	WaveTableGenerator(const Signal<sample_type>& table, parameter_type volume = 1.0f, parameter_type cycles = 1.0f)
 		: mTable(table)
 		, mVolume(volume)
 		, mCycles(cycles)
 	{
-		require(table.getNumSamples() > 0);
-		require(table.getNumChannels() == 1);
+		require(table.samples() > 0);
+		require(table.channels() == 1);
 	}
 
 	sample_type update(uint32_t sampleFreq, parameter_type freq)
@@ -48,14 +48,14 @@ private:
 	}
 	sample_type peek(parameter_type phase)const
 	{
-		// TODO せめてバイリニア補完したい
-		auto pos = static_cast<int>(phase * mTable.getNumSamples());
-		sample_type v = mTable.getSample(0, pos);
+		const size_t samples = mTable.samples();
+		auto pos = static_cast<size_t>(phase * samples);
+		sample_type v = mTable.data(0, pos);
 		return v * mVolume;
 	}
 
 private:
-	const juce::AudioBuffer<sample_type>& mTable; // mCycles周期分の信号
+	const Signal<sample_type>& mTable; // mCycles周期分の信号
 	const parameter_type mVolume; // 出力ボリューム
 	const parameter_type mCycles; // テーブルの周期数
 	parameter_type mPhase = 0; // 現在の位相 [0, 1)

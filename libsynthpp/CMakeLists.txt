@@ -1,7 +1,9 @@
 ﻿cmake_minimum_required(VERSION 3.24)
 
 file(GLOB_RECURSE srcs 
+	src/*.h
 	src/*.hpp
+	src/*.c
 	src/*.cpp
 	)
 

@@ -88,10 +88,10 @@ void Synthesizer::playingThreadMain()
 	
 		// 信号生成
 		auto beginRendering = clock::now();
-		auto sig = generate(static_cast<int>(make_samples));
+		auto sig = generate(make_samples);
 		auto endRendering = clock::now();
 		mStatistics.rendering_time = endRendering - beginRendering;
-		mStatistics.created_samples += sig.getNumSamples();
+		mStatistics.created_samples += sig.samples();
 		mStatistics.failed_samples += (need_samples - make_samples);
 
 		if(mRenderingCallback) mRenderingCallback(std::move(sig));
@@ -115,15 +115,18 @@ void Synthesizer::reset(midi::SystemType type)
 }
 
 
-lsp::Signal<float> Synthesizer::generate(int len)
+lsp::Signal<float> Synthesizer::generate(size_t len)
 {
 	constexpr float MASTER_VOLUME = 0.125f;
 
-	lsp::Signal<float> sig(2, len);
+	auto sig = lsp::Signal<float>::allocate(2, len);
+	auto lData = sig.mutableData(0);
+	auto rData = sig.mutableData(1);
 
-	for (int i = 0; i < len; ++i) {
-		float lch = 0;
-		float rch = 0;
+	for (size_t i = 0; i < len; ++i) {
+		auto& lch = lData[i];
+		auto& rch = rData[i];
+		lch = rch = 0;
 
 		// チャネル毎の信号を生成する
 		for (size_t ch = 0; ch < MAX_CHANNELS; ++ch) {
@@ -136,10 +139,6 @@ lsp::Signal<float> Synthesizer::generate(int len)
 		// マスタボリューム適用
 		lch *= MASTER_VOLUME;
 		rch *= MASTER_VOLUME;
-
-		// 書き込み
-		sig.setSample(0, i, lch);
-		sig.setSample(1, i, rch);
 	}
 	return sig;
 }

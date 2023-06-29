@@ -73,11 +73,10 @@ protected:
 	void sysExMessage(const uint8_t* data, size_t len);
 
 	// MIDIメッセージを元に演奏した結果を返します
-	Signal<float> generate(int len);
+	Signal<float> generate(size_t len);
 
 private:
 	mutable std::shared_mutex mMutex;
-	std::pmr::synchronized_pool_resource mMem;
 	std::deque<std::pair<clock::time_point, std::shared_ptr<const midi::Message>>> mMessageQueue;
 
 	Statistics mStatistics;
