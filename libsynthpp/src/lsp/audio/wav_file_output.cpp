@@ -7,10 +7,10 @@
 	https://opensource.org/license/mit/
 */
 
-#include <lsp/io/wav_file_output.hpp>
+#include <lsp/audio/wav_file_output.hpp>
 
 using namespace lsp;
-using namespace lsp::io;
+using namespace lsp::audio;
 
 WavFileOutput::WavFileOutput(uint32_t sampleFreq, uint32_t bitsPerSample, uint32_t channels, const std::filesystem::path& filePath)
 {

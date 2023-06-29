@@ -7,7 +7,7 @@
 #include <luath/drawing/font_loader.hpp>
 #include <lsp/midi/synth/synthesizer.hpp>
 #include <lsp/midi/smf/sequencer.hpp>
-#include <lsp/io/wasapi_output.hpp>
+#include <lsp/audio/wasapi_output.hpp>
 
 namespace luath::window
 {
@@ -46,7 +46,7 @@ private:
 	drawing::FontLoader mFontLoader;
 
 	// 再生用ストリーム
-	lsp::io::WasapiOutput mOutput;
+	lsp::audio::WasapiOutput mOutput;
 
 	// 再生パラメータ
 	std::atomic<float> mPostAmpVolume = 1.0f;
