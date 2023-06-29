@@ -15,34 +15,6 @@
 namespace lsp
 {
 
-// 信号 view
-template<class sample_type> requires std::signed_integral<sample_type> || std::floating_point<sample_type>
-class SignalView
-{
-public:
-	constexpr SignalView()
-		: SignalView(nullptr, 1, 0) {}
-	constexpr SignalView(const sample_type* data, uint32_t channels, size_t frames)
-		: mData(data), mChannels(channels), mFrames(frames) {}
-
-	// チャネル数を取得します
-	constexpr uint32_t channels()const noexcept { return mChannels; }
-
-	// フレーム数を取得します
-	constexpr size_t frames()const noexcept { return mFrames; }
-
-	// 各フレームの先頭ポインタを取得します
-	constexpr const sample_type* frame(size_t frame_index)const noexcept { return mData + mChannels * frame_index; }
-
-	// 全データへのポインタを取得します
-	constexpr const sample_type* data()const noexcept { return mData; }
-
-private:
-	const sample_type* mData;
-	uint32_t mChannels;
-	size_t mFrames;
-};
-
 // 信号型
 template<class sample_type> requires std::signed_integral<sample_type> || std::floating_point<sample_type>
 class Signal final
@@ -67,8 +39,6 @@ public:
 
 	Signal(Signal&& d)noexcept = default;
 	Signal& operator=(Signal&& d)noexcept = default;
-
-	operator SignalView<sample_type> ()const noexcept { return SignalView<sample_type>(mData.data(), mChannels, mFrames); }
 
 	// チャネル数を取得します
 	uint32_t channels()const noexcept { return mChannels; }

@@ -21,9 +21,10 @@ template<
 	std::floating_point parameter_type = std::conditional_t<std::is_floating_point_v<sample_type>, sample_type, float>
 > requires std::signed_integral<sample_type> || std::floating_point<sample_type>
 class WaveTableGenerator final
+
 {
 public:
-	WaveTableGenerator(SignalView<sample_type> table, parameter_type volume = 1.0f, parameter_type cycles = 1.0f)
+	WaveTableGenerator(const Signal<sample_type>& table, parameter_type volume = 1.0f, parameter_type cycles = 1.0f)
 		: mTable(table)
 		, mVolume(volume)
 		, mCycles(cycles)
@@ -54,7 +55,7 @@ private:
 	}
 
 private:
-	const SignalView<sample_type> mTable; // mCycles周期分の信号
+	const Signal<sample_type>& mTable; // mCycles周期分の信号
 	const parameter_type mVolume; // 出力ボリューム
 	const parameter_type mCycles; // テーブルの周期数
 	parameter_type mPhase = 0; // 現在の位相 [0, 1)

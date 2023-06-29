@@ -146,7 +146,7 @@ void WaveTable::reset()
 	}
 }
 
-float WaveTable::calcRMS(SignalView<float> wav)
+float WaveTable::calcRMS(const Signal<float>& wav)
 {
 	require(wav.channels() == 1);
 

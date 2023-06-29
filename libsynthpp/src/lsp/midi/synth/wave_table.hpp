@@ -56,7 +56,7 @@ public:
 
 private:
 	void add(size_t id, Signal<float>&& wav, float preAmp = -1, float cycles = 1);
-	static float calcRMS(SignalView<float> wav);
+	static float calcRMS(const Signal<float>& wav);
 
 private:
 	std::unordered_map<size_t, std::tuple<Signal<float>, /*preAmp*/float, /*cycles*/float>> mWaveTable;
