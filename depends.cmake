@@ -36,6 +36,7 @@ else()
         COMMAND ${GIT_EXECUTABLE} reset --hard --quiet 
         WORKING_DIRECTORY ${JUCE_SOURCE_DIR}        
         COMMAND_ERROR_IS_FATAL ANY
+        OUTPUT_QUIET
     )
     # 指定のタグのコミットがローカルにあるかを確認し、無ければfetchする
     execute_process(
@@ -53,7 +54,7 @@ else()
     endif()
     # 指定のタグへ切替
     execute_process(
-        COMMAND ${GIT_EXECUTABLE} checkout tags/${JUCE_GIT_TAG}
+        COMMAND ${GIT_EXECUTABLE} checkout tags/${JUCE_GIT_TAG} --quiet
         WORKING_DIRECTORY ${JUCE_SOURCE_DIR}
         COMMAND_ERROR_IS_FATAL ANY
     )
