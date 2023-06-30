@@ -20,18 +20,42 @@ set(JUCE_BUILD_EXAMPLES NO)
 set(JUCE_SOURCE_DIR  "${THIRD_PARTY_DIR}/JUCE")
 set(JUCE_MODULES_DIR "${JUCE_SOURCE_DIR}/modules")
 set(JUCE_GIT_REPOSITORY https://github.com/juce-framework/JUCE)
-set(JUCE_GIT_TAG        69795dc8e589a9eb5df251b6dd994859bf7b3fab) # 7.0.5
+set(JUCE_GIT_TAG        "7.0.5")
+set(JUCE_GIT_COMMIT     69795dc8e589a9eb5df251b6dd994859bf7b3fab)
 
 find_package(Git REQUIRED)
 
 if(NOT EXISTS ${JUCE_SOURCE_DIR})
+    # 指定のタグを shallow clone する ※ただし今後他のタグをcheckoutする可能性があるため
     execute_process(
-        COMMAND ${GIT_EXECUTABLE} clone ${JUCE_GIT_REPOSITORY} ${JUCE_SOURCE_DIR} --progress
+        COMMAND ${GIT_EXECUTABLE} clone ${JUCE_GIT_REPOSITORY} -b ${JUCE_GIT_TAG} ${JUCE_SOURCE_DIR} --depth=1 --no-single-branch --progress
     )
 else()
+    # 衝突を回避するため、全ての差分をリセット
     execute_process(
-        COMMAND ${GIT_EXECUTABLE} reset --hard ${JUCE_GIT_TAG} --quiet 
+        COMMAND ${GIT_EXECUTABLE} reset --hard --quiet 
+        WORKING_DIRECTORY ${JUCE_SOURCE_DIR}        
+        COMMAND_ERROR_IS_FATAL ANY
+    )
+    # 指定のタグのコミットがローカルにあるかを確認し、無ければfetchする
+    execute_process(
+        COMMAND ${GIT_EXECUTABLE} branch --contains ${69795dc8e589a9eb5df251b6dd994859bf7b3fab}
         WORKING_DIRECTORY ${JUCE_SOURCE_DIR}
+        RESULT_VARIABLE ret
+        OUTPUT_QUIET
+    )
+    if(ret AND NOT ret EQUAL 0)
+        execute_process(
+            COMMAND ${GIT_EXECUTABLE} fetch
+            WORKING_DIRECTORY ${JUCE_SOURCE_DIR}
+            COMMAND_ERROR_IS_FATAL ANY
+        )
+    endif()
+    # 指定のタグへ切替
+    execute_process(
+        COMMAND ${GIT_EXECUTABLE} checkout tags/${JUCE_GIT_TAG}
+        WORKING_DIRECTORY ${JUCE_SOURCE_DIR}
+        COMMAND_ERROR_IS_FATAL ANY
     )
 endif()
 
