@@ -47,8 +47,7 @@ public:
 	Digest digest()const noexcept;
 
 	float noteNo()const noexcept;
-	void noteOff()noexcept;
-	void noteCut()noexcept;
+	void noteOff(bool allowTailOff = true)noexcept;
 
 	void setHold(bool hold)noexcept;
 

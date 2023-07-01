@@ -12,8 +12,8 @@
 using namespace lsp::midi::synth;
 
 static const std::unordered_map<
-	uint8_t, std::tuple<
-	uint8_t,// pitch : NoteNo
+	int, std::tuple<
+	int,// pitch : NoteNo
 	float, // v: volume(adjuster)
 	float, // a: sec
 	float, // h: sec
@@ -81,7 +81,7 @@ static const std::unordered_map<
 	{ 81, { 86, 0.70f, 0.00f, 0.10f, 0.20f, 0.19f}},
 };
 
-std::unique_ptr<Voice> MidiChannel::createDrumVoice(uint8_t noteNo, uint8_t vel)
+std::unique_ptr<Voice> MidiChannel::createDrumVoice(int noteNo, float vel)
 {
 	uint8_t pitch = 69;
 	float v = 1.f; // volume(adjuster)
@@ -106,7 +106,7 @@ std::unique_ptr<Voice> MidiChannel::createDrumVoice(uint8_t noteNo, uint8_t vel)
 
 	// MEMO 人間の聴覚ではボリュームは対数的な特性を持つため、ベロシティを指数的に補正する
 	// TODO sustain_levelで除算しているのは旧LibSynth++からの移植コード。 補正が不要になったら削除すること
-	float volume = powf(10.f, -20.f * (1.f - vel / 127.f) / 20.f);
+	float volume = powf(10.f, -20.f * (1.f - vel) / 20.f);
 	float cutoff_level = 0.01f;
 	static const effector::EnvelopeGenerator<float>::Curve curveExp3(3.0f);
 

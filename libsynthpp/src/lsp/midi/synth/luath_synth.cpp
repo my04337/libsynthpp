@@ -7,13 +7,13 @@
 	https://opensource.org/license/mit/
 */
 
-#include <lsp/midi/synth/synthesizer.hpp>
+#include <lsp/midi/synth/luath_synth.hpp>
 #include <lsp/midi/messages/basic_message.hpp>
 #include <lsp/midi/messages/sysex_message.hpp>
 
 using namespace lsp::midi::synth;
 
-Synthesizer::Synthesizer(uint32_t sampleFreq, midi::SystemType defaultSystemType)
+LuathSynth::LuathSynth(uint32_t sampleFreq, midi::SystemType defaultSystemType)
 	: mSampleFreq(sampleFreq)
 {
 	mMidiChannels.reserve(MAX_CHANNELS);
@@ -23,19 +23,19 @@ Synthesizer::Synthesizer(uint32_t sampleFreq, midi::SystemType defaultSystemType
 
 	reset(defaultSystemType);
 }
-Synthesizer::~Synthesizer()
+LuathSynth::~LuathSynth()
 {
 	dispose();
 }
 
-void Synthesizer::dispose()
+void LuathSynth::dispose()
 {
 	std::lock_guard lock(mMutex);
 }
 
 // ---
 // 各種パラメータ類 リセット
-void Synthesizer::reset(midi::SystemType type)
+void LuathSynth::reset(midi::SystemType type)
 {
 	mSystemType = type;
 	mWaveTable.reset();
@@ -46,7 +46,7 @@ void Synthesizer::reset(midi::SystemType type)
 }
 
 
-lsp::Signal<float> Synthesizer::generate(size_t len)
+lsp::Signal<float> LuathSynth::generate(size_t len)
 {
 	auto cycleBegin = clock::now();
 
@@ -57,7 +57,7 @@ lsp::Signal<float> Synthesizer::generate(size_t len)
 	size_t msg_count = 0;
 	while(!mMessageQueue.empty()) {
 		const auto& [msg_time, msg] = mMessageQueue.front();
-		dispatchMessage(msg);
+		handleMidiEvent(msg);
 		++msg_count;
 		mMessageQueue.pop_front();
 	}
@@ -95,17 +95,17 @@ lsp::Signal<float> Synthesizer::generate(size_t len)
 }
 
 // MIDIメッセージ受信コールバック
-void Synthesizer::onMidiMessageReceived(clock::time_point msg_time, const std::shared_ptr<const midi::Message>& msg)
+void LuathSynth::onMidiMessageReceived(clock::time_point msg_time, const juce::MidiMessage& msg)
 {
 	std::lock_guard lock(mMutex);
 	mMessageQueue.emplace_back(msg_time, msg);
 }
 // 統計情報を取得します
-Synthesizer::Statistics Synthesizer::statistics()const
+LuathSynth::Statistics LuathSynth::statistics()const
 {
 	return mThreadSafeStatistics;
 }
-Synthesizer::Digest Synthesizer::digest()const
+LuathSynth::Digest LuathSynth::digest()const
 {
 	std::shared_lock lock(mMutex);
 	Digest digest;
@@ -117,20 +117,51 @@ Synthesizer::Digest Synthesizer::digest()const
 	}
 	return digest;
 }
-void Synthesizer::dispatchMessage(const std::shared_ptr<const midi::Message>& msg)
+
+// ---
+
+
+void LuathSynth::handleMidiEvent(const juce::MidiMessage& msg)
+{
+	if(msg.isSysEx()) {
+		sysExMessage(static_cast<const uint8_t*>(msg.getSysExData()), static_cast<size_t>(msg.getSysExDataSize()));
+	}
+	else {
+		juce::Synthesiser::handleMidiEvent(msg);
+	}
+}
+
+
+void LuathSynth::noteOn(int channel, int noteNo, float velocity)
+{
+	check(channel > 0);
+	auto& midich = mMidiChannels[static_cast<size_t>(channel) -1];
+	midich.noteOn(noteNo, velocity);
+}
+void LuathSynth::noteOff(int channel, int noteNo, float velocity, bool allowTailOff)
+{
+	// MEMO 一般に、MIDIではノートオフの代わりにvel=0のノートオンが使用されるため、呼ばれることは希である
+	check(channel > 0);
+	auto& midich = mMidiChannels[static_cast<size_t>(channel) - 1];
+	midich.noteOff(noteNo, allowTailOff);
+}
+void LuathSynth::allNotesOff(int channel, bool allowTailOff)
+{
+	for(auto& midich : mMidiChannels) {
+		midich.allNotesOff(allowTailOff);
+	}
+}
+void LuathSynth::handleProgramChange(int channel, int progId)
+{
+	check(channel > 0);
+	auto& midich = mMidiChannels[static_cast<size_t>(channel) - 1];
+	midich.programChange(progId);
+}
+
+#if 0
+void LuathSynth::dispatchMessage(const std::shared_ptr<const midi::Message>& msg)
 {
 	using namespace midi::messages;
-	if (auto noteOn = std::dynamic_pointer_cast<const NoteOn>(msg)) {
-		auto& midich = mMidiChannels[noteOn->channel()];
-		midich.noteOn(noteOn->noteNo(), noteOn->velocity());
-	} else if (auto noteOff = std::dynamic_pointer_cast<const NoteOff>(msg)) {
-		// MEMO 一般に、MIDIではノートオフの代わりにvel=0のノートオンが使用されるため、呼ばれることは希である
-		auto& midich = mMidiChannels[noteOff->channel()];
-		midich.noteOff(noteOff->noteNo());
-	} else if (auto programChange = std::dynamic_pointer_cast<const ProgramChange>(msg)) {
-		auto& midich = mMidiChannels[programChange->channel()];
-		midich.programChange(programChange->progId());
-	} else if (auto controlChange = std::dynamic_pointer_cast<const ControlChange>(msg)) {
 		auto& midich = mMidiChannels[controlChange->channel()];
 		midich.controlChange(controlChange->ctrlNo(), controlChange->value());
 	} else if (auto pitchBend = std::dynamic_pointer_cast<const PitchBend>(msg)) {
@@ -140,10 +171,12 @@ void Synthesizer::dispatchMessage(const std::shared_ptr<const midi::Message>& ms
 		sysExMessage(&sysEx->data()[0], sysEx->data().size());
 	}
 }
+#endif
 // ---
 
+
 // システムエクスクルーシブ
-void Synthesizer::sysExMessage(const uint8_t* data, size_t len)
+void LuathSynth::sysExMessage(const uint8_t* data, size_t len)
 {
 	size_t pos = 0;
 	auto peek = [&](size_t offset = 0) -> std::optional<uint8_t> {

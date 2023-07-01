@@ -13,7 +13,7 @@ using namespace lsp::midi::synth;
 
 
 static const std::unordered_map<
-	uint8_t, std::tuple<
+	int, std::tuple<
 	float, // v: volume(adjuster)
 	float, // a: sec
 	float, // h: sec
@@ -153,7 +153,7 @@ static const std::unordered_map<
 	{127, { 2.50f, 0.03f, 0.00f,  1.50f, 0.00f, 0.00f, 1.50f }},
 };
 
-std::unique_ptr<Voice> MidiChannel::createMelodyVoice(uint8_t noteNo, uint8_t vel)
+std::unique_ptr<Voice> MidiChannel::createMelodyVoice(int noteNo, float vel)
 {
 	float v = 1.f; // volume(adjuster)
 	float a = 0.f; // sec
@@ -193,7 +193,7 @@ std::unique_ptr<Voice> MidiChannel::createMelodyVoice(uint8_t noteNo, uint8_t ve
 
 	// MEMO 人間の聴覚ではボリュームは対数的な特性を持つため、ベロシティを指数的に補正する
 	// TODO sustain_levelで除算しているのは旧LibSynth++からの移植コード。 補正が不要になったら削除すること
-	float volume = powf(10.f, -20.f * (1.f - vel / 127.f) / 20.f) * v / ((s > 0.8f && s != 0.f) ? s : 0.8f);
+	float volume = powf(10.f, -20.f * (1.f - vel) / 20.f) * v / ((s > 0.8f && s != 0.f) ? s : 0.8f);
 	float cutoffLevel = 0.01f;
 	static const effector::EnvelopeGenerator<float>::Curve curveExp3(3.0f);
 

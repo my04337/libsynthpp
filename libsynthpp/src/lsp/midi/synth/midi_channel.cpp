@@ -25,13 +25,8 @@ void MidiChannel::reset(midi::SystemType type)
 {
 	mSystemType = type;
 
-	resetVoices();
+	allNotesOff(false);
 	resetParameters();
-}
-void MidiChannel::resetVoices()
-{
-	// 全発音を強制停止
-	mVoices.clear();
 }
 void MidiChannel::resetParameters()
 {
@@ -72,7 +67,7 @@ void MidiChannel::resetParameterNumberState()
 	ccDE_MSB.reset();
 	ccDE_LSB.reset();
 }
-void MidiChannel::noteOn(uint32_t noteNo, uint8_t vel)
+void MidiChannel::noteOn(int noteNo, float vel)
 {
 	// 同じノート番号は同時発音不可
 	noteOff(noteNo);
@@ -83,24 +78,22 @@ void MidiChannel::noteOn(uint32_t noteNo, uint8_t vel)
 		mVoices.emplace(id, std::move(voice));
 	}
 }
-void MidiChannel::noteOff(uint32_t noteNo)
+void MidiChannel::noteOff(int noteNo, bool allowTailOff)
 {
 	for (auto& [id, voice] : mVoices) {
 		if (voice->noteNo() == noteNo) {
-			voice->noteOff();
+			voice->noteOff(allowTailOff);
 		}
 	}
 }
-void MidiChannel::noteCut(uint32_t noteNo)
+void MidiChannel::allNotesOff(bool allowTailOff)
 {
 	for(auto& [id, voice] : mVoices) {
-		if(voice->noteNo() == noteNo) {
-			voice->noteCut();
-		}
+		voice->noteOff(allowTailOff);
 	}
 }
 // プログラムチェンジ
-void MidiChannel::programChange(uint8_t progId)
+void MidiChannel::programChange(int progId)
 {
 	// 事前に受信していたバンクセレクトを解決
 	// プログラムId更新
@@ -171,16 +164,8 @@ void MidiChannel::controlChange(uint8_t ctrlNo, uint8_t value)
 		break;
 
 	// --- チャネルモードメッセージ ---
-	case 120: // オールサウンドオフ
-		resetVoices();
-		break;
 	case 121: // リセットオールコントローラ
 		resetParameters();
-		break;
-	case 123: // オールノートオフ
-		for (auto& kvp : mVoices) {
-			kvp.second->noteCut();
-		}
 		break;
 	// --- チャネルモードメッセージ : not implemented ---
 	case 122: // ローカルコントロール
@@ -309,7 +294,7 @@ MidiChannel::Digest MidiChannel::digest()const
 
 	return digest;
 }
-std::unique_ptr<Voice> MidiChannel::createVoice(uint8_t noteNo, uint8_t vel)
+std::unique_ptr<Voice> MidiChannel::createVoice(int noteNo, float vel)
 {
 	if(mIsDrumPart) {
 		return createDrumVoice(noteNo, vel);

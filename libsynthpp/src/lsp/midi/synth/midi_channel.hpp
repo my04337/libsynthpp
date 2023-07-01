@@ -27,7 +27,7 @@ class MidiChannel
 public:
 	struct Digest {
 		uint8_t ch = 0; // チャネル
-		uint8_t progId = 0; // プログラムID
+		int progId = 0; // プログラムID
 		uint8_t bankSelectMSB = 0; // バンクセレクト
 		uint8_t bankSelectLSB = 0; // バンクセレクト
 		float pan = 0.5f; // パン
@@ -47,14 +47,13 @@ public:
 	MidiChannel(uint32_t sampleFreq, uint8_t ch, const WaveTable& waveTable);
 
 	void reset(midi::SystemType type);
-	void resetVoices();
 	void resetParameters();
 	void resetParameterNumberState();
 	// ---
-	void noteOn(uint32_t noteNo, uint8_t vel);
-	void noteOff(uint32_t noteNo);
-	void noteCut(uint32_t noteNo);
-	void programChange(uint8_t progId);
+	void noteOn(int noteNo, float vel);
+	void noteOff(int noteNo, bool allowTailOff = true);
+	void allNotesOff(bool allowTailOff);
+	void programChange(int progId);
 	void controlChange(uint8_t ctrlNo, uint8_t value);
 	void pitchBend(int16_t pitch);
 	void updateHold();
@@ -67,9 +66,9 @@ public:
 
 private:
 	// ボイスを生成します
-	std::unique_ptr<Voice> createVoice(uint8_t noteNo, uint8_t vel);
-	std::unique_ptr<Voice> createMelodyVoice(uint8_t noteNo, uint8_t vel);
-	std::unique_ptr<Voice> createDrumVoice(uint8_t noteNo, uint8_t vel);
+	std::unique_ptr<Voice> createVoice(int noteNo, float vel);
+	std::unique_ptr<Voice> createMelodyVoice(int noteNo, float vel);
+	std::unique_ptr<Voice> createDrumVoice(int noteNo, float vel);
 
 	void updatePitchBend();
 
@@ -95,7 +94,7 @@ private:
 	midi::SystemType mSystemType;
 		
 	// プログラムチェンジ
-	uint8_t mProgId; // プログラムId
+	int mProgId; // プログラムId
 	bool mIsDrumPart = false;
 
 	// コントロールチェンジ

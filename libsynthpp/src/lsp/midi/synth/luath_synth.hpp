@@ -21,8 +21,9 @@
 namespace lsp::midi::synth
 {
 
-class Synthesizer
+class LuathSynth
 	: public midi::MessageReceiver
+	, public juce::Synthesiser
 {
 public:
 	static constexpr uint8_t MAX_CHANNELS = 16;
@@ -46,13 +47,13 @@ public:
 	};
 
 public:
-	Synthesizer(uint32_t sampleFreq, midi::SystemType defaultSystemType = midi::SystemType::GS);
-	~Synthesizer();
+	LuathSynth(uint32_t sampleFreq, midi::SystemType defaultSystemType = midi::SystemType::GS);
+	~LuathSynth();
 
 	void dispose();
 
 	// MIDIメッセージを受信した際にコールバックされます。
-	virtual void onMidiMessageReceived(clock::time_point received_time, const std::shared_ptr<const midi::Message>& msg)override;
+	virtual void onMidiMessageReceived(clock::time_point received_time, const juce::MidiMessage& msg)override;
 
 	// 統計情報を取得します
 	Statistics statistics()const;
@@ -65,13 +66,22 @@ protected:
 	void dispatchMessage(const std::shared_ptr<const midi::Message>& msg);
 	void reset(midi::SystemType type);
 
-	// システムエクスクルーシブ
+public: // implementation of juce::Synthesizer +α
+	
+
+	void noteOn(int channel, int noteNo, float velocity)override;
+	void noteOff(int channel, int noteno, float velocity, bool allowTailOff)override;
+	void allNotesOff(int channel, bool allowTailOff)override;
+	void handleProgramChange(int channel, int progId);
+
 	void sysExMessage(const uint8_t* data, size_t len);
 
+protected: // implementation of juce::Synthesizer
+	void handleMidiEvent(const juce::MidiMessage&) override;
 
 private:
 	mutable std::shared_mutex mMutex;
-	std::deque<std::pair<clock::time_point, std::shared_ptr<const midi::Message>>> mMessageQueue;
+	std::deque<std::pair<clock::time_point, juce::MidiMessage>> mMessageQueue;
 
 	Statistics mStatistics;
 	std::atomic<Statistics> mThreadSafeStatistics;

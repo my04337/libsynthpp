@@ -39,20 +39,23 @@ float Voice::noteNo()const noexcept
 	return mNoteNo;
 }
 
-void Voice::noteOff()noexcept
+void Voice::noteOff(bool allowTailOff)noexcept
 {
-	if (mHold) {
-		mPendingNoteOff = true;
-	} else {
+	if(allowTailOff) {
+		if(mHold) {
+			mPendingNoteOff = true;
+		}
+		else {
+			mPendingNoteOff = false;
+			mEG.noteOff();
+		}
+	}
+	else {
 		mPendingNoteOff = false;
-		mEG.noteOff();
+		mEG.reset();
 	}
 }
-void Voice::noteCut()noexcept
-{
-	mPendingNoteOff = false;
-	mEG.reset();
-}
+
 void Voice::setHold(bool hold)noexcept
 {
 	mHold = hold;
