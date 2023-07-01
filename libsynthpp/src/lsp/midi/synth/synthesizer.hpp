@@ -25,11 +25,9 @@ class Synthesizer
 	: public midi::MessageReceiver
 {
 public:
-	using RenderingCallback = std::function<void(Signal<float>&& sig)>;
 	static constexpr uint8_t MAX_CHANNELS = 16;
 	struct Statistics {
 		uint64_t created_samples = 0;
-		uint64_t failed_samples = 0;
 
 		clock::duration cycle_time;
 		clock::duration rendering_time;
@@ -55,25 +53,21 @@ public:
 
 	// MIDIメッセージを受信した際にコールバックされます。
 	virtual void onMidiMessageReceived(clock::time_point received_time, const std::shared_ptr<const midi::Message>& msg)override;
-	
-	// 音声が生成された際のコールバック関数を設定します
-	void setRenderingCallback(RenderingCallback cb);
 
 	// 統計情報を取得します
 	Statistics statistics()const;
 	// 現在の内部状態のダイジェストを取得します
 	Digest digest()const;
+	// MIDIメッセージを元に演奏した結果を返します
+	Signal<float> generate(size_t len);
 
 protected:
-	void playingThreadMain();
 	void dispatchMessage(const std::shared_ptr<const midi::Message>& msg);
 	void reset(midi::SystemType type);
 
 	// システムエクスクルーシブ
 	void sysExMessage(const uint8_t* data, size_t len);
 
-	// MIDIメッセージを元に演奏した結果を返します
-	Signal<float> generate(size_t len);
 
 private:
 	mutable std::shared_mutex mMutex;
@@ -81,8 +75,6 @@ private:
 
 	Statistics mStatistics;
 	std::atomic<Statistics> mThreadSafeStatistics;
-
-	RenderingCallback mRenderingCallback;
 		
 	// all channel parameters
 	const uint32_t mSampleFreq;
@@ -91,10 +83,6 @@ private:
 
 	// midi channel parameters
 	std::vector<MidiChannel> mMidiChannels;
-
-	// 演奏スレッド
-	std::thread mPlayingThread;
-	std::atomic_bool mPlayingThreadAborted;
 };
 
 }

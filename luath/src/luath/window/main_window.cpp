@@ -86,13 +86,10 @@ static std::wstring freq2scale(float freq) {
 MainWindow::MainWindow()
 	: mSequencer(mSynthesizer)
 	, mSynthesizer(SAMPLE_FREQ)
-	, mOutput()
 	, mLissajousWidget(SAMPLE_FREQ, static_cast<uint32_t>(SAMPLE_FREQ * 250e-4f))
 	, mOscilloScopeWidget(SAMPLE_FREQ, static_cast<uint32_t>(SAMPLE_FREQ * 250e-4f))
 	, mSpectrumAnalyzerWidget(SAMPLE_FREQ, 4096)
 {
-	mSynthesizer.setRenderingCallback([this](Signal<float>&& sig){onRenderedSignal(std::move(sig));});
-
 }
 
 MainWindow::~MainWindow()
@@ -104,17 +101,6 @@ MainWindow::~MainWindow()
 		DestroyWindow(mWindowHandle);
 		mWindowHandle = nullptr;
 	}
-}
-void MainWindow::dispose()
-{
-	// 再生停止
-	auto isOutputStopped = mOutput.stop();
-
-	// シーケンサ停止
-	mSequencer.stop();
-
-	// トーンジェネレータ停止
-	mSynthesizer.dispose();
 }
 bool MainWindow::initialize()
 {
@@ -167,17 +153,32 @@ bool MainWindow::initialize()
 	auto midi_path = std::filesystem::current_path();
 	midi_path.append(L"assets/sample_midi/brambles_vsc3.mid"s); // 試験用MIDIファイル
 	loadMidi(midi_path);
-
-	// オーディオ出力 初期化
-	if(!mOutput.start()) {
-		MessageBox(
-			mWindowHandle,
-			L"出力デバイスのオープンに失敗しました。",
-			L"オーディオ エラー",
-			MB_OK | MB_ICONWARNING
-		);
+	
+	// オーディオ周り初期化
+	mAudioDeviceManager.initialiseWithDefaultDevices(
+		0, // numInputChannelsNeeded
+		2 // numOutputChannelsNeeded
+	);
+	mAudioDevice = mAudioDeviceManager.getCurrentAudioDevice();
+	if(!mAudioDevice) {
+		Log::w("Audio device is not found.");
 	}
+	mAudioDeviceManager.addAudioCallback(this);
+
+
 	return true;
+}
+void MainWindow::dispose()
+{
+	// 再生停止
+	mAudioDeviceManager.closeAudioDevice();
+	mAudioDeviceManager.removeAudioCallback(this);
+
+	// シーケンサ停止
+	mSequencer.stop();
+
+	// トーンジェネレータ停止
+	mSynthesizer.dispose();
 }
 LRESULT MainWindow::wndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -228,7 +229,7 @@ LRESULT MainWindow::wndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 			result = 0;
 			break;
 		case WM_DESTROY:
-			PostQuitMessage(0);
+			juce::MessageManager::getInstance()->stopDispatchLoop();
 			result = 0;
 			break;
 		}
@@ -302,6 +303,57 @@ void MainWindow::loadMidi(const std::filesystem::path& midi_path) {
 			MB_OK | MB_ICONWARNING
 		);
 	}
+}
+void MainWindow::audioDeviceIOCallbackWithContext(
+	const float* const* inputChannelData,
+	int numInputChannels,
+	float* const* outputChannelData,
+	int numOutputChannels,
+	int numSamples,
+	const juce::AudioIODeviceCallbackContext& context
+)
+{
+	// シンセサイザ信号生成
+	check(numOutputChannels == 2);
+	check(numSamples >= 0);
+	auto sig = mSynthesizer.generate(static_cast<size_t>(numSamples));
+
+	// ポストアンプ適用
+	auto postAmpVolume = mPostAmpVolume.load();
+	for(uint32_t ch = 0; ch < sig.channels(); ++ch) {
+		auto data = sig.mutableData(ch);
+		for(size_t i = 0; i < sig.samples(); ++i) {
+			data[i] *= postAmpVolume;
+		}
+	}
+	
+
+	// コールバック元へ書き戻し
+	for(uint32_t ch = 0; ch < sig.channels(); ++ch) {
+		auto output = outputChannelData[ch];
+		auto data = sig.data(ch);
+		std::copy(data, data + sig.samples(), output);
+	}
+
+
+	// UI側へ配送
+	// TODO 信号生成に影響を与えにくい経路で配送したい
+	mOscilloScopeWidget.write(sig);
+	mSpectrumAnalyzerWidget.write(sig);
+	mLissajousWidget.write(sig);
+}
+void MainWindow::audioDeviceAboutToStart(juce::AudioIODevice* device)
+{
+	mAudioDevice = device;
+	// TODO
+}
+void MainWindow::audioDeviceStopped()
+{
+	// nop
+}
+void MainWindow::audioDeviceError(const juce::String& errorMessage)
+{
+	Log::e("Audio device error : {}", errorMessage.toStdString());
 }
 
 struct MainWindow::DrawingContext
@@ -421,12 +473,16 @@ void MainWindow::onDraw(ID2D1RenderTarget& renderer)
 		case midi::SystemType::XG:	systemType = L"XG";		break;
 		}
 
-		drawText(150, 0, std::format(L"生成時間 : {}[msec]  failed : {}[msec]  buffered : {:04}[msec]",
+		auto buffered = mAudioDevice ? mAudioDevice->getCurrentBufferSizeSamples() / static_cast<float>(SAMPLE_FREQ) : 0.f;
+		auto latency = mAudioDevice ? mAudioDevice->getOutputLatencyInSamples() / static_cast<float>(SAMPLE_FREQ) : 0.f;
+
+		drawText(150, 0, std::format(L"生成時間 : {}[msec]  buffered : {:04}[msec]  latency : {:04}[msec]",
 			tgStatistics.created_samples * 1000ull / SAMPLE_FREQ,
-			tgStatistics.failed_samples * 1000ull / SAMPLE_FREQ,
-			mOutput.getBufferedFrameCount() * 1000 / SAMPLE_FREQ
+			buffered * 1000,
+			latency * 1000
 		));
-		drawText(150, 15, std::format(L"演奏負荷 : {:03}[%]", (int)(100 * tgStatistics.rendering_load_average())));
+
+		drawText(150, 15, std::format(L"演奏負荷 : {:03}[%]", static_cast<int>(100 * mAudioDeviceManager.getCpuUsage())));
 		drawText(150, 30, std::format(L"PostAmp : {:.3f}", mPostAmpVolume.load()));
 		drawText(280, 15, std::format(L"同時発音数 : {:03}", polyCount));
 		drawText(420, 15, std::format(L"MIDIリセット : {}", systemType));
@@ -588,21 +644,4 @@ void MainWindow::onDraw(ID2D1RenderTarget& renderer)
 			150 - margin * 2
 		);
 	}
-}
-void MainWindow::onRenderedSignal(Signal<float>&& sig)
-{
-	// ポストアンプ適用
-	auto postAmpVolume = mPostAmpVolume.load();
-	for(uint32_t ch = 0; ch < sig.channels(); ++ch) {
-		auto data = sig.mutableData(ch);
-		for(size_t i = 0; i < sig.samples(); ++i) {
-			data[i] *= postAmpVolume;
-		}
-	}
-
-	// 各出力先に配送
-	mOutput.write(sig);
-	mOscilloScopeWidget.write(sig);
-	mSpectrumAnalyzerWidget.write(sig);
-	mLissajousWidget.write(sig);
 }

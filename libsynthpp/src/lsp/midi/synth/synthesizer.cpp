@@ -15,7 +15,6 @@ using namespace lsp::midi::synth;
 
 Synthesizer::Synthesizer(uint32_t sampleFreq, midi::SystemType defaultSystemType)
 	: mSampleFreq(sampleFreq)
-	, mPlayingThreadAborted(false)
 {
 	mMidiChannels.reserve(MAX_CHANNELS);
 	for (uint8_t ch = 0; ch < MAX_CHANNELS; ++ch) {
@@ -23,8 +22,6 @@ Synthesizer::Synthesizer(uint32_t sampleFreq, midi::SystemType defaultSystemType
 	}
 
 	reset(defaultSystemType);
-
-	mPlayingThread = std::thread([this]{playingThreadMain();});
 }
 Synthesizer::~Synthesizer()
 {
@@ -34,74 +31,8 @@ Synthesizer::~Synthesizer()
 void Synthesizer::dispose()
 {
 	std::lock_guard lock(mMutex);
-
-	// コールバック破棄
-	mRenderingCallback = nullptr;
-
-	// 演奏スレッド停止
-	mPlayingThreadAborted = true;
-	if (mPlayingThread.joinable()) {
-		mPlayingThread.join();
-	}
 }
 
-// ---
-
-void Synthesizer::playingThreadMain()
-{
-	constexpr auto RENDERING_INTERVAL = std::chrono::milliseconds(10);
-
-	uint64_t SAMPLES_LIMIT_PER_RENDERING = 10*uint64_t(std::chrono::duration_cast<std::chrono::duration<double>>(RENDERING_INTERVAL).count() * mSampleFreq);
-	
-	// 演奏ループ開始
-	const clock::time_point begin_time = clock::now() - RENDERING_INTERVAL;
-
-	clock::time_point prev_wake_up_time = begin_time;
-	uint64_t prev_sample_pos = 0;
-	while (true) {
-		auto cycleBegin = clock::now();
-		auto next_wake_up_time = prev_wake_up_time;
-		while(next_wake_up_time < clock::now()) next_wake_up_time += RENDERING_INTERVAL;
-		std::this_thread::sleep_until(next_wake_up_time);
-		uint64_t next_sample_pos = std::chrono::duration_cast<std::chrono::microseconds>(next_wake_up_time-begin_time).count() * (uint64_t)mSampleFreq / 1000000ull;
-		uint64_t need_samples = next_sample_pos - prev_sample_pos;
-		prev_wake_up_time = next_wake_up_time;
-		prev_sample_pos = next_sample_pos;
-
-		uint64_t make_samples = std::min(need_samples, SAMPLES_LIMIT_PER_RENDERING);
-
-		if(mPlayingThreadAborted) break;
-
-		// 演奏開始
-		std::lock_guard lock(mMutex);
-
-
-		// 指定時刻時点までに蓄積されたMIDIメッセージを解釈
-		size_t msg_count = 0;
-		while (!mMessageQueue.empty()) {
-			const auto& [msg_time, msg] = mMessageQueue.front();
-			if(msg_time >= prev_wake_up_time) break;
-			dispatchMessage(msg);
-			++msg_count;
-			mMessageQueue.pop_front();
-		}
-	
-		// 信号生成
-		auto beginRendering = clock::now();
-		auto sig = generate(make_samples);
-		auto endRendering = clock::now();
-		mStatistics.rendering_time = endRendering - beginRendering;
-		mStatistics.created_samples += sig.samples();
-		mStatistics.failed_samples += (need_samples - make_samples);
-
-		if(mRenderingCallback) mRenderingCallback(std::move(sig));
-		
-		// 演奏終了
-		auto cycleEnd = clock::now();
-		mStatistics.cycle_time = cycleEnd - cycleBegin;
-		mThreadSafeStatistics = mStatistics;
-	}
-}
 // ---
 // 各種パラメータ類 リセット
 void Synthesizer::reset(midi::SystemType type)
@@ -117,6 +48,21 @@ void Synthesizer::reset(midi::SystemType type)
 
 lsp::Signal<float> Synthesizer::generate(size_t len)
 {
+	auto cycleBegin = clock::now();
+
+	// 演奏開始
+	std::lock_guard lock(mMutex);
+
+	// 蓄積されたMIDIメッセージを解釈
+	size_t msg_count = 0;
+	while(!mMessageQueue.empty()) {
+		const auto& [msg_time, msg] = mMessageQueue.front();
+		dispatchMessage(msg);
+		++msg_count;
+		mMessageQueue.pop_front();
+	}
+
+	// 信号生成
 	constexpr float MASTER_VOLUME = 0.125f;
 
 	auto sig = lsp::Signal<float>::allocate(2, len);
@@ -140,6 +86,11 @@ lsp::Signal<float> Synthesizer::generate(size_t len)
 		lch *= MASTER_VOLUME;
 		rch *= MASTER_VOLUME;
 	}
+
+	// 演奏終了
+	auto cycleEnd = clock::now();
+	mStatistics.cycle_time = cycleEnd - cycleBegin;
+	mThreadSafeStatistics = mStatistics;
 	return sig;
 }
 
@@ -148,12 +99,6 @@ void Synthesizer::onMidiMessageReceived(clock::time_point msg_time, const std::s
 {
 	std::lock_guard lock(mMutex);
 	mMessageQueue.emplace_back(msg_time, msg);
-}
-// 音声が生成された際のコールバック関数を設定します
-void Synthesizer::setRenderingCallback(RenderingCallback cb)
-{
-	std::lock_guard lock(mMutex);
-	mRenderingCallback = std::move(cb);
 }
 // 統計情報を取得します
 Synthesizer::Statistics Synthesizer::statistics()const

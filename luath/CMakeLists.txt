@@ -37,7 +37,7 @@ target_link_libraries(
 
 # link JUCE modules
 unset(juce_modules)
-list(APPEND juce_modules juce_core)
+list(APPEND juce_modules juce_core juce_audio_basics juce_audio_devices)
 
 # JUCEのライブラリをそのままtarget_link_libraryすると、不要なwarningが表示されるので
 # warningレベルを調整している。

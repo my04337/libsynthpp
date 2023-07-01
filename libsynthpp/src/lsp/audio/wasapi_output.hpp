@@ -24,7 +24,7 @@ struct IAudioClient3;
 
 namespace lsp::audio {
 
-// WASAPI 出力
+// スタンドアロン WASAPI 出力 ※非JUCE経由
 class WasapiOutput final
 	: non_copy_move
 {
