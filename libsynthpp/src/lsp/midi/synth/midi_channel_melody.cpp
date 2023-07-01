@@ -199,7 +199,7 @@ std::unique_ptr<Voice> MidiChannel::createMelodyVoice(int noteNo, float vel)
 
 	float overtuneGain = 0.f; // dB
 	if(mSystemType.isGS() || mSystemType.isXG()) {
-		overtuneGain = (getNRPN_MSB(1, 33).value_or(64) / 128.f - 0.5f) * 5.f;
+		overtuneGain = getInt7NRPN(1, 33).value_or(0) / 128.f * 5.f;
 	}
 
 	auto wg = mWaveTable.get(waveTableId);

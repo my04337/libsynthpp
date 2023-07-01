@@ -52,21 +52,11 @@ void MidiChannel::resetParameters()
 	ccDecayTime = 64;
 	ccReleaseTime = 64;
 
-	resetParameterNumberState();
-
-	ccRPNs.clear();
-	ccNRPNs.clear();
+	mRPNDetector.reset();
+	mRawRPNs.clear();
+	mRawNRPNs.clear();
 }
 
-void MidiChannel::resetParameterNumberState()
-{
-	ccRPN_MSB.reset();
-	ccRPN_LSB.reset();
-	ccNRPN_MSB.reset();
-	ccNRPN_LSB.reset();
-	ccDE_MSB.reset();
-	ccDE_LSB.reset();
-}
 void MidiChannel::noteOn(int noteNo, float vel)
 {
 	// 同じノート番号は同時発音不可
@@ -101,22 +91,15 @@ void MidiChannel::programChange(int progId)
 	mProgId = progId;
 }
 // コントロールチェンジ & チャネルモードメッセージ
-void MidiChannel::controlChange(int ctrlNo, uint8_t value)
+void MidiChannel::controlChange(int ctrlNo, int value)
 {
 	// 参考 : http://quelque.sakura.ne.jp/midi_cc.html
 	//        https://www.g200kg.com/jp/docs/tech/midi.html
-
-	bool apply_RPN_NRPN_state = false;
 
 	switch (ctrlNo) {
 	// --- コントロールチェンジ ---
 	case 0: // Bank Select <MSB>（バンクセレクト）
 		ccBankSelectMSB = value;
-		break;
-	case 6: // Data Entry(MSB)
-		ccDE_MSB = value;
-		ccDE_LSB.reset();
-		apply_RPN_NRPN_state = true; // MSBのみでよいものはこのタイミングで適用する
 		break;
 	case 10: // Pan(パン)
 		// MEMO 中央値は64。 1-127の範囲を取る実装が多い
@@ -131,10 +114,6 @@ void MidiChannel::controlChange(int ctrlNo, uint8_t value)
 	case 32: // Bank Select <LSB>（バンクセレクト）
 		ccBankSelectLSB = value;
 		break;
-	case 36: // Data Entry(LSB)
-		ccDE_LSB = value;
-		apply_RPN_NRPN_state = true; // MSBのみでよいものはこのタイミングで適用する
-		break;
 	case 64: // Hold1(ホールド1:ダンパーペダル)
 		ccPedal = (value >= 0x64);
 		updateHold();
@@ -148,22 +127,6 @@ void MidiChannel::controlChange(int ctrlNo, uint8_t value)
 	case 75: // Decay Time(ディケイタイム)
 		ccDecayTime = value;
 		break;
-	case 98: // NRPN(LSB)
-		ccNRPN_LSB = value;
-		break;
-	case 99: // NRPN(MSB)
-		resetParameterNumberState();
-		ccNRPN_MSB = value;
-		break;
-	case 100: // RPN(LSB)
-		ccRPN_LSB = value;
-		apply_RPN_NRPN_state = true; // RPNヌルはこのタイミングで適用する
-		break;
-	case 101: // RPN(MSB)
-		resetParameterNumberState();
-		ccRPN_MSB = value;
-		break;
-
 	// --- チャネルモードメッセージ ---
 	case 121: // リセットオールコントローラ
 		resetParameters();
@@ -178,41 +141,26 @@ void MidiChannel::controlChange(int ctrlNo, uint8_t value)
 	}
 
 	// RPN/NRPN 適用
-	if (apply_RPN_NRPN_state) {
-		if(ccRPN_MSB == 0x7F && ccRPN_MSB == 0x7F) {
-			// RPNヌル
-			resetParameterNumberState();
+	juce::MidiRPNMessage rpn;
+	if (mRPNDetector.parseControllerMessage(static_cast<int>(mMidiCh+1), ctrlNo, value, rpn)) {
+		if(rpn.isNRPN) {
+			mRawNRPNs.insert_or_assign(rpn.parameterNumber, std::make_pair(rpn.value, rpn.is14BitValue));
+		}else {
+			mRawRPNs.insert_or_assign(rpn.parameterNumber, std::make_pair(rpn.value, rpn.is14BitValue));
 		}
-		else if(ccDE_MSB || ccDE_LSB) {
-			if(ccRPN_MSB && ccRPN_LSB) {
-				auto key = (static_cast<uint16_t>(*ccRPN_MSB) << 8) | *ccRPN_LSB;
-				if(ccDE_LSB) {
-					ccRPNs[key].second = *ccDE_LSB;
-				}
-				else {
-					ccRPNs[key].first = *ccDE_MSB;
-				}
-			}
-			if(ccNRPN_MSB && ccNRPN_LSB) {
-				auto key = (static_cast<uint16_t>(*ccNRPN_MSB) << 8) | *ccNRPN_LSB;
-				if(ccDE_LSB) {
-					ccNRPNs[key].second = *ccDE_LSB;
-				}
-				else {
-					ccNRPNs[key].first = *ccDE_MSB;
-				}
-			}
+		const bool isRPN = !rpn.isNRPN;
+		const uint8_t pnMSB = (0x3F80 & rpn.parameterNumber) >> 7;
+		const uint8_t pnLSB = (0x007F & rpn.parameterNumber) >> 0;
 
-			// RPN/ NRPN 即時反映系
-			// - RPN: ピッチベンドセンシティビティ
-			if(ccRPN_MSB == 0 && ccRPN_LSB == 0 && ccDE_MSB) {
-				updatePitchBend();
-			}
+		// RPN/ NRPN 即時反映系
+		// - RPN: ピッチベンドセンシティビティ
+		if(isRPN && pnMSB == 0 && pnLSB == 0) {
+			updatePitchBend();
+		}
 
-			// - NRPN(XG) : ドラムパートへ切替
-			if(mSystemType.isXG() && ccNRPN_MSB == 127) {
-				setDrumMode(true);
-			}
+		// - NRPN(XG) : ドラムパートへ切替
+		if(mSystemType.isXG() && pnMSB == 127) {
+			setDrumMode(true);
 		}
 	}
 
@@ -304,31 +252,37 @@ std::unique_ptr<Voice> MidiChannel::createVoice(int noteNo, float vel)
 		return createMelodyVoice(noteNo, vel);
 	}
 }
-std::optional<uint8_t> MidiChannel::getRPN_MSB(uint8_t msb, uint8_t lsb)const noexcept
+std::optional<int> MidiChannel::getInt14RPN(int msb, int lsb)const noexcept
 {
-	auto found = ccRPNs.find((static_cast<uint16_t>(msb) << 8) | lsb);
-	return found != ccRPNs.end() ? std::make_optional<uint8_t>(found->second.first) : std::nullopt;
+	auto pn = ((msb & 0x7F) << 7) + (lsb & 0x7F);
+	auto found = mRawRPNs.find(pn);
+	if(found == mRawRPNs.end()) return {};
+	auto [value, is14bit] = found->second;
+	return (is14bit ? value : ((value & 0x7F) << 7)) - 0x2000;
 }
-std::optional<uint8_t> MidiChannel::getRPN_LSB(uint8_t msb, uint8_t lsb)const noexcept
+std::optional<int> MidiChannel::getInt7RPN(int msb, int lsb)const noexcept
 {
-	auto found = ccRPNs.find((static_cast<uint16_t>(msb) << 8) | lsb);
-	return found != ccRPNs.end() ? found->second.second : std::nullopt;
+	auto found = getInt14RPN(msb, lsb);
+	return found ? std::make_optional(found.value() / 0x80) : std::nullopt;
 }
-std::optional<uint8_t> MidiChannel::getNRPN_MSB(uint8_t msb, uint8_t lsb)const noexcept
+std::optional<int> MidiChannel::getInt14NRPN(int msb, int lsb)const noexcept
 {
-	auto found = ccNRPNs.find((static_cast<uint16_t>(msb) << 8) | lsb);
-	return found != ccNRPNs.end() ? std::make_optional<uint8_t>(found->second.first) : std::nullopt;
+	auto pn = ((msb & 0x7F) << 7) + (lsb & 0x7F);
+	auto found = mRawNRPNs.find(pn);
+	if(found == mRawNRPNs.end()) return {};
+	auto [value, is14bit] = found->second;
+	return (is14bit ? value : ((value & 0x7F) << 7)) - 0x2000;
 }
-std::optional<uint8_t> MidiChannel::getNRPN_LSB(uint8_t msb, uint8_t lsb)const noexcept
+std::optional<int> MidiChannel::getInt7NRPN(int msb, int lsb)const noexcept
 {
-	auto found = ccNRPNs.find((static_cast<uint16_t>(msb) << 8) | lsb);
-	return found != ccNRPNs.end() ? found->second.second : std::nullopt;
+	auto found = getInt14NRPN(msb, lsb);
+	return found ? std::make_optional(found.value() / 0x80) : std::nullopt;
 }
 void MidiChannel::updatePitchBend()
 {
-	auto pitchBendSensitivity = getNRPN_MSB(0, 0).value_or(mSystemType.isOnlyGM1() ? 12 : 2);
-	auto masterCourseTuning = getNRPN_MSB(0, 2).value_or(64) - 64;
-	auto masterFineTuning = ((getNRPN_MSB(0, 1).value_or(64) - 64) * 128 + (getNRPN_LSB(0, 1).value_or(64) - 64)) / 8192.f;
+	auto pitchBendSensitivity = getInt7NRPN(0, 0).value_or(mSystemType.isOnlyGM1() ? 12 : 2);
+	auto masterCourseTuning = getInt7NRPN(0, 2).value_or(0);
+	auto masterFineTuning = getInt14NRPN(0, 1).value_or(0) / 8192.f;
 	mCalculatedPitchBend 
 		= pitchBendSensitivity * (mRawPitchBend / 8192.0f)
 		+ masterCourseTuning

@@ -48,13 +48,12 @@ public:
 
 	void reset(midi::SystemType type);
 	void resetParameters();
-	void resetParameterNumberState();
 	// ---
 	void noteOn(int noteNo, float vel);
 	void noteOff(int noteNo, bool allowTailOff = true);
 	void allNotesOff(bool allowTailOff);
 	void programChange(int progId);
-	void controlChange(int ctrlNo, uint8_t value);
+	void controlChange(int ctrlNo, int value);
 	void pitchBend(int pitch);
 	void updateHold();
 	void setDrumMode(bool isDrumMode);
@@ -73,11 +72,11 @@ private:
 	void updatePitchBend();
 
 	// RPN and NRPN
-	std::optional<uint8_t> getRPN_MSB(uint8_t msb, uint8_t lsb)const noexcept;
-	std::optional<uint8_t> getRPN_LSB(uint8_t msb, uint8_t lsb)const noexcept;
+	std::optional<int> getInt14RPN(int msb, int lsb)const noexcept; // [-0x2000, +0x1FFF]
+	std::optional<int> getInt7RPN(int msb, int lsb)const noexcept;  // [-0x80,   +0x7F]
 
-	std::optional<uint8_t> getNRPN_MSB(uint8_t msb, uint8_t lsb)const noexcept;
-	std::optional<uint8_t> getNRPN_LSB(uint8_t msb, uint8_t lsb)const noexcept;
+	std::optional<int> getInt14NRPN(int msb, int lsb)const noexcept;// [-0x2000, +0x1FFF]
+	std::optional<int> getInt7NRPN(int msb, int lsb)const noexcept; // [-0x80,   +0x7F]
 	
 private:
 	// サンプリング周波数(実行時に動的にセット)
@@ -116,15 +115,10 @@ private:
 	float mCalculatedPitchBend;
 
 	// RPN/NRPN State
-	std::optional<uint8_t> ccRPN_MSB;
-	std::optional<uint8_t> ccRPN_LSB;
-	std::optional<uint8_t> ccNRPN_MSB;
-	std::optional<uint8_t> ccNRPN_LSB;
-	std::optional<uint8_t> ccDE_MSB;
-	std::optional<uint8_t> ccDE_LSB;
+	juce::MidiRPNDetector mRPNDetector;
+	std::unordered_map<int, std::pair<int, bool>> mRawRPNs;   // [0x0000, 0x3FFF]
+	std::unordered_map<int, std::pair<int, bool>> mRawNRPNs;  // [0x0000, 0x3FFF]
 
-	std::unordered_map<uint16_t, std::pair<uint8_t, std::optional<int8_t>>> ccRPNs;
-	std::unordered_map<uint16_t, std::pair<uint8_t, std::optional<int8_t>>> ccNRPNs;
 };
 
 }

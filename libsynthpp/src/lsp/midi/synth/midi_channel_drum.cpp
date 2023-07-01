@@ -96,12 +96,12 @@ std::unique_ptr<Voice> MidiChannel::createDrumVoice(int noteNo, float vel)
 	}
 
 	// NRPN : パンが指定されている場合、オーバーライドする
-	if(auto panFromRPN = getNRPN_MSB(28, noteNo)) {
-		pan = panFromRPN.value_or(rand() % 128) / 127.f;
+	if(auto panFromRPN = getInt7NRPN(28, noteNo)) {
+		pan = panFromRPN.value_or(rand() % 128 - 64) / 127.f + 0.5f;
 	}
 
 	// NRPN : ドラムの音程微調整
-	float resolvedNoteNo = static_cast<float>(pitch + getNRPN_MSB(24, noteNo).value_or(64) - 64);
+	float resolvedNoteNo = static_cast<float>(pitch + getInt7NRPN(24, noteNo).value_or(0));
 
 
 	// MEMO 人間の聴覚ではボリュームは対数的な特性を持つため、ベロシティを指数的に補正する
@@ -113,8 +113,8 @@ std::unique_ptr<Voice> MidiChannel::createDrumVoice(int noteNo, float vel)
 	float cutOffFreqRate = 2.f;
 	float overtuneGain = 0.f; // dB
 	if(mSystemType.isGS() || mSystemType.isXG()) {
-		cutOffFreqRate = getNRPN_MSB(1, 32).value_or(64) / 128.f * 2.f + 1.f;
-		overtuneGain = (getNRPN_MSB(1, 33).value_or(64) / 128.f - 0.5f) * 5.f;
+		cutOffFreqRate = (getInt7NRPN(1, 32).value_or(0) + 64) / 128.f * 2.f + 1.f;
+		overtuneGain = getInt7NRPN(1, 33).value_or(0) / 128.f * 5.f;
 	}
 
 	auto wg = mWaveTable.get(WaveTable::Preset::DrumNoise);
