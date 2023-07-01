@@ -101,7 +101,7 @@ void MidiChannel::programChange(int progId)
 	mProgId = progId;
 }
 // コントロールチェンジ & チャネルモードメッセージ
-void MidiChannel::controlChange(uint8_t ctrlNo, uint8_t value)
+void MidiChannel::controlChange(int ctrlNo, uint8_t value)
 {
 	// 参考 : http://quelque.sakura.ne.jp/midi_cc.html
 	//        https://www.g200kg.com/jp/docs/tech/midi.html
@@ -220,9 +220,9 @@ void MidiChannel::controlChange(uint8_t ctrlNo, uint8_t value)
 	ccPrevValue = value;
 }
 
-void MidiChannel::pitchBend(int16_t pitch)
+void MidiChannel::pitchBend(int value)
 {
-	mRawPitchBend = pitch;
+	mRawPitchBend = static_cast<uint16_t>(value - 0x2000); // 0 to 0x3fff
 	updatePitchBend();
 }
 

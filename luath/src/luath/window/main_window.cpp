@@ -295,12 +295,7 @@ void MainWindow::loadMidi(const std::filesystem::path& path) {
 	juce::MidiFile midiFile;
 	if(!midiFile.readFrom(midiInputStream)) {
 		// ロード失敗
-		MessageBox(
-			mWindowHandle,
-			L"ファイルエラー",
-			std::wstring(L"MIDIファイルを開けません : " + path.wstring()).c_str(),
-			MB_OK | MB_ICONWARNING
-		);
+		Log::e("Broken midi file : {}", path.string());
 	}
 	
 	// 再生開始

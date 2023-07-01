@@ -149,6 +149,18 @@ void LuathSynth::allNotesOff(int channel, bool allowTailOff)
 		midich.allNotesOff(allowTailOff);
 	}
 }
+void LuathSynth::handlePitchWheel(int channel, int value)
+{
+	check(channel > 0);
+	auto& midich = mMidiChannels[static_cast<size_t>(channel) - 1];
+	midich.pitchBend(value); 
+}
+void LuathSynth::handleController(int channel, int ctrlNo, int value)
+{
+	check(channel > 0);
+	auto& midich = mMidiChannels[static_cast<size_t>(channel) - 1];
+	midich.controlChange(ctrlNo, value);
+}
 void LuathSynth::handleProgramChange(int channel, int progId)
 {
 	check(channel > 0);
@@ -160,14 +172,9 @@ void LuathSynth::handleProgramChange(int channel, int progId)
 void LuathSynth::dispatchMessage(const std::shared_ptr<const midi::Message>& msg)
 {
 	using namespace midi::messages;
-		auto& midich = mMidiChannels[controlChange->channel()];
-		midich.controlChange(controlChange->ctrlNo(), controlChange->value());
 	} else if (auto pitchBend = std::dynamic_pointer_cast<const PitchBend>(msg)) {
 		auto& midich = mMidiChannels[pitchBend->channel()];
 		midich.pitchBend(pitchBend->pitch());
-	} else if (auto sysEx = std::dynamic_pointer_cast<const SysExMessage>(msg)) {
-		sysExMessage(&sysEx->data()[0], sysEx->data().size());
-	}
 }
 #endif
 // ---

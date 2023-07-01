@@ -71,7 +71,9 @@ public: // implementation of juce::Synthesizer +α
 	void noteOn(int channel, int noteNo, float velocity)override;
 	void noteOff(int channel, int noteno, float velocity, bool allowTailOff)override;
 	void allNotesOff(int channel, bool allowTailOff)override;
-	void handleProgramChange(int channel, int progId);
+	void handlePitchWheel(int channel, int value)override;
+	void handleController(int channel, int ctrlNo, int value)override;
+	void handleProgramChange(int channel, int progId)override;
 
 	void sysExMessage(const uint8_t* data, size_t len);
 

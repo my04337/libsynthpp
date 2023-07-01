@@ -54,8 +54,8 @@ public:
 	void noteOff(int noteNo, bool allowTailOff = true);
 	void allNotesOff(bool allowTailOff);
 	void programChange(int progId);
-	void controlChange(uint8_t ctrlNo, uint8_t value);
-	void pitchBend(int16_t pitch);
+	void controlChange(int ctrlNo, uint8_t value);
+	void pitchBend(int pitch);
 	void updateHold();
 	void setDrumMode(bool isDrumMode);
 	// ---
