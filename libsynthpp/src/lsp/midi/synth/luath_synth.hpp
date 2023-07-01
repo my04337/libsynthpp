@@ -10,10 +10,10 @@
 #pragma once
 
 #include <lsp/core/core.hpp>
+#include <lsp/midi/system_type.hpp>
+#include <lsp/midi/message_receiver.hpp>
 #include <lsp/midi/synth/midi_channel.hpp>
 #include <lsp/midi/synth/wave_table.hpp>
-
-#include <lsp/midi/message_receiver.hpp>
 
 #include <array>
 #include <shared_mutex>
@@ -47,7 +47,7 @@ public:
 	};
 
 public:
-	LuathSynth(uint32_t sampleFreq, midi::SystemType defaultSystemType = midi::SystemType::GS);
+	LuathSynth(uint32_t sampleFreq, midi::SystemType defaultSystemType = midi::SystemType::GS());
 	~LuathSynth();
 
 	void dispose();
@@ -63,7 +63,6 @@ public:
 	Signal<float> generate(size_t len);
 
 protected:
-	void dispatchMessage(const std::shared_ptr<const midi::Message>& msg);
 	void reset(midi::SystemType type);
 
 public: // implementation of juce::Synthesizer +α

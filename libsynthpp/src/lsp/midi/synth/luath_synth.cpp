@@ -8,8 +8,6 @@
 */
 
 #include <lsp/midi/synth/luath_synth.hpp>
-#include <lsp/midi/messages/basic_message.hpp>
-#include <lsp/midi/messages/sysex_message.hpp>
 
 using namespace lsp::midi::synth;
 
@@ -203,29 +201,29 @@ void LuathSynth::sysExMessage(const uint8_t* data, size_t len)
 
 		if(match({ 0x7F, 0x09, 0x01 })) {
 			// GM1 System On
-			reset(midi::SystemType::GM1);
+			reset(midi::SystemType::GM1());
 		}
 		else if(match({ 0x7F, 0x09, 0x03 })) {
 			// GM2 System On
-			reset(midi::SystemType::GM2);
+			reset(midi::SystemType::GM2());
 		}
 		else if(match({ 0x7F, 0x09, 0x02 })) {
 			// GM System Off → GS Reset
-			reset(midi::SystemType::GS);
+			reset(midi::SystemType::GS());
 		}
 	}
 	else if(makerId == 0x41) {
 		// Roland
-		if(
-			match({ {/*dev:any*/}, 0x42, 0x12, 0x40, 0x00, 0x7F, 0x00, 0x41 }) || // GS Reset
-			match({ {/*dev:any*/}, 0x42, 0x12, 0x00, 0x00, 0x7F, 0x00, 0x01 }) || // System Mode Set 1 // ※32パートで1音源
-			match({ {/*dev:any*/}, 0x42, 0x12, 0x00, 0x00, 0x7F, 0x01, 0x00 })    // System Mode Set 2 // ※16パートを2音源扱いにする。現在ほぼ使われないとのこと
-			) {
-			reset(midi::SystemType::GS); // TODO System Mode Set 1/2に正確に対応する
-		} else if(match({ {/*dev:any*/}, 0x42, 0x12, 0x40, 0x00, 0x7F, 0x00, 0x41 })) {
-				// GS Reset
-				reset(midi::SystemType::GS);
-			}
+		if(match({ {/*dev:any*/}, 0x42, 0x12, 0x40, 0x00, 0x7F, 0x00, 0x41 })) {
+			// GS Reset
+			reset(midi::SystemType::GS());
+		} else if(match({ {/*dev:any*/}, 0x42, 0x12, 0x00, 0x00, 0x7F, 0x00, 0x01 })) {
+			// System Mode Set 1 // ※32パートで1音源
+			reset(midi::SystemType::SystemModeSet1()); 
+		} else if(match({ {/*dev:any*/}, 0x42, 0x12, 0x00, 0x00, 0x7F, 0x01, 0x00 })) {
+			// System Mode Set 2 // ※16パートを2音源扱いにする。現在ほぼ使われないとのこと
+			reset(midi::SystemType::SystemModeSet2());
+		}
 		else if(match({ {/*dev:any*/}, 0x42, 0x12, 0x40, {/*1x:part*/}, 0x15, {/*mn*/}}) && (*peek(4) & 0xF0) == 0x10) {
 			// ドラムパート指定
 			//   see https://ssw.co.jp/dtm/drums/drsetup.html
@@ -238,7 +236,7 @@ void LuathSynth::sysExMessage(const uint8_t* data, size_t len)
 		// YAMAHA
 		if(match({ {/*dev:any*/}, 0x4C, 0x00, 0x00, 0x7E, 0x00 })) {
 			// XG Reset
-			reset(midi::SystemType::XG);
+			reset(midi::SystemType::XG());
 		}
 	}
 }

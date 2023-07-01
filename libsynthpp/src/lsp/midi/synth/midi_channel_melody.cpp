@@ -185,7 +185,7 @@ std::unique_ptr<Voice> MidiChannel::createMelodyVoice(int noteNo, float vel)
 	}
 
 
-	if(mSystemType != midi::SystemType::GM1) {
+	if(mSystemType.isGS() || mSystemType.isXG()) {
 		a *= powf(10.0f, (ccAttackTime / 128.f - 0.5f) * 4.556f);
 		d *= powf(10.0f, (ccDecayTime / 128.f - 0.5f) * 4.556f);
 		r *= powf(10.0f, (ccReleaseTime / 128.f - 0.5f) * 4.556f);
@@ -198,7 +198,7 @@ std::unique_ptr<Voice> MidiChannel::createMelodyVoice(int noteNo, float vel)
 	static const effector::EnvelopeGenerator<float>::Curve curveExp3(3.0f);
 
 	float overtuneGain = 0.f; // dB
-	if(mSystemType != midi::SystemType::GM1) {
+	if(mSystemType.isGS() || mSystemType.isXG()) {
 		overtuneGain = (getNRPN_MSB(1, 33).value_or(64) / 128.f - 0.5f) * 5.f;
 	}
 

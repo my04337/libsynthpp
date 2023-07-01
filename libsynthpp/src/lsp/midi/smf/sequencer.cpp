@@ -9,7 +9,7 @@
 
 #include <lsp/midi/smf/sequencer.hpp>
 #include <lsp/midi/message_receiver.hpp>
-#include <lsp/midi/messages/sysex_message.hpp>
+#include <lsp/midi/system_type.hpp>
 #include <lsp/util/thread_priority.hpp>
 
 using namespace lsp;
@@ -142,7 +142,13 @@ void Sequencer::playThreadMain(std::stop_token stopToken, const juce::MidiMessag
 	auto next_message_iter = sequence.begin();
 
 	while (true) {
-		if(stopToken.stop_requested()) break;
+		// 停止要求があった場合、状態を完全に破棄するためリセットを送出する
+		if(stopToken.stop_requested()) {
+			std::vector<uint8_t> reset {0x7E, 0x7F, 0x09, 0x01}; // GM1 Reset
+			auto now_time = clock::now();
+			mReceiver.onMidiMessageReceived(now_time, juce::MidiMessage::createSysExMessage(reset.data(), static_cast<int>(reset.size())));
+			break;
+		}
 
 		// 処理時間が現在より手前のメッセージを処理する
 		clock::time_point next_message_time;

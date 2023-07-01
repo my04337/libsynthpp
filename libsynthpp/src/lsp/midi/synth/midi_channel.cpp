@@ -18,7 +18,7 @@ MidiChannel::MidiChannel(uint32_t sampleFreq, uint8_t ch, const WaveTable& waveT
 	, mMidiCh(ch)
 	, mWaveTable(waveTable)
 {
-	reset(midi::SystemType::GM1);
+	reset(midi::SystemType::GM1());
 }
 // チャネル毎パラメータ類 リセット
 void MidiChannel::reset(midi::SystemType type)
@@ -91,6 +91,7 @@ void MidiChannel::allNotesOff(bool allowTailOff)
 	for(auto& [id, voice] : mVoices) {
 		voice->noteOff(allowTailOff);
 	}
+	if(!allowTailOff) mVoices.clear();
 }
 // プログラムチェンジ
 void MidiChannel::programChange(int progId)
@@ -209,7 +210,7 @@ void MidiChannel::controlChange(uint8_t ctrlNo, uint8_t value)
 			}
 
 			// - NRPN(XG) : ドラムパートへ切替
-			if(mSystemType == SystemType::XG && ccNRPN_MSB == 127) {
+			if(mSystemType.isXG() && ccNRPN_MSB == 127) {
 				setDrumMode(true);
 			}
 		}
@@ -325,7 +326,7 @@ std::optional<uint8_t> MidiChannel::getNRPN_LSB(uint8_t msb, uint8_t lsb)const n
 }
 void MidiChannel::updatePitchBend()
 {
-	auto pitchBendSensitivity = getNRPN_MSB(0, 0).value_or(mSystemType == midi::SystemType::GM1 ? 12 : 2 );
+	auto pitchBendSensitivity = getNRPN_MSB(0, 0).value_or(mSystemType.isOnlyGM1() ? 12 : 2);
 	auto masterCourseTuning = getNRPN_MSB(0, 2).value_or(64) - 64;
 	auto masterFineTuning = ((getNRPN_MSB(0, 1).value_or(64) - 64) * 128 + (getNRPN_LSB(0, 1).value_or(64) - 64)) / 8192.f;
 	mCalculatedPitchBend 

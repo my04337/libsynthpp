@@ -288,6 +288,7 @@ void MainWindow::onDpiChanged(float scale)
 void MainWindow::loadMidi(const std::filesystem::path& path) {
 	// 現在の再生を停止
 	mSequencer.stop();
+	if(mAudioDevice) mAudioDevice->stop();
 
 	// MIDIファイルをロード
 	juce::FileInputStream midiInputStream(juce::File(path.wstring().c_str()));
@@ -302,7 +303,8 @@ void MainWindow::loadMidi(const std::filesystem::path& path) {
 		);
 	}
 	
-	// シーケンサ起動
+	// 再生開始
+	if(mAudioDevice) mAudioDevice->start(this);
 	mSequencer.load(std::move(midiFile));
 	mSequencer.start();
 }
@@ -468,13 +470,7 @@ void MainWindow::onDraw(ID2D1RenderTarget& renderer)
 
 	// 演奏情報
 	{
-		const wchar_t* systemType = L"";
-		switch(synthDigest.systemType) {
-		case midi::SystemType::GM1:	systemType = L"GM1";	break;
-		case midi::SystemType::GM2:	systemType = L"GM2";	break;
-		case midi::SystemType::GS:	systemType = L"GS";		break;
-		case midi::SystemType::XG:	systemType = L"XG";		break;
-		}
+		auto systemType = synthDigest.systemType.toPrintableWString();
 
 		auto buffered = mAudioDevice ? mAudioDevice->getCurrentBufferSizeSamples() / static_cast<float>(SAMPLE_FREQ) : 0.f;
 		auto latency = mAudioDevice ? mAudioDevice->getOutputLatencyInSamples() / static_cast<float>(SAMPLE_FREQ) : 0.f;

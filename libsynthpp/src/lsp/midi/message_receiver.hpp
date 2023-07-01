@@ -10,7 +10,6 @@
 #pragma once
 
 #include <lsp/core/core.hpp>
-#include <lsp/midi/message.hpp>
 
 namespace lsp::midi
 {
