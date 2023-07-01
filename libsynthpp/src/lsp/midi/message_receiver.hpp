@@ -22,7 +22,7 @@ public:
 	virtual ~MessageReceiver() {}
 
 	// MIDIメッセージ受信コールバック : メッセージ類は蓄積される
-	virtual void onMidiMessageReceived(clock::time_point msg_time, const std::shared_ptr<const Message>& msg) = 0;
+	virtual void onMidiMessageReceived(clock::time_point msg_time, const juce::MidiMessage& msg) = 0;
 };
 
 }

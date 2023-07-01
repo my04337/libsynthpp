@@ -1,6 +1,5 @@
 ﻿#include <luath/window/main_window.hpp>
 #include <luath/app/application.hpp>
-#include <lsp/midi/smf/parser.hpp>
 
 #include <shellapi.h>
 
@@ -286,24 +285,28 @@ void MainWindow::onDpiChanged(float scale)
 	// 再描画を依頼
 	UpdateWindow(mWindowHandle);
 }
-void MainWindow::loadMidi(const std::filesystem::path& midi_path) {
+void MainWindow::loadMidi(const std::filesystem::path& path) {
+	// 現在の再生を停止
 	mSequencer.stop();
-	mSequencer.reset(midi::SystemType::GM1);
 
-	try {
-		auto parsed = midi::smf::Parser::parse(midi_path);
-		mSequencer.load(std::move(parsed.second));
-		mSequencer.start();
-	} catch (const midi::smf::decoding_exception&) {
+	// MIDIファイルをロード
+	juce::FileInputStream midiInputStream(juce::File(path.wstring().c_str()));
+	juce::MidiFile midiFile;
+	if(!midiFile.readFrom(midiInputStream)) {
 		// ロード失敗
 		MessageBox(
 			mWindowHandle,
 			L"ファイルエラー",
-			std::wstring(L"MIDIファイルを開けません : " + midi_path.wstring()).c_str(),
+			std::wstring(L"MIDIファイルを開けません : " + path.wstring()).c_str(),
 			MB_OK | MB_ICONWARNING
 		);
 	}
+	
+	// シーケンサ起動
+	mSequencer.load(std::move(midiFile));
+	mSequencer.start();
 }
+
 void MainWindow::audioDeviceIOCallbackWithContext(
 	const float* const* inputChannelData,
 	int numInputChannels,

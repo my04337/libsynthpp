@@ -81,7 +81,6 @@ std::optional<uint32_t> read_variable(std::istream& s)
 
 Sequencer::Sequencer(MessageReceiver& receiver)
 	: mReceiver(receiver)
-	, mPlayThreadAbortFlag(false)
 {
 }
 
@@ -90,26 +89,35 @@ Sequencer::~Sequencer()
 	stop();
 }
 
-void Sequencer::load(Body&& body)
+void Sequencer::load(juce::MidiFile&& midiFile)
 {
 	stop();
-	mSmfBody = std::move(body);
+
+	// 時刻をMIDIタイムスタンプ(デルタタイムベース?)から先頭からの秒に変換
+	midiFile.convertTimestampTicksToSeconds();
+
+	// シーケンサで扱うため全チャネルを統合
+	juce::MidiMessageSequence sequence;
+	for(int trackNo = 0; trackNo < midiFile.getNumTracks(); ++trackNo) {
+		sequence.addSequence(*midiFile.getTrack(trackNo), 0.0);
+	}
+
+	// ロード完了
+	mSequence = std::move(sequence);
 }
 void Sequencer::start()
 {
 	stop();
-	mPlayThreadAbortFlag = false;
 
 	std::promise<void> ready_promise;
 	auto ready_future = ready_promise.get_future();
-	mPlayThread = std::thread([this, &ready_promise]()
+	mPlayThread = std::jthread([this, &ready_promise]()
 	{
 		lsp::this_thread::set_priority(ThreadPriority::AboveNormal);
 
-		auto body = mSmfBody; // copy
+		auto body = mSequence; // copy
 		ready_promise.set_value();
-		playThreadMain(body);
-		mPlayThreadAbortFlag = true;
+		playThreadMain(mPlayThread.get_stop_token(), body);
 	});
 	ready_future.wait();
 }
@@ -117,63 +125,42 @@ void Sequencer::start()
 void Sequencer::stop() 
 {
 	if(mPlayThread.joinable()) {
-		mPlayThreadAbortFlag = true;
+		mPlayThread.request_stop();
 		mPlayThread.join();
 	}
 }
 bool Sequencer::isPlaying()const
 {
-	return !mPlayThreadAbortFlag;
-}
-void Sequencer::reset(SystemType type)
-{
-	std::shared_ptr<Message> msg;
-	switch (type) {
-	case SystemType::GM1:
-		msg = std::make_shared<messages::SysExMessage>(std::vector<uint8_t>{ 0x7E, 0x7F, 0x09, 0x01 });
-		break;
-	case SystemType::GM2:
-		msg = std::make_shared<messages::SysExMessage>(std::vector<uint8_t>{ 0x7E, 0x7F, 0x09, 0x03 });
-		break;
-	case SystemType::GS:
-		msg = std::make_shared<messages::SysExMessage>(std::vector<uint8_t>{ 0x7E, 0x7F, 0x09, 0x02 });
-		break;
-	case SystemType::XG:
-		msg = std::make_shared<messages::SysExMessage>(std::vector<uint8_t>{ 0x43, 0x10, 0x4C, 0x00, 0x00, 0x7E, 0x00 });
-		break;
-	}
-	if (msg) {
-		mReceiver.onMidiMessageReceived(std::chrono::steady_clock::time_point::min(), msg);
-	}
+	return mPlayThread.joinable() && !mPlayThread.get_stop_token().stop_requested();
 }
 
-void Sequencer::playThreadMain(const Body& smfBody)
+void Sequencer::playThreadMain(std::stop_token stopToken, const juce::MidiMessageSequence& sequence)
 {
 	static constexpr std::chrono::milliseconds max_sleep_duration{ 100 };
 
 	auto start_time = clock::now();
-	auto next_message_iter = smfBody.cbegin();
+	auto next_message_iter = sequence.begin();
 
 	while (true) {
-		if(mPlayThreadAbortFlag) break;
+		if(stopToken.stop_requested()) break;
 
 		// 処理時間が現在より手前のメッセージを処理する
 		clock::time_point next_message_time;
-		while (next_message_iter != smfBody.cend()) {
+		while (next_message_iter != sequence.end()) {
 			auto now_time = clock::now(); // 処理中にも現在時間は変わる
-			auto msg_time = start_time + next_message_iter->first;
-			auto& msg = next_message_iter->second;
+			auto msg_time = start_time + std::chrono::duration_cast<clock::duration>(std::chrono::duration<double>((*next_message_iter)->message.getTimeStamp()));
+			auto& msg = (*next_message_iter)->message;
 
 			if (msg_time >= now_time) {
 				next_message_time = msg_time;
 				break;
 			}
-			mReceiver.onMidiMessageReceived(msg_time,  msg);
+			mReceiver.onMidiMessageReceived(msg_time, msg);
 			++next_message_iter;
 		}
 
 		// 処理すべきメッセージが無くなった場合、停止
-		if(next_message_iter == smfBody.cend()) break;
+		if(next_message_iter == sequence.end()) break;
 
 		// 次のメッセージまで待機
 		auto max_sleep_until = clock::now() + max_sleep_duration;

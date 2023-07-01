@@ -11,7 +11,6 @@
 #include <lsp/effector/biquadratic_filter.hpp>
 #include <lsp/effector/envelope_generator.hpp>
 #include <lsp/midi/message.hpp>
-#include <lsp/midi/smf/parser.hpp>
 #include <lsp/midi/smf/sequencer.hpp>
 #include <lsp/audio/wav_file_output.hpp>
 
