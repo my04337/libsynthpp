@@ -15,10 +15,11 @@ SpectrumAnalyzer::SpectrumAnalyzer()
 SpectrumAnalyzer::~SpectrumAnalyzer()
 {
 }
-void SpectrumAnalyzer::setParams(float sampleFreq, size_t bufferSize)
+void SpectrumAnalyzer::setParams(float sampleFreq, size_t bufferSize, uint32_t strechRate)
 {
 	require(sampleFreq > 0);
 	require(bufferSize > 0 && std::has_single_bit(bufferSize));
+	require(strechRate > 0 && std::has_single_bit(strechRate));
 
 	auto span = static_cast<float>(bufferSize / sampleFreq);
 	require(span > 0);
@@ -26,18 +27,23 @@ void SpectrumAnalyzer::setParams(float sampleFreq, size_t bufferSize)
 	std::lock_guard lock(mInputMutex);
 	mSampleFreq = sampleFreq;
 	mSpan = span;
-	mBufferSize = bufferSize;
+	mStrechRate = strechRate;
+	mUnitBufferSize = bufferSize;
 
-	mInputBuffer1ch.resize(mBufferSize, 0.f);
-	mInputBuffer2ch.resize(mBufferSize, 0.f);
-	mDrawingBuffer1ch.resize(mBufferSize, 0.f);
-	mDrawingBuffer2ch.resize(mBufferSize, 0.f);
+	mInputBuffer1ch.resize(bufferSize, 0.f);
+	mInputBuffer2ch.resize(bufferSize, 0.f);
+	mDrawingBuffer1ch.resize(bufferSize, 0.f);
+	mDrawingBuffer2ch.resize(bufferSize, 0.f);
 
-	mDrawingFftRealBuffer.resize(mBufferSize, 0.f);
-	mDrawingFftImageBuffer.resize(mBufferSize, 0.f);
-	mDrawingFftWindowCache.resize(mBufferSize);
-	for(size_t i = 0; i < mBufferSize; ++i) {
-		mDrawingFftWindowCache[i] = lsp::fft::HammingWf(i / (float)mBufferSize);
+	mDrawingFftRealBuffer.resize(bufferSize * strechRate, 0.f);
+	mDrawingFftImageBuffer.resize(bufferSize * strechRate, 0.f);
+
+	mDrawingFftWindowCache.resize(bufferSize, 0.f);
+
+	// 高速な解析のため、信号前後を0パディングする
+	// 参考 : https://watlab-blog.com/2020/11/16/zero-padding-fft/
+	for(size_t i = 0; i < bufferSize; ++i) {
+		mDrawingFftWindowCache[i] = lsp::fft::HammingWf(i / (float)bufferSize);
 	}
 }
 
@@ -101,22 +107,22 @@ void SpectrumAnalyzer::draw(ID2D1RenderTarget& renderer, const float left, const
 	const float mid_x = (left + right) / 2;
 	const float mid_y = (top + bottom) / 2;
 
-	const auto buffer_size = mBufferSize;
-	const float frequency_resolution = static_cast<float>(mSampleFreq) / static_cast<float>(buffer_size); // 周波数分解能
+	const auto scale_rate = mStrechRate;
+	const float frequency_resolution = static_cast<float>(mSampleFreq) / static_cast<float>(mUnitBufferSize); // 周波数分解能
 
 
 	// 対数軸への変換関数
-	auto freq2horz = [&](float freq)->float {
-		if(freq < 1.0e-8f) freq = 1.0e-8f; // オーバーフロー対策の補正
-		float f = std::log10(freq);
-
-		return std::clamp((f - log_min_freq) / (log_max_freq - log_min_freq) * width, 0.f, width - 1.f);
-	};
 	auto power2vert = [&](float power)->float {
 		if(power < 1.0e-8f) power = 1.0e-8f; // オーバーフロー対策の補正
 		float dbfs = 10 * std::log10f(power);
 
 		return std::clamp(height - (dbfs - log_min_dbfs) / (log_max_dbfs - log_min_dbfs) * height, 0.f, height - 1.f);
+	};
+	auto freq2horz = [&](float freq)->float {
+		if(freq < 1.0e-8f) freq = 1.0e-8f; // オーバーフロー対策の補正
+		float f = std::log10(freq);
+
+		return std::clamp((f - log_min_freq) / (log_max_freq - log_min_freq) * width, 0.f, width - 1.f);
 	};
 	auto horz2freq = [&](float x)->float {
 		// freq2horzの逆変換を行う
@@ -153,29 +159,37 @@ void SpectrumAnalyzer::draw(ID2D1RenderTarget& renderer, const float left, const
 	}
 
 	// 信号描画
-	auto drawSignal = [&](const D2D1_COLOR_F& color, const std::vector<float>& buffer) {
+	auto drawSignal = [&](const D2D1_COLOR_F& color, const std::vector<float>& drawingBuffer) {
 		brush->SetColor(color);
 
 		// FFT実施
 		auto& real = mDrawingFftRealBuffer;
 		auto& image = mDrawingFftImageBuffer;
 		auto& window = mDrawingFftWindowCache;
-		for(size_t i = 0; i < real.size(); ++i) {
-			real[i] = buffer[i] * window[i];
+		if(mStrechRate > 1) {
+			const size_t window_offset = mUnitBufferSize * (mStrechRate - 1) / 2;
+			std::fill(real.begin(), real.end(), 0.f);
+			for(size_t i = 0; i < drawingBuffer.size(); ++i) {
+				real[window_offset + i] = drawingBuffer[i] * window[i];
+			}
+		} else {
+			for(size_t i = 0; i < drawingBuffer.size(); ++i) {
+				real[i] = drawingBuffer[i] * window[i];
+			}
 		}
 		std::fill(image.begin(), image.end(), 0.f);
-		lsp::fft::fft1d<float>(real, image, static_cast<int>(buffer.size()), 0, false);
+		lsp::fft::fft1d<float>(real, image, static_cast<int>(real.size()), 0, false);
 
 		// 各点の位置を求める
 		auto getPoint = [&](size_t pos) -> D2D1_POINT_2F {
-			float x = left + freq2horz(pos * frequency_resolution);
-			float power = real[pos] * real[pos] + image[pos] * image[pos];
+			float x = left + freq2horz(pos * frequency_resolution / scale_rate);
+			float power = (real[pos] * real[pos] + image[pos] * image[pos]);
 			float y = top + power2vert(power);
 			return { x, y };
 		};
 		auto prev = getPoint(0);
 		float yPeak = bottom;
-		for(size_t i = 1; i < buffer_size / 2; ++i) { // FFT結果の実軸部分の内、データ後半は折り返し雑音のため使用しない
+		for(size_t i = 1; i < real.size() / 2; ++i) { // FFT結果の実軸部分の内、データ後半は折り返し雑音のため使用しない
 			auto pt = getPoint(i);
 			yPeak = std::min(yPeak, pt.y);
 			if(pt.x - prev.x >= horizontal_resolution) {

@@ -346,7 +346,7 @@ void MainWindow::audioDeviceAboutToStart(juce::AudioIODevice* device)
 	auto sampleFreq = static_cast<float>(device->getCurrentSampleRate());
 	mSynthesizer.setSampleFreq(sampleFreq);
 	mOscilloScopeWidget.setParams(sampleFreq, 25e-3f);
-	mSpectrumAnalyzerWidget.setParams(sampleFreq, 4096);
+	mSpectrumAnalyzerWidget.setParams(sampleFreq, 4096, 2);
 	mLissajousWidget.setParams(sampleFreq, 25e-3f);
 }
 void MainWindow::audioDeviceStopped()

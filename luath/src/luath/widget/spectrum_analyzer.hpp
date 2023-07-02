@@ -12,7 +12,7 @@ public:
 	~SpectrumAnalyzer();
 
 	// 表示パラメータを指定します
-	void setParams(float sampleFreq, size_t bufferSize);
+	void setParams(float sampleFreq, size_t bufferSize, uint32_t strechRate = 1);
 
 	// 表示波形を書き込みます
 	void write(const lsp::Signal<float>& sig);
@@ -24,11 +24,13 @@ public:
 private:
 	float mSampleFreq; // [hz]
 	float mSpan;       // [second]
-	size_t mBufferSize;
+	uint32_t mStrechRate;
+	size_t mUnitBufferSize;
 
 	mutable std::mutex mInputMutex;
 	std::deque<float> mInputBuffer1ch; // リングバッファ
 	std::deque<float> mInputBuffer2ch; // リングバッファ
+
 	std::vector<float> mDrawingBuffer1ch; // 描画用バッファ。排他不要。
 	std::vector<float> mDrawingBuffer2ch; // 描画用バッファ。排他不要。
 
