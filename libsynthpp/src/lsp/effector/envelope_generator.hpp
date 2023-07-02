@@ -164,8 +164,9 @@ public:
 	parameter_type envelope()const
 	{
 		auto easing = [this](uint64_t max)->parameter_type { 
-			const auto p = parameter_type(mTime) / parameter_type(max);
+			if(max == 0) return mEndLevel;
 
+			const auto p = parameter_type(mTime) / parameter_type(max);
 			switch(mCurve) {
 			case Shape::Linear: 
 				// 線形補間

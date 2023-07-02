@@ -124,13 +124,7 @@ std::unique_ptr<Voice> MidiChannel::createDrumVoice(int noteNo, float vel)
 	voice->setResonance(cutOffFreqRate, overtuneGain);
 
 	auto& eg = voice->envolopeGenerator();
-	eg.setDrumEnvelope(
-		mSynth.sampleFreq(), curveExp3,
-		std::max(0.005f, a),
-		h,
-		std::max(0.005f, d),
-		cutoff_level
-	);
+	eg.setDrumEnvelope(mSynth.sampleFreq(), curveExp3, a, h, d, cutoff_level);
 	eg.noteOn();
 
 	return voice;

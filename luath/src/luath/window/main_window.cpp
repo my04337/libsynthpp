@@ -389,7 +389,7 @@ void MainWindow::onDraw()
 	auto renderHwndTargetProperties = D2D1::HwndRenderTargetProperties(mWindowHandle);
 	renderHwndTargetProperties.pixelSize.width = static_cast<UINT32>(windowRect.right - windowRect.left);
 	renderHwndTargetProperties.pixelSize.height = static_cast<UINT32>(windowRect.bottom - windowRect.top);
-	renderHwndTargetProperties.presentOptions = D2D1_PRESENT_OPTIONS_IMMEDIATELY;
+	renderHwndTargetProperties.presentOptions = D2D1_PRESENT_OPTIONS_NONE; // VSYNC(垂直同期)有効
 
 	CComPtr<ID2D1HwndRenderTarget> renderTarget;
 	check(SUCCEEDED(mD2DFactory->CreateHwndRenderTarget(
@@ -412,11 +412,11 @@ void MainWindow::onDraw()
 	// 描画メイン
 	onDraw(renderer);
 
-
 	// 描画終了
-	renderer.EndDraw();
 	auto drawing_end_time = clock::now();
 
+	// ディスプレイへ反映 ※VSYNC待機
+	renderer.EndDraw();
 	context.drawing_time_history[context.drawing_time_index] = std::chrono::duration_cast<std::chrono::microseconds>(drawing_end_time - drawing_start_time);
 	++context.drawing_time_index;
 	if(context.drawing_time_index == context.drawing_time_history.size()) {
@@ -464,12 +464,12 @@ void MainWindow::onDraw(ID2D1RenderTarget& renderer)
 
 	// 描画情報
 	{
-		drawText(0, 0, std::format(L"描画フレーム数 : {}", context.frames));
 		auto average_interval_time = std::accumulate(context.frame_interval_history.cbegin(), context.frame_interval_history.cend(), std::chrono::microseconds(0)) / context.frame_interval_history.size();
 		auto average_drawing_time = std::accumulate(context.drawing_time_history.cbegin(), context.drawing_time_history.cend(), std::chrono::microseconds(0)) / context.drawing_time_history.size();
 		if(average_interval_time.count() > 0) {
-			//auto drawing_load = static_cast<float>(average_drawing_time.count()) / static_cast<float>(average_interval_time.count());
-			drawText(0, 15, std::format(L"描画時間 : {:05.2f}[msec]", average_drawing_time.count() / 1000.f));
+			auto drawing_load = static_cast<float>(average_drawing_time.count()) / static_cast<float>(average_interval_time.count());
+			drawText(0, 0, std::format(L"描画時間 : {:05.2f}[msec]", average_drawing_time.count() / 1000.f));
+			drawText(0, 15, std::format(L"描画負荷 : {:06.2f}[%]", 100 * drawing_load));
 		}
 
 	}

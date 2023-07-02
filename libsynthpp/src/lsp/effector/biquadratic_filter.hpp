@@ -75,7 +75,7 @@ public:
 	}
 
 
-	// パラメータ設定 : ローパスフィルタ
+	// パラメータ設定 : ローパスフィルタ ※Q(default=1.0) : 勾配。1未満はより緩やかな勾配、1以上は急峻かつリプルあり。 
 	void setLopassParam(parameter_type sampleFreq, parameter_type cutOffFreq, parameter_type Q)
 	{
 		const parameter_type w0    = 2 * math::PI<parameter_type> * cutOffFreq / sampleFreq;
@@ -95,7 +95,7 @@ public:
 		BiquadraticFilter bqf; bqf.setLopassParam(sampleFreq, cutOffFreq, Q); return bqf;
 	}
 
-	// パラメータ設定 : ハイパスフィルタ
+	// パラメータ設定 : ハイパスフィルタ ※Q(default=1.0) : 勾配。1未満はより緩やかな勾配、1以上は急峻かつリプルあり。 
 	void setHighpassParam(parameter_type sampleFreq, parameter_type cutOffFreq, parameter_type Q)
 	{
 		const parameter_type w0    = 2 * math::PI<parameter_type> * cutOffFreq / sampleFreq;
@@ -115,7 +115,7 @@ public:
 		BiquadraticFilter bqf; bqf.setHighpassParam(sampleFreq, cutOffFreq, Q); return bqf;
 	}
 
-	// パラメータ設定 : バンドパス1
+	// パラメータ設定 : バンドパス1  ※BW:バンド幅[octave]。 ゲインが-3dB以下に落ち込む幅を示す
 	void setBandpass1Param(parameter_type sampleFreq, parameter_type centerFreq, parameter_type BW)
 	{
 		const parameter_type w0    = 2 * math::PI<parameter_type> * centerFreq / sampleFreq;
@@ -131,7 +131,7 @@ public:
 		a2 = 1 - alpha;
 	}
 
-	// パラメータ設定 : バンドパス2
+	// パラメータ設定 : バンドパス2  ※BW:バンド幅[octave]。 ゲインが-3dB以下に落ち込む幅を示す
 	void setBandpass2Param(parameter_type sampleFreq, parameter_type centerFreq, parameter_type BW)
 	{
 		const parameter_type w0    = 2 * math::PI<parameter_type> * centerFreq / sampleFreq;
@@ -148,7 +148,7 @@ public:
 		a2 = 1 - alpha;
 	}
 
-	// パラメータ設定 : バンドストップ
+	// パラメータ設定 : バンドストップ  ※BW:バンド幅[octave]。 ゲインが-3dB以下に落ち込む幅を示す
 	void setBandstopParam(parameter_type sampleFreq, parameter_type centerFreq, parameter_type BW)
 	{
 		const parameter_type w0    = 2 * math::PI<parameter_type> * centerFreq / sampleFreq;
@@ -165,7 +165,7 @@ public:
 		a2 = 1 - alpha;
 	}
 
-	// パラメータ設定 : オールパス
+	// パラメータ設定 : オールパス  ※バンド幅だが周波数特性には大きな影響はない。 位相のみに影響する。
 	void setAllpassParam(parameter_type sampleFreq, parameter_type cutOffFreq, parameter_type BW)
 	{
 		const parameter_type w0    = 2 * math::PI<parameter_type> * cutOffFreq / sampleFreq;
@@ -182,7 +182,7 @@ public:
 		a2 = 1 - alpha;
 	}
 
-	// パラメータ設定 : ピーキング
+	// パラメータ設定 : ピーキング  ※BW:バンド幅[octave]。 ゲインが-3dB以下に落ち込む幅を示す。 gain : ゲイン[dB]
 	void setPeakingParam(parameter_type sampleFreq, parameter_type centerFreq, parameter_type BW, parameter_type gain)
 	{
 		const parameter_type w0    = 2 * math::PI<parameter_type> * centerFreq / sampleFreq;
@@ -200,7 +200,7 @@ public:
 		a2 = 1 - alpha / A;
 	}
 
-	// パラメータ設定 : ローシェルフ
+	// パラメータ設定 : ローシェルフ  ※S(default=1.0) : 勾配[dB/octave], gain : ゲイン[dB]
 	void setLoshelfParam(parameter_type sampleFreq, parameter_type cutOffFreq, parameter_type S, parameter_type gain)
 	{
 		const parameter_type w0    = 2 * math::PI<parameter_type> * cutOffFreq / sampleFreq;
@@ -218,7 +218,7 @@ public:
 		a2 = (A + 1) + (A - 1) * cosw0 - 2 * sqrtA * alpha;
 	}
 
-	// パラメータ設定 : ハイシェルフ
+	// パラメータ設定 : ハイシェルフ  ※S(default=1.0) : 勾配[dB/octave], gain : ゲイン[dB]
 	void setHighshelfParam(parameter_type sampleFreq, parameter_type cutOffFreq, parameter_type S, parameter_type gain)
 	{
 		const parameter_type w0    = 2 * math::PI<parameter_type> * cutOffFreq / sampleFreq;

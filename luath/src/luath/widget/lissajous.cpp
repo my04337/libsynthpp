@@ -82,7 +82,7 @@ void Lissajous::draw(ID2D1RenderTarget& renderer, const float left, const float 
 	const float mid_x = (left + right) / 2;
 	const float mid_y = (top + bottom) / 2;
 
-	const uint32_t buffer_size = mBufferSize;
+	const size_t buffer_size = mBufferSize;
 	const float sample_pitch = width / buffer_size;
 
 	// 罫線描画

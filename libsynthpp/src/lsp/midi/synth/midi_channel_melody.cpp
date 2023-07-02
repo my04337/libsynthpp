@@ -227,16 +227,7 @@ std::unique_ptr<Voice> MidiChannel::createMelodyVoice(int noteNo, float vel)
 	voice->setResonance(2.f, overtuneGain);
 
 	auto& eg = voice->envolopeGenerator();
-	eg.setMelodyEnvelope(
-		mSynth.sampleFreq(), curveExp3,
-		std::max(0.001f, a),
-		h,
-		std::max(0.001f, d),
-		s,
-		f,
-		std::max(0.001f, r),
-		cutoffLevel
-	);
+	eg.setMelodyEnvelope(mSynth.sampleFreq(), curveExp3,a, h, d, s, f, r, cutoffLevel);
 	eg.noteOn();
 	return voice;
 }
