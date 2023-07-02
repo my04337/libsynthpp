@@ -131,9 +131,4 @@ std::string demangle(const char* mangled_name);
 inline std::string demangle(const std::type_info& v) { return lsp::demangle(v.name()); }
 inline std::string demangle(const std::type_index& v) { return lsp::demangle(v.name()); }
 
-// 添字演算子可能である事を表すコンセプト
-template<typename Tcontainer, typename Telement>
-concept subscript_operator_available = requires(Tcontainer a, size_t index) {
-	{a[index]} -> std::convertible_to<Telement>;
-};
 }
