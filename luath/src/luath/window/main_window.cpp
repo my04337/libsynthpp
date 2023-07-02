@@ -288,7 +288,6 @@ void MainWindow::onDpiChanged(float scale)
 void MainWindow::loadMidi(const std::filesystem::path& path) {
 	// 現在の再生を停止
 	mSequencer.stop();
-	if(mAudioDevice) mAudioDevice->stop();
 
 	// MIDIファイルをロード
 	juce::FileInputStream midiInputStream(juce::File(path.wstring().c_str()));
@@ -299,7 +298,6 @@ void MainWindow::loadMidi(const std::filesystem::path& path) {
 	}
 	
 	// 再生開始
-	if(mAudioDevice) mAudioDevice->start(this);
 	mSequencer.load(std::move(midiFile));
 	mSequencer.start();
 }
@@ -361,6 +359,8 @@ struct MainWindow::DrawingContext
 	// FPS計算,表示用
 	size_t frames = 0;
 	std::array<std::chrono::microseconds, 15> drawing_time_history = {};
+	std::array<std::chrono::microseconds, 15> frame_interval_history = {};
+	clock::time_point prev_drawing_start_time = clock::now();
 	size_t drawing_time_index = 0;
 
 	// 前回のボイス表示位置 (素直に順番に描画するとちらついて見づらいため表示を揃える)
@@ -398,6 +398,8 @@ void MainWindow::onDraw()
 	
 	// 描画開始
 	auto drawing_start_time = clock::now();
+	context.frame_interval_history[context.drawing_time_index] = std::chrono::duration_cast<std::chrono::microseconds>(drawing_start_time - context.prev_drawing_start_time);
+	context.prev_drawing_start_time = drawing_start_time;
 	renderer.BeginDraw();
 
 	renderer.SetTextAntialiasMode(D2D1_TEXT_ANTIALIAS_MODE_CLEARTYPE);
@@ -459,25 +461,33 @@ void MainWindow::onDraw(ID2D1RenderTarget& renderer)
 	// 描画情報
 	{
 		drawText(0, 0, std::format(L"描画フレーム数 : {}", context.frames));
-		auto average_time = std::accumulate(context.drawing_time_history.cbegin(), context.drawing_time_history.cend(), std::chrono::microseconds(0)) / context.drawing_time_history.size();
-		drawText(0, 15, std::format(L"描画時間 : {:0.2f}[msec]", average_time.count()/1000.f));
+		auto average_interval_time = std::accumulate(context.frame_interval_history.cbegin(), context.frame_interval_history.cend(), std::chrono::microseconds(0)) / context.frame_interval_history.size();
+		auto average_drawing_time = std::accumulate(context.drawing_time_history.cbegin(), context.drawing_time_history.cend(), std::chrono::microseconds(0)) / context.drawing_time_history.size();
+		if(average_interval_time.count() > 0) {
+			//auto drawing_load = static_cast<float>(average_drawing_time.count()) / static_cast<float>(average_interval_time.count());
+			drawText(0, 15, std::format(L"描画時間 : {:05.2f}[msec]", average_drawing_time.count() / 1000.f));
+		}
+
 	}
 
 	// 演奏情報
 	{
 		auto systemType = synthDigest.systemType.toPrintableWString();
 
-		auto buffered = mAudioDevice ? mAudioDevice->getCurrentBufferSizeSamples() / static_cast<float>(SAMPLE_FREQ) : 0.f;
-		auto latency = mAudioDevice ? mAudioDevice->getOutputLatencyInSamples() / static_cast<float>(SAMPLE_FREQ) : 0.f;
+		if(mAudioDevice != nullptr) {
+			auto buffered = mAudioDevice->getCurrentBufferSizeSamples() / static_cast<float>(SAMPLE_FREQ);
+			auto latency =  mAudioDevice->getOutputLatencyInSamples() / static_cast<float>(SAMPLE_FREQ);
 
-		drawText(150, 0, std::format(L"生成時間 : {}[msec]  buffered : {:04}[msec]  latency : {:04}[msec]",
-			tgStatistics.created_samples * 1000ull / SAMPLE_FREQ,
-			buffered * 1000,
-			latency * 1000
-		));
+			drawText(150, 0, std::format(L"バッファ : {:04}[msec]  レイテンシ : {:04}[msec]  デバイス名 : {}  ",
+				buffered * 1000,
+				latency * 1000,
+				mAudioDevice->getName().toWideCharPointer()
+			));
+		}
 
-		drawText(150, 15, std::format(L"演奏負荷 : {:03}[%]", static_cast<int>(100 * mAudioDeviceManager.getCpuUsage())));
-		drawText(150, 30, std::format(L"PostAmp : {:.3f}", mPostAmpVolume.load()));
+		drawText(150, 15, std::format(L"演奏負荷 : {:06.2f}[%]", 100 * mAudioDeviceManager.getCpuUsage()));
+		drawText(0, 30, std::format(L"マスタ音量 : {:.3f}", synthDigest.masterVolume));
+		drawText(150, 30, std::format(L"再生音量 : {:.3f}", mPostAmpVolume.load()));
 		drawText(280, 15, std::format(L"同時発音数 : {:03}", polyCount));
 		drawText(420, 15, std::format(L"MIDIリセット : {}", systemType));
 	}

@@ -15,12 +15,10 @@
 namespace lsp::midi::synth
 {
 
-// 波形テーブル
+// 波形テーブルセット
 class WaveTable 
 {
 public:
-	static constexpr size_t CustomWaveIdBegin = 1024;
-
 	struct Preset
 	{
 		// 波形 : 常に出力0
@@ -44,22 +42,20 @@ public:
 public:
 	WaveTable();
 
-	// 登録済みカスタム波形をリセットします
+	// 全ての波形をリセットします
 	void reset();
 
-	// カスタム波形を登録します
-	size_t add(Signal<float>&& wav, float preAmp = -1, float cycles = 1);
+	// プリセットの波形をセットします
+	void loadPreset();
+
+	// 波形テーブルを登録します
+	void add(size_t id, Signal<float>&& wav, float preAmp = -1, float cycles = 1);
 
 	// 波形テーブルジェネレータを取得します
-	generator::WaveTableGenerator<float> get(size_t id)const;
+	generator::WaveTableGenerator<float> createWaveGenerator(size_t id, float volume = 1.f)const;
 
-
-private:
-	void add(size_t id, Signal<float>&& wav, float preAmp = -1, float cycles = 1);
 
 private:
 	std::unordered_map<size_t, std::tuple<Signal<float>, /*preAmp*/float, /*cycles*/float>> mWaveTable;
-	size_t mNextCustomWaveId = CustomWaveIdBegin;
-	float mBaseRMS; // 基準となる実効値
 };
 }

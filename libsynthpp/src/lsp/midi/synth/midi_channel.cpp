@@ -13,10 +13,9 @@
 
 using namespace lsp::midi::synth;
 
-MidiChannel::MidiChannel(uint32_t sampleFreq, uint8_t ch, const WaveTable& waveTable)
-	: mSampleFreq(sampleFreq)
+MidiChannel::MidiChannel(LuathSynth& synth, uint8_t ch)
+	: mSynth(synth)
 	, mMidiCh(ch)
-	, mWaveTable(waveTable)
 {
 	reset(midi::SystemType::GM1());
 }

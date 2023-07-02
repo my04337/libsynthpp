@@ -8,6 +8,7 @@
 */
 
 #include <lsp/midi/synth/midi_channel.hpp>
+#include <lsp/midi/synth/luath_synth.hpp>
 
 using namespace lsp::midi::synth;
 
@@ -169,8 +170,8 @@ std::unique_ptr<Voice> MidiChannel::createMelodyVoice(int noteNo, float vel)
 	}
 
 	// リズム系の楽器は若干パラメータを補正 ※ドラムほど強くパラメータは変更しない
-	size_t waveTableId = WaveTable::Preset::SquareWave;
-	float noteNoAdjuster = 0;
+	bool isDrumLikeInstrument = false;
+	float adjustedNoteNo = noteNo;
 	switch(mProgId)
 	{
 	case 47:
@@ -179,9 +180,29 @@ std::unique_ptr<Voice> MidiChannel::createMelodyVoice(int noteNo, float vel)
 	case 125:
 	case 126:
 	case 127:
-		waveTableId = WaveTable::Preset::DrumNoise;
-		noteNoAdjuster -= 12; // 1オクターブ下げる
+		isDrumLikeInstrument = true;
+		adjustedNoteNo -= 12; // 1オクターブ下げる
 		break;
+	}
+
+	// 音色の調整
+	generator::WaveTableGenerator<float> wg;
+	if(isDrumLikeInstrument) {
+		wg = mSynth.presetWaveTable().createWaveGenerator(WaveTable::Preset::DrumNoise);
+	} else{
+		// 素の正弦波は結構どぎつい倍音を持つため、折り返しノイズ等を避けるために大まかなノート番号によって倍音成分を変化させる
+		// ※正弦波の倍音は1～50まで用意してあるため、良い感じにマッピングする
+		static constexpr float min_note_no = 0;  // C-1 : 8.2[Hz]
+		static constexpr float max_note_no = 108; // C8 : 4186.0[Hz]
+		static constexpr int min_dim = 5; 
+		static constexpr int max_dim = 30;
+
+		auto waveTableId = std::clamp(
+			static_cast<int>(min_dim + (1.f - (adjustedNoteNo - min_note_no) / (max_note_no - min_note_no)) * (max_dim - min_dim)),
+			min_dim,
+			max_dim
+		);
+		wg = mSynth.squareWaveTable().createWaveGenerator(waveTableId);
 	}
 
 
@@ -202,13 +223,12 @@ std::unique_ptr<Voice> MidiChannel::createMelodyVoice(int noteNo, float vel)
 		overtuneGain = getInt7NRPN(1, 33).value_or(0) / 128.f * 5.f;
 	}
 
-	auto wg = mWaveTable.get(waveTableId);
-	auto voice = std::make_unique<WaveTableVoice>(mSampleFreq, wg, noteNo + noteNoAdjuster, mCalculatedPitchBend, volume, ccPedal);
+	auto voice = std::make_unique<WaveTableVoice>(mSynth.sampleFreq(), wg, adjustedNoteNo, mCalculatedPitchBend, volume, ccPedal);
 	voice->setResonance(2.f, overtuneGain);
 
 	auto& eg = voice->envolopeGenerator();
 	eg.setMelodyEnvelope(
-		mSampleFreq, curveExp3,
+		mSynth.sampleFreq(), curveExp3,
 		std::max(0.001f, a),
 		h,
 		std::max(0.001f, d),

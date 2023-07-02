@@ -18,12 +18,6 @@ WaveTable::WaveTable()
 {
 	reset();
 }
-size_t WaveTable::add(Signal<float>&& wav, float preAmp, float cycles)
-{
-	size_t id = mNextCustomWaveId++;
-	add(id, std::move(wav), preAmp, cycles);
-	return id;
-}
 void WaveTable::add(size_t id, Signal<float>&& wav, float preAmp, float cycles)
 {
 	require(wav.channels() == 1);
@@ -31,12 +25,12 @@ void WaveTable::add(size_t id, Signal<float>&& wav, float preAmp, float cycles)
 	if (preAmp < 0) {
 		// MEMO 実効値の2乗=パワーを用いて正規化すると、それらしい音量で揃う(ラウドネスは考慮していないので注意)
 		float rms = wav.getRMSLevel(0);
-		preAmp = mBaseRMS * mBaseRMS / (rms * rms + 1.0e-8f) * abs(preAmp);
+		preAmp = 1.f / (rms * rms + 1.0e-8f) * abs(preAmp);
 	}
 	mWaveTable.insert_or_assign(id, std::make_tuple(std::move(wav), preAmp, cycles));
 }
 
-generator::WaveTableGenerator<float> WaveTable::get(size_t id)const
+generator::WaveTableGenerator<float> WaveTable::createWaveGenerator(size_t id, float volume)const
 {
 	auto found = mWaveTable.find(id);
 	if (found == mWaveTable.end()) {
@@ -46,15 +40,20 @@ generator::WaveTableGenerator<float> WaveTable::get(size_t id)const
 
 	auto& [wave, preAmp, cycles] = found->second;
 
-	return generator::WaveTableGenerator<float>(wave, preAmp, cycles);
+	return generator::WaveTableGenerator<float>(wave, preAmp * volume, cycles);
 }
 
 void WaveTable::reset()
 {
+	mWaveTable.clear();
+}
+void WaveTable::loadPreset()
+{
+	reset();
+
 	using FunctionGenerator = generator::FunctionGenerator<float>;
 	using BiquadraticFilter = effector::BiquadraticFilter<float>;
 
-	mNextCustomWaveId = CustomWaveIdBegin;
 	mWaveTable.clear();
 
 	// Ground
@@ -73,7 +72,6 @@ void WaveTable::reset()
 		for (size_t i = 0; i < samples; ++i) {
 			data[i] = fg.update();
 		}
-		mBaseRMS = sig.getRMSLevel(0);
 		add(Preset::SinWave, std::move(sig), 1);
 	}
 	// SquareWave50

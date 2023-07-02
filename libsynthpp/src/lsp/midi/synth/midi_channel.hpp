@@ -18,6 +18,7 @@
 namespace lsp::midi::synth
 {
 class WaveTable;
+class LuathSynth;
 
 using StereoFrame = std::pair<float, float>;
 
@@ -44,7 +45,7 @@ public:
 		std::unordered_map<VoiceId, Voice::Digest> voices;
 	};
 
-	MidiChannel(uint32_t sampleFreq, uint8_t ch, const WaveTable& waveTable);
+	MidiChannel(LuathSynth& synth, uint8_t ch);
 
 	void reset(midi::SystemType type);
 	void resetParameters();
@@ -79,13 +80,11 @@ private:
 	std::optional<int> getInt7NRPN(int msb, int lsb)const noexcept; // [-0x80,   +0x7F]
 	
 private:
-	// サンプリング周波数(実行時に動的にセット)
-	const uint32_t mSampleFreq;
+	LuathSynth& mSynth;
+
 	// チャネル番号(実行時に動的にセット)
 	const uint8_t mMidiCh;
 
-	// 波形テーブル
-	const WaveTable& mWaveTable;
 	// 発音中のボイス
 	std::unordered_map<VoiceId, std::unique_ptr<Voice>> mVoices;
 

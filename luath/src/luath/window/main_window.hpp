@@ -64,9 +64,9 @@ private:
 	std::atomic<float> mPostAmpVolume = 1.0f;
 
 	// シーケンサ,シンセサイザ
-	midi::synth::LuathSynth mSynthesizer;
 	midi::smf::Sequencer mSequencer;
-
+	midi::synth::LuathSynth mSynthesizer;
+	
 	// 各種ウィジット
 	widget::OscilloScope mOscilloScopeWidget;
 	widget::SpectrumAnalyzer mSpectrumAnalyzerWidget;

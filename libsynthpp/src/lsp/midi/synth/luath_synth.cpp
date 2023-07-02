@@ -8,17 +8,47 @@
 */
 
 #include <lsp/midi/synth/luath_synth.hpp>
+#include <lsp/generator/function_generator.hpp>
 
 using namespace lsp::midi::synth;
 
 LuathSynth::LuathSynth(uint32_t sampleFreq, midi::SystemType defaultSystemType)
 	: mSampleFreq(sampleFreq)
 {
-	mMidiChannels.reserve(MAX_CHANNELS);
-	for (uint8_t ch = 0; ch < MAX_CHANNELS; ++ch) {
-		mMidiChannels.emplace_back(sampleFreq, ch, mWaveTable);
+	// 最終段のローパスフィルタ ※折り返し誤差低減のため
+	mFinalLpfL.setLopassParam(sampleFreq, sampleFreq / 3, 1.f);
+	mFinalLpfR.setLopassParam(sampleFreq, sampleFreq / 3, 1.f);
+
+	// 波形テーブルのセットアップ
+	mPresetWaveTable.loadPreset();
+	{
+		auto sig = Signal<float>::allocate(1);
+		*sig.mutableData(0) = 0;
+		mSquareWaveTable.add(0, std::move(sig), 0); // ground
+	}
+	for(uint32_t waveIndex = 1; waveIndex <= 50; ++waveIndex) {
+		constexpr size_t samples = 512;
+		auto sig = Signal<float>::allocate(samples);
+		auto data = sig.mutableData(0);
+		std::fill(data, data + samples, 0.f);
+		for(uint32_t dim = 0; dim < waveIndex; ++dim) {
+			generator::FunctionGenerator<float> fg;
+			fg.setSinWave(samples, 1 + dim * 2);
+			for(size_t i = 0; i < samples; ++i) {
+				data[i] += fg.update() / (1 + dim * 2);
+			}
+		}
+		mSquareWaveTable.add(waveIndex, std::move(sig), 1.f);
+
 	}
 
+	// MIDIチャネルのセットアップ
+	mMidiChannels.reserve(MAX_CHANNELS);
+	for (uint8_t ch = 0; ch < MAX_CHANNELS; ++ch) {
+		mMidiChannels.emplace_back(*this, ch);
+	}
+
+	// MIDIリセット
 	reset(defaultSystemType);
 }
 LuathSynth::~LuathSynth()
@@ -36,7 +66,7 @@ void LuathSynth::dispose()
 void LuathSynth::reset(midi::SystemType type)
 {
 	mSystemType = type;
-	mWaveTable.reset();
+	mMasterVolume = 1.f;
 
 	for (auto& midich : mMidiChannels) {
 		midich.reset(type);
@@ -61,7 +91,7 @@ lsp::Signal<float> LuathSynth::generate(size_t len)
 	}
 
 	// 信号生成
-	constexpr float MASTER_VOLUME = 0.125f;
+	constexpr float MASTER_ATTENUATOR = 0.125f;
 
 	auto sig = lsp::Signal<float>::allocate(2, len);
 	auto lData = sig.mutableData(0);
@@ -80,9 +110,13 @@ lsp::Signal<float> LuathSynth::generate(size_t len)
 			rch += v.second;
 		}
 
+		// 最終段用のローパスフィルタを適用
+		lch = mFinalLpfL.update(lch);
+		rch = mFinalLpfR.update(rch);
+
 		// マスタボリューム適用
-		lch *= MASTER_VOLUME;
-		rch *= MASTER_VOLUME;
+		lch *= mMasterVolume * MASTER_ATTENUATOR;
+		rch *= mMasterVolume * MASTER_ATTENUATOR;
 	}
 
 	// 演奏終了
@@ -108,6 +142,7 @@ LuathSynth::Digest LuathSynth::digest()const
 	std::shared_lock lock(mMutex);
 	Digest digest;
 	digest.systemType = mSystemType;
+	digest.masterVolume = mMasterVolume;
 
 	digest.channels.reserve(mMidiChannels.size());
 	for (auto& ch : mMidiChannels) {
@@ -168,15 +203,6 @@ void LuathSynth::handleProgramChange(int channel, int progId)
 	midich.programChange(progId);
 }
 
-#if 0
-void LuathSynth::dispatchMessage(const std::shared_ptr<const midi::Message>& msg)
-{
-	using namespace midi::messages;
-	} else if (auto pitchBend = std::dynamic_pointer_cast<const PitchBend>(msg)) {
-		auto& midich = mMidiChannels[pitchBend->channel()];
-		midich.pitchBend(pitchBend->pitch());
-}
-#endif
 // ---
 
 
@@ -217,6 +243,10 @@ void LuathSynth::sysExMessage(const uint8_t* data, size_t len)
 		else if(match({ 0x7F, 0x09, 0x02 })) {
 			// GM System Off → GS Reset
 			reset(midi::SystemType::GS());
+		}
+		else if(match({ 0x7F, {/*dev:any*/}, 0x04, 0x01, 0x00, {/*volume*/} })) {
+			// マスターボリューム
+			mMasterVolume = *peek(5) / 127.f;
 		}
 	}
 	else if(makerId == 0x41) {

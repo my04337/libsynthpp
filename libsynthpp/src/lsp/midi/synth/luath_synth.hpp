@@ -28,8 +28,6 @@ class LuathSynth
 public:
 	static constexpr uint8_t MAX_CHANNELS = 16;
 	struct Statistics {
-		uint64_t created_samples = 0;
-
 		clock::duration cycle_time;
 		clock::duration rendering_time;
 		float rendering_load_average()const noexcept {
@@ -42,6 +40,7 @@ public:
 	};
 	struct Digest {
 		midi::SystemType systemType;
+		float masterVolume;
 
 		std::vector<MidiChannel::Digest> channels;
 	};
@@ -55,12 +54,20 @@ public:
 	// MIDIメッセージを受信した際にコールバックされます。
 	virtual void onMidiMessageReceived(clock::time_point received_time, const juce::MidiMessage& msg)override;
 
+	// サンプリング周波数を返します
+	uint32_t sampleFreq()const noexcept { return mSampleFreq; }
+
 	// 統計情報を取得します
 	Statistics statistics()const;
 	// 現在の内部状態のダイジェストを取得します
 	Digest digest()const;
 	// MIDIメッセージを元に演奏した結果を返します
 	Signal<float> generate(size_t len);
+
+	// 波形テーブル(プリセット)を返します
+	const WaveTable& presetWaveTable()const noexcept { return mPresetWaveTable; }
+	// 波形テーブル(正弦波)を返します
+	const WaveTable& squareWaveTable()const noexcept { return mSquareWaveTable; }
 
 protected:
 	void reset(midi::SystemType type);
@@ -86,11 +93,19 @@ private:
 
 	Statistics mStatistics;
 	std::atomic<Statistics> mThreadSafeStatistics;
-		
+
+	// 最終段エフェクタ
+	effector::BiquadraticFilter<float> mFinalLpfL;
+	effector::BiquadraticFilter<float> mFinalLpfR;
+	float mMasterVolume;
+
+	// Wavetables
+	WaveTable mPresetWaveTable;
+	WaveTable mSquareWaveTable;
+
 	// all channel parameters
 	const uint32_t mSampleFreq;
 	midi::SystemType mSystemType;
-	WaveTable mWaveTable;
 
 	// midi channel parameters
 	std::vector<MidiChannel> mMidiChannels;

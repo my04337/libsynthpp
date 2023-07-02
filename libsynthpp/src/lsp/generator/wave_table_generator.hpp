@@ -24,8 +24,13 @@ class WaveTableGenerator final
 
 {
 public:
+	WaveTableGenerator()
+		: mTable(nullptr)
+		, mVolume(0)
+		, mCycles(1)
+	{}
 	WaveTableGenerator(const Signal<sample_type>& table, parameter_type volume = 1.0f, parameter_type cycles = 1.0f)
-		: mTable(table)
+		: mTable(&table)
 		, mVolume(volume)
 		, mCycles(cycles)
 	{
@@ -48,16 +53,17 @@ private:
 	}
 	sample_type peek(parameter_type phase)const
 	{
-		const size_t samples = mTable.samples();
+		if(!mTable) return 0;
+		const size_t samples = mTable->samples();
 		auto pos = static_cast<size_t>(phase * samples);
-		sample_type v = mTable.data(0, pos);
+		sample_type v = mTable->data(0, pos);
 		return v * mVolume;
 	}
 
 private:
-	const Signal<sample_type>& mTable; // mCycles周期分の信号
-	const parameter_type mVolume; // 出力ボリューム
-	const parameter_type mCycles; // テーブルの周期数
+	const Signal<sample_type>* mTable; // mCycles周期分の信号
+	parameter_type mVolume; // 出力ボリューム
+	parameter_type mCycles; // テーブルの周期数
 	parameter_type mPhase = 0; // 現在の位相 [0, 1)
 };
 
