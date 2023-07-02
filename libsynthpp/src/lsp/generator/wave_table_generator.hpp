@@ -38,7 +38,7 @@ public:
 		require(table.channels() == 1);
 	}
 
-	sample_type update(uint32_t sampleFreq, parameter_type freq)
+	sample_type update(parameter_type sampleFreq, parameter_type freq)
 	{
 		parameter_type phaseDelta = freq / sampleFreq / mCycles;
 		sample_type v = peek(mPhase);

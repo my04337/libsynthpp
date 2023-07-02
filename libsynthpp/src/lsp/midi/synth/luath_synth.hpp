@@ -46,7 +46,7 @@ public:
 	};
 
 public:
-	LuathSynth(uint32_t sampleFreq, midi::SystemType defaultSystemType = midi::SystemType::GS());
+	LuathSynth(float sampleFreq, midi::SystemType defaultSystemType = midi::SystemType::GS());
 	~LuathSynth();
 
 	void dispose();
@@ -55,7 +55,7 @@ public:
 	virtual void onMidiMessageReceived(clock::time_point received_time, const juce::MidiMessage& msg)override;
 
 	// サンプリング周波数を返します
-	uint32_t sampleFreq()const noexcept { return mSampleFreq; }
+	float sampleFreq()const noexcept { return mSampleFreq; }
 
 	// 統計情報を取得します
 	Statistics statistics()const;
@@ -104,7 +104,7 @@ private:
 	WaveTable mSquareWaveTable;
 
 	// all channel parameters
-	const uint32_t mSampleFreq;
+	const float mSampleFreq;
 	midi::SystemType mSystemType;
 
 	// midi channel parameters

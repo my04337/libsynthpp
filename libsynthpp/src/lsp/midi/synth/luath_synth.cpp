@@ -12,7 +12,7 @@
 
 using namespace lsp::midi::synth;
 
-LuathSynth::LuathSynth(uint32_t sampleFreq, midi::SystemType defaultSystemType)
+LuathSynth::LuathSynth(float sampleFreq, midi::SystemType defaultSystemType)
 	: mSampleFreq(sampleFreq)
 {
 	// 最終段のローパスフィルタ ※折り返し誤差低減のため
@@ -33,7 +33,7 @@ LuathSynth::LuathSynth(uint32_t sampleFreq, midi::SystemType defaultSystemType)
 		std::fill(data, data + samples, 0.f);
 		for(uint32_t dim = 0; dim < waveIndex; ++dim) {
 			generator::FunctionGenerator<float> fg;
-			fg.setSinWave(samples, 1 + dim * 2);
+			fg.setSinWave(static_cast<float>(samples), static_cast<float>(1 + dim * 2));
 			for(size_t i = 0; i < samples; ++i) {
 				data[i] += fg.update() / (1 + dim * 2);
 			}

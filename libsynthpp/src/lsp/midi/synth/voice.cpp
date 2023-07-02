@@ -11,7 +11,7 @@
 
 using namespace lsp::midi::synth;
 
-Voice::Voice(uint32_t sampleFreq, float noteNo, float pitchBend, float volume, bool hold)
+Voice::Voice(float sampleFreq, float noteNo, float pitchBend, float volume, bool hold)
 	: mSampleFreq(sampleFreq)
 	, mNoteNo(noteNo)
 	, mPitchBend(pitchBend)

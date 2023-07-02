@@ -171,7 +171,7 @@ std::unique_ptr<Voice> MidiChannel::createMelodyVoice(int noteNo, float vel)
 
 	// リズム系の楽器は若干パラメータを補正 ※ドラムほど強くパラメータは変更しない
 	bool isDrumLikeInstrument = false;
-	float adjustedNoteNo = noteNo;
+	float adjustedNoteNo = static_cast<float>(noteNo);
 	switch(mProgId)
 	{
 	case 47:

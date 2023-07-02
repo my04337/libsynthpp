@@ -80,7 +80,7 @@ void SpectrumAnalyzer::draw(ID2D1RenderTarget& renderer, const float left, const
 
 	// よく使う値を先に計算
 	static const float log_min_freq = std::log10f(20); // Hz
-	static const float log_max_freq = std::log10f(20000); // Hz
+	static const float log_max_freq = std::log10f(22000); // Hz
 	static const float log_min_dbfs = -20; // dbFS(power)
 	static const float log_max_dbfs = +60; // dbFS(power)
 	static const float horizontal_resolution = 0.5f; // px ※高周波部分の描画間引用
@@ -97,14 +97,14 @@ void SpectrumAnalyzer::draw(ID2D1RenderTarget& renderer, const float left, const
 
 	// 対数軸への変換関数
 	auto freq2horz = [&](float freq)->float {
-		if (freq < 1.0e-8f) freq = 1.0e-8f; // オーバーフロー対策の補正
+		if(freq < 1.0e-8f) freq = 1.0e-8f; // オーバーフロー対策の補正
 		float f = std::log10(freq);
 
 		return std::clamp((f - log_min_freq) / (log_max_freq - log_min_freq) * width, 0.f, width - 1.f);
 	};
 	auto power2vert = [&](float power)->float {
-		if (power < 1.0e-8f) power = 1.0e-8f; // オーバーフロー対策の補正
-		float dbfs = 10*std::log10f(power);
+		if(power < 1.0e-8f) power = 1.0e-8f; // オーバーフロー対策の補正
+		float dbfs = 10 * std::log10f(power);
 
 		return std::clamp(height - (dbfs - log_min_dbfs) / (log_max_dbfs - log_min_dbfs) * height, 0.f, height - 1.f);
 	};
@@ -116,20 +116,30 @@ void SpectrumAnalyzer::draw(ID2D1RenderTarget& renderer, const float left, const
 
 	// グラフ目盛り描画
 	brush->SetColor({ 0.5f, 1.f, 0.125f, 1.f });
-	for (float digit = 1; digit < 5; ++digit) {
+	for(float digit = 1; digit < 5; ++digit) {
 		float base_freq = std::powf(10, digit);
-		for (int i = 0; i < 10; ++i) {
+		for(int i = 1; i < 10; ++i) {
 			float x = left + freq2horz(base_freq * i);
-			float ff = horz2freq(x - left);
 			renderer.DrawLine({ x, top }, { x, bottom - 1.f }, brush);
 		}
 	}
-	for (float digit = log_min_dbfs/10; digit < log_max_dbfs/10; ++digit) {
+	for(float digit = log_min_dbfs / 10; digit < log_max_dbfs / 10; ++digit) {
 		float base_v = std::powf(10, digit);
-		for (int i = 0; i < 10; ++i) {
+		for(int i = 1; i < 10; ++i) {
 			float y = top + power2vert(base_v * i);
 			renderer.DrawLine({ left, y }, { right - 1.f, y }, brush);
 		}
+	}
+	brush->SetColor({ 0.25f, 0.75f, 0.125f, 1.f });
+	for(float digit = 1; digit < 5; ++digit) {
+		float base_freq = std::powf(10, digit);
+		float x = left + freq2horz(base_freq);
+		renderer.DrawLine({ x, top }, { x, bottom - 1.f }, brush);
+	}
+	for(float digit = log_min_dbfs / 10; digit < log_max_dbfs / 10; ++digit) {
+		float base_v = std::powf(10, digit);
+		float y = top + power2vert(base_v);
+		renderer.DrawLine({ left, y }, { right - 1.f, y }, brush);
 	}
 
 	// 信号描画
