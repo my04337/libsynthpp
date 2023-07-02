@@ -1,34 +1,44 @@
 ﻿#include <luath/widget/spectrum_analyzer.hpp>
 #include <lsp/util/fft.hpp>
 
-#include <bitset>
+#include <bit>
 #include <array>
 
 using namespace luath;
 using namespace luath::widget;
 
-SpectrumAnalyzer::SpectrumAnalyzer(uint32_t sampleFreq, uint32_t bufferLength)
-	: mSampleFreq(sampleFreq)
-	, mBufferLength(bufferLength)
+SpectrumAnalyzer::SpectrumAnalyzer()
 {
-	require(sampleFreq > 0);
-	require(bufferLength > 0);
-
-	mInputBuffer1ch.resize(mBufferLength, 0.f);
-	mInputBuffer2ch.resize(mBufferLength, 0.f);
-	mDrawingBuffer1ch.resize(mBufferLength, 0.f);
-	mDrawingBuffer2ch.resize(mBufferLength, 0.f);
-
-	mDrawingFftRealBuffer.resize(mBufferLength, 0.f);
-	mDrawingFftImageBuffer.resize(mBufferLength, 0.f);
-	mDrawingFftWindowCache.resize(mBufferLength);
-	for(size_t i = 0; i < bufferLength; ++i) {
-		mDrawingFftWindowCache[i] = lsp::fft::HammingWf(i / (float)mBufferLength);
-	}
+	setParams(1.f, 256);
 }
 
 SpectrumAnalyzer::~SpectrumAnalyzer()
 {
+}
+void SpectrumAnalyzer::setParams(float sampleFreq, size_t bufferSize)
+{
+	require(sampleFreq > 0);
+	require(bufferSize > 0 && std::has_single_bit(bufferSize));
+
+	auto span = static_cast<float>(bufferSize / sampleFreq);
+	require(span > 0);
+
+	std::lock_guard lock(mInputMutex);
+	mSampleFreq = sampleFreq;
+	mSpan = span;
+	mBufferSize = bufferSize;
+
+	mInputBuffer1ch.resize(mBufferSize, 0.f);
+	mInputBuffer2ch.resize(mBufferSize, 0.f);
+	mDrawingBuffer1ch.resize(mBufferSize, 0.f);
+	mDrawingBuffer2ch.resize(mBufferSize, 0.f);
+
+	mDrawingFftRealBuffer.resize(mBufferSize, 0.f);
+	mDrawingFftImageBuffer.resize(mBufferSize, 0.f);
+	mDrawingFftWindowCache.resize(mBufferSize);
+	for(size_t i = 0; i < mBufferSize; ++i) {
+		mDrawingFftWindowCache[i] = lsp::fft::HammingWf(i / (float)mBufferSize);
+	}
 }
 
 void SpectrumAnalyzer::write(const Signal<float>& sig)
@@ -91,8 +101,8 @@ void SpectrumAnalyzer::draw(ID2D1RenderTarget& renderer, const float left, const
 	const float mid_x = (left + right) / 2;
 	const float mid_y = (top + bottom) / 2;
 
-	const uint32_t buffer_length = mBufferLength;
-	const float frequency_resolution = static_cast<float>(mSampleFreq) / static_cast<float>(mBufferLength); // 周波数分解能
+	const auto buffer_size = mBufferSize;
+	const float frequency_resolution = static_cast<float>(mSampleFreq) / static_cast<float>(buffer_size); // 周波数分解能
 
 
 	// 対数軸への変換関数
@@ -165,7 +175,7 @@ void SpectrumAnalyzer::draw(ID2D1RenderTarget& renderer, const float left, const
 		};
 		auto prev = getPoint(0);
 		float yPeak = bottom;
-		for(uint32_t i = 1; i < buffer_length / 2; ++i) { // FFT結果の実軸部分の内、データ後半は折り返し雑音のため使用しない
+		for(size_t i = 1; i < buffer_size / 2; ++i) { // FFT結果の実軸部分の内、データ後半は折り返し雑音のため使用しない
 			auto pt = getPoint(i);
 			yPeak = std::min(yPeak, pt.y);
 			if(pt.x - prev.x >= horizontal_resolution) {

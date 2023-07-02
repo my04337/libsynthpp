@@ -85,9 +85,8 @@ static std::wstring freq2scale(float freq) {
 MainWindow::MainWindow()
 	: mSequencer(mSynthesizer)
 	, mSynthesizer(SAMPLE_FREQ)
-	, mLissajousWidget(SAMPLE_FREQ, static_cast<uint32_t>(SAMPLE_FREQ * 250e-4f))
-	, mOscilloScopeWidget(SAMPLE_FREQ, static_cast<uint32_t>(SAMPLE_FREQ * 250e-4f))
-	, mSpectrumAnalyzerWidget(SAMPLE_FREQ, 4096)
+	, mOscilloScopeWidget()
+	, mSpectrumAnalyzerWidget()
 {
 }
 
@@ -343,6 +342,11 @@ void MainWindow::audioDeviceIOCallbackWithContext(
 void MainWindow::audioDeviceAboutToStart(juce::AudioIODevice* device)
 {
 	mAudioDevice = device;
+	if(!device) return;
+	auto sampleFreq = static_cast<float>(device->getCurrentSampleRate());
+	mOscilloScopeWidget.setParams(sampleFreq, 25e-3f);
+	mSpectrumAnalyzerWidget.setParams(sampleFreq, 4096);
+	mLissajousWidget.setParams(sampleFreq, 25e-3f);
 	// TODO
 }
 void MainWindow::audioDeviceStopped()
