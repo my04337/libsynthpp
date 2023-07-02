@@ -130,7 +130,7 @@ void WaveTable::loadPreset()
 		auto data = sig.mutableData(0);
 		FunctionGenerator fg;
 		fg.setWhiteNoise();
-		std::array<BiquadraticFilter, 7> bqfs;
+		std::array<BiquadraticFilter, 5> bqfs;
 		bqfs[0].setLopassParam(44100, 4000.f, 0.5f); // 不要高周波を緩やかにカットオフ
 		bqfs[1].setLopassParam(44100, 4000.f, 0.5f); // (同上)
 		bqfs[2].setLopassParam(44100, 3000.f, 0.5f); // (同上)
