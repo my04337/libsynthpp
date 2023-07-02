@@ -18,7 +18,6 @@ using lsp::midi::synth::VoiceId;
 
 static constexpr int SCREEN_WIDTH = 800;
 static constexpr int SCREEN_HEIGHT = 680;
-static constexpr uint32_t SAMPLE_FREQ = 44100;
 
 static constexpr std::array<D2D1_COLOR_F, 16> CHANNEL_COLOR{
 	D2D1_COLOR_F{ 1.f, 0.f, 0.f, 1.f}, // 赤
@@ -84,7 +83,7 @@ static std::wstring freq2scale(float freq) {
 }
 MainWindow::MainWindow()
 	: mSequencer(mSynthesizer)
-	, mSynthesizer(SAMPLE_FREQ)
+	, mSynthesizer()
 	, mOscilloScopeWidget()
 	, mSpectrumAnalyzerWidget()
 {
@@ -343,11 +342,12 @@ void MainWindow::audioDeviceAboutToStart(juce::AudioIODevice* device)
 {
 	mAudioDevice = device;
 	if(!device) return;
+
 	auto sampleFreq = static_cast<float>(device->getCurrentSampleRate());
+	mSynthesizer.setSampleFreq(sampleFreq);
 	mOscilloScopeWidget.setParams(sampleFreq, 25e-3f);
 	mSpectrumAnalyzerWidget.setParams(sampleFreq, 4096);
 	mLissajousWidget.setParams(sampleFreq, 25e-3f);
-	// TODO
 }
 void MainWindow::audioDeviceStopped()
 {
@@ -479,8 +479,9 @@ void MainWindow::onDraw(ID2D1RenderTarget& renderer)
 		auto systemType = synthDigest.systemType.toPrintableWString();
 
 		if(mAudioDevice != nullptr) {
-			auto buffered = mAudioDevice->getCurrentBufferSizeSamples() / static_cast<float>(SAMPLE_FREQ);
-			auto latency =  mAudioDevice->getOutputLatencyInSamples() / static_cast<float>(SAMPLE_FREQ);
+			auto sampleFreq = mAudioDevice->getCurrentSampleRate();
+			auto buffered = mAudioDevice->getCurrentBufferSizeSamples() / sampleFreq;
+			auto latency = mAudioDevice->getOutputLatencyInSamples() / sampleFreq;
 
 			drawText(150, 0, std::format(L"バッファ : {:04}[msec]  レイテンシ : {:04}[msec]  デバイス名 : {}  ",
 				buffered * 1000,

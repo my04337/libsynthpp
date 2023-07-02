@@ -12,12 +12,8 @@
 
 using namespace lsp::midi::synth;
 
-LuathSynth::LuathSynth(float sampleFreq, midi::SystemType defaultSystemType)
-	: mSampleFreq(sampleFreq)
+LuathSynth::LuathSynth()
 {
-	// 最終段のローパスフィルタ ※折り返し誤差低減のため
-	mFinalLpfL.setLopassParam(sampleFreq, sampleFreq / 3, 1.f);
-	mFinalLpfR.setLopassParam(sampleFreq, sampleFreq / 3, 1.f);
 
 	// 波形テーブルのセットアップ
 	mPresetWaveTable.loadPreset();
@@ -39,7 +35,6 @@ LuathSynth::LuathSynth(float sampleFreq, midi::SystemType defaultSystemType)
 			}
 		}
 		mSquareWaveTable.add(waveIndex, std::move(sig), 1.f);
-
 	}
 
 	// MIDIチャネルのセットアップ
@@ -48,8 +43,21 @@ LuathSynth::LuathSynth(float sampleFreq, midi::SystemType defaultSystemType)
 		mMidiChannels.emplace_back(*this, ch);
 	}
 
-	// MIDIリセット
-	reset(defaultSystemType);
+	// 周波数 仮指定 ※間接的にMIDIリセット
+	setSampleFreq(1.f);
+}
+// サンプ林周波数を指定します
+void LuathSynth::setSampleFreq(float sampleFreq)
+{
+	std::lock_guard lock(mMutex);
+	mSampleFreq = sampleFreq;
+
+	// 最終段のローパスフィルタ ※折り返し誤差低減のため
+	mFinalLpfL.setLopassParam(sampleFreq, sampleFreq / 3, 1.f);
+	mFinalLpfR.setLopassParam(sampleFreq, sampleFreq / 3, 1.f);
+
+	// 完全にリセットする
+	reset();
 }
 LuathSynth::~LuathSynth()
 {
