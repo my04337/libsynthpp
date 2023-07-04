@@ -7,7 +7,7 @@
 	https://opensource.org/license/mit/
 */
 
-#include <lsp/midi/synth/midi_channel.hpp>
+#include <lsp/midi/synth/channel_sound.hpp>
 #include <lsp/midi/synth/luath_synth.hpp>
 
 using namespace lsp::midi::synth;
@@ -154,7 +154,7 @@ static const std::unordered_map<
 	{127, { 2.50f, 0.03f, 0.00f,  1.50f, 0.00f, 0.00f, 1.50f }},
 };
 
-std::unique_ptr<Voice> MidiChannel::createMelodyVoice(int noteNo, float vel)
+std::unique_ptr<Voice> ChannelSound::createMelodyVoice(int noteNo, float vel)
 {
 	float v = 1.f; // volume(adjuster)
 	float a = 0.f; // sec

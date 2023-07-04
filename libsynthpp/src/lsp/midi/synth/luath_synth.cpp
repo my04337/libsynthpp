@@ -38,9 +38,15 @@ LuathSynth::LuathSynth()
 	}
 
 	// MIDIチャネルのセットアップ
-	mMidiChannels.reserve(MAX_CHANNELS);
-	for (uint8_t ch = 0; ch < MAX_CHANNELS; ++ch) {
-		mMidiChannels.emplace_back(*this, ch);
+	addSound(new ZeroSound());
+	for(int ch = 1; ch <= 16; ++ch) {
+		addSound(new ChannelSound(*this, ch));
+	}
+	check(dynamic_cast<ZeroSound*>(getSound(0).get()) != nullptr);
+	for(int ch = 1; ch <= 16; ++ch) {
+		auto sound = dynamic_cast<ChannelSound*>(getSound(ch).get());
+		check(sound != nullptr);
+		check(sound->midiChannel() == ch);
 	}
 
 	// 周波数 仮指定 ※間接的にMIDIリセット
@@ -76,8 +82,8 @@ void LuathSynth::reset(midi::SystemType type)
 	mSystemType = type;
 	mMasterVolume = 1.f;
 
-	for (auto& midich : mMidiChannels) {
-		midich.reset(type);
+	for(int ch = 1; ch <= 16; ++ch) {
+		getChannelSound(ch).reset(type);
 	}
 }
 
@@ -110,8 +116,8 @@ lsp::Signal<float> LuathSynth::generate(size_t len)
 		lch = rch = 0;
 
 		// チャネル毎の信号を生成する
-		for (size_t ch = 0; ch < MAX_CHANNELS; ++ch) {
-			auto& midich = mMidiChannels[ch];
+		for (int ch = 1; ch <= 16; ++ch) {
+			auto& midich = getChannelSound(ch);
 			auto v = midich.update();
 			lch += v.first;
 			rch += v.second;
@@ -151,9 +157,9 @@ LuathSynth::Digest LuathSynth::digest()const
 	digest.systemType = mSystemType;
 	digest.masterVolume = mMasterVolume;
 
-	digest.channels.reserve(mMidiChannels.size());
-	for (auto& ch : mMidiChannels) {
-		digest.channels.push_back(ch.digest());
+	digest.channels.reserve(16);
+	for(int ch = 1; ch <= 16; ++ch) {
+		digest.channels.push_back(getChannelSound(ch).digest());
 	}
 	return digest;
 }
@@ -174,40 +180,28 @@ void LuathSynth::handleMidiEvent(const juce::MidiMessage& msg)
 
 void LuathSynth::noteOn(int channel, int noteNo, float velocity)
 {
-	check(channel > 0);
-	auto& midich = mMidiChannels[static_cast<size_t>(channel) -1];
-	midich.noteOn(noteNo, velocity);
+	getChannelSound(channel).noteOn(noteNo, velocity);
 }
 void LuathSynth::noteOff(int channel, int noteNo, float velocity, bool allowTailOff)
 {
 	// MEMO 一般に、MIDIではノートオフの代わりにvel=0のノートオンが使用されるため、呼ばれることは希である
-	check(channel > 0);
-	auto& midich = mMidiChannels[static_cast<size_t>(channel) - 1];
-	midich.noteOff(noteNo, allowTailOff);
+	getChannelSound(channel).noteOff(noteNo, allowTailOff);
 }
 void LuathSynth::allNotesOff(int channel, bool allowTailOff)
 {
-	for(auto& midich : mMidiChannels) {
-		midich.allNotesOff(allowTailOff);
-	}
+	getChannelSound(channel).allNotesOff(allowTailOff);
 }
 void LuathSynth::handlePitchWheel(int channel, int value)
 {
-	check(channel > 0);
-	auto& midich = mMidiChannels[static_cast<size_t>(channel) - 1];
-	midich.pitchBend(value); 
+	getChannelSound(channel).pitchBend(value);
 }
 void LuathSynth::handleController(int channel, int ctrlNo, int value)
 {
-	check(channel > 0);
-	auto& midich = mMidiChannels[static_cast<size_t>(channel) - 1];
-	midich.controlChange(ctrlNo, value);
+	getChannelSound(channel).controlChange(ctrlNo, value);
 }
 void LuathSynth::handleProgramChange(int channel, int progId)
 {
-	check(channel > 0);
-	auto& midich = mMidiChannels[static_cast<size_t>(channel) - 1];
-	midich.programChange(progId);
+	getChannelSound(channel).programChange(progId);
 }
 
 // ---
@@ -271,9 +265,9 @@ void LuathSynth::sysExMessage(const uint8_t* data, size_t len)
 		else if(match({ {/*dev:any*/}, 0x42, 0x12, 0x40, {/*1x:part*/}, 0x15, {/*mn*/}}) && (*peek(4) & 0xF0) == 0x10) {
 			// ドラムパート指定
 			//   see https://ssw.co.jp/dtm/drums/drsetup.html
-			auto ch = static_cast<uint8_t>(*peek(4) & 0x0F);
+			auto ch = static_cast<int>(*peek(4) & 0x0F) + 1;
 			auto mapNo = *peek(6);
-			mMidiChannels[ch].setDrumMode(mapNo != 0);
+			getChannelSound(ch).setDrumMode(mapNo != 0);
 		}
 	}
 	else if(makerId == 0x43) {

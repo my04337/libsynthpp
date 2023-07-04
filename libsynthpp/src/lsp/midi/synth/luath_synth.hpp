@@ -11,7 +11,7 @@
 
 #include <lsp/core/core.hpp>
 #include <lsp/midi/system_type.hpp>
-#include <lsp/midi/synth/midi_channel.hpp>
+#include <lsp/midi/synth/channel_sound.hpp>
 #include <lsp/midi/synth/wave_table.hpp>
 
 #include <array>
@@ -25,7 +25,6 @@ class LuathSynth
 	, public juce::MidiInputCallback
 {
 public:
-	static constexpr uint8_t MAX_CHANNELS = 16;
 	struct Statistics {
 		clock::duration cycle_time;
 		clock::duration rendering_time;
@@ -41,7 +40,7 @@ public:
 		midi::SystemType systemType;
 		float masterVolume;
 
-		std::vector<MidiChannel::Digest> channels;
+		std::vector<ChannelSound::Digest> channels;
 	};
 
 public:
@@ -73,6 +72,9 @@ public:
 
 protected:
 	void reset(midi::SystemType defaultSystemType = midi::SystemType::GS());
+
+	ChannelSound& getChannelSound(int ch)noexcept { return dynamic_cast<ChannelSound&>(*getSound(ch)); }
+	const ChannelSound& getChannelSound(int ch)const noexcept { return dynamic_cast<ChannelSound&>(*getSound(ch)); }
 
 public: // implementation of juce::Synthesizer +α
 	
@@ -108,9 +110,6 @@ private:
 	// all channel parameters
 	float mSampleFreq;
 	midi::SystemType mSystemType;
-
-	// midi channel parameters
-	std::vector<MidiChannel> mMidiChannels;
 };
 
 }

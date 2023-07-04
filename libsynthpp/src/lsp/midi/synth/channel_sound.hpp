@@ -22,12 +22,21 @@ class LuathSynth;
 
 using StereoFrame = std::pair<float, float>;
 
-class MidiChannel
-	: non_copy
+class ZeroSound
+	: public juce::SynthesiserSound
+	, non_copy
+{
+	bool appliesToNote(int midiNoteNumber)override { return false; }
+	bool appliesToChannel(int midiChannel)override { return false; }
+};
+
+class ChannelSound
+	: public juce::SynthesiserSound
+	, non_copy
 {
 public:
 	struct Digest {
-		uint8_t ch = 0; // チャネル
+		int ch = 1; // チャネル [1～16]
 		int progId = 0; // プログラムID
 		uint8_t bankSelectMSB = 0; // バンクセレクト
 		uint8_t bankSelectLSB = 0; // バンクセレクト
@@ -45,7 +54,12 @@ public:
 		std::unordered_map<VoiceId, Voice::Digest> voices;
 	};
 
-	MidiChannel(LuathSynth& synth, uint8_t ch);
+	ChannelSound(LuathSynth& synth, int ch);
+
+	bool appliesToNote(int midiNoteNumber)override { return true; }
+	bool appliesToChannel(int midiChannel)override { return mMidiCh == midiChannel; }
+
+	int midiChannel()const noexcept { return mMidiCh; }
 
 	void reset(midi::SystemType type);
 	void resetParameters();
@@ -82,8 +96,8 @@ private:
 private:
 	LuathSynth& mSynth;
 
-	// チャネル番号(実行時に動的にセット)
-	const uint8_t mMidiCh;
+	// チャネル番号 (1～16)
+	const int mMidiCh;
 
 	// 発音中のボイス
 	std::unordered_map<VoiceId, std::unique_ptr<Voice>> mVoices;

@@ -19,23 +19,27 @@ using lsp::midi::synth::VoiceId;
 static constexpr int SCREEN_WIDTH = 800;
 static constexpr int SCREEN_HEIGHT = 680;
 
-static constexpr std::array<D2D1_COLOR_F, 16> CHANNEL_COLOR{
-	D2D1_COLOR_F{ 1.f, 0.f, 0.f, 1.f}, // 赤
-	D2D1_COLOR_F{ 1.f, 0.5f, 0.f, 1.f }, // 朱色
-	D2D1_COLOR_F{ 1.f, 0.75f, 0.f, 1.f }, // ゴールデンイエロー
-	D2D1_COLOR_F{ 1.f, 1.f, 0.f, 1.f }, // 黄色
-	D2D1_COLOR_F{ 0.75f, 1.f, 0.f, 1.f }, // 明るい黄緑色 
-	D2D1_COLOR_F{ 0.f, 1.f, 0.f, 1.f }, // 緑
-	D2D1_COLOR_F{ 0.f, 1.f, 0.75f, 1.f }, // 黄緑色
-	D2D1_COLOR_F{ 0.f, 0.75f, 1.f, 1.f }, // セルリアンブルー
-	D2D1_COLOR_F{ 0.f, 0.3f, 1.f, 1.f }, // コバルトブルー
-	D2D1_COLOR_F{ 0.5f, 0.5f, 0.5f, 1.f }, // グレー ※通常ドラム
-	D2D1_COLOR_F{ 0.3f, 0.f, 1.f, 1.f }, // ヒヤシンス
-	D2D1_COLOR_F{ 0.5f, 0.f, 1.f, 1.f }, // バイオレット
-	D2D1_COLOR_F{ 0.75f, 0.f, 1.f, 1.f }, // ムラサキ
-	D2D1_COLOR_F{ 1.f, 0.f, 1.f, 1.f }, // マゼンタ
-	D2D1_COLOR_F{ 1.f, 0.f, 0.5f, 1.f }, // ルビーレッド
-	D2D1_COLOR_F{ 0.75f, 0.f, 0.3f, 1.f }, // カーマイン
+static constexpr D2D1_COLOR_F getMidiChannelColor(int ch)
+{
+	switch(ch) {
+	case  1: return D2D1_COLOR_F{ 1.f, 0.f, 0.f, 1.f }; // 赤
+	case  2: return D2D1_COLOR_F{ 1.f, 0.5f, 0.f, 1.f }; // 朱色
+	case  3: return D2D1_COLOR_F{ 1.f, 0.75f, 0.f, 1.f }; // ゴールデンイエロー
+	case  4: return D2D1_COLOR_F{ 1.f, 1.f, 0.f, 1.f }; // 黄色
+	case  5: return D2D1_COLOR_F{ 0.75f, 1.f, 0.f, 1.f }; // 明るい黄緑色 
+	case  6: return D2D1_COLOR_F{ 0.f, 1.f, 0.f, 1.f }; // 緑
+	case  7: return D2D1_COLOR_F{ 0.f, 1.f, 0.75f, 1.f }; // 黄緑色
+	case  8: return D2D1_COLOR_F{ 0.f, 0.75f, 1.f, 1.f }; // セルリアンブルー
+	case  9: return D2D1_COLOR_F{ 0.f, 0.3f, 1.f, 1.f }; // コバルトブルー
+	case 10: return D2D1_COLOR_F{ 0.5f, 0.5f, 0.5f, 1.f }; // グレー ※通常ドラム
+	case 11: return D2D1_COLOR_F{ 0.3f, 0.f, 1.f, 1.f }; // ヒヤシンス
+	case 12: return D2D1_COLOR_F{ 0.5f, 0.f, 1.f, 1.f }; // バイオレット
+	case 13: return D2D1_COLOR_F{ 0.75f, 0.f, 1.f, 1.f }; // ムラサキ
+	case 14: return D2D1_COLOR_F{ 1.f, 0.f, 1.f, 1.f }; // マゼンタ
+	case 15: return D2D1_COLOR_F{ 1.f, 0.f, 0.5f, 1.f }; // ルビーレッド
+	case 16: return D2D1_COLOR_F{ 0.75f, 0.f, 0.3f, 1.f }; // カーマイン
+	}
+	std::unreachable();
 };
 
 static constexpr const wchar_t* state2text(Voice::EnvelopeState state)
@@ -534,7 +538,7 @@ void MainWindow::onDraw(ID2D1RenderTarget& renderer)
 			x = ofsX;
 			ci = 0;
 
-			const auto bgColor = CHANNEL_COLOR[cd.ch];
+			const auto bgColor = getMidiChannelColor(cd.ch);
 			brush->SetColor({ bgColor.r, bgColor.g, bgColor.b, bgColor.a / 2 });
 			renderer.FillRectangle({ x, y, x + width , y + height }, brush);
 
@@ -615,7 +619,7 @@ void MainWindow::onDraw(ID2D1RenderTarget& renderer)
 
 			if(vid.empty()) continue;
 
-			const auto bgColor = CHANNEL_COLOR[ch];
+			const auto bgColor = getMidiChannelColor(ch);
 			brush->SetColor({ bgColor.r, bgColor.g, bgColor.b, std::clamp(vd.envelope * 0.4f + 0.1f, 0.f, 1.f)});
 			renderer.FillRectangle({ x, y, x + width, y + height }, brush);
 
