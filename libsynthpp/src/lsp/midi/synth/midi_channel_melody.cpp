@@ -9,6 +9,7 @@
 
 #include <lsp/midi/synth/channel_sound.hpp>
 #include <lsp/midi/synth/luath_synth.hpp>
+#include <lsp/midi/synth/instruments.hpp>
 
 using namespace lsp::midi::synth;
 
@@ -188,7 +189,7 @@ std::unique_ptr<Voice> ChannelSound::createMelodyVoice(int noteNo, float vel)
 	// 音色の調整
 	generator::WaveTableGenerator<float> wg;
 	if(isDrumLikeInstrument) {
-		wg = mSynth.presetWaveTable().createWaveGenerator(WaveTable::Preset::DrumNoise);
+		wg = Instruments::createDrumNoiseGenerator();
 	} else{
 		// 素の正弦波は結構どぎつい倍音を持つため、折り返しノイズ等を避けるために大まかなノート番号によって倍音成分を変化させる
 		// ※正弦波の倍音は1～50まで用意してあるため、良い感じにマッピングする
@@ -202,7 +203,7 @@ std::unique_ptr<Voice> ChannelSound::createMelodyVoice(int noteNo, float vel)
 			min_dim,
 			max_dim
 		);
-		wg = mSynth.squareWaveTable().createWaveGenerator(waveTableId);
+		wg = Instruments::createSquareGenerator(waveTableId);
 	}
 
 

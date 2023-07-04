@@ -8,7 +8,7 @@
 */
 
 #include <lsp/midi/synth/channel_sound.hpp>
-#include <lsp/midi/synth/wave_table.hpp>
+#include <lsp/midi/synth/instruments.hpp>
 #include <lsp/midi/synth/voice.hpp>
 
 using namespace lsp::midi::synth;

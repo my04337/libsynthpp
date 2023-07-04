@@ -14,29 +14,6 @@ using namespace lsp::midi::synth;
 
 LuathSynth::LuathSynth()
 {
-
-	// 波形テーブルのセットアップ
-	mPresetWaveTable.loadPreset();
-	{
-		auto sig = Signal<float>::allocate(1);
-		*sig.mutableData(0) = 0;
-		mSquareWaveTable.add(0, std::move(sig), 0); // ground
-	}
-	for(uint32_t waveIndex = 1; waveIndex <= 50; ++waveIndex) {
-		constexpr size_t samples = 512;
-		auto sig = Signal<float>::allocate(samples);
-		auto data = sig.mutableData(0);
-		std::fill(data, data + samples, 0.f);
-		for(uint32_t dim = 0; dim < waveIndex; ++dim) {
-			generator::FunctionGenerator<float> fg;
-			fg.setSinWave(static_cast<float>(samples), static_cast<float>(1 + dim * 2));
-			for(size_t i = 0; i < samples; ++i) {
-				data[i] += fg.update() / (1 + dim * 2);
-			}
-		}
-		mSquareWaveTable.add(waveIndex, std::move(sig), 1.f);
-	}
-
 	// MIDIチャネルのセットアップ
 	addSound(new ZeroSound());
 	for(int ch = 1; ch <= 16; ++ch) {

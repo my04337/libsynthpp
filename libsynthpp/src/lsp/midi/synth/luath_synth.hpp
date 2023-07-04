@@ -12,7 +12,6 @@
 #include <lsp/core/core.hpp>
 #include <lsp/midi/system_type.hpp>
 #include <lsp/midi/synth/channel_sound.hpp>
-#include <lsp/midi/synth/wave_table.hpp>
 
 #include <array>
 #include <shared_mutex>
@@ -65,11 +64,6 @@ public:
 	// MIDIメッセージを元に演奏した結果を返します
 	Signal<float> generate(size_t len);
 
-	// 波形テーブル(プリセット)を返します
-	const WaveTable& presetWaveTable()const noexcept { return mPresetWaveTable; }
-	// 波形テーブル(正弦波)を返します
-	const WaveTable& squareWaveTable()const noexcept { return mSquareWaveTable; }
-
 protected:
 	void reset(midi::SystemType defaultSystemType = midi::SystemType::GS());
 
@@ -102,10 +96,6 @@ private:
 	effector::BiquadraticFilter<float> mFinalLpfL;
 	effector::BiquadraticFilter<float> mFinalLpfR;
 	float mMasterVolume;
-
-	// Wavetables
-	WaveTable mPresetWaveTable;
-	WaveTable mSquareWaveTable;
 
 	// all channel parameters
 	float mSampleFreq;

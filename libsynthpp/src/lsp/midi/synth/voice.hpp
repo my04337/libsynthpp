@@ -10,7 +10,6 @@
 #pragma once
 
 #include <lsp/core/core.hpp>
-#include <lsp/midi/synth/wave_table.hpp>
 
 #include <lsp/effector/envelope_generator.hpp>
 #include <lsp/effector/biquadratic_filter.hpp>

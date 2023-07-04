@@ -9,6 +9,7 @@
 
 #include <lsp/midi/synth/channel_sound.hpp>
 #include <lsp/midi/synth/luath_synth.hpp>
+#include <lsp/midi/synth/instruments.hpp>
 
 using namespace lsp::midi::synth;
 
@@ -118,7 +119,7 @@ std::unique_ptr<Voice> ChannelSound::createDrumVoice(int noteNo, float vel)
 		overtuneGain = getInt7NRPN(1, 33).value_or(0) / 128.f * 5.f;
 	}
 
-	auto wg = mSynth.presetWaveTable().createWaveGenerator(WaveTable::Preset::DrumNoise);
+	auto wg = Instruments::createDrumNoiseGenerator();
 	auto voice = std::make_unique<WaveTableVoice>(mSynth.sampleFreq(), wg, resolvedNoteNo, mCalculatedPitchBend, volume, ccPedal);
 	voice->setPan(pan);
 	voice->setResonance(cutOffFreqRate, overtuneGain);
