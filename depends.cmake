@@ -26,7 +26,7 @@ set(JUCE_GIT_COMMIT     69795dc8e589a9eb5df251b6dd994859bf7b3fab)
 find_package(Git REQUIRED)
 
 if(NOT EXISTS ${JUCE_SOURCE_DIR})
-    # 指定のタグを shallow clone する ※ただし今後他のタグをcheckoutする可能性があるため
+    # 指定のタグを shallow clone する ※ただし今後他のタグをcheckoutする可能性があるため、メタ情報だけは取得しておく
     execute_process(
         COMMAND ${GIT_EXECUTABLE} clone ${JUCE_GIT_REPOSITORY} -b ${JUCE_GIT_TAG} ${JUCE_SOURCE_DIR} --depth=1 --no-single-branch --progress
     )
