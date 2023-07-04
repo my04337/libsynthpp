@@ -11,7 +11,6 @@
 
 #include <lsp/core/core.hpp>
 #include <lsp/midi/system_type.hpp>
-#include <lsp/midi/message_receiver.hpp>
 #include <lsp/midi/synth/midi_channel.hpp>
 #include <lsp/midi/synth/wave_table.hpp>
 
@@ -22,8 +21,8 @@ namespace lsp::midi::synth
 {
 
 class LuathSynth
-	: public midi::MessageReceiver
-	, public juce::Synthesiser
+	: public juce::Synthesiser
+	, public juce::MidiInputCallback
 {
 public:
 	static constexpr uint8_t MAX_CHANNELS = 16;
@@ -52,7 +51,7 @@ public:
 	void dispose();
 
 	// MIDIメッセージを受信した際にコールバックされます。
-	virtual void onMidiMessageReceived(clock::time_point received_time, const juce::MidiMessage& msg)override;
+	virtual void handleIncomingMidiMessage(juce::MidiInput* source, const juce::MidiMessage& message)override;
 
 	// サンプ林周波数を指定します
 	void setSampleFreq(float sampleFreq);
@@ -92,7 +91,7 @@ protected: // implementation of juce::Synthesizer
 
 private:
 	mutable std::shared_mutex mMutex;
-	std::deque<std::pair<clock::time_point, juce::MidiMessage>> mMessageQueue;
+	std::deque<juce::MidiMessage> mMessageQueue;
 
 	Statistics mStatistics;
 	std::atomic<Statistics> mThreadSafeStatistics;

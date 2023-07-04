@@ -8,78 +8,14 @@
 */
 
 #include <lsp/midi/smf/sequencer.hpp>
-#include <lsp/midi/message_receiver.hpp>
 #include <lsp/midi/system_type.hpp>
 #include <lsp/util/thread_priority.hpp>
 
 using namespace lsp;
 using namespace lsp::midi::smf;
 
-// 参考URL :
-//  http://eternalwindows.jp/winmm/midi/midi00.html
-//  https://www.g200kg.com/jp/docs/dic/midi.html
-//  https://www.cs.cmu.edu/~music/cmsip/readings/Standard-MIDI-file-format-updated.pdf
-//   http://lib.roland.co.jp/support/jp/manuals/res/1810481/SC-8850_j8.pdf
 
-namespace 
-{
-
-// ビッグエンディアンの値を読み出します
-template<
-	std::integral T
->
-std::optional<T> read_big(std::istream& s, size_t bytes = sizeof(T)) 
-{
-	// TODO リトルエンディアンでの実行前提
-	// TODO アラインメントが適切ではない可能性あり
-	require(bytes <= sizeof(T));
-	std::array<uint8_t, sizeof(T)> buff = {0};
-	for (size_t i = 0; i < bytes; ++i) {
-		int b = s.get();
-		if(b < 0) return {};
-		buff[bytes-i-1] = static_cast<uint8_t>(b);
-	}
-	return *reinterpret_cast<T*>(&buff[0]);
-}
-
-// 1バイトを読み出します
-std::optional<uint8_t> read_byte(std::istream& s) 
-{
-	// TODO リトルエンディアンでの実行前提
-	// TODO アラインメントが適切ではない可能性あり
-
-	int b = s.get();
-	if(b < 0) return {};
-	return static_cast<uint8_t>(b);
-}
-
-// デルタタイム(可変長数値)を読み出します
-std::optional<uint32_t> read_variable(std::istream& s) 
-{
-	uint32_t ret = 0;
-	int read_bytes = 0;
-	while (true) {
-		// 最大でも4バイトで構成される
-		if(read_bytes >= 4) return {}; 
-
-		int b = s.get();
-		++read_bytes;
-		if(b < 0) return {}; // EOF or error
-
-		// 数値として使う値は7bit単位で格納されている
-		ret <<= 7;
-		ret += static_cast<uint8_t>(b & 0x7F);
-
-		// 最上位桁が0ならば、この桁で終わり
-		if((b & 0x80) == 0) break;
-	}
-	return ret;
-}
-
-}
-
-
-Sequencer::Sequencer(MessageReceiver& receiver)
+Sequencer::Sequencer(juce::MidiInputCallback& receiver)
 	: mReceiver(receiver)
 {
 }
@@ -145,8 +81,7 @@ void Sequencer::playThreadMain(std::stop_token stopToken, const juce::MidiMessag
 		// 停止要求があった場合、状態を完全に破棄するためリセットを送出する
 		if(stopToken.stop_requested()) {
 			std::vector<uint8_t> reset {0x7E, 0x7F, 0x09, 0x01}; // GM1 Reset
-			auto now_time = clock::now();
-			mReceiver.onMidiMessageReceived(now_time, juce::MidiMessage::createSysExMessage(reset.data(), static_cast<int>(reset.size())));
+			mReceiver.handleIncomingMidiMessage(nullptr, juce::MidiMessage::createSysExMessage(reset.data(), static_cast<int>(reset.size())));
 			break;
 		}
 
@@ -161,7 +96,7 @@ void Sequencer::playThreadMain(std::stop_token stopToken, const juce::MidiMessag
 				next_message_time = msg_time;
 				break;
 			}
-			mReceiver.onMidiMessageReceived(msg_time, msg);
+			mReceiver.handleIncomingMidiMessage(nullptr, msg);
 			++next_message_iter;
 		}
 

@@ -10,7 +10,6 @@
 #pragma once
 
 #include <lsp/core/core.hpp>
-#include <lsp/midi/message_receiver.hpp>
 
 
 namespace lsp::midi::smf
@@ -20,7 +19,7 @@ class Sequencer
 	: non_copy_move
 {
 public:
-	Sequencer(MessageReceiver& receiver);
+	Sequencer(juce::MidiInputCallback& receiver);
 	~Sequencer();
 
 	// SMFを開きます
@@ -39,7 +38,7 @@ private:
 	void playThreadMain(std::stop_token stopToken, const juce::MidiMessageSequence& messages);
 
 private:
-	MessageReceiver& mReceiver;
+	juce:: MidiInputCallback& mReceiver;
 	std::jthread mPlayThread;
 	juce::MidiMessageSequence mSequence;
 

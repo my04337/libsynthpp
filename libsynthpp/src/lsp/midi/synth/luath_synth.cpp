@@ -92,8 +92,7 @@ lsp::Signal<float> LuathSynth::generate(size_t len)
 	// 蓄積されたMIDIメッセージを解釈
 	size_t msg_count = 0;
 	while(!mMessageQueue.empty()) {
-		const auto& [msg_time, msg] = mMessageQueue.front();
-		handleMidiEvent(msg);
+		handleMidiEvent(mMessageQueue.front());
 		++msg_count;
 		mMessageQueue.pop_front();
 	}
@@ -135,10 +134,10 @@ lsp::Signal<float> LuathSynth::generate(size_t len)
 }
 
 // MIDIメッセージ受信コールバック
-void LuathSynth::onMidiMessageReceived(clock::time_point msg_time, const juce::MidiMessage& msg)
+void LuathSynth::handleIncomingMidiMessage(juce::MidiInput* source, const juce::MidiMessage& message)
 {
 	std::lock_guard lock(mMutex);
-	mMessageQueue.emplace_back(msg_time, msg);
+	mMessageQueue.emplace_back(message);
 }
 // 統計情報を取得します
 LuathSynth::Statistics LuathSynth::statistics()const
