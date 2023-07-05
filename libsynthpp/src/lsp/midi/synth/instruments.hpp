@@ -10,7 +10,7 @@
 #pragma once
 
 #include <lsp/core/core.hpp>
-#include <lsp/generator/wave_table_generator.hpp>
+#include <lsp/dsp/wave_table_generator.hpp>
 
 namespace lsp::midi::synth
 {
@@ -19,7 +19,7 @@ namespace lsp::midi::synth
 class Instruments 
 {
 public:
-	using WaveTableGenerator = generator::WaveTableGenerator<float>;
+	using WaveTableGenerator = dsp::WaveTableGenerator<float>;
 
 	// 波形テーブル一覧
 

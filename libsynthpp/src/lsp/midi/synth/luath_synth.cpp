@@ -8,7 +8,7 @@
 */
 
 #include <lsp/midi/synth/luath_synth.hpp>
-#include <lsp/generator/function_generator.hpp>
+#include <lsp/dsp/function_generator.hpp>
 
 using namespace lsp::midi::synth;
 

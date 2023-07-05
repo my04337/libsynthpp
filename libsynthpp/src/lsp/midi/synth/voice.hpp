@@ -11,9 +11,9 @@
 
 #include <lsp/core/core.hpp>
 
-#include <lsp/effector/envelope_generator.hpp>
-#include <lsp/effector/biquadratic_filter.hpp>
-#include <lsp/generator/wave_table_generator.hpp>
+#include <lsp/dsp/envelope_generator.hpp>
+#include <lsp/dsp/biquadratic_filter.hpp>
+#include <lsp/dsp/wave_table_generator.hpp>
 
 namespace lsp::midi::synth
 {
@@ -27,14 +27,14 @@ class Voice
 	: non_copy_move
 {
 public:
-	using EnvelopeGenerator = effector::EnvelopeGenerator<float>;
-	using EnvelopeState = effector::EnvelopeState;
-	using BiquadraticFilter = effector::BiquadraticFilter<float>;
+	using EnvelopeGenerator = dsp::EnvelopeGenerator<float>;
+	using EnvelopeState = dsp::EnvelopeState;
+	using BiquadraticFilter = dsp::BiquadraticFilter<float>;
 
 	struct Digest {
 		float freq = 0; // 基本周波数
 		float envelope = 0; // エンベロープジェネレータ出力
-		effector::EnvelopeState state = effector::EnvelopeState::Free; // エンベロープジェネレータ ステート
+		dsp::EnvelopeState state = dsp::EnvelopeState::Free; // エンベロープジェネレータ ステート
 	};
 
 public:
@@ -83,7 +83,7 @@ class WaveTableVoice
 	: public Voice
 {
 public:
-	using WaveTableGenerator = generator::WaveTableGenerator<float>;
+	using WaveTableGenerator = dsp::WaveTableGenerator<float>;
 
 
 public:

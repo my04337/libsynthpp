@@ -1,5 +1,5 @@
 ﻿#include <luath/widget/spectrum_analyzer.hpp>
-#include <lsp/util/fft.hpp>
+#include <lsp/dsp/fft.hpp>
 
 #include <bit>
 #include <array>
@@ -43,7 +43,7 @@ void SpectrumAnalyzer::setParams(float sampleFreq, size_t bufferSize, uint32_t s
 	// 高速な解析のため、信号前後を0パディングする
 	// 参考 : https://watlab-blog.com/2020/11/16/zero-padding-fft/
 	for(size_t i = 0; i < bufferSize; ++i) {
-		mDrawingFftWindowCache[i] = lsp::fft::HammingWf(i / (float)bufferSize);
+		mDrawingFftWindowCache[i] = lsp::dsp::fft::HammingWf(i / (float)bufferSize);
 	}
 }
 
@@ -178,7 +178,7 @@ void SpectrumAnalyzer::draw(ID2D1RenderTarget& renderer, const float left, const
 			}
 		}
 		std::fill(image.begin(), image.end(), 0.f);
-		lsp::fft::fft1d<float>(real.data(), image.data(), static_cast<int>(real.size()), 0, false);
+		lsp::dsp::fft::fft1d<float>(real.data(), image.data(), static_cast<int>(real.size()), 0, false);
 
 		// 各点の位置を求める
 		auto getPoint = [&](size_t pos) -> D2D1_POINT_2F {

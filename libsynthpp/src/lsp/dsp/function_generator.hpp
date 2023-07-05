@@ -13,7 +13,7 @@
 
 #include <random>
 
-namespace lsp::generator {
+namespace lsp::dsp {
 
 // 波形種別
 enum class WaveFormType

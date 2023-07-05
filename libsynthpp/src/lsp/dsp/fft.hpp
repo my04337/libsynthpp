@@ -11,7 +11,7 @@
 
 #include <lsp/core/core.hpp>
 
-namespace lsp::fft
+namespace lsp::dsp::fft
 {
 // 各種窓関数
 template<

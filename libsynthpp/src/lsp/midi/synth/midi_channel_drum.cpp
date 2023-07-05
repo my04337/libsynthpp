@@ -110,7 +110,7 @@ std::unique_ptr<Voice> ChannelSound::createDrumVoice(int noteNo, float vel)
 	// TODO sustain_levelで除算しているのは旧LibSynth++からの移植コード。 補正が不要になったら削除すること
 	float volume = powf(10.f, -20.f * (1.f - vel) / 20.f);
 	float cutoff_level = 0.01f;
-	static const effector::EnvelopeGenerator<float>::Curve curveExp3(3.0f);
+	static const dsp::EnvelopeGenerator<float>::Curve curveExp3(3.0f);
 
 	float cutOffFreqRate = 2.f;
 	float overtuneGain = 0.f; // dB

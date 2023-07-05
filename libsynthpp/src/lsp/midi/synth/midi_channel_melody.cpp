@@ -187,7 +187,7 @@ std::unique_ptr<Voice> ChannelSound::createMelodyVoice(int noteNo, float vel)
 	}
 
 	// 音色の調整
-	generator::WaveTableGenerator<float> wg;
+	dsp::WaveTableGenerator<float> wg;
 	if(isDrumLikeInstrument) {
 		wg = Instruments::createDrumNoiseGenerator();
 	} else{
@@ -217,7 +217,7 @@ std::unique_ptr<Voice> ChannelSound::createMelodyVoice(int noteNo, float vel)
 	// TODO sustain_levelで除算しているのは旧LibSynth++からの移植コード。 補正が不要になったら削除すること
 	float volume = powf(10.f, -20.f * (1.f - vel) / 20.f) * v / ((s > 0.8f && s != 0.f) ? s : 0.8f);
 	float cutoffLevel = 0.01f;
-	static const effector::EnvelopeGenerator<float>::Curve curveExp3(3.0f);
+	static const dsp::EnvelopeGenerator<float>::Curve curveExp3(3.0f);
 
 	float overtuneGain = 0.f; // dB
 	if(mSystemType.isGS() || mSystemType.isXG()) {

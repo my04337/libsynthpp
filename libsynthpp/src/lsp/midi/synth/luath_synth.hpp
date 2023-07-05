@@ -93,8 +93,8 @@ private:
 	std::atomic<Statistics> mThreadSafeStatistics;
 
 	// 最終段エフェクタ
-	effector::BiquadraticFilter<float> mFinalLpfL;
-	effector::BiquadraticFilter<float> mFinalLpfR;
+	dsp::BiquadraticFilter<float> mFinalLpfL;
+	dsp::BiquadraticFilter<float> mFinalLpfR;
 	float mMasterVolume;
 
 	// all channel parameters

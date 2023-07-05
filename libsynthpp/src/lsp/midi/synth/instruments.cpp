@@ -8,8 +8,8 @@
 */
 
 #include <lsp/midi/synth/instruments.hpp>
-#include <lsp/generator/function_generator.hpp>
-#include <lsp/effector/biquadratic_filter.hpp>
+#include <lsp/dsp/function_generator.hpp>
+#include <lsp/dsp/biquadratic_filter.hpp>
 
 using namespace lsp;
 using namespace lsp::midi::synth;
@@ -44,7 +44,7 @@ auto Instruments::createSquareGenerator(int overtoneOrder, float volume)
 	-> WaveTableGenerator
 {
 	static constexpr size_t MAX_OVERTONE_ORDER = 50;
-	using FunctionGenerator = generator::FunctionGenerator<float>;
+	using FunctionGenerator = dsp::FunctionGenerator<float>;
 
 	static const auto tables = []() ->std::array<Signal<float>, MAX_OVERTONE_ORDER + 1> {
 		std::array <Signal<float>, MAX_OVERTONE_ORDER + 1> tables;
@@ -74,8 +74,8 @@ auto Instruments::createSquareGenerator(int overtoneOrder, float volume)
 auto Instruments::createDrumNoiseGenerator(float volume)
 	-> WaveTableGenerator
 {
-	using FunctionGenerator = generator::FunctionGenerator<float>;
-	using BiquadraticFilter = effector::BiquadraticFilter<float>;
+	using FunctionGenerator = dsp::FunctionGenerator<float>;
+	using BiquadraticFilter = dsp::BiquadraticFilter<float>;
 	static constexpr size_t samples = 131072;
 
 	static const auto [table, preAmp] = []() -> std::tuple<Signal<float>, float> {

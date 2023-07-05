@@ -12,7 +12,7 @@
 #include <lsp/core/core.hpp>
 
 
-namespace lsp::effector {
+namespace lsp::dsp {
 
 // 双二次フィルタクラス
 //   参考URL : http://ufcpp.net/study/sp/digital_filter/biquad/

@@ -11,7 +11,7 @@
 
 #include <lsp/core/core.hpp>
 
-namespace lsp::effector
+namespace lsp::dsp
 {
 
 
