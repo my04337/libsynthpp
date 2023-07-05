@@ -8,29 +8,39 @@
 */
 
 #include <lsp/synth/synth.hpp>
+#include <lsp/synth/sound.hpp>
 #include <lsp/dsp/function_generator.hpp>
 
 using namespace lsp::synth;
 
+static constexpr int MAX_VOICE_COUNT = 90;
+
 LuathSynth::LuathSynth()
 {
 	// MIDIチャネルのセットアップ
-	mChannelParams.reserve(16);
+	mChannelState.reserve(16);
 	for(int ch = 1; ch <= 16; ++ch) {
-		mChannelParams.emplace_back(*this, ch);
+		mChannelState.emplace_back(*this, ch);
+		addSound(new LuathSound(*this, ch));
 	}
+	check(getNumSounds() == 16);
 
-	// juce::Synthesizerとしてのサウンド&ボイスのセットアップ
-	addSound(new LuathSound(*this));
+	// ボイスのセットアップ
+	for(int id = 0; id < MAX_VOICE_COUNT; ++id) {
+		addVoice(new LuathVoice(*this));
+	}
+	check(getNumVoices() == MAX_VOICE_COUNT);
 
 
 	// 周波数 仮指定 ※間接的にMIDIリセット
-	setSampleFreq(1.f);
+	setCurrentPlaybackSampleRate(1.f);
 }
 // サンプ林周波数を指定します
-void LuathSynth::setSampleFreq(float sampleFreq)
+void LuathSynth::setCurrentPlaybackSampleRate(double sampleRate)
 {
 	std::lock_guard lock(mMutex);
+	SUPER::setCurrentPlaybackSampleRate(sampleRate);
+	auto sampleFreq = static_cast<float>(sampleRate);
 	mSampleFreq = sampleFreq;
 
 	// 最終段のローパスフィルタ ※折り返し誤差低減のため
@@ -58,29 +68,40 @@ void LuathSynth::reset(midi::SystemType type)
 	mMasterVolume = 1.f;
 
 	for(int ch = 1; ch <= 16; ++ch) {
-		getChannelParams(ch).reset(type);
+		getChannelState(ch).reset();
+		allNotesOff(ch, false);
 	}
 }
-ChannelParams& LuathSynth::getChannelParams(int ch)noexcept 
+ChannelState& LuathSynth::getChannelState(int ch)noexcept 
 {
 	require(ch >= 1 && ch <= 16);
-	return mChannelParams[static_cast<size_t>(ch - 1)];
+	return mChannelState[static_cast<size_t>(ch - 1)];
 }
-const ChannelParams& LuathSynth::getChannelParams(int ch)const noexcept
+const ChannelState& LuathSynth::getChannelState(int ch)const noexcept
 {
 	require(ch >= 1 && ch <= 16);
-	return mChannelParams[static_cast<size_t>(ch - 1)];
+	return mChannelState[static_cast<size_t>(ch - 1)];
 }
 
 
-lsp::Signal<float> LuathSynth::generate(size_t len)
+// MIDIメッセージ受信コールバック
+void LuathSynth::handleIncomingMidiMessage(juce::MidiInput* source, const juce::MidiMessage& message)
+{
+	std::lock_guard lock(mMutex);
+	mMessageQueue.emplace_back(message);
+}
+// 信号を生成します
+void LuathSynth::renderNextBlock(juce::AudioBuffer<float>& outputAudio, const juce::MidiBuffer& inputMidi, int startSample, int numSamples)
 {
 	auto cycleBegin = clock::now();
+
+	require(outputAudio.getNumChannels() == 2);
 
 	// 演奏開始
 	std::lock_guard lock(mMutex);
 
 	// 蓄積されたMIDIメッセージを解釈
+	// TODO 本来はinpuMidiを使うべき
 	size_t msg_count = 0;
 	while(!mMessageQueue.empty()) {
 		handleMidiEvent(mMessageQueue.front());
@@ -88,47 +109,36 @@ lsp::Signal<float> LuathSynth::generate(size_t len)
 		mMessageQueue.pop_front();
 	}
 
-	// 信号生成
+	// 出力をゼロクリア
+	outputAudio.clear(startSample, numSamples);
+
+	// 各voiceの出力を実施
+	SUPER::renderNextBlock(outputAudio, inputMidi, startSample, numSamples);
+
+	// 後段のエフェクト類を適用
 	constexpr float MASTER_ATTENUATOR = 0.125f;
-
-	auto sig = lsp::Signal<float>::allocate(2, len);
-	auto lData = sig.mutableData(0);
-	auto rData = sig.mutableData(1);
-
-	for (size_t i = 0; i < len; ++i) {
-		auto& lch = lData[i];
-		auto& rch = rData[i];
-		lch = rch = 0;
-
-		// チャネル毎の信号を生成する
-		for (int ch = 1; ch <= 16; ++ch) {
-			auto& midich = getChannelParams(ch);
-			auto v = midich.update();
-			lch += v.first;
-			rch += v.second;
-		}
-
+	auto lch = outputAudio.getWritePointer(0, startSample);
+	auto rch = outputAudio.getWritePointer(1, startSample);
+	for(int i = 0; i < numSamples; ++i) {
+		auto l = lch[i];
+		auto r = rch[i];
 		// 最終段用のローパスフィルタを適用
-		lch = mFinalLpfL.update(lch);
-		rch = mFinalLpfR.update(rch);
+		l = mFinalLpfL.update(l);
+		r = mFinalLpfR.update(r);
 
 		// マスタボリューム適用
-		lch *= mMasterVolume * MASTER_ATTENUATOR;
-		rch *= mMasterVolume * MASTER_ATTENUATOR;
+		l *= mMasterVolume * MASTER_ATTENUATOR;
+		r *= mMasterVolume * MASTER_ATTENUATOR;
+
+		// 書き戻し
+		lch[i] = l;
+		rch[i] = r;
 	}
 
 	// 演奏終了
 	auto cycleEnd = clock::now();
 	mStatistics.cycle_time = cycleEnd - cycleBegin;
 	mThreadSafeStatistics = mStatistics;
-	return sig;
-}
-
-// MIDIメッセージ受信コールバック
-void LuathSynth::handleIncomingMidiMessage(juce::MidiInput* source, const juce::MidiMessage& message)
-{
-	std::lock_guard lock(mMutex);
-	mMessageQueue.emplace_back(message);
 }
 // 統計情報を取得します
 LuathSynth::Statistics LuathSynth::statistics()const
@@ -144,9 +154,21 @@ LuathSynth::Digest LuathSynth::digest()const
 
 	digest.channels.reserve(16);
 	for(int ch = 1; ch <= 16; ++ch) {
-		digest.channels.push_back(getChannelParams(ch).digest());
+		digest.channels.push_back(getChannelState(ch).digest(mSystemType));
 	}
+	auto numVoice = getNumVoices();
+	digest.voices.reserve(numVoice);
+	for(int i = 0; i < numVoice; ++i) {
+		auto voice = dynamic_cast<LuathVoice*>(getVoice(i));
+		check(voice != nullptr);
+		digest.voices.emplace_back(voice->digest());
+	}
+
 	return digest;
+}
+lsp::midi::SystemType LuathSynth::systemType()const noexcept
+{
+	return mSystemType;
 }
 
 // ---
@@ -163,30 +185,19 @@ void LuathSynth::handleMidiEvent(const juce::MidiMessage& msg)
 }
 
 
-void LuathSynth::noteOn(int channel, int noteNo, float velocity)
-{
-	getChannelParams(channel).noteOn(noteNo, velocity);
-}
-void LuathSynth::noteOff(int channel, int noteNo, float velocity, bool allowTailOff)
-{
-	// MEMO 一般に、MIDIではノートオフの代わりにvel=0のノートオンが使用されるため、呼ばれることは希である
-	getChannelParams(channel).noteOff(noteNo, allowTailOff);
-}
-void LuathSynth::allNotesOff(int channel, bool allowTailOff)
-{
-	getChannelParams(channel).allNotesOff(allowTailOff);
-}
 void LuathSynth::handlePitchWheel(int channel, int value)
 {
-	getChannelParams(channel).pitchBend(value);
+	auto pitchBendWithoutSensitivity = (value - 8192.f) / 8192.f;
+	getChannelState(channel).pitchBendWithoutSensitivity = (value - 8192.f) / 8192.f;
+	SUPER::handlePitchWheel(channel, value);
 }
 void LuathSynth::handleController(int channel, int ctrlNo, int value)
 {
-	getChannelParams(channel).controlChange(ctrlNo, value);
+	getChannelState(channel).controlChange(ctrlNo, value);
 }
 void LuathSynth::handleProgramChange(int channel, int progId)
 {
-	getChannelParams(channel).programChange(progId);
+	getChannelState(channel).progId = progId;
 }
 
 // ---
@@ -252,7 +263,7 @@ void LuathSynth::sysExMessage(const uint8_t* data, size_t len)
 			//   see https://ssw.co.jp/dtm/drums/drsetup.html
 			auto ch = static_cast<int>(*peek(4) & 0x0F) + 1;
 			auto mapNo = *peek(6);
-			getChannelParams(ch).setDrumMode(mapNo != 0);
+			getChannelState(ch).isDrumPart = (mapNo != 0);
 		}
 	}
 	else if(makerId == 0x43) {

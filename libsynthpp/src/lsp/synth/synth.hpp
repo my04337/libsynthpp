@@ -11,18 +11,23 @@
 
 #include <lsp/core/core.hpp>
 #include <lsp/midi/system_type.hpp>
-#include <lsp/synth/channel_params.hpp>
+#include <lsp/synth/state.hpp>
+#include <lsp/synth/voice.hpp>
 
 #include <array>
 #include <shared_mutex>
 
 namespace lsp::synth
 {
+class LuathVoice;
 
 class LuathSynth final
 	: public juce::Synthesiser
 	, public juce::MidiInputCallback
 {
+	friend class LuathVoice;
+	using SUPER = juce::Synthesiser;
+
 public:
 	struct Statistics {
 		clock::duration cycle_time;
@@ -39,7 +44,8 @@ public:
 		midi::SystemType systemType;
 		float masterVolume;
 
-		std::vector<ChannelParams::Digest> channels;
+		std::vector<ChannelState::Digest> channels;
+		std::vector<LuathVoice::Digest> voices;
 	};
 
 public:
@@ -50,9 +56,12 @@ public:
 
 	// MIDIメッセージを受信した際にコールバックされます。
 	virtual void handleIncomingMidiMessage(juce::MidiInput* source, const juce::MidiMessage& message)override;
+	
+	// 信号を生成します
+	void renderNextBlock(juce::AudioBuffer<float>& outputAudio, const juce::MidiBuffer& inputMidi, int startSample, int numSamples);
 
-	// サンプ林周波数を指定します
-	void setSampleFreq(float sampleFreq);
+	// サンプリング周波数を指定します
+	void setCurrentPlaybackSampleRate(double sampleRate)override;
 
 	// サンプリング周波数を返します
 	float sampleFreq()const noexcept { return mSampleFreq; }
@@ -61,21 +70,17 @@ public:
 	Statistics statistics()const;
 	// 現在の内部状態のダイジェストを取得します
 	Digest digest()const;
-	// MIDIメッセージを元に演奏した結果を返します
-	Signal<float> generate(size_t len);
+	// MIDIシステムタイプ(リセット種別)を取得します
+	midi::SystemType systemType()const noexcept;
 
 protected:
 	void reset(midi::SystemType defaultSystemType = midi::SystemType::GS());
 
-	ChannelParams& getChannelParams(int ch)noexcept;
-	const ChannelParams& getChannelParams(int ch)const noexcept;
+	ChannelState& getChannelState(int ch)noexcept;
+	const ChannelState& getChannelState(int ch)const noexcept;
 
 public: // implementation of juce::Synthesizer +α
 	
-
-	void noteOn(int channel, int noteNo, float velocity)override;
-	void noteOff(int channel, int noteno, float velocity, bool allowTailOff)override;
-	void allNotesOff(int channel, bool allowTailOff)override;
 	void handlePitchWheel(int channel, int value)override;
 	void handleController(int channel, int ctrlNo, int value)override;
 	void handleProgramChange(int channel, int progId)override;
@@ -102,7 +107,7 @@ private:
 	midi::SystemType mSystemType;
 
 	// per channel params
-	std::vector<ChannelParams> mChannelParams;
+	std::vector<ChannelState> mChannelState;
 };
 
 }

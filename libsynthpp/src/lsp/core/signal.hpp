@@ -34,6 +34,10 @@ public:
 	Signal(Signal&& d)noexcept = default;
 	Signal& operator=(Signal&& d)noexcept = default;
 
+
+	juce::AudioBuffer<sample_type>& data()noexcept { return mData; }
+	const juce::AudioBuffer<sample_type>& data()const noexcept { return mData; }
+
 	// チャネル数を取得します
 	uint32_t channels()const noexcept { return static_cast<uint32_t>(mData.getNumChannels()); }
 

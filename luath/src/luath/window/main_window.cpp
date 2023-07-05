@@ -316,7 +316,8 @@ void MainWindow::audioDeviceIOCallbackWithContext(
 	// シンセサイザ信号生成
 	check(numOutputChannels == 2);
 	check(numSamples >= 0);
-	auto sig = mSynthesizer.generate(static_cast<size_t>(numSamples));
+	auto sig = lsp::Signal<float>::allocate(numOutputChannels, static_cast<size_t>(numSamples));
+	mSynthesizer.renderNextBlock(sig.data(), {}, 0, numSamples);
 
 	// ポストアンプ適用
 	auto postAmpVolume = mPostAmpVolume.load();
@@ -348,7 +349,7 @@ void MainWindow::audioDeviceAboutToStart(juce::AudioIODevice* device)
 	if(!device) return;
 
 	auto sampleFreq = static_cast<float>(device->getCurrentSampleRate());
-	mSynthesizer.setSampleFreq(sampleFreq);
+	mSynthesizer.setCurrentPlaybackSampleRate(device->getCurrentSampleRate());
 	mOscilloScopeWidget.setParams(sampleFreq, 25e-3f);
 	mSpectrumAnalyzerWidget.setParams(sampleFreq, 4096, 2);
 	mLissajousWidget.setParams(sampleFreq, 25e-3f);
@@ -370,10 +371,6 @@ struct MainWindow::DrawingContext
 	std::array<std::chrono::microseconds, 15> frame_interval_history = {};
 	clock::time_point prev_drawing_start_time = clock::now();
 	size_t drawing_time_index = 0;
-
-	// 前回のボイス表示位置 (素直に順番に描画するとちらついて見づらいため表示を揃える)
-	std::unordered_map<VoiceId, size_t> prevVoicePosMap;
-	size_t prevVoiceEndPos = 0;
 };
 
 
@@ -462,9 +459,17 @@ void MainWindow::onDraw(ID2D1RenderTarget& renderer)
 	const auto tgStatistics = mSynthesizer.statistics();
 	const auto synthDigest = mSynthesizer.digest();
 	const auto& channelDigests = synthDigest.channels;
+	const auto& voiceDigests = synthDigest.voices;
 
-	size_t polyCount = 0;
-	for(auto& cd : channelDigests) polyCount += cd.poly;
+	// チャネル毎の合計発音数を取得
+	std::array<int, 16> poly;
+	std::fill(poly.begin(), poly.end(), 0);
+	for(auto& vd : voiceDigests) {
+		if(vd.ch < 1 || vd.ch > 16) continue;
+		if(vd.state == LuathVoice::EnvelopeState::Free) continue;
+		++poly[vd.ch - 1];
+	}
+	int polyCount = std::accumulate(poly.begin(), poly.end(), 0);
 
 	// 描画情報
 	{
@@ -548,10 +553,10 @@ void MainWindow::onDraw(ID2D1RenderTarget& renderer)
 			drawText(col(), y, std::format(L"{:0.3f}", cd.expression));
 			drawText(col(), y, std::format(L"{:+0.4f}", cd.pitchBend));
 			drawText(col(), y, std::format(L"{:0.2f}", cd.pan));
-			drawText(col(), y, std::format(L"{:03}.{:03}.{:03}", cd.attackTime, cd.decayTime, cd.releaseTime));
+			drawText(col(), y, std::format(L"{:03}.{:03}.{:03}", static_cast<int>(cd.attackTime*127), static_cast<int>(cd.decayTime * 127), static_cast<int>(cd.releaseTime * 127)));
 			drawText(col(), y, cd.pedal ? L"on" : L"off");
 			drawText(col(), y, cd.drum ? L"on" : L"off");
-			drawText(col(), y, std::format(L"{:02}", cd.poly));
+			drawText(col(), y, std::format(L"{:02}", poly[cd.ch - 1]));
 		}
 	}
 
@@ -562,39 +567,6 @@ void MainWindow::onDraw(ID2D1RenderTarget& renderer)
 		const size_t voicePerRow = 45;
 		const float height = 12;
 
-		// 全チャネルのボイス情報を統合
-		std::unordered_map<VoiceId, std::pair</*ch*/uint8_t, LuathVoice::Digest>> unsortedVoiceDigests;
-		for(const auto& cd : channelDigests) {
-			for(const auto& [vid, vd] : cd.voices) {
-				unsortedVoiceDigests.emplace(vid, std::make_pair(cd.ch, vd));
-			}
-		}
-		// 前回の描画位置を維持しながら描画順を決定する
-		std::vector<std::tuple<VoiceId, /*ch*/uint8_t, LuathVoice::Digest>> voiceDigests;
-		voiceDigests.resize(std::max(unsortedVoiceDigests.size(), context.prevVoiceEndPos));
-		for(auto& [vid, pos] : context.prevVoicePosMap) {
-			auto found = unsortedVoiceDigests.find(vid);
-			if(found != unsortedVoiceDigests.end()) {
-				voiceDigests[pos] = std::make_tuple(found->first, std::get<0>(found->second), std::get<1>(found->second));
-				unsortedVoiceDigests.erase(found);
-			}
-		}
-		for(size_t i = 0; i < voiceDigests.size() && !unsortedVoiceDigests.empty(); ++i) {
-			if(!std::get<0>(voiceDigests[i]).empty()) continue;
-			auto found = unsortedVoiceDigests.begin();
-			voiceDigests[i] = std::make_tuple(found->first, std::get<0>(found->second), std::get<1>(found->second));
-			unsortedVoiceDigests.erase(found);
-		}
-		check(unsortedVoiceDigests.empty());
-		context.prevVoiceEndPos = 0;
-		context.prevVoicePosMap.clear();
-		for(size_t i = 0; i < voiceDigests.size(); ++i) {
-			if(std::get<0>(voiceDigests[i]).empty()) continue;
-			context.prevVoicePosMap[std::get<0>(voiceDigests[i])] = i;
-			context.prevVoiceEndPos = i + 1;
-		}
-
-		// 描画
 		constexpr std::array<float, 4> columnWidth{ 15, 22, 30, 40};
 		float x = ofsX;
 		size_t ci = 0;
@@ -612,18 +584,18 @@ void MainWindow::onDraw(ID2D1RenderTarget& renderer)
 			drawText(col(), ofsY, L"Status");
 		}
 		for(size_t i = 0; i < voiceDigests.size(); ++i) {
-			const auto& [vid, ch, vd] = voiceDigests[i];
+			const auto& vd = voiceDigests[i];
+			if(vd.state == LuathVoice::EnvelopeState::Free) continue;
+
 			x = ofsX + (static_cast<float>(i / voicePerRow)) * (width + 10);
 			float y = ofsY + height * ((i % voicePerRow) + 1);
 			ci = 0;
 
-			if(vid.empty()) continue;
-
-			const auto bgColor = getMidiChannelColor(ch);
+			const auto bgColor = getMidiChannelColor(vd.ch);
 			brush->SetColor({ bgColor.r, bgColor.g, bgColor.b, std::clamp(vd.envelope * 0.4f + 0.1f, 0.f, 1.f)});
 			renderer.FillRectangle({ x, y, x + width, y + height }, brush);
 
-			drawSmallText(col(), y, std::format(L"{:02}", ch));
+			drawSmallText(col(), y, std::format(L"{:02}", vd.ch));
 			drawSmallText(col(), y, freq2scale(vd.freq));
 			drawSmallText(col(), y, std::format(L"{:.3f}", vd.envelope));
 			drawSmallText(col(), y, state2text(vd.state));
