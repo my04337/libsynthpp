@@ -74,7 +74,7 @@ struct ChannelState final
 	Digest digest(const midi::SystemType& systemType)const;
 	void reset();
 
-	void controlChange(int ctrlNo, int value);
+	void handleController(int ctrlNo, int value);
 	// ---
 
 

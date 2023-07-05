@@ -63,7 +63,7 @@ void ChannelState::reset()
 }
 
 // コントロールチェンジ & チャネルモードメッセージ
-void ChannelState::controlChange(int ctrlNo, int value)
+void ChannelState::handleController(int ctrlNo, int value)
 {
 	// 参考 : http://quelque.sakura.ne.jp/midi_cc.html
 	//        https://www.g200kg.com/jp/docs/tech/midi.html

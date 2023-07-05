@@ -193,11 +193,13 @@ void LuathSynth::handlePitchWheel(int channel, int value)
 }
 void LuathSynth::handleController(int channel, int ctrlNo, int value)
 {
-	getChannelState(channel).controlChange(ctrlNo, value);
+	getChannelState(channel).handleController(ctrlNo, value);
+	SUPER::handleController(channel, ctrlNo, value);
 }
 void LuathSynth::handleProgramChange(int channel, int progId)
 {
 	getChannelState(channel).progId = progId;
+	SUPER::handleProgramChange(channel, progId);
 }
 
 // ---
