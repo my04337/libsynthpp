@@ -242,7 +242,7 @@ ChannelParams::Digest ChannelParams::digest()const
 
 	return digest;
 }
-std::unique_ptr<Voice> ChannelParams::createVoice(int noteNo, float vel)
+std::unique_ptr<LuathVoice> ChannelParams::createVoice(int noteNo, float vel)
 {
 	if(mIsDrumPart) {
 		return createDrumVoice(noteNo, vel);
@@ -294,7 +294,7 @@ void ChannelParams::updatePitchBend()
 void ChannelParams::updateHold()
 {
 	for (auto& [id, voice] : mVoices) {
-		voice->setHold(ccPedal);
+		voice->setSustainPedalDown(ccPedal);
 	}
 }
 void ChannelParams::setDrumMode(bool isDrum)

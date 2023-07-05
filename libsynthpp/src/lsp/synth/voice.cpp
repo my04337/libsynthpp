@@ -11,20 +11,23 @@
 
 using namespace lsp::synth;
 
-Voice::Voice(float sampleFreq, float noteNo, float pitchBend, float volume, bool hold)
-	: mSampleFreq(sampleFreq)
+LuathVoice::LuathVoice(const WaveTableGenerator& wg, float noteNo, float pitchBend, float volume, bool hold)
+	: mWG(wg)
 	, mNoteNo(noteNo)
 	, mPitchBend(pitchBend)
 	, mVolume(volume)
-	, mHold(hold)
 {
 	updateFreq();
 }
 
-Voice::~Voice() = default;
+LuathVoice::~LuathVoice() = default;
 
+bool LuathVoice::canPlaySound(juce::SynthesiserSound* sound)
+{
+	return dynamic_cast<LuathSound*>(sound) != nullptr; 
+} 
 
-Voice::Digest Voice::digest()const noexcept
+LuathVoice::Digest LuathVoice::digest()const noexcept
 {
 	Digest digest;
 
@@ -34,15 +37,15 @@ Voice::Digest Voice::digest()const noexcept
 
 	return digest;
 }
-float Voice::noteNo()const noexcept
+float LuathVoice::noteNo()const noexcept
 {
 	return mNoteNo;
 }
 
-void Voice::noteOff(bool allowTailOff)noexcept
+void LuathVoice::noteOff(bool allowTailOff)noexcept
 {
 	if(allowTailOff) {
-		if(mHold) {
+		if(isSustainPedalDown()) {
 			mPendingNoteOff = true;
 		}
 		else {
@@ -56,43 +59,36 @@ void Voice::noteOff(bool allowTailOff)noexcept
 	}
 }
 
-void Voice::setHold(bool hold)noexcept
-{
-	mHold = hold;
-	if (mPendingNoteOff && !hold) {
-		noteOff();
-	}
-}
-std::optional<float> Voice::pan()const noexcept
+std::optional<float> LuathVoice::pan()const noexcept
 {
 	return mPan;
 }
-void Voice::setPan(float pan)noexcept
+void LuathVoice::setPan(float pan)noexcept
 {
 	mPan = pan;
 }
-void Voice::setPitchBend(float pitchBend)noexcept
+void LuathVoice::setPitchBend(float pitchBend)noexcept
 {
 	mPitchBend = pitchBend;
 	updateFreq();
 }
 
-void Voice::setCutOff(float freqRate, float cutOffGain)
+void LuathVoice::setCutOff(float freqRate, float cutOffGain)
 {
 	float freq = mCalculatedFreq * freqRate;
-	mCutOffFilter.setHighshelfParam(mSampleFreq, freq, 1.f, cutOffGain);
+	mCutOffFilter.setHighshelfParam(sampleFreq(), freq, 1.f, cutOffGain);
 }
-void Voice::setResonance(float freqRate, float overtoneGain)
+void LuathVoice::setResonance(float freqRate, float overtoneGain)
 {
 	float freq = mCalculatedFreq * freqRate;
-	mResonanceFilter.setPeakingParam(mSampleFreq, freq, 1.f, overtoneGain);
+	mResonanceFilter.setPeakingParam(sampleFreq(), freq, 1.f, overtoneGain);
 }
-Voice::EnvelopeGenerator& Voice::envolopeGenerator() noexcept
+LuathVoice::EnvelopeGenerator& LuathVoice::envolopeGenerator() noexcept
 {
 	return mEG;
 }
 
-void Voice::updateFreq()noexcept
+void LuathVoice::updateFreq()noexcept
 {
 	// TODO いずれ平均律以外にも対応したい
 	mCalculatedFreq = 440 * exp2((mNoteNo + mPitchBend - 69.0f) / 12.0f);

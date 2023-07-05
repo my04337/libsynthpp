@@ -41,14 +41,16 @@ struct _voice_id_tag {};
 using VoiceId = issuable_id_base_t<_voice_id_tag>;
 
 
-// ボイス(あるチャネルの1音) - 基底クラス
-class Voice
-	: non_copy_move
+// ボイス(あるチャネルの1音) - Luath用波形テーブル音源
+class LuathVoice final
+	: public juce::SynthesiserVoice
+	, non_copy_move
 {
 public:
 	using EnvelopeGenerator = dsp::EnvelopeGenerator<float>;
 	using EnvelopeState = dsp::EnvelopeState;
 	using BiquadraticFilter = dsp::BiquadraticFilter<float>;
+	using WaveTableGenerator = dsp::WaveTableGenerator<float>;
 
 	struct Digest {
 		float freq = 0; // 基本周波数
@@ -57,17 +59,33 @@ public:
 	};
 
 public:
-	Voice(float sampleFreq, float noteNo, float pitchBend, float volume, bool hold);
-	virtual ~Voice();
+	LuathVoice(const WaveTableGenerator& wg, float noteNo, float pitchBend, float volume, bool hold);
+	virtual ~LuathVoice();
 
-	virtual float update() = 0;
+	// --- implmentation of uce::SynthesiserVoice --- 
+	bool canPlaySound(juce::SynthesiserSound*)override;
+	void startNote(int midiNoteNumber, float velocity, juce::SynthesiserSound* sound, int currentPitchWheelPosition) {} // TODO
+	void stopNote(float velocity, bool allowTailOff) {} // TODO
+	void pitchWheelMoved(int newPitchWheelValue) {} // TODO
+	void controllerMoved(int controllerNumber, int newControllerValue) {} // TODO
+	void renderNextBlock(juce::AudioBuffer< float >& outputBuffer, int startSample, int numSamples) {} // TODO
+	// ---
+
+	float update()
+	{
+		auto v = mWG.update(sampleFreq(), mCalculatedFreq);
+		v = mCutOffFilter.update(v);
+		v = mResonanceFilter.update(v);
+		v *= mEG.update();
+		v *= mVolume;
+		return v;
+	}
 
 	Digest digest()const noexcept;
+	float sampleFreq()const noexcept { return static_cast<float>(getSampleRate()); }
 
 	float noteNo()const noexcept;
 	void noteOff(bool allowTailOff = true)noexcept;
-
-	void setHold(bool hold)noexcept;
 
 	std::optional<float> pan()const noexcept;
 	void setPan(float pan)noexcept;
@@ -83,49 +101,16 @@ protected:
 	void updateFreq()noexcept;
 
 protected:
-	const float mSampleFreq;
 	EnvelopeGenerator mEG;
 	BiquadraticFilter mCutOffFilter;
 	BiquadraticFilter mResonanceFilter;
+	WaveTableGenerator mWG;
 	float mNoteNo;
 	bool mPendingNoteOff = false;
-	bool mHold = false;
 	float mPitchBend;
 	float mCalculatedFreq = 0;
 	float mVolume;
 	std::optional<float> mPan; // ドラムなど、ボイス毎にパンが指定される場合のヒント
-};
-
-
-// 波形メモリ ボイス実装
-class WaveTableVoice
-	: public Voice
-{
-public:
-	using WaveTableGenerator = dsp::WaveTableGenerator<float>;
-
-
-public:
-	WaveTableVoice(float sampleFreq, const WaveTableGenerator& wg,float noteNo, float pitchBend, float volume, bool hold)
-		: Voice(sampleFreq, noteNo, pitchBend, volume, hold)
-		, mWG(wg)
-	{}
-
-
-	virtual ~WaveTableVoice() {}
-
-	virtual float update()override
-	{
-		auto v = mWG.update(mSampleFreq, mCalculatedFreq);
-		v = mCutOffFilter.update(v);
-		v = mResonanceFilter.update(v);
-		v *= mEG.update();
-		v *= mVolume;
-		return v;
-	}
-
-private:
-	WaveTableGenerator mWG;
 };
 
 }

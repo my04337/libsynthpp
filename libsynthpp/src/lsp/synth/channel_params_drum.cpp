@@ -8,7 +8,7 @@
 */
 
 #include <lsp/synth/channel_params.hpp>
-#include <lsp/synth/luath_synth.hpp>
+#include <lsp/synth/synth.hpp>
 #include <lsp/synth/instruments.hpp>
 
 using namespace lsp::synth;
@@ -83,7 +83,7 @@ static const std::unordered_map<
 	{ 81, { 86, 0.70f, 0.00f, 0.10f, 0.20f, 0.19f}},
 };
 
-std::unique_ptr<Voice> ChannelParams::createDrumVoice(int noteNo, float vel)
+std::unique_ptr<LuathVoice> ChannelParams::createDrumVoice(int noteNo, float vel)
 {
 	uint8_t pitch = 69;
 	float v = 1.f; // volume(adjuster)
@@ -120,7 +120,8 @@ std::unique_ptr<Voice> ChannelParams::createDrumVoice(int noteNo, float vel)
 	}
 
 	auto wg = Instruments::createDrumNoiseGenerator();
-	auto voice = std::make_unique<WaveTableVoice>(mSynth.sampleFreq(), wg, resolvedNoteNo, mCalculatedPitchBend, volume, ccPedal);
+	auto voice = std::make_unique<LuathVoice>(wg, resolvedNoteNo, mCalculatedPitchBend, volume, ccPedal);
+	voice->setCurrentPlaybackSampleRate(mSynth.sampleFreq());
 	voice->setPan(pan);
 	voice->setResonance(cutOffFreqRate, overtuneGain);
 

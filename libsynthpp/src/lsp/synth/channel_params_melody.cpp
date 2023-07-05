@@ -8,7 +8,7 @@
 */
 
 #include <lsp/synth/channel_params.hpp>
-#include <lsp/synth/luath_synth.hpp>
+#include <lsp/synth/synth.hpp>
 #include <lsp/synth/instruments.hpp>
 
 using namespace lsp::synth;
@@ -155,7 +155,7 @@ static const std::unordered_map<
 	{127, { 2.50f, 0.03f, 0.00f,  1.50f, 0.00f, 0.00f, 1.50f }},
 };
 
-std::unique_ptr<Voice> ChannelParams::createMelodyVoice(int noteNo, float vel)
+std::unique_ptr<LuathVoice> ChannelParams::createMelodyVoice(int noteNo, float vel)
 {
 	float v = 1.f; // volume(adjuster)
 	float a = 0.f; // sec
@@ -224,7 +224,8 @@ std::unique_ptr<Voice> ChannelParams::createMelodyVoice(int noteNo, float vel)
 		overtuneGain = getInt7NRPN(1, 33).value_or(0) / 128.f * 5.f;
 	}
 
-	auto voice = std::make_unique<WaveTableVoice>(mSynth.sampleFreq(), wg, adjustedNoteNo, mCalculatedPitchBend, volume, ccPedal);
+	auto voice = std::make_unique<LuathVoice>(wg, adjustedNoteNo, mCalculatedPitchBend, volume, ccPedal);
+	voice->setCurrentPlaybackSampleRate(mSynth.sampleFreq());
 	voice->setResonance(2.f, overtuneGain);
 
 	auto& eg = voice->envolopeGenerator();

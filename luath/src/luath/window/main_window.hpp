@@ -5,7 +5,7 @@
 #include <luath/widget/spectrum_analyzer.hpp>
 #include <luath/widget/lissajous.hpp>
 #include <luath/drawing/font_loader.hpp>
-#include <lsp/synth/luath_synth.hpp>
+#include <lsp/synth/synth.hpp>
 #include <lsp/midi/sequencer.hpp>
 
 namespace luath::window

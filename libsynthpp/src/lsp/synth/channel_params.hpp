@@ -43,7 +43,7 @@ public:
 		bool pedal = false; // ペダルOn/Off
 		bool drum = false; // ドラムか否か
 
-		std::unordered_map<VoiceId, Voice::Digest> voices;
+		std::unordered_map<VoiceId, LuathVoice::Digest> voices;
 	};
 
 	ChannelParams(LuathSynth& synth, int ch);
@@ -72,9 +72,9 @@ public:
 
 private:
 	// ボイスを生成します
-	std::unique_ptr<Voice> createVoice(int noteNo, float vel);
-	std::unique_ptr<Voice> createMelodyVoice(int noteNo, float vel);
-	std::unique_ptr<Voice> createDrumVoice(int noteNo, float vel);
+	std::unique_ptr<LuathVoice> createVoice(int noteNo, float vel);
+	std::unique_ptr<LuathVoice> createMelodyVoice(int noteNo, float vel);
+	std::unique_ptr<LuathVoice> createDrumVoice(int noteNo, float vel);
 
 	void updatePitchBend();
 
@@ -92,7 +92,7 @@ private:
 	const int mMidiCh;
 
 	// 発音中のボイス
-	std::unordered_map<VoiceId, std::unique_ptr<Voice>> mVoices;
+	std::unordered_map<VoiceId, std::unique_ptr<LuathVoice>> mVoices;
 
 	// システムリセット種別
 	midi::SystemType mSystemType;

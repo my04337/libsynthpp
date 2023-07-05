@@ -13,7 +13,7 @@ using namespace lsp;
 using namespace luath;
 using namespace luath::window;
 
-using lsp::synth::Voice;
+using lsp::synth::LuathVoice;
 using lsp::synth::VoiceId;
 
 static constexpr int SCREEN_WIDTH = 800;
@@ -42,15 +42,15 @@ static constexpr D2D1_COLOR_F getMidiChannelColor(int ch)
 	std::unreachable();
 };
 
-static constexpr const wchar_t* state2text(Voice::EnvelopeState state)
+static constexpr const wchar_t* state2text(LuathVoice::EnvelopeState state)
 {
 	switch(state) {
-	case Voice::EnvelopeState::Attack: return L"Attack";
-	case Voice::EnvelopeState::Hold:   return L"Hold";
-	case Voice::EnvelopeState::Decay:  return L"Decay";
-	case Voice::EnvelopeState::Fade:   return L"Fade";
-	case Voice::EnvelopeState::Release:return L"Release";
-	case Voice::EnvelopeState::Free:   return L"Free";
+	case LuathVoice::EnvelopeState::Attack: return L"Attack";
+	case LuathVoice::EnvelopeState::Hold:   return L"Hold";
+	case LuathVoice::EnvelopeState::Decay:  return L"Decay";
+	case LuathVoice::EnvelopeState::Fade:   return L"Fade";
+	case LuathVoice::EnvelopeState::Release:return L"Release";
+	case LuathVoice::EnvelopeState::Free:   return L"Free";
 	default: return L"Unknown";
 	}
 };
@@ -563,14 +563,14 @@ void MainWindow::onDraw(ID2D1RenderTarget& renderer)
 		const float height = 12;
 
 		// 全チャネルのボイス情報を統合
-		std::unordered_map<VoiceId, std::pair</*ch*/uint8_t, Voice::Digest>> unsortedVoiceDigests;
+		std::unordered_map<VoiceId, std::pair</*ch*/uint8_t, LuathVoice::Digest>> unsortedVoiceDigests;
 		for(const auto& cd : channelDigests) {
 			for(const auto& [vid, vd] : cd.voices) {
 				unsortedVoiceDigests.emplace(vid, std::make_pair(cd.ch, vd));
 			}
 		}
 		// 前回の描画位置を維持しながら描画順を決定する
-		std::vector<std::tuple<VoiceId, /*ch*/uint8_t, Voice::Digest>> voiceDigests;
+		std::vector<std::tuple<VoiceId, /*ch*/uint8_t, LuathVoice::Digest>> voiceDigests;
 		voiceDigests.resize(std::max(unsortedVoiceDigests.size(), context.prevVoiceEndPos));
 		for(auto& [vid, pos] : context.prevVoicePosMap) {
 			auto found = unsortedVoiceDigests.find(vid);

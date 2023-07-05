@@ -7,7 +7,7 @@
 	https://opensource.org/license/mit/
 */
 
-#include <lsp/synth/luath_synth.hpp>
+#include <lsp/synth/synth.hpp>
 #include <lsp/dsp/function_generator.hpp>
 
 using namespace lsp::synth;
