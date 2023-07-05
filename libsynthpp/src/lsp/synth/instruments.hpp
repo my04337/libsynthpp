@@ -12,11 +12,11 @@
 #include <lsp/core/core.hpp>
 #include <lsp/dsp/wave_table_generator.hpp>
 
-namespace lsp::midi::synth
+namespace lsp::synth
 {
 
 // 楽器情報
-class Instruments 
+class Instruments  final
 {
 public:
 	using WaveTableGenerator = dsp::WaveTableGenerator<float>;

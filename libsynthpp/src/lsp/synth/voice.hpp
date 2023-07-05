@@ -15,8 +15,27 @@
 #include <lsp/dsp/biquadratic_filter.hpp>
 #include <lsp/dsp/wave_table_generator.hpp>
 
-namespace lsp::midi::synth
+namespace lsp::synth
 {
+class LuathSynth;
+
+// Luath用サウンド 
+// MEMO juce::SynthesizerVoiceは何らかのjuce::SynthesizerSoundに属している必要があるため、最低限の物を用意した。
+class LuathSound final
+	: public juce::SynthesiserSound
+{
+public:
+	LuathSound(LuathSynth& synth) : mSynth(synth) {}
+
+	bool appliesToNote(int midiNoteNumber)override { return false; }
+	bool appliesToChannel(int midiChannel)override { return false; }
+
+	LuathSynth& synth()const noexcept { return mSynth; }
+
+private:
+	LuathSynth& mSynth;
+};
+
 // ボイス識別番号
 struct _voice_id_tag {};
 using VoiceId = issuable_id_base_t<_voice_id_tag>;

@@ -10,7 +10,7 @@
 #include <lsp/core/core.hpp>
 #include <lsp/dsp/biquadratic_filter.hpp>
 #include <lsp/dsp/envelope_generator.hpp>
-#include <lsp/midi/smf/sequencer.hpp>
+#include <lsp/midi/sequencer.hpp>
 #include <lsp/audio/wav_file_output.hpp>
 
 using namespace lsp;

@@ -7,12 +7,12 @@
 	https://opensource.org/license/mit/
 */
 
-#include <lsp/midi/synth/instruments.hpp>
+#include <lsp/synth/instruments.hpp>
 #include <lsp/dsp/function_generator.hpp>
 #include <lsp/dsp/biquadratic_filter.hpp>
 
 using namespace lsp;
-using namespace lsp::midi::synth;
+using namespace lsp::synth;
 
 static float preAmp2Volume(const Signal<float>& table, float preAmp) 
 {

@@ -13,8 +13,8 @@ using namespace lsp;
 using namespace luath;
 using namespace luath::window;
 
-using lsp::midi::synth::Voice;
-using lsp::midi::synth::VoiceId;
+using lsp::synth::Voice;
+using lsp::synth::VoiceId;
 
 static constexpr int SCREEN_WIDTH = 800;
 static constexpr int SCREEN_HEIGHT = 680;

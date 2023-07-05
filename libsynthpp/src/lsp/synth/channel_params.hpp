@@ -10,27 +10,19 @@
 #pragma once
 
 #include <lsp/core/core.hpp>
-#include <lsp/midi/synth/voice.hpp>
+#include <lsp/synth/voice.hpp>
 #include <lsp/midi/system_type.hpp>
 
 #include <array>
 
-namespace lsp::midi::synth
+namespace lsp::synth
 {
-class WaveTable;
 class LuathSynth;
 
 using StereoFrame = std::pair<float, float>;
 
-class ZeroSound
-	: public juce::SynthesiserSound
-	, non_copy
-{
-	bool appliesToNote(int midiNoteNumber)override { return false; }
-	bool appliesToChannel(int midiChannel)override { return false; }
-};
 
-class ChannelSound
+class ChannelParams final
 	: public juce::SynthesiserSound
 	, non_copy
 {
@@ -54,7 +46,7 @@ public:
 		std::unordered_map<VoiceId, Voice::Digest> voices;
 	};
 
-	ChannelSound(LuathSynth& synth, int ch);
+	ChannelParams(LuathSynth& synth, int ch);
 
 	bool appliesToNote(int midiNoteNumber)override { return true; }
 	bool appliesToChannel(int midiChannel)override { return mMidiCh == midiChannel; }

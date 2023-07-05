@@ -11,15 +11,15 @@
 
 #include <lsp/core/core.hpp>
 #include <lsp/midi/system_type.hpp>
-#include <lsp/midi/synth/channel_sound.hpp>
+#include <lsp/synth/channel_params.hpp>
 
 #include <array>
 #include <shared_mutex>
 
-namespace lsp::midi::synth
+namespace lsp::synth
 {
 
-class LuathSynth
+class LuathSynth final
 	: public juce::Synthesiser
 	, public juce::MidiInputCallback
 {
@@ -39,7 +39,7 @@ public:
 		midi::SystemType systemType;
 		float masterVolume;
 
-		std::vector<ChannelSound::Digest> channels;
+		std::vector<ChannelParams::Digest> channels;
 	};
 
 public:
@@ -67,8 +67,8 @@ public:
 protected:
 	void reset(midi::SystemType defaultSystemType = midi::SystemType::GS());
 
-	ChannelSound& getChannelSound(int ch)noexcept { return dynamic_cast<ChannelSound&>(*getSound(ch)); }
-	const ChannelSound& getChannelSound(int ch)const noexcept { return dynamic_cast<ChannelSound&>(*getSound(ch)); }
+	ChannelParams& getChannelParams(int ch)noexcept;
+	const ChannelParams& getChannelParams(int ch)const noexcept;
 
 public: // implementation of juce::Synthesizer +α
 	
@@ -97,9 +97,12 @@ private:
 	dsp::BiquadraticFilter<float> mFinalLpfR;
 	float mMasterVolume;
 
-	// all channel parameters
+	// all channel params
 	float mSampleFreq;
 	midi::SystemType mSystemType;
+
+	// per channel params
+	std::vector<ChannelParams> mChannelParams;
 };
 
 }

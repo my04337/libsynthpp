@@ -7,27 +7,27 @@
 	https://opensource.org/license/mit/
 */
 
-#include <lsp/midi/synth/channel_sound.hpp>
-#include <lsp/midi/synth/instruments.hpp>
-#include <lsp/midi/synth/voice.hpp>
+#include <lsp/synth/channel_params.hpp>
+#include <lsp/synth/instruments.hpp>
+#include <lsp/synth/voice.hpp>
 
-using namespace lsp::midi::synth;
+using namespace lsp::synth;
 
-ChannelSound::ChannelSound(LuathSynth& synth, int ch)
+ChannelParams::ChannelParams(LuathSynth& synth, int ch)
 	: mSynth(synth)
 	, mMidiCh(ch)
 {
 	reset(midi::SystemType::GM1());
 }
 // チャネル毎パラメータ類 リセット
-void ChannelSound::reset(midi::SystemType type)
+void ChannelParams::reset(midi::SystemType type)
 {
 	mSystemType = type;
 
 	allNotesOff(false);
 	resetParameters();
 }
-void ChannelSound::resetParameters()
+void ChannelParams::resetParameters()
 {
 	// チャネル ボイス メッセージ系
 	mProgId = 0; // Acoustic Piano
@@ -56,7 +56,7 @@ void ChannelSound::resetParameters()
 	mRawNRPNs.clear();
 }
 
-void ChannelSound::noteOn(int noteNo, float vel)
+void ChannelParams::noteOn(int noteNo, float vel)
 {
 	// 同じノート番号は同時発音不可
 	noteOff(noteNo);
@@ -67,7 +67,7 @@ void ChannelSound::noteOn(int noteNo, float vel)
 		mVoices.emplace(id, std::move(voice));
 	}
 }
-void ChannelSound::noteOff(int noteNo, bool allowTailOff)
+void ChannelParams::noteOff(int noteNo, bool allowTailOff)
 {
 	for (auto& [id, voice] : mVoices) {
 		if (voice->noteNo() == noteNo) {
@@ -75,7 +75,7 @@ void ChannelSound::noteOff(int noteNo, bool allowTailOff)
 		}
 	}
 }
-void ChannelSound::allNotesOff(bool allowTailOff)
+void ChannelParams::allNotesOff(bool allowTailOff)
 {
 	for(auto& [id, voice] : mVoices) {
 		voice->noteOff(allowTailOff);
@@ -83,14 +83,14 @@ void ChannelSound::allNotesOff(bool allowTailOff)
 	if(!allowTailOff) mVoices.clear();
 }
 // プログラムチェンジ
-void ChannelSound::programChange(int progId)
+void ChannelParams::programChange(int progId)
 {
 	// 事前に受信していたバンクセレクトを解決
 	// プログラムId更新
 	mProgId = progId;
 }
 // コントロールチェンジ & チャネルモードメッセージ
-void ChannelSound::controlChange(int ctrlNo, int value)
+void ChannelParams::controlChange(int ctrlNo, int value)
 {
 	// 参考 : http://quelque.sakura.ne.jp/midi_cc.html
 	//        https://www.g200kg.com/jp/docs/tech/midi.html
@@ -167,13 +167,13 @@ void ChannelSound::controlChange(int ctrlNo, int value)
 	ccPrevValue = value;
 }
 
-void ChannelSound::pitchBend(int value)
+void ChannelParams::pitchBend(int value)
 {
 	mRawPitchBend = static_cast<uint16_t>(value - 0x2000); // 0 to 0x3fff
 	updatePitchBend();
 }
 
-StereoFrame ChannelSound::update()
+StereoFrame ChannelParams::update()
 {
 	// オシレータからの出力はモノラル
 	StereoFrame ret = std::make_pair(0.0f, 0.0f);
@@ -217,7 +217,7 @@ StereoFrame ChannelSound::update()
 
 	return ret;
 }
-ChannelSound::Digest ChannelSound::digest()const
+ChannelParams::Digest ChannelParams::digest()const
 {
 	Digest digest;
 
@@ -242,7 +242,7 @@ ChannelSound::Digest ChannelSound::digest()const
 
 	return digest;
 }
-std::unique_ptr<Voice> ChannelSound::createVoice(int noteNo, float vel)
+std::unique_ptr<Voice> ChannelParams::createVoice(int noteNo, float vel)
 {
 	if(mIsDrumPart) {
 		return createDrumVoice(noteNo, vel);
@@ -251,7 +251,7 @@ std::unique_ptr<Voice> ChannelSound::createVoice(int noteNo, float vel)
 		return createMelodyVoice(noteNo, vel);
 	}
 }
-std::optional<int> ChannelSound::getInt14RPN(int msb, int lsb)const noexcept
+std::optional<int> ChannelParams::getInt14RPN(int msb, int lsb)const noexcept
 {
 	auto pn = ((msb & 0x7F) << 7) + (lsb & 0x7F);
 	auto found = mRawRPNs.find(pn);
@@ -259,12 +259,12 @@ std::optional<int> ChannelSound::getInt14RPN(int msb, int lsb)const noexcept
 	auto [value, is14bit] = found->second;
 	return (is14bit ? value : ((value & 0x7F) << 7)) - 0x2000;
 }
-std::optional<int> ChannelSound::getInt7RPN(int msb, int lsb)const noexcept
+std::optional<int> ChannelParams::getInt7RPN(int msb, int lsb)const noexcept
 {
 	auto found = getInt14RPN(msb, lsb);
 	return found ? std::make_optional(found.value() / 0x80) : std::nullopt;
 }
-std::optional<int> ChannelSound::getInt14NRPN(int msb, int lsb)const noexcept
+std::optional<int> ChannelParams::getInt14NRPN(int msb, int lsb)const noexcept
 {
 	auto pn = ((msb & 0x7F) << 7) + (lsb & 0x7F);
 	auto found = mRawNRPNs.find(pn);
@@ -272,12 +272,12 @@ std::optional<int> ChannelSound::getInt14NRPN(int msb, int lsb)const noexcept
 	auto [value, is14bit] = found->second;
 	return (is14bit ? value : ((value & 0x7F) << 7)) - 0x2000;
 }
-std::optional<int> ChannelSound::getInt7NRPN(int msb, int lsb)const noexcept
+std::optional<int> ChannelParams::getInt7NRPN(int msb, int lsb)const noexcept
 {
 	auto found = getInt14NRPN(msb, lsb);
 	return found ? std::make_optional(found.value() / 0x80) : std::nullopt;
 }
-void ChannelSound::updatePitchBend()
+void ChannelParams::updatePitchBend()
 {
 	auto pitchBendSensitivity = getInt7NRPN(0, 0).value_or(mSystemType.isOnlyGM1() ? 12 : 2);
 	auto masterCourseTuning = getInt7NRPN(0, 2).value_or(0);
@@ -291,13 +291,13 @@ void ChannelSound::updatePitchBend()
 		kvp.second->setPitchBend(mCalculatedPitchBend);
 	}
 }
-void ChannelSound::updateHold()
+void ChannelParams::updateHold()
 {
 	for (auto& [id, voice] : mVoices) {
 		voice->setHold(ccPedal);
 	}
 }
-void ChannelSound::setDrumMode(bool isDrum)
+void ChannelParams::setDrumMode(bool isDrum)
 {
 	if(mIsDrumPart != isDrum) {
 		mVoices.clear();

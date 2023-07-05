@@ -7,12 +7,12 @@
 	https://opensource.org/license/mit/
 */
 
-#include <lsp/midi/smf/sequencer.hpp>
+#include <lsp/midi/sequencer.hpp>
 #include <lsp/midi/system_type.hpp>
 #include <lsp/util/thread_priority.hpp>
 
 using namespace lsp;
-using namespace lsp::midi::smf;
+using namespace lsp::midi;
 
 
 Sequencer::Sequencer(juce::MidiInputCallback& receiver)

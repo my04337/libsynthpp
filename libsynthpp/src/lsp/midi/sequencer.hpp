@@ -12,7 +12,7 @@
 #include <lsp/core/core.hpp>
 
 
-namespace lsp::midi::smf
+namespace lsp::midi
 {
 // SMFファイル シーケンサ
 class Sequencer

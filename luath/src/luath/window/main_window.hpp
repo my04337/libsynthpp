@@ -5,8 +5,8 @@
 #include <luath/widget/spectrum_analyzer.hpp>
 #include <luath/widget/lissajous.hpp>
 #include <luath/drawing/font_loader.hpp>
-#include <lsp/midi/synth/luath_synth.hpp>
-#include <lsp/midi/smf/sequencer.hpp>
+#include <lsp/synth/luath_synth.hpp>
+#include <lsp/midi/sequencer.hpp>
 
 namespace luath::window
 {
@@ -64,8 +64,8 @@ private:
 	std::atomic<float> mPostAmpVolume = 1.0f;
 
 	// シーケンサ,シンセサイザ
-	midi::smf::Sequencer mSequencer;
-	midi::synth::LuathSynth mSynthesizer;
+	midi::Sequencer mSequencer;
+	synth::LuathSynth mSynthesizer;
 	
 	// 各種ウィジット
 	widget::OscilloScope mOscilloScopeWidget;

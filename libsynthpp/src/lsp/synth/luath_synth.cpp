@@ -7,24 +7,22 @@
 	https://opensource.org/license/mit/
 */
 
-#include <lsp/midi/synth/luath_synth.hpp>
+#include <lsp/synth/luath_synth.hpp>
 #include <lsp/dsp/function_generator.hpp>
 
-using namespace lsp::midi::synth;
+using namespace lsp::synth;
 
 LuathSynth::LuathSynth()
 {
 	// MIDIチャネルのセットアップ
-	addSound(new ZeroSound());
+	mChannelParams.reserve(16);
 	for(int ch = 1; ch <= 16; ++ch) {
-		addSound(new ChannelSound(*this, ch));
+		mChannelParams.emplace_back(*this, ch);
 	}
-	check(dynamic_cast<ZeroSound*>(getSound(0).get()) != nullptr);
-	for(int ch = 1; ch <= 16; ++ch) {
-		auto sound = dynamic_cast<ChannelSound*>(getSound(ch).get());
-		check(sound != nullptr);
-		check(sound->midiChannel() == ch);
-	}
+
+	// juce::Synthesizerとしてのサウンド&ボイスのセットアップ
+	addSound(new LuathSound(*this));
+
 
 	// 周波数 仮指定 ※間接的にMIDIリセット
 	setSampleFreq(1.f);
@@ -60,8 +58,18 @@ void LuathSynth::reset(midi::SystemType type)
 	mMasterVolume = 1.f;
 
 	for(int ch = 1; ch <= 16; ++ch) {
-		getChannelSound(ch).reset(type);
+		getChannelParams(ch).reset(type);
 	}
+}
+ChannelParams& LuathSynth::getChannelParams(int ch)noexcept 
+{
+	require(ch >= 1 && ch <= 16);
+	return mChannelParams[static_cast<size_t>(ch - 1)];
+}
+const ChannelParams& LuathSynth::getChannelParams(int ch)const noexcept
+{
+	require(ch >= 1 && ch <= 16);
+	return mChannelParams[static_cast<size_t>(ch - 1)];
 }
 
 
@@ -94,7 +102,7 @@ lsp::Signal<float> LuathSynth::generate(size_t len)
 
 		// チャネル毎の信号を生成する
 		for (int ch = 1; ch <= 16; ++ch) {
-			auto& midich = getChannelSound(ch);
+			auto& midich = getChannelParams(ch);
 			auto v = midich.update();
 			lch += v.first;
 			rch += v.second;
@@ -136,7 +144,7 @@ LuathSynth::Digest LuathSynth::digest()const
 
 	digest.channels.reserve(16);
 	for(int ch = 1; ch <= 16; ++ch) {
-		digest.channels.push_back(getChannelSound(ch).digest());
+		digest.channels.push_back(getChannelParams(ch).digest());
 	}
 	return digest;
 }
@@ -157,28 +165,28 @@ void LuathSynth::handleMidiEvent(const juce::MidiMessage& msg)
 
 void LuathSynth::noteOn(int channel, int noteNo, float velocity)
 {
-	getChannelSound(channel).noteOn(noteNo, velocity);
+	getChannelParams(channel).noteOn(noteNo, velocity);
 }
 void LuathSynth::noteOff(int channel, int noteNo, float velocity, bool allowTailOff)
 {
 	// MEMO 一般に、MIDIではノートオフの代わりにvel=0のノートオンが使用されるため、呼ばれることは希である
-	getChannelSound(channel).noteOff(noteNo, allowTailOff);
+	getChannelParams(channel).noteOff(noteNo, allowTailOff);
 }
 void LuathSynth::allNotesOff(int channel, bool allowTailOff)
 {
-	getChannelSound(channel).allNotesOff(allowTailOff);
+	getChannelParams(channel).allNotesOff(allowTailOff);
 }
 void LuathSynth::handlePitchWheel(int channel, int value)
 {
-	getChannelSound(channel).pitchBend(value);
+	getChannelParams(channel).pitchBend(value);
 }
 void LuathSynth::handleController(int channel, int ctrlNo, int value)
 {
-	getChannelSound(channel).controlChange(ctrlNo, value);
+	getChannelParams(channel).controlChange(ctrlNo, value);
 }
 void LuathSynth::handleProgramChange(int channel, int progId)
 {
-	getChannelSound(channel).programChange(progId);
+	getChannelParams(channel).programChange(progId);
 }
 
 // ---
@@ -244,7 +252,7 @@ void LuathSynth::sysExMessage(const uint8_t* data, size_t len)
 			//   see https://ssw.co.jp/dtm/drums/drsetup.html
 			auto ch = static_cast<int>(*peek(4) & 0x0F) + 1;
 			auto mapNo = *peek(6);
-			getChannelSound(ch).setDrumMode(mapNo != 0);
+			getChannelParams(ch).setDrumMode(mapNo != 0);
 		}
 	}
 	else if(makerId == 0x43) {

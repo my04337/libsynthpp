@@ -7,11 +7,11 @@
 	https://opensource.org/license/mit/
 */
 
-#include <lsp/midi/synth/channel_sound.hpp>
-#include <lsp/midi/synth/luath_synth.hpp>
-#include <lsp/midi/synth/instruments.hpp>
+#include <lsp/synth/channel_params.hpp>
+#include <lsp/synth/luath_synth.hpp>
+#include <lsp/synth/instruments.hpp>
 
-using namespace lsp::midi::synth;
+using namespace lsp::synth;
 
 static const std::unordered_map<
 	int, std::tuple<
@@ -83,7 +83,7 @@ static const std::unordered_map<
 	{ 81, { 86, 0.70f, 0.00f, 0.10f, 0.20f, 0.19f}},
 };
 
-std::unique_ptr<Voice> ChannelSound::createDrumVoice(int noteNo, float vel)
+std::unique_ptr<Voice> ChannelParams::createDrumVoice(int noteNo, float vel)
 {
 	uint8_t pitch = 69;
 	float v = 1.f; // volume(adjuster)

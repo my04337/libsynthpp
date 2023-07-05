@@ -7,9 +7,9 @@
 	https://opensource.org/license/mit/
 */
 
-#include <lsp/midi/synth/voice.hpp>
+#include <lsp/synth/voice.hpp>
 
-using namespace lsp::midi::synth;
+using namespace lsp::synth;
 
 Voice::Voice(float sampleFreq, float noteNo, float pitchBend, float volume, bool hold)
 	: mSampleFreq(sampleFreq)
