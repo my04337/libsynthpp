@@ -14,19 +14,6 @@
 using namespace lsp;
 using namespace lsp::synth;
 
-static float preAmp2Volume(const Signal<float>& table, float preAmp) 
-{
-	if(preAmp < 0) {
-		// MEMO 実効値の2乗=パワーを用いて正規化すると、それらしい音量で揃う(ラウドネスは考慮していないので注意)
-		float rms = table.getRMSLevel(0);
-		return 1.f / (rms * rms + 1.0e-8f) * abs(preAmp);
-	}
-	else {
-		return preAmp;
-	}
-}
-
-
 auto Instruments::createZeroWaveTable(float volume) 
 	-> WaveTableGenerator
 {
@@ -83,12 +70,13 @@ auto Instruments::createDrumNoiseGenerator(float volume)
 		auto data = table.mutableData(0);
 		FunctionGenerator fg;
 		fg.setWhiteNoise();
-		std::array<BiquadraticFilter, 5> bqfs;
+		std::array<BiquadraticFilter, 56> bqfs;
 		bqfs[0].setLopassParam(44100, 4000.f, 0.5f); // 不要高周波を緩やかにカットオフ
 		bqfs[1].setLopassParam(44100, 4000.f, 0.5f); // (同上)
 		bqfs[2].setLopassParam(44100, 3000.f, 0.5f); // (同上)
 		bqfs[3].setLopassParam(44100, 2000.f, 0.5f); // (同上)
-		bqfs[4].setLopassParam(44100, 1000.f, 1.0f); // 基本となる音程
+		bqfs[4].setLopassParam(44100, 1000.f, 1.0f); // 基本となる
+		bqfs[5].setLopassParam(44100,  500.f, 0.5f); // 基本となる音程
 		for(size_t i = 0; i < samples * 2; i++) {
 			// 波形が安定するまで読み捨てる
 			float s = fg.update();
@@ -99,9 +87,9 @@ auto Instruments::createDrumNoiseGenerator(float volume)
 			for(auto& bqf : bqfs) s = bqf.update(s);
 			data[i] = s;
 		}
-		auto preAmp = preAmp2Volume(table, -0.30f);
+		auto preAmp = 10.0f;
 		return std::make_tuple(std::move(table), preAmp);
 	}();
 
-	return WaveTableGenerator(table, preAmp2Volume(table, -0.30f) * volume, 62.5f);
+	return WaveTableGenerator(table, preAmp * volume, 62.5f);
 }

@@ -116,7 +116,7 @@ void LuathSynth::renderNextBlock(juce::AudioBuffer<float>& outputAudio, const ju
 	SUPER::renderNextBlock(outputAudio, inputMidi, startSample, numSamples);
 
 	// 後段のエフェクト類を適用
-	constexpr float MASTER_ATTENUATOR = 0.125f;
+	constexpr float MASTER_ATTENUATOR = 0.075f;
 	auto lch = outputAudio.getWritePointer(0, startSample);
 	auto rch = outputAudio.getWritePointer(1, startSample);
 	for(int i = 0; i < numSamples; ++i) {
