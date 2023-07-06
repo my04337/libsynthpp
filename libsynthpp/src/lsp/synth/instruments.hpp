@@ -21,7 +21,8 @@ class Instruments  final
 public:
 	using WaveTableGenerator = dsp::WaveTableGenerator<float>;
 
-	// 波形テーブル一覧
+	// 波形テーブルを予め初期化します
+	static void prepareWaveTable();
 
 	// 常に0を返すジェネレータを作成します
 	static WaveTableGenerator createZeroWaveTable(float volume = 1.f);

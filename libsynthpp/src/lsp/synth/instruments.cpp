@@ -26,6 +26,14 @@ auto Instruments::createZeroWaveTable(float volume)
 	return WaveTableGenerator(table, volume);
 }
 
+// 波形テーブルを予め初期化します
+void Instruments::prepareWaveTable()
+{
+	// 演奏中のテーブル構築を避けるため、先に初期化しておく
+	createSquareGenerator(0, 0.f);
+	createDrumNoiseGenerator(0.f);
+}
+
 // 正弦波のジェネレータを返します
 auto Instruments::createSquareGenerator(int overtoneOrder, float volume)
 	-> WaveTableGenerator

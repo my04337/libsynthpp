@@ -9,6 +9,7 @@
 
 #include <lsp/synth/synth.hpp>
 #include <lsp/synth/sound.hpp>
+#include <lsp/synth/instruments.hpp>
 #include <lsp/dsp/function_generator.hpp>
 
 using namespace lsp::synth;
@@ -17,6 +18,9 @@ static constexpr int MAX_VOICE_COUNT = 90;
 
 LuathSynth::LuathSynth()
 {
+	// 波形テーブルを先にロードしておく
+	Instruments::prepareWaveTable();
+
 	// MIDIチャネルのセットアップ
 	mChannelState.reserve(16);
 	for(int ch = 1; ch <= 16; ++ch) {
