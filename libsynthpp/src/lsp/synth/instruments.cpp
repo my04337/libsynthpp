@@ -78,13 +78,12 @@ auto Instruments::createDrumNoiseGenerator(float volume)
 		auto data = table.mutableData(0);
 		FunctionGenerator fg;
 		fg.setWhiteNoise();
-		std::array<BiquadraticFilter, 56> bqfs;
-		bqfs[0].setLopassParam(44100, 4000.f, 0.5f); // 不要高周波を緩やかにカットオフ
+		std::array<BiquadraticFilter, 6> bqfs;
+		bqfs[0].setLopassParam(44100, 4000.f, 1.0f); // 不要高周波を緩やかにカットオフ
 		bqfs[1].setLopassParam(44100, 4000.f, 0.5f); // (同上)
 		bqfs[2].setLopassParam(44100, 3000.f, 0.5f); // (同上)
 		bqfs[3].setLopassParam(44100, 2000.f, 0.5f); // (同上)
-		bqfs[4].setLopassParam(44100, 1000.f, 1.0f); // 基本となる
-		bqfs[5].setLopassParam(44100,  500.f, 0.5f); // 基本となる音程
+		bqfs[4].setLopassParam(44100, 1000.f, 1.0f); // 基本となる高さ
 		for(size_t i = 0; i < samples * 2; i++) {
 			// 波形が安定するまで読み捨てる
 			float s = fg.update();
