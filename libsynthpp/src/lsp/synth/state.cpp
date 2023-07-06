@@ -16,13 +16,20 @@ using namespace lsp::synth;
 
 namespace {
 
-float int7ToFloat(int value, float min, float max) {
+float uint7ToFloat(int value, float min, float max) {
 	auto normalized = std::clamp((value - 1) / 126.0f, 0.0f, 1.0f);
 	return min + normalized * (max - min);
 };
-float int14ToFloat(int value, float min, float max) {
-	auto normalized = std::clamp((value - 1) / 8190.f, 0.0f, 1.0f);
+float uint14ToFloat(int value, float min, float max) {
+	auto normalized = std::clamp((value - 1) / 16382.f, 0.0f, 1.0f);
 	return min + normalized * (max - min);
+};
+
+float int7ToFloat(int value, float min, float max) {
+	return uint7ToFloat(value + 64, min, max);
+};
+float int14ToFloat(int value, float min, float max) {
+	return uint14ToFloat(value + 8192, min, max);
 };
 
 }
@@ -76,13 +83,13 @@ void ChannelState::handleController(int ctrlNo, int value)
 		break;
 	case 10: // Pan(パン)
 		// MEMO 中央値は64。 1-127の範囲を取る実装が多い
-		ccPanpot = int7ToFloat(value, 0, 1);
+		ccPanpot = uint7ToFloat(value, 0, 1);
 		break;
 	case 7: // Channel Volumeチャンネルボリューム）
-		ccVolume = int7ToFloat(value, 0, 1);
+		ccVolume = uint7ToFloat(value, 0, 1);
 		break;
 	case 11: // Expression(エクスプレッション)
-		ccExpression = int7ToFloat(value, 0, 1);
+		ccExpression = uint7ToFloat(value, 0, 1);
 		break;
 	case 32: // Bank Select <LSB>（バンクセレクト）
 		bankSelectLSB = value;
@@ -91,13 +98,13 @@ void ChannelState::handleController(int ctrlNo, int value)
 		ccPedal = (value >= 0x64);
 		break;
 	case 72: // Release Time(リリースタイム)
-		ccReleaseTime = int7ToFloat(value, 0, 1);
+		ccReleaseTime = uint7ToFloat(value, 0, 1);
 		break;
 	case 73: // Attack Time(アタックタイム)
-		ccAttackTime = int7ToFloat(value, 0, 1);
+		ccAttackTime = uint7ToFloat(value, 0, 1);
 		break;
 	case 75: // Decay Time(ディケイタイム)
-		ccDecayTime = int7ToFloat(value, 0, 1);
+		ccDecayTime = uint7ToFloat(value, 0, 1);
 		break;
 	// --- チャネルモードメッセージ ---
 	case 121: // リセットオールコントローラ
