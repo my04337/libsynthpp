@@ -313,10 +313,16 @@ void MainWindow::audioDeviceIOCallbackWithContext(
 	const juce::AudioIODeviceCallbackContext& context
 )
 {
-	// シンセサイザ信号生成
+	// 出力先の準備
 	check(numOutputChannels == 2);
 	check(numSamples >= 0);
-	auto sig = lsp::Signal<float>::allocate(numOutputChannels, static_cast<size_t>(numSamples));
+	auto sig = lsp::Signal<float>::fromAudioBuffer(
+		juce::AudioBuffer<float>(
+			outputChannelData,	// 出力先バッファに直接書き込むようにする
+			numOutputChannels,
+			numSamples
+		)
+	);
 	mSynthesizer.renderNextBlock(sig.data(), {}, 0, numSamples);
 
 	// ポストアンプ適用
@@ -327,15 +333,6 @@ void MainWindow::audioDeviceIOCallbackWithContext(
 			data[i] *= postAmpVolume;
 		}
 	}
-	
-
-	// コールバック元へ書き戻し
-	for(uint32_t ch = 0; ch < sig.channels(); ++ch) {
-		auto output = outputChannelData[ch];
-		auto data = sig.data(ch);
-		std::copy(data, data + sig.samples(), output);
-	}
-
 
 	// UI側へ配送
 	// TODO 信号生成に影響を与えにくい経路で配送したい

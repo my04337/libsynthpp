@@ -28,6 +28,9 @@ public:
 	static Signal allocate(uint32_t channels, size_t frames) {
 		return Signal(channels, frames);
 	}
+	static Signal fromAudioBuffer(juce::AudioBuffer<sample_type>&& buffer) {
+		return Signal(std::move(buffer));
+	}
 
 	Signal() : mData() {}
 
@@ -56,6 +59,9 @@ public:
 protected:
 	Signal(uint32_t channels, size_t frames)
 		: mData(static_cast<int>(channels), static_cast<int>(frames)) {
+	}
+	Signal(juce::AudioBuffer<sample_type>&& buffer)
+		: mData(std::move(buffer)) {
 	}
 
 private:
