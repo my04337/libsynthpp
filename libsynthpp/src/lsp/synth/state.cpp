@@ -57,9 +57,6 @@ void ChannelState::reset()
 	ccExpression = 1.0;
 	ccPedal = false;
 
-	ccPrevCtrlNo = 0xFF; // invalid value
-	ccPrevValue = 0x00;
-
 	ccAttackTime = 0.5f;
 	ccDecayTime = 0.5f;
 	ccReleaseTime = 0.5f;
@@ -137,9 +134,6 @@ void ChannelState::handleController(int ctrlNo, int value)
 			isDrumPart = true;
 		}
 	}
-
-	ccPrevCtrlNo = ctrlNo;
-	ccPrevValue = value;
 }
 ChannelState::Digest ChannelState::digest(const midi::SystemType& systemType)const
 {
@@ -163,6 +157,10 @@ ChannelState::Digest ChannelState::digest(const midi::SystemType& systemType)con
 }
 
 float ChannelState::pitchBend(const midi::SystemType& systemType)const noexcept
+{
+	return pitchBend(systemType, pitchBendWithoutSensitivity);
+}
+float ChannelState::pitchBend(const midi::SystemType& systemType, float pitchBendWithoutSensitivity)const noexcept
 {
 	auto pitchBendSensitivity = static_cast<float>(nrpn_getInt7(0, 0).value_or(synth.systemType().isOnlyGM1() ? 12 : 2));
 	return pitchBendWithoutSensitivity * pitchBendSensitivity;

@@ -80,7 +80,17 @@ protected:
 	const ChannelState& getChannelState(int ch)const noexcept;
 
 public: // implementation of juce::Synthesizer +α
-	
+	template<class F, class Voice> requires std::invocable<F, Voice&>
+	void forEachVoice(int channel, F f) {
+		for(auto& voice : voices) {
+			if(voice->isPlayingChannel(channel)) {
+				if(auto v = dynamic_cast<Voice*>(voice)) {
+					f(*v);
+				}
+			}
+		}
+	}
+
 	void handlePitchWheel(int channel, int value)override;
 	void handleController(int channel, int ctrlNo, int value)override;
 	void handleProgramChange(int channel, int progId)override;
@@ -91,7 +101,6 @@ protected: // implementation of juce::Synthesizer
 	void handleMidiEvent(const juce::MidiMessage&) override;
 
 private:
-	mutable std::shared_mutex mMutex;
 	std::deque<juce::MidiMessage> mMessageQueue;
 
 	Statistics mStatistics;

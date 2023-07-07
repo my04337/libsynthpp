@@ -42,7 +42,7 @@ LuathSynth::LuathSynth()
 // サンプ林周波数を指定します
 void LuathSynth::setCurrentPlaybackSampleRate(double sampleRate)
 {
-	std::lock_guard lock(mMutex);
+	juce::ScopedLock sl(lock);
 	SUPER::setCurrentPlaybackSampleRate(sampleRate);
 	auto sampleFreq = static_cast<float>(sampleRate);
 	mSampleFreq = sampleFreq;
@@ -61,7 +61,7 @@ LuathSynth::~LuathSynth()
 
 void LuathSynth::dispose()
 {
-	std::lock_guard lock(mMutex);
+	juce::ScopedLock sl(lock);
 }
 
 // ---
@@ -91,7 +91,7 @@ const ChannelState& LuathSynth::getChannelState(int ch)const noexcept
 // MIDIメッセージ受信コールバック
 void LuathSynth::handleIncomingMidiMessage(juce::MidiInput* source, const juce::MidiMessage& message)
 {
-	std::lock_guard lock(mMutex);
+	juce::ScopedLock sl(lock);
 	mMessageQueue.emplace_back(message);
 }
 // 信号を生成します
@@ -102,7 +102,7 @@ void LuathSynth::renderNextBlock(juce::AudioBuffer<float>& outputAudio, const ju
 	require(outputAudio.getNumChannels() == 2);
 
 	// 演奏開始
-	std::lock_guard lock(mMutex);
+	juce::ScopedLock sl(lock);
 
 	// 蓄積されたMIDIメッセージを解釈
 	// TODO 本来はinpuMidiを使うべき
@@ -151,7 +151,7 @@ LuathSynth::Statistics LuathSynth::statistics()const
 }
 LuathSynth::Digest LuathSynth::digest()const
 {
-	std::shared_lock lock(mMutex);
+	juce::ScopedLock sl(lock);
 	Digest digest;
 	digest.systemType = mSystemType;
 	digest.masterVolume = mMasterVolume;
