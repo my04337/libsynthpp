@@ -88,12 +88,6 @@ const ChannelState& LuathSynth::getChannelState(int ch)const noexcept
 }
 
 
-// MIDIメッセージ受信コールバック
-void LuathSynth::handleIncomingMidiMessage(juce::MidiInput* source, const juce::MidiMessage& message)
-{
-	juce::ScopedLock sl(lock);
-	mMessageQueue.emplace_back(message);
-}
 // 信号を生成します
 void LuathSynth::renderNextBlock(juce::AudioBuffer<float>& outputAudio, const juce::MidiBuffer& inputMidi, int startSample, int numSamples)
 {
@@ -103,15 +97,6 @@ void LuathSynth::renderNextBlock(juce::AudioBuffer<float>& outputAudio, const ju
 
 	// 演奏開始
 	juce::ScopedLock sl(lock);
-
-	// 蓄積されたMIDIメッセージを解釈
-	// TODO 本来はinpuMidiを使うべき
-	size_t msg_count = 0;
-	while(!mMessageQueue.empty()) {
-		handleMidiEvent(mMessageQueue.front());
-		++msg_count;
-		mMessageQueue.pop_front();
-	}
 
 	// 出力をゼロクリア
 	outputAudio.clear(startSample, numSamples);

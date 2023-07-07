@@ -23,7 +23,6 @@ class LuathVoice;
 
 class LuathSynth final
 	: public juce::Synthesiser
-	, public juce::MidiInputCallback
 {
 	friend class LuathVoice;
 	using SUPER = juce::Synthesiser;
@@ -54,9 +53,6 @@ public:
 
 	void dispose();
 
-	// MIDIメッセージを受信した際にコールバックされます。
-	virtual void handleIncomingMidiMessage(juce::MidiInput* source, const juce::MidiMessage& message)override;
-	
 	// 信号を生成します
 	void renderNextBlock(juce::AudioBuffer<float>& outputAudio, const juce::MidiBuffer& inputMidi, int startSample, int numSamples);
 
@@ -101,8 +97,6 @@ protected: // implementation of juce::Synthesizer
 	void handleMidiEvent(const juce::MidiMessage&) override;
 
 private:
-	std::deque<juce::MidiMessage> mMessageQueue;
-
 	Statistics mStatistics;
 	std::atomic<Statistics> mThreadSafeStatistics;
 

@@ -14,6 +14,7 @@ namespace luath::window
 class MainWindow final
 	: non_copy_move
 	, juce::AudioIODeviceCallback
+	, juce::MidiInputCallback
 {
 public:
 	MainWindow();
@@ -26,6 +27,8 @@ public:
 	void onDpiChanged(float scale);
 
 private:
+	void handleIncomingMidiMessage(juce::MidiInput* source, const juce::MidiMessage& message)override;
+
 	void audioDeviceIOCallbackWithContext(
 		const float* const* inputChannelData,
 		int numInputChannels,
@@ -47,7 +50,10 @@ protected:
 private:
 	static LRESULT CALLBACK wndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
-private:	
+private:
+	juce::CriticalSection mMidiBufferLock;
+	juce::MidiBuffer mMidiBuffer;
+
 	HWND mWindowHandle = nullptr;
 
 	// 描画機構

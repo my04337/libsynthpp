@@ -86,7 +86,7 @@ static std::wstring freq2scale(float freq) {
 	}
 }
 MainWindow::MainWindow()
-	: mSequencer(mSynthesizer)
+	: mSequencer(*this)
 	, mSynthesizer()
 	, mOscilloScopeWidget()
 	, mSpectrumAnalyzerWidget()
@@ -304,6 +304,16 @@ void MainWindow::loadMidi(const std::filesystem::path& path) {
 	mSequencer.start();
 }
 
+void MainWindow::handleIncomingMidiMessage(juce::MidiInput* source, const juce::MidiMessage& message)
+{
+	juce::ScopedLock sl(mMidiBufferLock);
+
+	// TODO 本来 sampleNumber は次にレンダリングするMIDIメッセージが何サンプル目に解釈すべきかを示しているべき。
+	//      smd::midi::Sequencer 側のあり方含めて検討すること
+	int sampleNumber = 0;
+	mMidiBuffer.addEvent(message, sampleNumber);
+}
+
 void MainWindow::audioDeviceIOCallbackWithContext(
 	const float* const* inputChannelData,
 	int numInputChannels,
@@ -323,9 +333,15 @@ void MainWindow::audioDeviceIOCallbackWithContext(
 			numSamples
 		)
 	);
-	mSynthesizer.renderNextBlock(sig.data(), {}, 0, numSamples);
 
-	// ポストアンプ適用
+	// シンセサイザ発音
+	{
+		juce::ScopedLock sl(mMidiBufferLock);
+		mSynthesizer.renderNextBlock(sig.data(), mMidiBuffer, 0, numSamples);
+		mMidiBuffer.clear();
+	}
+
+	// ポストエフェクト適用
 	auto postAmpVolume = mPostAmpVolume.load();
 	for(uint32_t ch = 0; ch < sig.channels(); ++ch) {
 		auto data = sig.mutableData(ch);
