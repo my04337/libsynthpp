@@ -1,40 +1,79 @@
 ﻿cmake_minimum_required(VERSION 3.26)
 
-include(FetchContent)
+
+set(THIRD_PARTY_DIR  "${CMAKE_CURRENT_LIST_DIR}/third_party")
 
 ###########################################################
-### C++ Modules for MSVC(experimental)
-#if(MSVC) 
-#	# 少なくともVS2022 17.6時代では std, std.compat ｗo自前でビルドする必要あり
-#	#   see https://learn.microsoft.com/ja-jp/cpp/cpp/tutorial-import-stl-named-module?view=msvc-170
-#
-#	# 各モジュール置き場を解決
-#	set(MSVC_CXX_STD_MODULE_DIR ${CMAKE_BINARY_DIR}/_deps/cxx_std)
-#	cmake_path(SET VCToolsInstallDir NORMALIZE "$ENV{VCToolsInstallDir}" )
-#	if(NOT EXISTS "${MSVC_CXX_STD_MODULE_DIR}") 
-#		file(MAKE_DIRECTORY "${MSVC_CXX_STD_MODULE_DIR}")
-#	endif()
-#
-#	# モジュールのビルド
-#	if(NOT EXISTS "${MSVC_CXX_STD_MODULE_DIR}/std.ixx" OR NOT EXISTS "${MSVC_CXX_STD_MODULE_DIR}/std.compat.ixx")
-#		file(COPY_FILE "${VCToolsInstallDir}modules/std.ixx" "${MSVC_CXX_STD_MODULE_DIR}/std.ixx")
-#		file(COPY_FILE "${VCToolsInstallDir}modules/std.compat.ixx" "${MSVC_CXX_STD_MODULE_DIR}/std.compat.ixx")
-#		execute_process(
-#			COMMAND cl /std:c++latest /EHsc /nologo /W4 /MTd /c "${MSVC_CXX_STD_MODULE_DIR}/std.ixx" "${MSVC_CXX_STD_MODULE_DIR}/std.compat.ixx"
-#			WORKING_DIRECTORY  "${MSVC_CXX_STD_MODULE_DIR}"
-#		)
-#	endif()
-#
-#	# モジュールを簡単にリンク出来るようにプロジェクトを用意
-#	set(MODULE_NAME experimental_std_modules)
-#	add_library(
-#		${MODULE_NAME} STATIC
-#	)
-#	target_sources(
-#		${MODULE_NAME}
-#		PUBLIC
-#			FILE_SET cxx_modules TYPE CXX_MODULES FILES
-#				"${MSVC_CXX_STD_MODULE_DIR}/std.ixx"
-#				"${MSVC_CXX_STD_MODULE_DIR}/std.compat.ixx"
-#	)
-#endif()
+### JUCE 
+# 
+# 注意 : ISC Licenseで提供されるモジュールのみ利用可能
+#      * juce_core
+#      * juce_audio_basics
+#      * juce_audio_devices
+#      * juce_events
+#        
+
+set(JUCE_MODULES_ONLY YES)
+set(JUCE_BUILD_EXTRAS NO)
+set(JUCE_BUILD_EXAMPLES NO)
+
+set(JUCE_SOURCE_DIR  "${THIRD_PARTY_DIR}/JUCE")
+set(JUCE_MODULES_DIR "${JUCE_SOURCE_DIR}/modules")
+set(JUCE_GIT_REPOSITORY https://github.com/juce-framework/JUCE)
+set(JUCE_GIT_TAG        "7.0.5")
+set(JUCE_GIT_COMMIT     69795dc8e589a9eb5df251b6dd994859bf7b3fab)
+
+find_package(Git REQUIRED)
+
+if(NOT EXISTS ${JUCE_SOURCE_DIR})
+    # 指定のタグを shallow clone する ※ただし今後他のタグをcheckoutする可能性があるため、メタ情報だけは取得しておく
+    execute_process(
+        COMMAND ${GIT_EXECUTABLE} clone ${JUCE_GIT_REPOSITORY} -b ${JUCE_GIT_TAG} ${JUCE_SOURCE_DIR} --depth=1 --no-single-branch --progress
+    )
+else()
+    # 衝突を回避するため、全ての差分をリセット
+    execute_process(
+        COMMAND ${GIT_EXECUTABLE} reset --hard --quiet 
+        WORKING_DIRECTORY ${JUCE_SOURCE_DIR}        
+        COMMAND_ERROR_IS_FATAL ANY
+        OUTPUT_QUIET
+    )
+    # 指定のタグのコミットがローカルにあるかを確認し、無ければfetchする
+    execute_process(
+        COMMAND ${GIT_EXECUTABLE} branch --contains ${69795dc8e589a9eb5df251b6dd994859bf7b3fab}
+        WORKING_DIRECTORY ${JUCE_SOURCE_DIR}
+        RESULT_VARIABLE ret
+        OUTPUT_QUIET
+    )
+    if(ret AND NOT ret EQUAL 0)
+        execute_process(
+            COMMAND ${GIT_EXECUTABLE} fetch
+            WORKING_DIRECTORY ${JUCE_SOURCE_DIR}
+            COMMAND_ERROR_IS_FATAL ANY
+        )
+    endif()
+    # 指定のタグへ切替
+    execute_process(
+        COMMAND ${GIT_EXECUTABLE} checkout tags/${JUCE_GIT_TAG} --quiet
+        WORKING_DIRECTORY ${JUCE_SOURCE_DIR}
+        COMMAND_ERROR_IS_FATAL ANY
+    )
+endif()
+
+#[[
+FetchContent_Populate(
+    juce
+    GIT_REPOSITORY  https://github.com/juce-framework/JUCE
+    GIT_TAG         69795dc8e589a9eb5df251b6dd994859bf7b3fab # 7.0.5
+    SOURCE_DIR      ${THIRD_PARTY_DIR}/JUCE
+)
+]]
+include("${JUCE_SOURCE_DIR}/extras/Build/CMake/JUCEModuleSupport.cmake")
+
+juce_add_modules(
+    ALIAS_NAMESPACE juce
+    "${JUCE_MODULES_DIR}/juce_core"
+    "${JUCE_MODULES_DIR}/juce_audio_basics"
+    "${JUCE_MODULES_DIR}/juce_audio_devices"
+    "${JUCE_MODULES_DIR}/juce_events"
+)

@@ -8,8 +8,11 @@ namespace luath::widget
 class SpectrumAnalyzer
 {
 public:
-	SpectrumAnalyzer(uint32_t sampleFreq, uint32_t bufferLength);
+	SpectrumAnalyzer();
 	~SpectrumAnalyzer();
+
+	// 表示パラメータを指定します
+	void setParams(float sampleFreq, size_t bufferSize, uint32_t strechRate = 1);
 
 	// 表示波形を書き込みます
 	void write(const lsp::Signal<float>& sig);
@@ -19,12 +22,15 @@ public:
 	void draw(ID2D1RenderTarget& renderer, float x, float y, float width, float height);
 
 private:
-	const uint32_t mSampleFreq;
-	const uint32_t mBufferLength;
+	float mSampleFreq; // [hz]
+	float mSpan;       // [second]
+	uint32_t mStrechRate;
+	size_t mUnitBufferSize;
 
 	mutable std::mutex mInputMutex;
 	std::deque<float> mInputBuffer1ch; // リングバッファ
 	std::deque<float> mInputBuffer2ch; // リングバッファ
+
 	std::vector<float> mDrawingBuffer1ch; // 描画用バッファ。排他不要。
 	std::vector<float> mDrawingBuffer2ch; // 描画用バッファ。排他不要。
 

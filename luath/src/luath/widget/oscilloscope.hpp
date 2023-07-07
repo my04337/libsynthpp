@@ -8,8 +8,11 @@ namespace luath::widget
 class OscilloScope
 {
 public:
-	OscilloScope(uint32_t sampleFreq, uint32_t bufferLength);
+	OscilloScope();
 	~OscilloScope();
+
+	// 表示パラメータを指定します
+	void setParams(float sampleFreq, float span);
 
 	// 表示波形を書き込みます
 	void write(const lsp::Signal<float>& sig);
@@ -18,8 +21,9 @@ public:
 	void draw(ID2D1RenderTarget& renderer, float x, float y, float width, float height);
 	
 private:
-	const uint32_t mSampleFreq;
-	const uint32_t mBufferLength;
+	float mSampleFreq;	// [Hz]
+	float mSpan;		// [second]
+	size_t mBufferSize;
 
 	mutable std::mutex mInputMutex;
 	std::deque<float> mInputBuffer1ch; // リングバッファ

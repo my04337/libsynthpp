@@ -1,6 +1,5 @@
 ﻿#include <luath/window/main_window.hpp>
 #include <luath/app/application.hpp>
-#include <lsp/midi/smf/parser.hpp>
 
 #include <shellapi.h>
 
@@ -14,41 +13,44 @@ using namespace lsp;
 using namespace luath;
 using namespace luath::window;
 
-using lsp::midi::synth::Voice;
-using lsp::midi::synth::VoiceId;
+using lsp::synth::LuathVoice;
+using lsp::synth::VoiceId;
 
 static constexpr int SCREEN_WIDTH = 800;
 static constexpr int SCREEN_HEIGHT = 680;
-static constexpr uint32_t SAMPLE_FREQ = 44100;
 
-static constexpr std::array<D2D1_COLOR_F, 16> CHANNEL_COLOR{
-	D2D1_COLOR_F{ 1.f, 0.f, 0.f, 1.f}, // 赤
-	D2D1_COLOR_F{ 1.f, 0.5f, 0.f, 1.f }, // 朱色
-	D2D1_COLOR_F{ 1.f, 0.75f, 0.f, 1.f }, // ゴールデンイエロー
-	D2D1_COLOR_F{ 1.f, 1.f, 0.f, 1.f }, // 黄色
-	D2D1_COLOR_F{ 0.75f, 1.f, 0.f, 1.f }, // 明るい黄緑色 
-	D2D1_COLOR_F{ 0.f, 1.f, 0.f, 1.f }, // 緑
-	D2D1_COLOR_F{ 0.f, 1.f, 0.75f, 1.f }, // 黄緑色
-	D2D1_COLOR_F{ 0.f, 0.75f, 1.f, 1.f }, // セルリアンブルー
-	D2D1_COLOR_F{ 0.f, 0.3f, 1.f, 1.f }, // コバルトブルー
-	D2D1_COLOR_F{ 0.5f, 0.5f, 0.5f, 1.f }, // グレー ※通常ドラム
-	D2D1_COLOR_F{ 0.3f, 0.f, 1.f, 1.f }, // ヒヤシンス
-	D2D1_COLOR_F{ 0.5f, 0.f, 1.f, 1.f }, // バイオレット
-	D2D1_COLOR_F{ 0.75f, 0.f, 1.f, 1.f }, // ムラサキ
-	D2D1_COLOR_F{ 1.f, 0.f, 1.f, 1.f }, // マゼンタ
-	D2D1_COLOR_F{ 1.f, 0.f, 0.5f, 1.f }, // ルビーレッド
-	D2D1_COLOR_F{ 0.75f, 0.f, 0.3f, 1.f }, // カーマイン
+static constexpr D2D1_COLOR_F getMidiChannelColor(int ch)
+{
+	switch(ch) {
+	case  1: return D2D1_COLOR_F{ 1.f, 0.f, 0.f, 1.f }; // 赤
+	case  2: return D2D1_COLOR_F{ 1.f, 0.5f, 0.f, 1.f }; // 朱色
+	case  3: return D2D1_COLOR_F{ 1.f, 0.75f, 0.f, 1.f }; // ゴールデンイエロー
+	case  4: return D2D1_COLOR_F{ 1.f, 1.f, 0.f, 1.f }; // 黄色
+	case  5: return D2D1_COLOR_F{ 0.75f, 1.f, 0.f, 1.f }; // 明るい黄緑色 
+	case  6: return D2D1_COLOR_F{ 0.f, 1.f, 0.f, 1.f }; // 緑
+	case  7: return D2D1_COLOR_F{ 0.f, 1.f, 0.75f, 1.f }; // 黄緑色
+	case  8: return D2D1_COLOR_F{ 0.f, 0.75f, 1.f, 1.f }; // セルリアンブルー
+	case  9: return D2D1_COLOR_F{ 0.f, 0.3f, 1.f, 1.f }; // コバルトブルー
+	case 10: return D2D1_COLOR_F{ 0.5f, 0.5f, 0.5f, 1.f }; // グレー ※通常ドラム
+	case 11: return D2D1_COLOR_F{ 0.3f, 0.f, 1.f, 1.f }; // ヒヤシンス
+	case 12: return D2D1_COLOR_F{ 0.5f, 0.f, 1.f, 1.f }; // バイオレット
+	case 13: return D2D1_COLOR_F{ 0.75f, 0.f, 1.f, 1.f }; // ムラサキ
+	case 14: return D2D1_COLOR_F{ 1.f, 0.f, 1.f, 1.f }; // マゼンタ
+	case 15: return D2D1_COLOR_F{ 1.f, 0.f, 0.5f, 1.f }; // ルビーレッド
+	case 16: return D2D1_COLOR_F{ 0.75f, 0.f, 0.3f, 1.f }; // カーマイン
+	}
+	std::unreachable();
 };
 
-static constexpr const wchar_t* state2text(Voice::EnvelopeState state)
+static constexpr const wchar_t* state2text(LuathVoice::EnvelopeState state)
 {
 	switch(state) {
-	case Voice::EnvelopeState::Attack: return L"Attack";
-	case Voice::EnvelopeState::Hold:   return L"Hold";
-	case Voice::EnvelopeState::Decay:  return L"Decay";
-	case Voice::EnvelopeState::Fade:   return L"Fade";
-	case Voice::EnvelopeState::Release:return L"Release";
-	case Voice::EnvelopeState::Free:   return L"Free";
+	case LuathVoice::EnvelopeState::Attack: return L"Attack";
+	case LuathVoice::EnvelopeState::Hold:   return L"Hold";
+	case LuathVoice::EnvelopeState::Decay:  return L"Decay";
+	case LuathVoice::EnvelopeState::Fade:   return L"Fade";
+	case LuathVoice::EnvelopeState::Release:return L"Release";
+	case LuathVoice::EnvelopeState::Free:   return L"Free";
 	default: return L"Unknown";
 	}
 };
@@ -84,15 +86,11 @@ static std::wstring freq2scale(float freq) {
 	}
 }
 MainWindow::MainWindow()
-	: mSequencer(mSynthesizer)
-	, mSynthesizer(SAMPLE_FREQ)
-	, mOutput()
-	, mLissajousWidget(SAMPLE_FREQ, static_cast<uint32_t>(SAMPLE_FREQ * 250e-4f))
-	, mOscilloScopeWidget(SAMPLE_FREQ, static_cast<uint32_t>(SAMPLE_FREQ * 250e-4f))
-	, mSpectrumAnalyzerWidget(SAMPLE_FREQ, 4096)
+	: mSequencer(*this)
+	, mSynthesizer()
+	, mOscilloScopeWidget()
+	, mSpectrumAnalyzerWidget()
 {
-	mSynthesizer.setRenderingCallback([this](Signal<float>&& sig){onRenderedSignal(std::move(sig));});
-
 }
 
 MainWindow::~MainWindow()
@@ -104,17 +102,6 @@ MainWindow::~MainWindow()
 		DestroyWindow(mWindowHandle);
 		mWindowHandle = nullptr;
 	}
-}
-void MainWindow::dispose()
-{
-	// 再生停止
-	auto isOutputStopped = mOutput.stop();
-
-	// シーケンサ停止
-	mSequencer.stop();
-
-	// トーンジェネレータ停止
-	mSynthesizer.dispose();
 }
 bool MainWindow::initialize()
 {
@@ -167,17 +154,32 @@ bool MainWindow::initialize()
 	auto midi_path = std::filesystem::current_path();
 	midi_path.append(L"assets/sample_midi/brambles_vsc3.mid"s); // 試験用MIDIファイル
 	loadMidi(midi_path);
-
-	// オーディオ出力 初期化
-	if(!mOutput.start()) {
-		MessageBox(
-			mWindowHandle,
-			L"出力デバイスのオープンに失敗しました。",
-			L"オーディオ エラー",
-			MB_OK | MB_ICONWARNING
-		);
+	
+	// オーディオ周り初期化
+	mAudioDeviceManager.initialiseWithDefaultDevices(
+		0, // numInputChannelsNeeded
+		2 // numOutputChannelsNeeded
+	);
+	mAudioDevice = mAudioDeviceManager.getCurrentAudioDevice();
+	if(!mAudioDevice) {
+		Log::w("Audio device is not found.");
 	}
+	mAudioDeviceManager.addAudioCallback(this);
+
+
 	return true;
+}
+void MainWindow::dispose()
+{
+	// 再生停止
+	mAudioDeviceManager.closeAudioDevice();
+	mAudioDeviceManager.removeAudioCallback(this);
+
+	// シーケンサ停止
+	mSequencer.stop();
+
+	// トーンジェネレータ停止
+	mSynthesizer.dispose();
 }
 LRESULT MainWindow::wndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -228,7 +230,7 @@ LRESULT MainWindow::wndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 			result = 0;
 			break;
 		case WM_DESTROY:
-			PostQuitMessage(0);
+			juce::MessageManager::getInstance()->stopDispatchLoop();
 			result = 0;
 			break;
 		}
@@ -285,23 +287,93 @@ void MainWindow::onDpiChanged(float scale)
 	// 再描画を依頼
 	UpdateWindow(mWindowHandle);
 }
-void MainWindow::loadMidi(const std::filesystem::path& midi_path) {
+void MainWindow::loadMidi(const std::filesystem::path& path) {
+	// 現在の再生を停止
 	mSequencer.stop();
-	mSequencer.reset(midi::SystemType::GM1);
 
-	try {
-		auto parsed = midi::smf::Parser::parse(midi_path);
-		mSequencer.load(std::move(parsed.second));
-		mSequencer.start();
-	} catch (const midi::smf::decoding_exception&) {
+	// MIDIファイルをロード
+	juce::FileInputStream midiInputStream(juce::File(path.wstring().c_str()));
+	juce::MidiFile midiFile;
+	if(!midiFile.readFrom(midiInputStream)) {
 		// ロード失敗
-		MessageBox(
-			mWindowHandle,
-			L"ファイルエラー",
-			std::wstring(L"MIDIファイルを開けません : " + midi_path.wstring()).c_str(),
-			MB_OK | MB_ICONWARNING
-		);
+		Log::e("Broken midi file : {}", path.string());
 	}
+	
+	// 再生開始
+	mSequencer.load(std::move(midiFile));
+	mSequencer.start();
+}
+
+void MainWindow::handleIncomingMidiMessage(juce::MidiInput* source, const juce::MidiMessage& message)
+{
+	juce::ScopedLock sl(mMidiBufferLock);
+
+	// TODO 本来 sampleNumber は次にレンダリングするMIDIメッセージが何サンプル目に解釈すべきかを示しているべき。
+	//      smd::midi::Sequencer 側のあり方含めて検討すること
+	int sampleNumber = 0;
+	mMidiBuffer.addEvent(message, sampleNumber);
+}
+
+void MainWindow::audioDeviceIOCallbackWithContext(
+	const float* const* inputChannelData,
+	int numInputChannels,
+	float* const* outputChannelData,
+	int numOutputChannels,
+	int numSamples,
+	const juce::AudioIODeviceCallbackContext& context
+)
+{
+	// 出力先の準備
+	check(numOutputChannels == 2);
+	check(numSamples >= 0);
+	auto sig = lsp::Signal<float>::fromAudioBuffer(
+		juce::AudioBuffer<float>(
+			outputChannelData,	// 出力先バッファに直接書き込むようにする
+			numOutputChannels,
+			numSamples
+		)
+	);
+
+	// シンセサイザ発音
+	{
+		juce::ScopedLock sl(mMidiBufferLock);
+		mSynthesizer.renderNextBlock(sig.data(), mMidiBuffer, 0, numSamples);
+		mMidiBuffer.clear();
+	}
+
+	// ポストエフェクト適用
+	auto postAmpVolume = mPostAmpVolume.load();
+	for(uint32_t ch = 0; ch < sig.channels(); ++ch) {
+		auto data = sig.mutableData(ch);
+		for(size_t i = 0; i < sig.samples(); ++i) {
+			data[i] *= postAmpVolume;
+		}
+	}
+
+	// UI側へ配送
+	// TODO 信号生成に影響を与えにくい経路で配送したい
+	mOscilloScopeWidget.write(sig);
+	mSpectrumAnalyzerWidget.write(sig);
+	mLissajousWidget.write(sig);
+}
+void MainWindow::audioDeviceAboutToStart(juce::AudioIODevice* device)
+{
+	mAudioDevice = device;
+	if(!device) return;
+
+	auto sampleFreq = static_cast<float>(device->getCurrentSampleRate());
+	mSynthesizer.setCurrentPlaybackSampleRate(device->getCurrentSampleRate());
+	mOscilloScopeWidget.setParams(sampleFreq, 25e-3f);
+	mSpectrumAnalyzerWidget.setParams(sampleFreq, 4096, 2);
+	mLissajousWidget.setParams(sampleFreq, 25e-3f);
+}
+void MainWindow::audioDeviceStopped()
+{
+	// nop
+}
+void MainWindow::audioDeviceError(const juce::String& errorMessage)
+{
+	Log::e("Audio device error : {}", errorMessage.toStdString());
 }
 
 struct MainWindow::DrawingContext
@@ -309,11 +381,9 @@ struct MainWindow::DrawingContext
 	// FPS計算,表示用
 	size_t frames = 0;
 	std::array<std::chrono::microseconds, 15> drawing_time_history = {};
+	std::array<std::chrono::microseconds, 15> frame_interval_history = {};
+	clock::time_point prev_drawing_start_time = clock::now();
 	size_t drawing_time_index = 0;
-
-	// 前回のボイス表示位置 (素直に順番に描画するとちらついて見づらいため表示を揃える)
-	std::unordered_map<VoiceId, size_t> prevVoicePosMap;
-	size_t prevVoiceEndPos = 0;
 };
 
 
@@ -333,7 +403,7 @@ void MainWindow::onDraw()
 	auto renderHwndTargetProperties = D2D1::HwndRenderTargetProperties(mWindowHandle);
 	renderHwndTargetProperties.pixelSize.width = static_cast<UINT32>(windowRect.right - windowRect.left);
 	renderHwndTargetProperties.pixelSize.height = static_cast<UINT32>(windowRect.bottom - windowRect.top);
-	renderHwndTargetProperties.presentOptions = D2D1_PRESENT_OPTIONS_IMMEDIATELY;
+	renderHwndTargetProperties.presentOptions = D2D1_PRESENT_OPTIONS_NONE; // VSYNC(垂直同期)有効
 
 	CComPtr<ID2D1HwndRenderTarget> renderTarget;
 	check(SUCCEEDED(mD2DFactory->CreateHwndRenderTarget(
@@ -346,6 +416,8 @@ void MainWindow::onDraw()
 	
 	// 描画開始
 	auto drawing_start_time = clock::now();
+	context.frame_interval_history[context.drawing_time_index] = std::chrono::duration_cast<std::chrono::microseconds>(drawing_start_time - context.prev_drawing_start_time);
+	context.prev_drawing_start_time = drawing_start_time;
 	renderer.BeginDraw();
 
 	renderer.SetTextAntialiasMode(D2D1_TEXT_ANTIALIAS_MODE_CLEARTYPE);
@@ -354,11 +426,11 @@ void MainWindow::onDraw()
 	// 描画メイン
 	onDraw(renderer);
 
-
 	// 描画終了
-	renderer.EndDraw();
 	auto drawing_end_time = clock::now();
 
+	// ディスプレイへ反映 ※VSYNC待機
+	renderer.EndDraw();
 	context.drawing_time_history[context.drawing_time_index] = std::chrono::duration_cast<std::chrono::microseconds>(drawing_end_time - drawing_start_time);
 	++context.drawing_time_index;
 	if(context.drawing_time_index == context.drawing_time_history.size()) {
@@ -400,34 +472,49 @@ void MainWindow::onDraw(ID2D1RenderTarget& renderer)
 	const auto tgStatistics = mSynthesizer.statistics();
 	const auto synthDigest = mSynthesizer.digest();
 	const auto& channelDigests = synthDigest.channels;
+	const auto& voiceDigests = synthDigest.voices;
 
-	size_t polyCount = 0;
-	for(auto& cd : channelDigests) polyCount += cd.poly;
+	// チャネル毎の合計発音数を取得
+	std::array<int, 16> poly;
+	std::fill(poly.begin(), poly.end(), 0);
+	for(auto& vd : voiceDigests) {
+		if(vd.ch < 1 || vd.ch > 16) continue;
+		if(vd.state == LuathVoice::EnvelopeState::Free) continue;
+		++poly[vd.ch - 1];
+	}
+	int polyCount = std::accumulate(poly.begin(), poly.end(), 0);
 
 	// 描画情報
 	{
-		drawText(0, 0, std::format(L"描画フレーム数 : {}", context.frames));
-		auto average_time = std::accumulate(context.drawing_time_history.cbegin(), context.drawing_time_history.cend(), std::chrono::microseconds(0)) / context.drawing_time_history.size();
-		drawText(0, 15, std::format(L"描画時間 : {:0.2f}[msec]", average_time.count()/1000.f));
+		auto average_interval_time = std::accumulate(context.frame_interval_history.cbegin(), context.frame_interval_history.cend(), std::chrono::microseconds(0)) / context.frame_interval_history.size();
+		auto average_drawing_time = std::accumulate(context.drawing_time_history.cbegin(), context.drawing_time_history.cend(), std::chrono::microseconds(0)) / context.drawing_time_history.size();
+		if(average_interval_time.count() > 0) {
+			auto drawing_load = static_cast<float>(average_drawing_time.count()) / static_cast<float>(average_interval_time.count());
+			drawText(0, 0, std::format(L"描画時間 : {:05.2f}[msec]", average_drawing_time.count() / 1000.f));
+			drawText(0, 15, std::format(L"描画負荷 : {:06.2f}[%]", 100 * drawing_load));
+		}
+
 	}
 
 	// 演奏情報
 	{
-		const wchar_t* systemType = L"";
-		switch(synthDigest.systemType) {
-		case midi::SystemType::GM1:	systemType = L"GM1";	break;
-		case midi::SystemType::GM2:	systemType = L"GM2";	break;
-		case midi::SystemType::GS:	systemType = L"GS";		break;
-		case midi::SystemType::XG:	systemType = L"XG";		break;
+		auto systemType = synthDigest.systemType.toPrintableWString();
+
+		if(mAudioDevice != nullptr) {
+			auto sampleFreq = mAudioDevice->getCurrentSampleRate();
+			auto buffered = mAudioDevice->getCurrentBufferSizeSamples() / sampleFreq;
+			auto latency = mAudioDevice->getOutputLatencyInSamples() / sampleFreq;
+
+			drawText(150, 0, std::format(L"バッファ : {:04}[msec]  レイテンシ : {:04}[msec]  デバイス名 : {}  ",
+				buffered * 1000,
+				latency * 1000,
+				mAudioDevice->getName().toWideCharPointer()
+			));
 		}
 
-		drawText(150, 0, std::format(L"生成時間 : {}[msec]  failed : {}[msec]  buffered : {:04}[msec]",
-			tgStatistics.created_samples * 1000ull / SAMPLE_FREQ,
-			tgStatistics.failed_samples * 1000ull / SAMPLE_FREQ,
-			mOutput.getBufferedFrameCount() * 1000 / SAMPLE_FREQ
-		));
-		drawText(150, 15, std::format(L"演奏負荷 : {:03}[%]", (int)(100 * tgStatistics.rendering_load_average())));
-		drawText(150, 30, std::format(L"PostAmp : {:.3f}", mPostAmpVolume.load()));
+		drawText(150, 15, std::format(L"演奏負荷 : {:06.2f}[%]", 100 * mAudioDeviceManager.getCpuUsage()));
+		drawText(0, 30, std::format(L"マスタ音量 : {:.3f}", synthDigest.masterVolume));
+		drawText(150, 30, std::format(L"再生音量 : {:.3f}", mPostAmpVolume.load()));
 		drawText(280, 15, std::format(L"同時発音数 : {:03}", polyCount));
 		drawText(420, 15, std::format(L"MIDIリセット : {}", systemType));
 	}
@@ -469,7 +556,7 @@ void MainWindow::onDraw(ID2D1RenderTarget& renderer)
 			x = ofsX;
 			ci = 0;
 
-			const auto bgColor = CHANNEL_COLOR[cd.ch];
+			const auto bgColor = getMidiChannelColor(cd.ch);
 			brush->SetColor({ bgColor.r, bgColor.g, bgColor.b, bgColor.a / 2 });
 			renderer.FillRectangle({ x, y, x + width , y + height }, brush);
 
@@ -479,10 +566,10 @@ void MainWindow::onDraw(ID2D1RenderTarget& renderer)
 			drawText(col(), y, std::format(L"{:0.3f}", cd.expression));
 			drawText(col(), y, std::format(L"{:+0.4f}", cd.pitchBend));
 			drawText(col(), y, std::format(L"{:0.2f}", cd.pan));
-			drawText(col(), y, std::format(L"{:03}.{:03}.{:03}", cd.attackTime, cd.decayTime, cd.releaseTime));
+			drawText(col(), y, std::format(L"{:03}.{:03}.{:03}", static_cast<int>(cd.attackTime*127), static_cast<int>(cd.decayTime * 127), static_cast<int>(cd.releaseTime * 127)));
 			drawText(col(), y, cd.pedal ? L"on" : L"off");
 			drawText(col(), y, cd.drum ? L"on" : L"off");
-			drawText(col(), y, std::format(L"{:02}", cd.poly));
+			drawText(col(), y, std::format(L"{:02}", poly[cd.ch - 1]));
 		}
 	}
 
@@ -493,39 +580,6 @@ void MainWindow::onDraw(ID2D1RenderTarget& renderer)
 		const size_t voicePerRow = 45;
 		const float height = 12;
 
-		// 全チャネルのボイス情報を統合
-		std::unordered_map<VoiceId, std::pair</*ch*/uint8_t, Voice::Digest>> unsortedVoiceDigests;
-		for(const auto& cd : channelDigests) {
-			for(const auto& [vid, vd] : cd.voices) {
-				unsortedVoiceDigests.emplace(vid, std::make_pair(cd.ch, vd));
-			}
-		}
-		// 前回の描画位置を維持しながら描画順を決定する
-		std::vector<std::tuple<VoiceId, /*ch*/uint8_t, Voice::Digest>> voiceDigests;
-		voiceDigests.resize(std::max(unsortedVoiceDigests.size(), context.prevVoiceEndPos));
-		for(auto& [vid, pos] : context.prevVoicePosMap) {
-			auto found = unsortedVoiceDigests.find(vid);
-			if(found != unsortedVoiceDigests.end()) {
-				voiceDigests[pos] = std::make_tuple(found->first, std::get<0>(found->second), std::get<1>(found->second));
-				unsortedVoiceDigests.erase(found);
-			}
-		}
-		for(size_t i = 0; i < voiceDigests.size() && !unsortedVoiceDigests.empty(); ++i) {
-			if(!std::get<0>(voiceDigests[i]).empty()) continue;
-			auto found = unsortedVoiceDigests.begin();
-			voiceDigests[i] = std::make_tuple(found->first, std::get<0>(found->second), std::get<1>(found->second));
-			unsortedVoiceDigests.erase(found);
-		}
-		check(unsortedVoiceDigests.empty());
-		context.prevVoiceEndPos = 0;
-		context.prevVoicePosMap.clear();
-		for(size_t i = 0; i < voiceDigests.size(); ++i) {
-			if(std::get<0>(voiceDigests[i]).empty()) continue;
-			context.prevVoicePosMap[std::get<0>(voiceDigests[i])] = i;
-			context.prevVoiceEndPos = i + 1;
-		}
-
-		// 描画
 		constexpr std::array<float, 4> columnWidth{ 15, 22, 30, 40};
 		float x = ofsX;
 		size_t ci = 0;
@@ -543,18 +597,18 @@ void MainWindow::onDraw(ID2D1RenderTarget& renderer)
 			drawText(col(), ofsY, L"Status");
 		}
 		for(size_t i = 0; i < voiceDigests.size(); ++i) {
-			const auto& [vid, ch, vd] = voiceDigests[i];
+			const auto& vd = voiceDigests[i];
+			if(vd.state == LuathVoice::EnvelopeState::Free) continue;
+
 			x = ofsX + (static_cast<float>(i / voicePerRow)) * (width + 10);
 			float y = ofsY + height * ((i % voicePerRow) + 1);
 			ci = 0;
 
-			if(vid.empty()) continue;
-
-			const auto bgColor = CHANNEL_COLOR[ch];
+			const auto bgColor = getMidiChannelColor(vd.ch);
 			brush->SetColor({ bgColor.r, bgColor.g, bgColor.b, std::clamp(vd.envelope * 0.4f + 0.1f, 0.f, 1.f)});
 			renderer.FillRectangle({ x, y, x + width, y + height }, brush);
 
-			drawSmallText(col(), y, std::format(L"{:02}", ch));
+			drawSmallText(col(), y, std::format(L"{:02}", vd.ch));
 			drawSmallText(col(), y, freq2scale(vd.freq));
 			drawSmallText(col(), y, std::format(L"{:.3f}", vd.envelope));
 			drawSmallText(col(), y, state2text(vd.state));
@@ -588,20 +642,4 @@ void MainWindow::onDraw(ID2D1RenderTarget& renderer)
 			150 - margin * 2
 		);
 	}
-}
-void MainWindow::onRenderedSignal(Signal<float>&& sig)
-{
-	// ポストアンプ適用
-	auto postAmpVolume = mPostAmpVolume.load();
-	size_t samples = sig.frames() * sig.channels();
-	auto p = sig.data();
-	for (size_t i = 0; i < samples; ++i) {
-		p[i] *= postAmpVolume;
-	}
-
-	// 各出力先に配送
-	mOutput.write(sig);
-	mOscilloScopeWidget.write(sig);
-	mSpectrumAnalyzerWidget.write(sig);
-	mLissajousWidget.write(sig);
 }

@@ -3,19 +3,30 @@
 using namespace luath;
 using namespace luath::widget;
 
-Lissajous::Lissajous(uint32_t sampleFreq, uint32_t bufferLength)
-	: mSampleFreq(sampleFreq)
-	, mBufferLength(bufferLength)
+Lissajous::Lissajous()
 {
-	require(sampleFreq > 0);
-	require(bufferLength > 0);
-
-	mInputBuffer.resize(mBufferLength, std::make_pair(0.f, 0.f));
-	mDrawingBuffer.resize(mBufferLength, std::make_pair(0.f, 0.f));
+	setParams(1.f, 1.f);
 }
 
 Lissajous::~Lissajous()
 {
+}
+
+void Lissajous::setParams(float sampleFreq, float span)
+{
+	require(sampleFreq > 0);
+	require(span > 0);
+
+	auto bufferSize = static_cast<size_t>(sampleFreq * span);
+	require(bufferSize > 0);
+
+	std::lock_guard lock(mInputMutex);
+	mSampleFreq = sampleFreq;
+	mSpan = span;
+	mBufferSize = bufferSize;
+
+	mInputBuffer.resize(bufferSize, std::make_pair(0.f, 0.f));
+	mDrawingBuffer.resize(bufferSize, std::make_pair(0.f, 0.f));
 }
 
 void Lissajous::write(const Signal<float>& sig)
@@ -23,18 +34,17 @@ void Lissajous::write(const Signal<float>& sig)
 	std::lock_guard lock(mInputMutex);
 
 	const auto signal_channels = sig.channels();
-	const auto signal_frames = sig.frames();
+	const auto signal_samples = sig.samples();
 
 	require(signal_channels == 2, "Lissajous : write - failed (channel count is mismatch)");
 
 	// バッファ末尾に追記
-	for(size_t i = 0; i < signal_frames; ++i) {
-		auto frame = sig.frame(i);
-		mInputBuffer.emplace_back(frame[0], frame[1]);
+	for(size_t i = 0; i < signal_samples; ++i) {
+		mInputBuffer.emplace_back(sig.data(0, i), sig.data(1, i));
 	}
 
 	// リングバッファとして振る舞うため、先頭から同じサイズを削除
-	mInputBuffer.erase(mInputBuffer.begin(), mInputBuffer.begin() + signal_frames);
+	mInputBuffer.erase(mInputBuffer.begin(), mInputBuffer.begin() + signal_samples);
 }
 
 void Lissajous::draw(ID2D1RenderTarget& renderer, const float left, const float top, const float width, const float height)
@@ -72,8 +82,8 @@ void Lissajous::draw(ID2D1RenderTarget& renderer, const float left, const float 
 	const float mid_x = (left + right) / 2;
 	const float mid_y = (top + bottom) / 2;
 
-	const uint32_t buffer_length = mBufferLength;
-	const float sample_pitch = width / (float)mBufferLength;
+	const size_t buffer_size = mBufferSize;
+	const float sample_pitch = width / buffer_size;
 
 	// 罫線描画
 	brush->SetColor({ 0.5f, 1.f, 0.125f, 1.f });
@@ -87,7 +97,7 @@ void Lissajous::draw(ID2D1RenderTarget& renderer, const float left, const float 
 	// 信号描画
 	brush->SetColor({ 1.f, 0.f, 0.f, 1.f });
 	D2D1_POINT_2F prev;
-	for(uint32_t i = 0; i < buffer_length; ++i) {
+	for(size_t i = 0; i < buffer_size; ++i) {
 		auto [ch1, ch2] = mDrawingBuffer[i];
 		float x = mid_x + width / 2.0f * normalize(ch1);
 		float y = mid_y - height / 2.0f * normalize(ch2);

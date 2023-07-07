@@ -11,7 +11,7 @@
 
 #include <lsp/core/core.hpp>
 
-namespace lsp::fft
+namespace lsp::dsp::fft
 {
 // 各種窓関数
 template<
@@ -72,8 +72,8 @@ parameter_type HammingWf(parameter_type pos)
 	return a0 - a1 * (std::cos(2 * math::PI<parameter_type> * pos));
 }
 
-template<std::floating_point sample_type, subscript_operator_available<sample_type> container>
-bool fft1d(container& ar, container& ai, int n, int iter, bool isIFFT)
+template<std::floating_point sample_type>
+bool fft1d(sample_type* ar, sample_type* ai, int n, int iter, bool isIFFT)
 {
 	int i, it, j, j1, j2, k, xp, xp2;
 	sample_type arg, dr1, dr2, di1, di2, tr, ti, w, wr, wi;

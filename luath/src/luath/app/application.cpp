@@ -15,18 +15,24 @@ Application::~Application()
 
 int Application::exec()
 {
-	// ウィンドウ生成
-	luath::window::MainWindow main_window;
-    check(main_window.initialize());
-    
-	// メッセージループ 開始
+	// JUCE メッセージマネージャー初期化 ※Win32メッセージループに相当
+	auto msgManager = juce::MessageManager::getInstance();
 
-	MSG msg;
-
-	while(GetMessage(&msg, NULL, 0, 0))
+	// メインウィンドウ生成
 	{
-		TranslateMessage(&msg);
-		DispatchMessage(&msg);
+		luath::window::MainWindow mainWindow;
+		check(mainWindow.initialize());
+
+		// メッセージループ開始
+		msgManager->runDispatchLoop();
 	}
+
+	// メッセージループ停止
+	juce::MessageManager::deleteInstance();
+
+	// 削除されていないオブジェクトを全て削除
+	// MEMO Win32+WASAPI環境において、デバイスの変更を受け付けるためのスレッドがリークするための措置。
+	juce::DeletedAtShutdown::deleteAll();
+
 	return 0;
 }

@@ -11,7 +11,7 @@
 
 #include <lsp/core/core.hpp>
 
-namespace lsp::effector
+namespace lsp::dsp
 {
 
 
@@ -90,7 +90,7 @@ public:
 
 	// エンベロープ形状パラメータを指定します (メロディ用)
 	void setMelodyEnvelope(
-		uint32_t sampleFreq,		    // Hz
+		float sampleFreq,				// Hz
 		float attack_time,				// sec
 		float decay_time,				// sec
 		parameter_type sustain_level,	// level (0 <= x <= 1)
@@ -100,7 +100,7 @@ public:
 		setMelodyEnvelope(sampleFreq, {}, attack_time, 0, decay_time, sustain_level, 0, release_time, std::numeric_limits<parameter_type>::epsilon());
 	}
 	void setMelodyEnvelope(
-		uint32_t sampleFreq,			// Hz
+		float sampleFreq,				// Hz
 		Curve curve,					
 		float attack_time,				// sec
 		float hold_time,				// sec
@@ -125,7 +125,7 @@ public:
 	}
 	// エンベロープ形状パラメータを指定します (ドラム用)
 	void setDrumEnvelope(
-		uint32_t sampleFreq,			// Hz
+		float sampleFreq,				// Hz
 		Curve curve,
 		float attack_time,				// sec
 		float hold_time,				// sec
@@ -164,8 +164,9 @@ public:
 	parameter_type envelope()const
 	{
 		auto easing = [this](uint64_t max)->parameter_type { 
-			const auto p = parameter_type(mTime) / parameter_type(max);
+			if(max == 0) return mEndLevel;
 
+			const auto p = parameter_type(mTime) / parameter_type(max);
 			switch(mCurve) {
 			case Shape::Linear: 
 				// 線形補間

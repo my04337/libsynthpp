@@ -45,16 +45,31 @@
 #include <variant>
 #include <vector>
 
+// プラットフォーム非依存 : JUCE ※ICE License Only
+#ifndef JUCE_GLOBAL_MODULE_SETTINGS_INCLUDED
+	#define JUCE_GLOBAL_MODULE_SETTINGS_INCLUDED
+#endif
+#ifdef WIN32
+	#pragma pack(push)
+	#pragma warning(disable:4996)
+#endif
+#include <juce_core/juce_core.h>
+#include <juce_events/juce_events.h>
+#include <juce_audio_basics/juce_audio_basics.h>
+#include <juce_audio_devices/juce_audio_devices.h>
+#ifdef WIN32
+	#pragma pack(pop)
+#endif
 
 // プラットフォーム依存 : Win32
 #ifdef WIN32
-#define WIN32_LEAN_AND_MEAN 
-#define STRICT 
-#define NOMINMAX 
-#include <sdkddkver.h>
-#include <Windows.h>
-#include <atlbase.h>
-#include <atlcom.h>
+	#define WIN32_LEAN_AND_MEAN 
+	#define STRICT 
+	#define NOMINMAX 
+	#include <sdkddkver.h>
+	#include <Windows.h>
+	#include <atlbase.h>
+	#include <atlcom.h>
 
 #endif
 
@@ -116,9 +131,4 @@ std::string demangle(const char* mangled_name);
 inline std::string demangle(const std::type_info& v) { return lsp::demangle(v.name()); }
 inline std::string demangle(const std::type_index& v) { return lsp::demangle(v.name()); }
 
-// 添字演算子可能である事を表すコンセプト
-template<typename Tcontainer, typename Telement>
-concept subscript_operator_available = requires(Tcontainer a, size_t index) {
-	{a[index]} -> std::convertible_to<Telement>;
-};
 }

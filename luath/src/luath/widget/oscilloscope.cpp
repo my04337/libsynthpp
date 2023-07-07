@@ -3,21 +3,31 @@
 using namespace luath;
 using namespace luath::widget;
 
-OscilloScope::OscilloScope(uint32_t sampleFreq, uint32_t bufferLength)
-	: mSampleFreq(sampleFreq)
-	, mBufferLength(bufferLength)
+OscilloScope::OscilloScope()
 {
-	require(sampleFreq > 0);
-	require(bufferLength > 0);
-
-	mInputBuffer1ch.resize(mBufferLength, 0.f);
-	mInputBuffer2ch.resize(mBufferLength, 0.f);
-	mDrawingBuffer1ch.resize(mBufferLength, 0.f);
-	mDrawingBuffer2ch.resize(mBufferLength, 0.f);
+	setParams(1.f, 1.f);
 }
 
 OscilloScope::~OscilloScope()
 {
+}
+void OscilloScope::setParams(float sampleFreq, float span)
+{
+	require(sampleFreq > 0);
+	require(span > 0);
+
+	auto bufferSize = static_cast<size_t>(sampleFreq * span);
+	require(bufferSize > 0);
+
+	std::lock_guard lock(mInputMutex);
+	mSampleFreq = sampleFreq;
+	mSpan = span;
+	mBufferSize = bufferSize;
+
+	mInputBuffer1ch.resize(mBufferSize, 0.f);
+	mInputBuffer2ch.resize(mBufferSize, 0.f);
+	mDrawingBuffer1ch.resize(mBufferSize, 0.f);
+	mDrawingBuffer2ch.resize(mBufferSize, 0.f);
 }
 
 void OscilloScope::write(const Signal<float>& sig)
@@ -25,20 +35,17 @@ void OscilloScope::write(const Signal<float>& sig)
 	std::lock_guard lock(mInputMutex);
 
 	const auto signal_channels = sig.channels();
-	const auto signal_frames = sig.frames();
+	const auto signal_samples = sig.samples();
 
 	require(signal_channels == 2, "OscilloScope : write - failed (channel count is mismatch)");
 
 	// バッファ末尾に追記
-	for(size_t i = 0; i < signal_frames; ++i) {
-		auto frame = sig.frame(i);
-		mInputBuffer1ch.emplace_back(frame[0]);
-		mInputBuffer2ch.emplace_back(frame[1]);
-	}
+	mInputBuffer1ch.insert(mInputBuffer1ch.end(), sig.data(0), sig.data(0) + signal_samples);
+	mInputBuffer2ch.insert(mInputBuffer2ch.end(), sig.data(1), sig.data(1) + signal_samples);
 
 	// リングバッファとして振る舞うため、先頭から同じサイズを削除
-	mInputBuffer1ch.erase(mInputBuffer1ch.begin(), mInputBuffer1ch.begin() + signal_frames);
-	mInputBuffer2ch.erase(mInputBuffer2ch.begin(), mInputBuffer2ch.begin() + signal_frames);
+	mInputBuffer1ch.erase(mInputBuffer1ch.begin(), mInputBuffer1ch.begin() + signal_samples);
+	mInputBuffer2ch.erase(mInputBuffer2ch.begin(), mInputBuffer2ch.begin() + signal_samples);
 }
 
 void OscilloScope::draw(ID2D1RenderTarget& renderer, const float left, const float top, const float width, const float height)
@@ -77,8 +84,8 @@ void OscilloScope::draw(ID2D1RenderTarget& renderer, const float left, const flo
 	const float mid_x = (left + right) / 2;
 	const float mid_y = (top + bottom) / 2;
 
-	const uint32_t buffer_length = mBufferLength;
-	const float sample_pitch = width / (float)mBufferLength;
+	const size_t buffer_size = mBufferSize;
+	const float sample_pitch = width / buffer_size;
 
 	// 罫線描画
 	brush->SetColor({0.5f, 1.f, 0.125f, 1.f});
@@ -96,7 +103,7 @@ void OscilloScope::draw(ID2D1RenderTarget& renderer, const float left, const flo
 			return { left + pos * sample_pitch , mid_y - height / 2.0f * normalize(buffer[pos]) };
 		};
 		auto prev = getPoint(0);
-		for(uint32_t i = 1; i < buffer_length; ++i) {
+		for(size_t i = 1; i < buffer_size; ++i) {
 			auto pt = getPoint(i);
 			if(prev.x != pt.x || prev.y != pt.y) {
 				renderer.DrawLine(prev, pt, brush);
