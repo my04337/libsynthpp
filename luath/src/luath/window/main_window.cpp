@@ -566,7 +566,10 @@ void MainWindow::onDraw(ID2D1RenderTarget& renderer)
 			drawText(col(), y, std::format(L"{:0.3f}", cd.expression));
 			drawText(col(), y, std::format(L"{:+0.4f}", cd.pitchBend));
 			drawText(col(), y, std::format(L"{:0.2f}", cd.pan));
-			drawText(col(), y, std::format(L"{:03}.{:03}.{:03}", static_cast<int>(cd.attackTime*127), static_cast<int>(cd.decayTime * 127), static_cast<int>(cd.releaseTime * 127)));
+			drawText(col(), y, std::format(L"{:03}.{:03}.{:03}",
+				static_cast<int>(std::round(cd.attackTime * 127)),
+				static_cast<int>(std::round(cd.decayTime * 127)),
+				static_cast<int>(std::round(cd.releaseTime * 127))));
 			drawText(col(), y, cd.pedal ? L"on" : L"off");
 			drawText(col(), y, cd.drum ? L"on" : L"off");
 			drawText(col(), y, std::format(L"{:02}", poly[cd.ch - 1]));
