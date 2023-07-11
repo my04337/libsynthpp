@@ -3,30 +3,33 @@
 マルチプラットフォーム MIDIシンセサイザ ライブラリ  
 Multiplatoform MIDI synthesizer library.
 
-※本プロジェクトは、私が最新C++を理解するためのテストベッドとして開発しているものです。
-※本プロジェクトは、私がかつて下記OSDNプロジェクトで開発していたライブラリの焼き直し版です。  
+本ライブラリは主に下記のサブプロジェクトにて構成されています。
+
+## libsynth++ (libsynth++ディレクトリ以下)
+* C++ 23を全面的に活用した信号処理フレームワーク
+* 軽量でシンプルな波形テーブル音源のシンセサイザ(LuathSynth)実装
+* ライセンス : MIT License ( https://opensource.org/license/mit/ )
+* フレームワークには JUCE ライブラリを使用
+    * ただし ISC Licenseで提供される juce_core, juce_audio_devices, juce_audio_basics, juce_events のみを使用
+* マルチプラットフォーム対応
+* CMakeプロジェクト
+    
+## luath (luathディレクトリ以下)
+* シンセサイザ(LuathSynth)を搭載した実験用アプリケーション
+* ライセンス (現状)
+    * MIT License
+    * https://opensource.org/license/mit/
+* ライセンス (将来)
+    * GPLv3 License
+    * https://opensource.org/license/gpl-3-0/
+    * 将来的にJUCE ライブラリのGPLv3部分を用いて書き直すため
+    
+----
+
+なお、本プロジェクトは、私が最新C++を理解するためのテストベッドとして開発しているものです。
+
+また、本プロジェクトは、私がかつて下記OSDNプロジェクトで開発していたライブラリの焼き直し版です。  
+※おそらく4度目の焼き直しです。
+
 https://ja.osdn.net/projects/libsynthpp/
-
-
-## 信号処理ライブラリ(libsynth++)が目指しているもの
-
-* 開発言語
-    * C++23
-* フレームワーク
-    * JUCE ※ISC Licenseで提供される juce_core, juce_audio_devices, juce_audio_basics, juce_events のみを使用
-* 対応プラットフォーム
-    * マルチプラットフォーム
-        * 普段の開発ではWindows 10 以降を使用
-* プロジェクト構成
-    * CMakeプロジェクト
-* その他コンセプト
-    * C++ 23の全面的な活用
-    * 簡潔で使いやすいAPI
-    * 将来的にC++ Modulesを利用
-        * VS2022 17.6時点ではWindows.hやatlbase.hのインクルードに失敗するため見送り
-
-
-## MIDIシンセサイザ(luath)部分が目指しているもの
-* GM, GS, XGフォーマットへの対応
-* 32チャネル波形テーブル音源
 
