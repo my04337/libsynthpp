@@ -78,4 +78,5 @@ juce_add_modules(
     "${JUCE_MODULES_DIR}/juce_data_structures"
     "${JUCE_MODULES_DIR}/juce_graphics"
     "${JUCE_MODULES_DIR}/juce_gui_basics"
+    "${JUCE_MODULES_DIR}/juce_gui_extra"
 )

@@ -13,35 +13,45 @@
 
 using namespace luath::app;
 
-Application::Application(int argc, char** argv)
+Application::~Application() = default;
+
+void Application::initialise(const juce::String& commandLineParameters)
 {
+	// Win32 : COM セットアップ
 	check(SUCCEEDED(CoInitialize(NULL)));
+
+	// ログ出力機構 セットアップ
+	auto logger = std::make_unique<OutputDebugStringLogger>();
+	Log::addLogger(logger.get());
+	mLoggers.emplace_back(std::move(logger));
+
+	Log::setLogLevel(lsp::LogLevel::Debug);
+
+	// メインウィンドウ表示
+	mMainWindow = std::make_unique<MainWindow>();
+	mMainWindow->setVisible(true);
+
 }
-Application::~Application()
+void Application::shutdown()
 {
+	// メインウィンドウclose
+	mMainWindow.reset();
+
+	// ログ出力機構 シャットダウン
+	for(auto& logger : mLoggers) {
+		Log::removeLogger(logger.get());
+	}
+	mLoggers.clear();
+
+	// WIn32 : COM シャットダウン
 	CoUninitialize();
 }
 
-int Application::exec()
+const juce::String Application::getApplicationName()
 {
-	// JUCE メッセージマネージャー初期化 ※Win32メッセージループに相当
-	auto msgManager = juce::MessageManager::getInstance();
-
-	// メインウィンドウ生成
-	{
-		luath::app::window::MainWindow mainWindow;
-		check(mainWindow.initialize());
-
-		// メッセージループ開始
-		msgManager->runDispatchLoop();
-	}
-
-	// メッセージループ停止
-	juce::MessageManager::deleteInstance();
-
-	// 削除されていないオブジェクトを全て削除
-	// MEMO Win32+WASAPI環境において、デバイスの変更を受け付けるためのスレッドがリークするための措置。
-	juce::DeletedAtShutdown::deleteAll();
-
-	return 0;
+	return L"luath - LibSynth++ Sample MIDI Synthesizer";
+}
+const juce::String Application::getApplicationVersion()
+{
+	return L"";
 }

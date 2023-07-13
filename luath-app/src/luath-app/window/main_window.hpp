@@ -10,34 +10,38 @@
 #pragma once
 
 #include <luath-app/core/core.hpp>
-#include <luath-app/widget/oscilloscope.hpp>
-#include <luath-app/widget/spectrum_analyzer.hpp>
-#include <luath-app/widget/lissajous.hpp>
-#include <luath-app/drawing/font_loader.hpp>
+#include <luath-app/window/main_content.hpp>
 #include <lsp/synth/synth.hpp>
 #include <lsp/midi/sequencer.hpp>
 
-namespace luath::app::window
+namespace luath::app
 {
 
 class MainWindow final
-	: non_copy_move
-	, juce::AudioIODeviceCallback
-	, juce::MidiInputCallback
+	: public juce::DocumentWindow
+	, public juce::FileDragAndDropTarget
+	, public juce::AudioIODeviceCallback
+	, public juce::MidiInputCallback
+	, non_copy_move
 {
+	using SUPER = juce::DocumentWindow;
+
 public:
 	MainWindow();
-	~MainWindow();
+	~MainWindow()override;
 
-	bool initialize();
-	void dispose();
-	bool onKeyDown(uint16_t key, bool shift, bool ctrl, bool alt);
-	void onDropFile(const std::vector<std::filesystem::path>& paths);
-	void onDpiChanged(float scale);
+	// Buttons
+	void closeButtonPressed()override;
+	bool keyPressed(const juce::KeyPress& key)override;
 
-private:
+	// Drag & Drop
+	bool isInterestedInFileDrag(const juce::StringArray& files)override;
+	void filesDropped(const juce::StringArray& files, int x, int y)override;
+
+	// MIDI
 	void handleIncomingMidiMessage(juce::MidiInput* source, const juce::MidiMessage& message)override;
 
+	// Audio
 	void audioDeviceIOCallbackWithContext(
 		const float* const* inputChannelData,
 		int numInputChannels,
@@ -50,28 +54,17 @@ private:
 	void audioDeviceStopped()override;
 	void audioDeviceError(const juce::String& errorMessage)override;
 
+
 protected:
 	void loadMidi(const std::filesystem::path& path);
-	void onDraw();
-	void onDraw(ID2D1RenderTarget& renderer);
 
 
 private:
-	static LRESULT CALLBACK wndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
-
-private:
+	// MIDI関連
 	juce::CriticalSection mMidiBufferLock;
 	juce::MidiBuffer mMidiBuffer;
 
-	HWND mWindowHandle = nullptr;
-
-	// 描画機構
-	struct DrawingContext;
-	std::unique_ptr<DrawingContext> mDrawingContext;
-	CComPtr<ID2D1Factory> mD2DFactory;
-	drawing::FontLoader mFontLoader;
-
-	// オーディオm関連
+	// オーディオ関連
 	juce::AudioDeviceManager mAudioDeviceManager;
 	juce::AudioIODevice* mAudioDevice = nullptr;
 
@@ -82,10 +75,8 @@ private:
 	midi::Sequencer mSequencer;
 	synth::LuathSynth mSynthesizer;
 	
-	// 各種ウィジット
-	widget::OscilloScope mOscilloScopeWidget;
-	widget::SpectrumAnalyzer mSpectrumAnalyzerWidget;
-	widget::Lissajous mLissajousWidget;
+	// コンポーネント
+	std::unique_ptr<MainContent> mMainContent;
 };
 
 }

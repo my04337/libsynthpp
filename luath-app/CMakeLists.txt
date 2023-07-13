@@ -30,9 +30,6 @@ target_link_libraries(
 	luath-app 
 	PRIVATE 
 		libsynth++
-		D2d1.lib
-		Dwrite.lib
-		Shell32.lib
 )
 
 # link JUCE modules
@@ -40,7 +37,7 @@ unset(juce_modules)
 # - ISC License
 list(APPEND juce_modules juce_core juce_audio_basics juce_audio_devices)
 # - GPLv3 or Commerical
-list(APPEND juce_modules juce_data_structures juce_graphics juce_gui_basics)
+list(APPEND juce_modules juce_data_structures juce_graphics juce_gui_basics juce_gui_extra)
 
 # JUCEのライブラリをそのままtarget_link_libraryすると、不要なwarningが表示されるので
 # warningレベルを調整している。

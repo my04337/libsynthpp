@@ -27,7 +27,7 @@ public:
 	void write(const lsp::Signal<float>& sig);
 
 	// リサージュ曲線を描画を描画します
-	void draw(ID2D1RenderTarget& renderer, float x, float y, float width, float height);
+	void paint(juce::Graphics& g, float x, float y, float width, float height);
 	
 private:
 	float mSampleFreq; // [hz]

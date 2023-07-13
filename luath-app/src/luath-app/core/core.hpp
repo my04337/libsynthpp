@@ -13,10 +13,11 @@
 
 #include <juce_gui_basics/juce_gui_basics.h>
 
-#include <d2d1.h>
-#include <d2d1helper.h>
-#include <dwrite_3.h>
-#include <wincodec.h>
+#ifdef small
+#undef small // Win32API : rpcndr.h が small というマクロを定義する大迷惑なことをしたことでビルドエラーが起きる事への対処
+#endif
+
+#include <juce_gui_extra/juce_gui_extra.h>
 
 namespace luath::app
 {

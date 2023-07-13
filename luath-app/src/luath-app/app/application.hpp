@@ -14,13 +14,20 @@
 namespace luath::app
 {
 class Application final
-	: non_copy_move
+	: public juce::JUCEApplication
 {
 public:
-	Application(int argc, char** argv);
-	~Application();
+	~Application()override;
 
-	int exec();
+	void initialise(const juce::String& commandLineParameters)override;
+	void shutdown()override;
+
+	const juce::String getApplicationName()override;
+	const juce::String getApplicationVersion()override;
+
+private:
+	std::list<std::unique_ptr<ILogger>> mLoggers;
+	std::unique_ptr<juce::DocumentWindow> mMainWindow;
 };
 
 }

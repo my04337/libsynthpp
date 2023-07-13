@@ -57,7 +57,7 @@ void OscilloScope::write(const Signal<float>& sig)
 	mInputBuffer2ch.erase(mInputBuffer2ch.begin(), mInputBuffer2ch.begin() + signal_samples);
 }
 
-void OscilloScope::draw(ID2D1RenderTarget& renderer, const float left, const float top, const float width, const float height)
+void OscilloScope::paint(juce::Graphics& g, const float left, const float top, const float width, const float height)
 {
 	// 信号出力をブロックしないように描画用信号バッファへコピー
 	{
@@ -67,28 +67,18 @@ void OscilloScope::draw(ID2D1RenderTarget& renderer, const float left, const flo
 	}
 
 	// 描画開始
-	CComPtr<ID2D1Factory> factory;
-	renderer.GetFactory(&factory);
-	check(factory != nullptr);
+	g.saveState();
+	auto fin_act_restore_state = finally([&] {g.restoreState(); });
 
-	CComPtr<ID2D1SolidColorBrush> brush;
-	renderer.CreateSolidColorBrush({ 0.f, 0.f, 0.f, 1.f }, &brush);
+	const juce::Rectangle<float>  rect{ left, top, width, height };
+	juce::Path clipPath;
+	clipPath.addRectangle(rect);
+	g.reduceClipRegion(clipPath);
 
-	// ステータス & クリッピング
-	CComPtr<ID2D1DrawingStateBlock> drawingState;
-	check(SUCCEEDED(factory->CreateDrawingStateBlock(&drawingState)));
-	renderer.SaveDrawingState(drawingState);
-
-	const D2D1_RECT_F  rect{ left, top, left + width, top + height };
-	renderer.PushAxisAlignedClip(rect, D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
-	auto fin_act= finally([&renderer, &drawingState] {
-		renderer.PopAxisAlignedClip(); 
-		renderer.RestoreDrawingState(drawingState);
-	});
 
 	// よく使う値を先に計算
-	const float right  = rect.right;
-	const float bottom = rect.bottom;
+	const float right = rect.getRight();
+	const float bottom = rect.getBottom();
 
 	const float mid_x = (left + right) / 2;
 	const float mid_y = (top + bottom) / 2;
@@ -97,33 +87,39 @@ void OscilloScope::draw(ID2D1RenderTarget& renderer, const float left, const flo
 	const float sample_pitch = width / buffer_size;
 
 	// 罫線描画
-	brush->SetColor({0.5f, 1.f, 0.125f, 1.f});
-	for (int i = 1; i <= 9; ++i) {
-		float x = left + width  * 0.1f * i;
-		float y = top  + height * 0.1f * i;
-		renderer.DrawLine({ left, y }, { right, y }, brush);
-		renderer.DrawLine({ x, top }, { x, bottom }, brush);
+	g.setColour(juce::Colour::fromFloatRGBA(0.5f, 1.f, 0.125f, 1.f));
+	for(int i = 1; i <= 9; ++i) {
+		float x = left + width * 0.1f * i;
+		float y = top + height * 0.1f * i;
+		g.drawLine(left, y, right, y);
+		g.drawLine(x, top, x, bottom);
 	}
 
 	// 信号描画
-	auto drawSignal = [&](const D2D1_COLOR_F& color, const std::vector<float>& buffer) {
-		brush->SetColor(color);
-		auto getPoint = [&](size_t pos) -> D2D1_POINT_2F {
+	auto drawSignal = [&](const juce::Colour& color, const std::vector<float>& buffer) {
+		g.setColour(color);
+
+		auto getPoint = [&](size_t pos) -> std::pair<float, float> {
 			return { left + pos * sample_pitch , mid_y - height / 2.0f * normalize(buffer[pos]) };
 		};
+
+		juce::Path signalPath;
 		auto prev = getPoint(0);
-		for(size_t i = 1; i < buffer_size; ++i) {
-			auto pt = getPoint(i);
-			if(prev.x != pt.x || prev.y != pt.y) {
-				renderer.DrawLine(prev, pt, brush);
+		for(size_t i = 0; i < buffer_size; ++i) {
+			auto [x, y] = getPoint(i);
+			if(i == 0) {
+				signalPath.startNewSubPath(x, y);
 			}
-			prev = pt;
+			else [[likely]] {
+				signalPath.lineTo(x, y);
+			}
 		}
+		g.strokePath(signalPath, juce::PathStrokeType(1));
 	};
 	drawSignal({ 1.f, 0.f, 0.f, 0.5f }, mDrawingBuffer1ch);
 	drawSignal({ 0.f, 0.f, 1.f, 0.5f }, mDrawingBuffer2ch);
 
 	// 枠描画
-	brush->SetColor({ 0.f, 0.f, 0.f, 1.f });
-	renderer.DrawRectangle(rect, brush);
+	g.setColour(juce::Colour::fromFloatRGBA(0.f, 0.f, 0.f, 1.f));
+	g.drawRect(rect);
 }
