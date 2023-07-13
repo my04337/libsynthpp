@@ -40,7 +40,7 @@ unset(juce_modules)
 # - ISC License
 list(APPEND juce_modules juce_core juce_audio_basics juce_audio_devices)
 # - GPLv3 or Commerical
-list(APPEND juce_gui_basics)
+list(APPEND juce_modules juce_data_structures juce_graphics juce_gui_basics)
 
 # JUCEのライブラリをそのままtarget_link_libraryすると、不要なwarningが表示されるので
 # warningレベルを調整している。

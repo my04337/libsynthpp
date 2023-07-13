@@ -75,5 +75,7 @@ juce_add_modules(
 # GPL License or Commercial
 juce_add_modules(
     ALIAS_NAMESPACE juce
+    "${JUCE_MODULES_DIR}/juce_data_structures"
+    "${JUCE_MODULES_DIR}/juce_graphics"
     "${JUCE_MODULES_DIR}/juce_gui_basics"
 )

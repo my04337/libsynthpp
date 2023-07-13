@@ -11,6 +11,8 @@
 
 #include <lsp/core/core.hpp>
 
+#include <juce_gui_basics/juce_gui_basics.h>
+
 #include <d2d1.h>
 #include <d2d1helper.h>
 #include <dwrite_3.h>
