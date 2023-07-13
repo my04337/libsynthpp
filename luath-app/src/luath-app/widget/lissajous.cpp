@@ -1,4 +1,4 @@
-﻿#include <luath/widget/lissajous.hpp>
+﻿#include <luath-app/widget/lissajous.hpp>
 
 using namespace luath;
 using namespace luath::widget;

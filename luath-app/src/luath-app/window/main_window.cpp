@@ -1,5 +1,5 @@
-﻿#include <luath/window/main_window.hpp>
-#include <luath/app/application.hpp>
+﻿#include <luath-app/window/main_window.hpp>
+#include <luath-app/app/application.hpp>
 
 #include <shellapi.h>
 

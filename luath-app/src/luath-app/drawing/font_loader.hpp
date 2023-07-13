@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-#include <luath/core/core.hpp>
+#include <luath-app/core/core.hpp>
 
 namespace luath::drawing
 {

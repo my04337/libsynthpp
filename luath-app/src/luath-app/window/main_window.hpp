@@ -1,10 +1,10 @@
 ﻿#pragma once
 
-#include <luath/core/core.hpp>
-#include <luath/widget/oscilloscope.hpp>
-#include <luath/widget/spectrum_analyzer.hpp>
-#include <luath/widget/lissajous.hpp>
-#include <luath/drawing/font_loader.hpp>
+#include <luath-app/core/core.hpp>
+#include <luath-app/widget/oscilloscope.hpp>
+#include <luath-app/widget/spectrum_analyzer.hpp>
+#include <luath-app/widget/lissajous.hpp>
+#include <luath-app/drawing/font_loader.hpp>
 #include <lsp/synth/synth.hpp>
 #include <lsp/midi/sequencer.hpp>
 

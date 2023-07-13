@@ -5,16 +5,16 @@ Multiplatoform MIDI synthesizer library.
 
 本ライブラリは主に下記のサブプロジェクトにて構成されています。
 
-## libsynth++ (libsynth++ディレクトリ以下)
+## libsynth++ および luath-core (libsynth++ディレクトリ以下)
 * C++ 23を全面的に活用した信号処理フレームワーク
-* 軽量でシンプルな波形テーブル音源のシンセサイザ(LuathSynth)実装
+* 軽量でシンプルな波形テーブル音源のシンセサイザ「luath」コア実装
 * ライセンス : MIT License ( https://opensource.org/license/mit/ )
 * フレームワークには JUCE ライブラリを使用
     * ただし ISC Licenseで提供される juce_core, juce_audio_devices, juce_audio_basics, juce_events のみを使用
 * マルチプラットフォーム対応
 * CMakeプロジェクト
     
-## luath (luathディレクトリ以下)
+## luath-app (luath-appディレクトリ以下)
 * シンセサイザ(LuathSynth)を搭載した実験用アプリケーション
 * ライセンス (現状)
     * MIT License

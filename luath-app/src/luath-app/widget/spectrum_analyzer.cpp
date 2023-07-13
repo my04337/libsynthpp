@@ -1,4 +1,4 @@
-﻿#include <luath/widget/spectrum_analyzer.hpp>
+﻿#include <luath-app/widget/spectrum_analyzer.hpp>
 #include <lsp/dsp/fft.hpp>
 
 #include <bit>
