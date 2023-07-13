@@ -17,7 +17,7 @@
 #include <lsp/synth/synth.hpp>
 #include <lsp/midi/sequencer.hpp>
 
-namespace luath::window
+namespace luath::app::window
 {
 
 class MainWindow final

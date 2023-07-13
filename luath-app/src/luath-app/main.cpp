@@ -9,8 +9,7 @@
 
 #include <luath-app/app/application.hpp>
 
-using namespace lsp;
-using namespace luath;
+using namespace luath::app;
 
 int WINAPI WinMain(
 	HINSTANCE /* hInstance */,

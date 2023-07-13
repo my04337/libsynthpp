@@ -11,9 +11,8 @@
 
 #include <fstream>
 
-using namespace lsp;
-using namespace luath;
-using namespace luath::drawing;
+using namespace luath::app;
+using namespace luath::app::drawing;
 
 FontLoader::FontLoader(const CComPtr<IDWriteFactory5>& factory)
 	: mFactory(factory)

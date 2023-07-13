@@ -18,9 +18,8 @@
 #include <numeric>
 #include <fstream>
 
-using namespace lsp;
-using namespace luath;
-using namespace luath::window;
+using namespace luath::app;
+using namespace luath::app::window;
 
 using lsp::synth::LuathVoice;
 using lsp::synth::VoiceId;

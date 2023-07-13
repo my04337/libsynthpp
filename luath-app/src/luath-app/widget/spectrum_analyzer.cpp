@@ -13,8 +13,8 @@
 #include <bit>
 #include <array>
 
-using namespace luath;
-using namespace luath::widget;
+using namespace luath::app;
+using namespace luath::app::widget;
 
 SpectrumAnalyzer::SpectrumAnalyzer()
 {

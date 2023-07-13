@@ -11,8 +11,7 @@
 #include <luath-app/app/application.hpp>
 #include <luath-app/window/main_window.hpp>
 
-using namespace lsp;
-using namespace luath;
+using namespace luath::app;
 
 Application::Application(int argc, char** argv)
 {
@@ -30,7 +29,7 @@ int Application::exec()
 
 	// メインウィンドウ生成
 	{
-		luath::window::MainWindow mainWindow;
+		luath::app::window::MainWindow mainWindow;
 		check(mainWindow.initialize());
 
 		// メッセージループ開始

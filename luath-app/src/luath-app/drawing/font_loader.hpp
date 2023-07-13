@@ -11,7 +11,7 @@
 
 #include <luath-app/core/core.hpp>
 
-namespace luath::drawing
+namespace luath::app::drawing
 {
 
 class FontLoader

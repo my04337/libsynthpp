@@ -11,7 +11,7 @@
 
 #include <luath-app/core/core.hpp>
 
-namespace luath::widget
+namespace luath::app::widget
 {
 
 class OscilloScope

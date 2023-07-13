@@ -11,7 +11,7 @@
 
 #include <luath-app/core/core.hpp>
 
-namespace luath
+namespace luath::app
 {
 class Application final
 	: non_copy_move

@@ -9,8 +9,8 @@
 
 #include <luath-app/widget/oscilloscope.hpp>
 
-using namespace luath;
-using namespace luath::widget;
+using namespace luath::app;
+using namespace luath::app::widget;
 
 OscilloScope::OscilloScope()
 {

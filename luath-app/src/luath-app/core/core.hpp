@@ -18,7 +18,7 @@
 #include <dwrite_3.h>
 #include <wincodec.h>
 
-namespace luath
+namespace luath::app
 {
 // 利便性のため、lsp名前空間をusing指定する
 using namespace lsp;
