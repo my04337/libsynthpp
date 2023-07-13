@@ -98,13 +98,16 @@ MainContent::MainContent(const lsp::synth::LuathSynth& synth, const juce::AudioD
 	check(SUCCEEDED(D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, &mD2DFactory)));
 	mFontLoader.createFontCollection(L"UmeFont"s, std::filesystem::current_path().append(L"assets/font/ume-tgo4.ttf"s));
 
+	// OpenGL関連初期化
+	openGLContext.setComponentPaintingEnabled(true);
+
 	// その他ウィンドウ設定
 	setSize(SCREEN_WIDTH, SCREEN_HEIGHT);
-	setSynchroniseToVBlank(true);
 }
 
 MainContent::~MainContent()
 {
+	shutdownOpenGL();
 }
 
 
@@ -125,7 +128,15 @@ void MainContent::writeAudio(const lsp::Signal<float>& sig)
 	mLissajousWidget.write(sig);
 }
 
-void MainContent::update()
+void MainContent::initialise()
+{
+
+}
+void MainContent::shutdown()
+{
+
+}
+void MainContent::render()
 {
 	repaint();
 }

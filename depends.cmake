@@ -79,4 +79,5 @@ juce_add_modules(
     "${JUCE_MODULES_DIR}/juce_graphics"
     "${JUCE_MODULES_DIR}/juce_gui_basics"
     "${JUCE_MODULES_DIR}/juce_gui_extra"
+    "${JUCE_MODULES_DIR}/juce_opengl"
 )
