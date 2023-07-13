@@ -1,4 +1,13 @@
-﻿#include <luath-app/widget/spectrum_analyzer.hpp>
+﻿/**
+	luath-app
+
+	Copyright(c) 2023 my04337
+
+	This software is released under the GPLv3 License.
+	https://opensource.org/license/gpl-3-0/
+*/
+
+#include <luath-app/widget/spectrum_analyzer.hpp>
 #include <lsp/dsp/fft.hpp>
 
 #include <bit>

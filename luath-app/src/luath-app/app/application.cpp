@@ -1,4 +1,14 @@
-﻿#include <luath-app/app/application.hpp>
+﻿/**
+	luath-app
+
+	Copyright(c) 2023 my04337
+
+	This software is released under the GPLv3 License.
+	https://opensource.org/license/gpl-3-0/
+*/
+
+
+#include <luath-app/app/application.hpp>
 #include <luath-app/window/main_window.hpp>
 
 using namespace lsp;
