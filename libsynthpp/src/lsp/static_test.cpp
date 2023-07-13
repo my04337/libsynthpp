@@ -11,7 +11,6 @@
 #include <lsp/dsp/biquadratic_filter.hpp>
 #include <lsp/dsp/envelope_generator.hpp>
 #include <lsp/midi/sequencer.hpp>
-#include <lsp/audio/wav_file_output.hpp>
 
 using namespace lsp;
 
@@ -85,19 +84,5 @@ namespace
 void unused_function_f_bq() {
 	dsp::BiquadraticFilter<float> bqf_float;
 	dsp::BiquadraticFilter<double> bqf_double;
-}
-}
-
-// ############################################################################
-// ### Audio::WavFileOutput
-namespace 
-{
-[[maybe_unused]]
-void unused_function_a_wfo() {
-	audio::WavFileOutput out(44100, 16, 2, "");
-	out.write(Signal<int8_t>());
-	out.write(Signal<int32_t>());
-	out.write(Signal<float>());
-	out.write(Signal<double>());
 }
 }
