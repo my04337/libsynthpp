@@ -1,13 +1,4 @@
-﻿/**
-	luath-app
-
-	Copyright(c) 2023 my04337
-
-	This software is released under the GPLv3 License.
-	https://opensource.org/license/gpl-3-0/
-*/
-
-#pragma once
+﻿#pragma once
 
 #include <luath-app/core/core.hpp>
 
@@ -26,8 +17,9 @@ public:
 	// 表示波形を書き込みます
 	void write(const lsp::Signal<float>& sig);
 
+
 	// スペクトラム解析結果を描画を描画します
-	void paint(juce::Graphics& g, float x, float y, float width, float height);
+	void paint(ID2D1RenderTarget& g, float x, float y, float width, float height);
 
 private:
 	float mSampleFreq; // [hz]

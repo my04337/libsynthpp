@@ -9,7 +9,6 @@
 
 #include <luath-app/window/main_content.hpp>
 #include <lsp/synth/synth.hpp>
-#include <fstream>
 
 using namespace std::string_literals;
 using namespace luath::app;
@@ -21,28 +20,29 @@ using lsp::synth::VoiceId;
 static constexpr int SCREEN_WIDTH = 800;
 static constexpr int SCREEN_HEIGHT = 680;
 
-static constexpr juce::Colour getMidiChannelColor(int ch)
+static constexpr D2D1_COLOR_F getMidiChannelColor(int ch)
 {
 	switch(ch) {
-	case  1: return juce::Colour::fromFloatRGBA(1.f, 0.f, 0.f, 1.f); // 赤
-	case  2: return juce::Colour::fromFloatRGBA(1.f, 0.5f, 0.f, 1.f); // 朱色
-	case  3: return juce::Colour::fromFloatRGBA(1.f, 0.75f, 0.f, 1.f); // ゴールデンイエロー
-	case  4: return juce::Colour::fromFloatRGBA(1.f, 1.f, 0.f, 1.f); // 黄色
-	case  5: return juce::Colour::fromFloatRGBA(0.75f, 1.f, 0.f, 1.f); // 明るい黄緑色 
-	case  6: return juce::Colour::fromFloatRGBA(0.f, 1.f, 0.f, 1.f); // 緑
-	case  7: return juce::Colour::fromFloatRGBA(0.f, 1.f, 0.75f, 1.f); // 黄緑色
-	case  8: return juce::Colour::fromFloatRGBA(0.f, 0.75f, 1.f, 1.f); // セルリアンブルー
-	case  9: return juce::Colour::fromFloatRGBA(0.f, 0.3f, 1.f, 1.f); // コバルトブルー
-	case 10: return juce::Colour::fromFloatRGBA(0.5f, 0.5f, 0.5f, 1.f); // グレー ※通常ドラム
-	case 11: return juce::Colour::fromFloatRGBA(0.3f, 0.f, 1.f, 1.f); // ヒヤシンス
-	case 12: return juce::Colour::fromFloatRGBA(0.5f, 0.f, 1.f, 1.f); // バイオレット
-	case 13: return juce::Colour::fromFloatRGBA(0.75f, 0.f, 1.f, 1.f); // ムラサキ
-	case 14: return juce::Colour::fromFloatRGBA(1.f, 0.f, 1.f, 1.f); // マゼンタ
-	case 15: return juce::Colour::fromFloatRGBA(1.f, 0.f, 0.5f, 1.f); // ルビーレッド
-	case 16: return juce::Colour::fromFloatRGBA(0.75f, 0.f, 0.3f, 1.f); // カーマイン
+	case  1: return D2D1_COLOR_F{ 1.f, 0.f, 0.f, 1.f }; // 赤
+	case  2: return D2D1_COLOR_F{ 1.f, 0.5f, 0.f, 1.f }; // 朱色
+	case  3: return D2D1_COLOR_F{ 1.f, 0.75f, 0.f, 1.f }; // ゴールデンイエロー
+	case  4: return D2D1_COLOR_F{ 1.f, 1.f, 0.f, 1.f }; // 黄色
+	case  5: return D2D1_COLOR_F{ 0.75f, 1.f, 0.f, 1.f }; // 明るい黄緑色 
+	case  6: return D2D1_COLOR_F{ 0.f, 1.f, 0.f, 1.f }; // 緑
+	case  7: return D2D1_COLOR_F{ 0.f, 1.f, 0.75f, 1.f }; // 黄緑色
+	case  8: return D2D1_COLOR_F{ 0.f, 0.75f, 1.f, 1.f }; // セルリアンブルー
+	case  9: return D2D1_COLOR_F{ 0.f, 0.3f, 1.f, 1.f }; // コバルトブルー
+	case 10: return D2D1_COLOR_F{ 0.5f, 0.5f, 0.5f, 1.f }; // グレー ※通常ドラム
+	case 11: return D2D1_COLOR_F{ 0.3f, 0.f, 1.f, 1.f }; // ヒヤシンス
+	case 12: return D2D1_COLOR_F{ 0.5f, 0.f, 1.f, 1.f }; // バイオレット
+	case 13: return D2D1_COLOR_F{ 0.75f, 0.f, 1.f, 1.f }; // ムラサキ
+	case 14: return D2D1_COLOR_F{ 1.f, 0.f, 1.f, 1.f }; // マゼンタ
+	case 15: return D2D1_COLOR_F{ 1.f, 0.f, 0.5f, 1.f }; // ルビーレッド
+	case 16: return D2D1_COLOR_F{ 0.75f, 0.f, 0.3f, 1.f }; // カーマイン
 	}
 	std::unreachable();
 };
+
 
 static constexpr const wchar_t* state2text(LuathVoice::EnvelopeState state)
 {
@@ -93,18 +93,10 @@ MainContent::MainContent(const lsp::synth::LuathSynth& synth, const juce::AudioD
 	, mAudioDeviceManager(audioDeviceManager)
 {
 
-	// フォントのロード
-	auto fontPath = std::filesystem::current_path().append(L"assets/font/ume-tgo4.ttf"); // TODO カレントパスではなくexeからの相対パスにしたい
-	std::ifstream ifs(fontPath, std::ios_base::in | std::ios_base::binary);
-	std::vector<char> fontData((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
-	ifs.close();
-
-	mTypeface = juce::Typeface::createSystemTypefaceFor(fontData.data(), fontData.size());
-	mNormalFont = juce::Font(mTypeface);
-	mNormalFont.setHeight(12);
-	mSmallFont = juce::Font(mTypeface);
-	mSmallFont.setHeight(10);
-
+	// D2D描画関連初期化
+	check(SUCCEEDED(CoCreateInstance(CLSID_WICImagingFactory, nullptr,CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&mWICFactory))));
+	check(SUCCEEDED(D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, &mD2DFactory)));
+	mFontLoader.createFontCollection(L"UmeFont"s, std::filesystem::current_path().append(L"assets/font/ume-tgo4.ttf"s));
 
 	// その他ウィンドウ設定
 	setSize(SCREEN_WIDTH, SCREEN_HEIGHT);
@@ -133,33 +125,124 @@ void MainContent::writeAudio(const lsp::Signal<float>& sig)
 	mLissajousWidget.write(sig);
 }
 
-void MainContent::update() 
+void MainContent::update()
 {
 	repaint();
 }
-void MainContent::paint(juce::Graphics& g)
+
+void MainContent::paint(juce::Graphics& g_)
 {
-	// 描画開始
+	// MEMO JUCEデフォルトの描画があまりにも遅いため、下記の流れで描画している ※これでも素のjuce::Graphicsよりは高速
+	//   IWicBitmapへD2D描画 → juce::Image へ転写 → juce::Graphics::drawImageAtにて転写
+	// TODO いずれOpenGLを用いて書き直したい
+
+	// 描画時間記録開始
 	auto drawingStartTime = clock::now();
 	mFrameIntervalHistory[mDrawingTimeIndex] = std::chrono::duration_cast<std::chrono::microseconds>(drawingStartTime - mPrevDrawingStartTime);
 	mPrevDrawingStartTime = drawingStartTime;
 
+	// 描画対象のサイズ取得
+	auto windowHandle = reinterpret_cast<HWND>(getWindowHandle());
+	SIZE windowSize{ getWidth(), getHeight() };
+	auto drawingScale = static_cast<float>(GetDpiForWindow(windowHandle)) / 96.f;
+
+	// 描画バッファ準備 ※メモリ確保に時間がかかるためキャッシュしておく
+	{
+		UINT renderBufferWicWidth;
+		UINT renderBufferWicHeight;
+
+		if(
+			!mRenderBufferWicBitmap ||
+			!SUCCEEDED(mRenderBufferWicBitmap->GetSize(&renderBufferWicWidth, &renderBufferWicHeight)) ||
+			windowSize.cx != renderBufferWicWidth ||
+			windowSize.cy != renderBufferWicHeight
+			) 
+		{
+			check(SUCCEEDED(mWICFactory->CreateBitmap(
+				static_cast<UINT>(windowSize.cx),
+				static_cast<UINT>(windowSize.cy),
+				GUID_WICPixelFormat32bppPBGRA,
+				WICBitmapCacheOnDemand,
+				&mRenderBufferWicBitmap
+			)));
+		}
+
+		if(
+			!mRenderBufferJuceImage.isValid() ||
+			mRenderBufferJuceImage.getWidth() != windowSize.cx ||
+			mRenderBufferJuceImage.getHeight() != windowSize.cy
+			)
+		{
+			mRenderBufferJuceImage = juce::Image(juce::Image::PixelFormat::ARGB, windowSize.cx, windowSize.cy, true);
+		}
+	}
+	
+
+	// レンダリングターゲットの作成
+	auto renderTargetProperties = D2D1::RenderTargetProperties();
+	renderTargetProperties.pixelFormat.format = DXGI_FORMAT_B8G8R8A8_UNORM;
+	renderTargetProperties.pixelFormat.alphaMode = D2D1_ALPHA_MODE_PREMULTIPLIED;
+	renderTargetProperties.dpiX = drawingScale * 96.f;
+	renderTargetProperties.dpiY = drawingScale * 96.f;
+
+	CComPtr<ID2D1RenderTarget> renderTarget;
+	check(SUCCEEDED(mD2DFactory->CreateWicBitmapRenderTarget(
+		mRenderBufferWicBitmap,
+		renderTargetProperties,
+		&renderTarget
+	)));
+
+	auto& g = *renderTarget;
+
+	// D2D描画開始
+	g.BeginDraw();
+	g.SetTextAntialiasMode(D2D1_TEXT_ANTIALIAS_MODE_CLEARTYPE);
+	paint(g);
+	g.EndDraw();
+
+	// Juce側描画バッファに転送
+	juce::Image::BitmapData renderBufferJuceImage(mRenderBufferJuceImage, juce::Image::BitmapData::writeOnly);
+	check(SUCCEEDED(mRenderBufferWicBitmap->CopyPixels(
+		nullptr,
+		static_cast<UINT>(renderBufferJuceImage.lineStride),
+		static_cast<UINT>(renderBufferJuceImage.size),
+		reinterpret_cast<BYTE*>(renderBufferJuceImage.data)
+	)));
+	g_.drawImageAt(mRenderBufferJuceImage, 0, 0);
+
+
+	// 描画終了
+	auto drawingEndTime = clock::now();
+	mDrawingTimeHistory[mDrawingTimeIndex] = std::chrono::duration_cast<std::chrono::microseconds>(drawingEndTime - drawingStartTime);
+	++mDrawingTimeIndex;
+	if(mDrawingTimeIndex == mDrawingTimeHistory.size()) {
+		mDrawingTimeIndex = 0;
+	}
+	++mFrames;
+}
+void MainContent::paint(ID2D1RenderTarget& g)
+{
+	// 描画開始
+
+	CComPtr<ID2D1SolidColorBrush> brush; // 汎用ブラシ
+	check(SUCCEEDED(g.CreateSolidColorBrush({ 0.f, 0.f, 0.f, 1.f }, &brush)));
+	CComPtr<ID2D1SolidColorBrush> blackBrush; // 色指定ブラシ : ■
+	check(SUCCEEDED(g.CreateSolidColorBrush({ 0.f, 0.f, 0.f, 1.f }, &blackBrush)));
+
+
+	auto textFormatDefault = mFontLoader.createTextFormat(L"UmeFont"s, L"梅ゴシック"s, 12);
+	auto textFormatSmall = mFontLoader.createTextFormat(L"UmeFont"s, L"梅ゴシック"s, 10);
+
 	auto drawText = [&](float x, float y, std::wstring_view str) {
-		g.setFont(mNormalFont);
-		g.setColour(juce::Colours::black);
-		g.drawSingleLineText(
-			juce::String(str.data(), str.size()),
-			x, y + mNormalFont.getAscent(),
-			juce::Justification::left
+		g.DrawText(
+			str.data(), static_cast<UINT32>(str.size()), textFormatDefault,
+			{ x, y, 65536.f, 65536.f }, blackBrush
 		);
 	};
 	auto drawSmallText = [&](float x, float y, std::wstring_view str) {
-		g.setFont(mSmallFont);
-		g.setColour(juce::Colours::black);
-		g.drawSingleLineText(
-			juce::String(str.data(), str.size()),
-			x, y + mSmallFont.getAscent(),
-			juce::Justification::left
+		g.DrawText(
+			str.data(), static_cast<UINT32>(str.size()), textFormatSmall,
+			{ x, y, 65536.f, 65536.f }, blackBrush
 		);
 	};
 
@@ -181,7 +264,7 @@ void MainContent::paint(juce::Graphics& g)
 	int polyCount = std::accumulate(poly.begin(), poly.end(), 0);
 
 	// 背景塗りつぶし
-	g.fillAll(juce::Colours::white);
+	g.Clear({ 1.f, 1.f, 1.f, 1.f });
 
 	// 基本情報
 	{
@@ -252,8 +335,9 @@ void MainContent::paint(juce::Graphics& g)
 			x = ofsX;
 			ci = 0;
 
-			g.setColour(getMidiChannelColor(cd.ch).withMultipliedAlpha(0.5f));
-			g.fillRect(x, y, width, height);
+			const auto bgColor = getMidiChannelColor(cd.ch);
+			brush->SetColor({ bgColor.r, bgColor.g, bgColor.b, bgColor.a / 2 });
+			g.FillRectangle({ x, y, x + width , y + height }, brush);
 
 			drawText(col(), y, std::format(L"{:02}", cd.ch));
 			drawText(col(), y, std::format(L"{:03}:{:03}.{:03}", cd.progId, cd.bankSelectMSB, cd.bankSelectLSB));
@@ -302,8 +386,10 @@ void MainContent::paint(juce::Graphics& g)
 			float y = ofsY + height * ((i % voicePerRow) + 1);
 			ci = 0;
 
-			g.setColour(getMidiChannelColor(vd.ch).withMultipliedAlpha(std::clamp(vd.envelope * 0.4f + 0.1f, 0.f, 1.f)));
-			g.fillRect(x, y, width, height);
+			const auto bgColor = getMidiChannelColor(vd.ch);
+			brush->SetColor({ bgColor.r, bgColor.g, bgColor.b, std::clamp(vd.envelope * 0.4f + 0.1f, 0.f, 1.f) });
+			g.FillRectangle({ x, y, x + width, y + height }, brush);
+
 
 			drawSmallText(col(), y, std::format(L"{:02}", vd.ch));
 			drawSmallText(col(), y, freq2scale(vd.freq));
@@ -336,15 +422,4 @@ void MainContent::paint(juce::Graphics& g)
 			150 - margin * 2
 		);
 	}
-
-	// 描画終了
-	auto drawingEndTime = clock::now();
-
-	// 統計情報更新
-	mDrawingTimeHistory[mDrawingTimeIndex] = std::chrono::duration_cast<std::chrono::microseconds>(drawingEndTime - drawingStartTime);
-	++mDrawingTimeIndex;
-	if(mDrawingTimeIndex == mDrawingTimeHistory.size()) {
-		mDrawingTimeIndex = 0;
-	}
-	++mFrames;
 }

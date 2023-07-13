@@ -11,6 +11,11 @@
 
 #include <lsp/core/core.hpp>
 
+#include <d2d1.h>
+#include <d2d1helper.h>
+#include <dwrite_3.h>
+#include <wincodec.h>
+
 #include <juce_gui_basics/juce_gui_basics.h>
 
 #ifdef small
@@ -18,6 +23,7 @@
 #endif
 
 #include <juce_gui_extra/juce_gui_extra.h>
+
 
 namespace luath::app
 {
