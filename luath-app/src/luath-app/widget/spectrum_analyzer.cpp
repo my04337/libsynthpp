@@ -122,37 +122,46 @@ void SpectrumAnalyzer::paint(juce::Graphics& g)
 	};
 
 
-	// グラフ目盛り描画
-	g.setColour(juce::Colour::fromFloatRGBA(0.5f, 1.f, 0.125f, 1.f));
+	// グラフ目盛り描画 - 薄い区切り線
+	juce::Path scalePath;
 	for(float digit = 1; digit < 5; ++digit) {
 		float base_freq = std::powf(10, digit);
 		for(int i = 1; i < 10; ++i) {
 			float x = left + freq2horz(base_freq * i);
-			g.drawLine(x, top, x, bottom - 1.f);
+			scalePath.startNewSubPath(x, top);
+			scalePath.lineTo(x, bottom - 1.f);
 		}
 	}
 	for(float digit = log_min_dbfs / 10; digit < log_max_dbfs / 10; ++digit) {
 		float base_v = std::powf(10, digit);
 		for(int i = 1; i < 10; ++i) {
 			float y = top + power2vert(base_v * i);
-			g.drawLine(left, y, right - 1.f, y);
+			scalePath.startNewSubPath(left, y);
+			scalePath.lineTo(right - 1.f, y);
 		}
 	}
-	g.setColour(juce::Colour::fromFloatRGBA(0.25f, 0.75f, 0.125f, 1.f));
+	g.setColour(juce::Colour::fromFloatRGBA(0.5f, 1.f, 0.125f, 1.f));
+	g.strokePath(scalePath, juce::PathStrokeType(1));
+
+	// グラフ目盛り描画 - 濃い区切り線
+	scalePath.clear();
 	for(float digit = 1; digit < 5; ++digit) {
 		float base_freq = std::powf(10, digit);
 		float x = left + freq2horz(base_freq);
-		g.drawLine(x, top, x, bottom - 1.f);
+		scalePath.startNewSubPath(x, top);
+		scalePath.lineTo(x, bottom - 1.f);
 	}
 	for(float digit = log_min_dbfs / 10; digit < log_max_dbfs / 10; ++digit) {
 		float base_v = std::powf(10, digit);
 		float y = top + power2vert(base_v);
-		g.drawLine(left, y, right - 1.f, y);
+		scalePath.startNewSubPath(left, y);
+		scalePath.lineTo(right - 1.f, y);
 	}
+	g.setColour(juce::Colour::fromFloatRGBA(0.25f, 0.75f, 0.125f, 1.f));
+	g.strokePath(scalePath, juce::PathStrokeType(1));
 
 	// 信号描画
 	auto drawSignal = [&](const juce::Colour& color, const std::vector<float>& drawingBuffer) {
-		g.setColour(color);
 
 		// FFT実施
 		auto& real = mDrawingFftRealBuffer;
@@ -179,18 +188,21 @@ void SpectrumAnalyzer::paint(juce::Graphics& g)
 			float y = top + power2vert(power);
 			return { x, y };
 		};
-		auto prev = getPoint(0);
+		juce::Path signalPath;
+		signalPath.startNewSubPath(getPoint(0));
 		float yPeak = bottom;
 		for(size_t i = 1; i < real.size() / 2; ++i) { // FFT結果の実軸部分の内、データ後半は折り返し雑音のため使用しない
 			auto pt = getPoint(i);
 			yPeak = std::min(yPeak, pt.y);
-			if(pt.x - prev.x >= horizontal_resolution) {
+			if(pt.x - signalPath.getCurrentPosition().x >= horizontal_resolution) {
 				pt.y = yPeak;
-				g.drawLine(prev.x, prev.y, pt.x, pt.y);
+				signalPath.lineTo(pt);
 				yPeak = bottom;
-				prev = pt;
 			}
 		}
+		// 描画
+		g.setColour(color);
+		g.strokePath(signalPath, juce::PathStrokeType(1));
 	};
 	drawSignal(juce::Colour::fromFloatRGBA(1.f, 0.f, 0.f, 0.5f), mDrawingBuffer1ch);
 	drawSignal(juce::Colour::fromFloatRGBA(0.f, 0.f, 1.f, 0.5f), mDrawingBuffer2ch);

@@ -59,6 +59,8 @@ void Lissajous::paint(juce::Graphics& g)
 	auto fin_act_restore_state = finally([&] {g.restoreState(); });
 
 	const juce::Rectangle<float>  rect{ static_cast<float>(getX()), static_cast<float>(getY()), static_cast<float>(getWidth()), static_cast<float>(getHeight())};
+	if(rect.isEmpty()) return;
+
 	juce::Path clipPath;
 	clipPath.addRectangle(rect);
 	g.reduceClipRegion(clipPath);
@@ -86,18 +88,23 @@ void Lissajous::paint(juce::Graphics& g)
 	}
 
 	// 信号描画
-	g.setColour(juce::Colour::fromFloatRGBA(1.f, 0.f, 0.f, 1.f ));
-	juce::Point<float> prev;
-	for(size_t i = 0; i < buffer_size; ++i) {
-		auto [ch1, ch2] = mDrawingBuffer[i];
-		float x = mid_x + width / 2.0f * normalize(ch1);
-		float y = mid_y - height / 2.0f * normalize(ch2);
-		juce::Point<float> pt{ x, y };
-		if(i > 0 && (prev.x != pt.x || prev.y != pt.y)) {
-			g.drawLine(prev.x, prev.y, pt.x, pt.y);
+	auto getPoint = [&](size_t pos) -> juce::Point<float> {
+		auto [ch1, ch2] = mDrawingBuffer[pos];
+		return {
+			mid_x + width / 2.0f * normalize(ch1),
+			mid_y - height / 2.0f * normalize(ch2),
+		};
+	};
+	juce::Path signalPath;
+	signalPath.startNewSubPath(getPoint(0));
+	for(size_t i = 1; i < buffer_size; ++i) {
+		auto cur = getPoint(i);
+		if(cur.getDistanceFrom(signalPath.getCurrentPosition()) >= 1.f) {
+			signalPath.lineTo(cur);
 		}
-		prev = pt;
 	}
+	g.setColour(juce::Colour::fromFloatRGBA(1.f, 0.f, 0.f, 1.f));
+	g.strokePath(signalPath, juce::PathStrokeType(1));
 
 	// 枠描画
 	g.setColour(juce::Colour::fromFloatRGBA(0.f, 0.f, 0.f, 1.f));
