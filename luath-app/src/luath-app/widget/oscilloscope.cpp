@@ -61,6 +61,8 @@ void OscilloScope::paint(juce::Graphics& g)
 	auto fin_act_restore_state = finally([&] {g.restoreState(); });
 
 	const juce::Rectangle<float>  rect{ static_cast<float>(getX()), static_cast<float>(getY()), static_cast<float>(getWidth()), static_cast<float>(getHeight())};
+	if(rect.isEmpty())return;
+
 	juce::Path clipPath;
 	clipPath.addRectangle(rect);
 	g.reduceClipRegion(clipPath);
@@ -77,7 +79,12 @@ void OscilloScope::paint(juce::Graphics& g)
 	const float mid_y = (top + bottom) / 2;
 
 	const size_t buffer_size = mBufferSize;
-	const float sample_pitch = width / buffer_size;
+	const float speed_ratio = buffer_size / width;
+
+	auto& interpolated = mInterpolatedSignalBuffer;
+	const size_t interpolated_size = static_cast<size_t>(std::ceil(width));
+	interpolated.resize(interpolated_size);
+
 
 	// 罫線描画
 	g.setColour(juce::Colour::fromFloatRGBA(0.5f, 1.f, 0.125f, 1.f));
@@ -90,18 +97,25 @@ void OscilloScope::paint(juce::Graphics& g)
 
 	// 信号描画
 	auto drawSignal = [&](const juce::Colour& color, const std::vector<float>& buffer) {
-		g.setColour(color);
-		auto getPoint = [&](size_t pos) -> juce::Point<float> {
-			return { left + pos * sample_pitch , mid_y - height / 2.0f * normalize(buffer[pos]) };
-		};
-		auto prev = getPoint(0);
-		for(size_t i = 1; i < buffer_size; ++i) {
-			auto pt = getPoint(i);
-			if(prev.x != pt.x || prev.y != pt.y) {
-				g.drawLine(prev.x, prev.y, pt.x, pt.y);
-			}
-			prev = pt;
+		// そのまま全サンプルを描画すると重いため、描画画素数に応じた値まで間引く
+		juce::LinearInterpolator().process(
+			speed_ratio,
+			buffer.data(),
+			interpolated.data(),
+			static_cast<int>(interpolated_size),
+			static_cast<int>(buffer_size),
+			0
+		);
+
+		// 複数回のdrawLine呼び出しは重いため、Pathとして一括で描画する
+		auto getY = [&](float v) {return mid_y - height / 2.0f * normalize(v); };		
+		juce::Path path;		
+		path.startNewSubPath(left, getY(interpolated[0]));
+		for(size_t i = 1; i < interpolated_size; ++i) {
+			path.lineTo(left + static_cast<float>(i), getY(interpolated[i]));
 		}
+		g.setColour(color);
+		g.strokePath(path, juce::PathStrokeType(1));
 	};
 	drawSignal(juce::Colour::fromFloatRGBA(1.f, 0.f, 0.f, 0.5f), mDrawingBuffer1ch);
 	drawSignal(juce::Colour::fromFloatRGBA(0.f, 0.f, 1.f, 0.5f), mDrawingBuffer2ch);
