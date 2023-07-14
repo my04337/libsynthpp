@@ -30,9 +30,6 @@ target_link_libraries(
 	luath-app 
 	PRIVATE 
 		libsynth++
-		Windowscodecs.lib
-		D2d1.lib
-		Dwrite.lib
 )
 
 # link JUCE modules

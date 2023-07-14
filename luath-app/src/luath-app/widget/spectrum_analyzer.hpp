@@ -19,7 +19,7 @@ public:
 
 
 	// スペクトラム解析結果を描画を描画します
-	void paint(ID2D1RenderTarget& g, float x, float y, float width, float height);
+	void paint(juce::Graphics& g, float x, float y, float width, float height);
 
 private:
 	float mSampleFreq; // [hz]

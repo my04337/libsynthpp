@@ -18,7 +18,7 @@ public:
 	void write(const lsp::Signal<float>& sig);
 
 	// オシロスコープを描画します
-	void paint(ID2D1RenderTarget& g, float x, float y, float width, float height);
+	void paint(juce::Graphics& g, float x, float y, float width, float height);
 	
 private:
 	float mSampleFreq;	// [Hz]

@@ -10,7 +10,6 @@
 #pragma once
 
 #include <luath-app/core/core.hpp>
-#include <luath-app/drawing/font_loader.hpp>
 #include <luath-app/widget/oscilloscope.hpp>
 #include <luath-app/widget/spectrum_analyzer.hpp>
 #include <luath-app/widget/lissajous.hpp>
@@ -33,19 +32,16 @@ public:
 	void shutdown()override;
 	void render()override;
 
-	void paint(ID2D1RenderTarget& g);
-	void paint(juce::Graphics&)override;
+	void paint(juce::Graphics& g)override;
 
 private:
 	const lsp::synth::LuathSynth& mSynth;
 	const juce::AudioDeviceManager& mAudioDeviceManager;
 
 	// 描画関連
-	CComPtr<IWICImagingFactory> mWICFactory;
-	CComPtr<ID2D1Factory> mD2DFactory;
-	drawing::FontLoader mFontLoader;
-	CComPtr<IWICBitmap> mRenderBufferWicBitmap;
-	juce::Image mRenderBufferJuceImage;
+	juce::Typeface::Ptr mDefaultTypeface;
+	juce::Font mDefaultFont;
+	juce::Font mSmallFont;
 
 	// ウィジット類
 	widget::OscilloScope mOscilloScopeWidget;

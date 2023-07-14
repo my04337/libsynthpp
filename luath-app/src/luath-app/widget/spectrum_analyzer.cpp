@@ -64,7 +64,7 @@ void SpectrumAnalyzer::write(const Signal<float>& sig)
 	mInputBuffer2ch.erase(mInputBuffer2ch.begin(), mInputBuffer2ch.begin() + signal_samples);
 }
 
-void SpectrumAnalyzer::paint(ID2D1RenderTarget& g, const float left, const float top, const float width, const float height)
+void SpectrumAnalyzer::paint(juce::Graphics& g, const float left, const float top, const float width, const float height)
 {
 	// 信号出力をブロックしないように描画用信号バッファへコピー
 	{
@@ -74,24 +74,13 @@ void SpectrumAnalyzer::paint(ID2D1RenderTarget& g, const float left, const float
 	}
 
 	// 描画開始
-	CComPtr<ID2D1Factory> factory;
-	g.GetFactory(&factory);
-	lsp::check(factory != nullptr);
+	g.saveState();
+	auto fin_act_restore_state = finally([&] {g.restoreState(); });
 
-	CComPtr<ID2D1SolidColorBrush> brush;
-	g.CreateSolidColorBrush({ 0.f, 0.f, 0.f, 1.f }, &brush);
-
-	// ステータス & クリッピング
-	CComPtr<ID2D1DrawingStateBlock> drawingState;
-	lsp::check(SUCCEEDED(factory->CreateDrawingStateBlock(&drawingState)));
-	g.SaveDrawingState(drawingState);
-
-	const D2D1_RECT_F  rect{ left, top, left + width, top + height };
-	g.PushAxisAlignedClip(rect, D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
-	auto fin_act = lsp::finally([&g, &drawingState] {
-		g.PopAxisAlignedClip();
-		g.RestoreDrawingState(drawingState);
-	});
+	const juce::Rectangle<float>  rect{ left, top, width, height };
+	juce::Path clipPath;
+	clipPath.addRectangle(rect);
+	g.reduceClipRegion(clipPath);
 
 	// よく使う値を先に計算
 	static const float log_min_freq = std::log10f(20); // Hz
@@ -100,8 +89,8 @@ void SpectrumAnalyzer::paint(ID2D1RenderTarget& g, const float left, const float
 	static const float log_max_dbfs = +60; // dbFS(power)
 	static const float horizontal_resolution = 0.5f; // px ※高周波部分の描画間引用
 
-	const float right = rect.right;
-	const float bottom = rect.bottom;
+	const float right = rect.getRight();
+	const float bottom = rect.getBottom();
 
 	const float mid_x = (left + right) / 2;
 	const float mid_y = (top + bottom) / 2;
@@ -130,36 +119,36 @@ void SpectrumAnalyzer::paint(ID2D1RenderTarget& g, const float left, const float
 
 
 	// グラフ目盛り描画
-	brush->SetColor({ 0.5f, 1.f, 0.125f, 1.f });
+	g.setColour(juce::Colour::fromFloatRGBA(0.5f, 1.f, 0.125f, 1.f));
 	for(float digit = 1; digit < 5; ++digit) {
 		float base_freq = std::powf(10, digit);
 		for(int i = 1; i < 10; ++i) {
 			float x = left + freq2horz(base_freq * i);
-			g.DrawLine({ x, top }, { x, bottom - 1.f }, brush);
+			g.drawLine(x, top, x, bottom - 1.f);
 		}
 	}
 	for(float digit = log_min_dbfs / 10; digit < log_max_dbfs / 10; ++digit) {
 		float base_v = std::powf(10, digit);
 		for(int i = 1; i < 10; ++i) {
 			float y = top + power2vert(base_v * i);
-			g.DrawLine({ left, y }, { right - 1.f, y }, brush);
+			g.drawLine(left, y, right - 1.f, y);
 		}
 	}
-	brush->SetColor({ 0.25f, 0.75f, 0.125f, 1.f });
+	g.setColour(juce::Colour::fromFloatRGBA(0.25f, 0.75f, 0.125f, 1.f));
 	for(float digit = 1; digit < 5; ++digit) {
 		float base_freq = std::powf(10, digit);
 		float x = left + freq2horz(base_freq);
-		g.DrawLine({ x, top }, { x, bottom - 1.f }, brush);
+		g.drawLine(x, top, x, bottom - 1.f);
 	}
 	for(float digit = log_min_dbfs / 10; digit < log_max_dbfs / 10; ++digit) {
 		float base_v = std::powf(10, digit);
 		float y = top + power2vert(base_v);
-		g.DrawLine({ left, y }, { right - 1.f, y }, brush);
+		g.drawLine(left, y, right - 1.f, y);
 	}
 
 	// 信号描画
-	auto drawSignal = [&](const D2D1_COLOR_F& color, const std::vector<float>& drawingBuffer) {
-		brush->SetColor(color);
+	auto drawSignal = [&](const juce::Colour& color, const std::vector<float>& drawingBuffer) {
+		g.setColour(color);
 
 		// FFT実施
 		auto& real = mDrawingFftRealBuffer;
@@ -180,7 +169,7 @@ void SpectrumAnalyzer::paint(ID2D1RenderTarget& g, const float left, const float
 		lsp::dsp::fft::fft1d<float>(real.data(), image.data(), static_cast<int>(real.size()), 0, false);
 
 		// 各点の位置を求める
-		auto getPoint = [&](size_t pos) -> D2D1_POINT_2F {
+		auto getPoint = [&](size_t pos) -> juce::Point<float> {
 			float x = left + freq2horz(pos * frequency_resolution / scale_rate);
 			float power = (real[pos] * real[pos] + image[pos] * image[pos]);
 			float y = top + power2vert(power);
@@ -193,16 +182,16 @@ void SpectrumAnalyzer::paint(ID2D1RenderTarget& g, const float left, const float
 			yPeak = std::min(yPeak, pt.y);
 			if(pt.x - prev.x >= horizontal_resolution) {
 				pt.y = yPeak;
-				g.DrawLine(prev, pt, brush);
+				g.drawLine(prev.x, prev.y, pt.x, pt.y);
 				yPeak = bottom;
 				prev = pt;
 			}
 		}
 	};
-	drawSignal({ 1.f, 0.f, 0.f, 0.5f }, mDrawingBuffer1ch);
-	drawSignal({ 0.f, 0.f, 1.f, 0.5f }, mDrawingBuffer2ch);
+	drawSignal(juce::Colour::fromFloatRGBA(1.f, 0.f, 0.f, 0.5f), mDrawingBuffer1ch);
+	drawSignal(juce::Colour::fromFloatRGBA(0.f, 0.f, 1.f, 0.5f), mDrawingBuffer2ch);
 
 	// 枠描画
-	brush->SetColor({ 0.f, 0.f, 0.f, 1.f });
-	g.DrawRectangle(rect, brush);
+	g.setColour(juce::Colour::fromFloatRGBA(0.f, 0.f, 0.f, 1.f));
+	g.drawRect(rect);
 }
