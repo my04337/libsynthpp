@@ -6,10 +6,11 @@ namespace luath::app::widget
 {
 
 class SpectrumAnalyzer
+	: public juce::Component
 {
 public:
 	SpectrumAnalyzer();
-	~SpectrumAnalyzer();
+	~SpectrumAnalyzer()override;
 
 	// 表示パラメータを指定します
 	void setParams(float sampleFreq, size_t bufferSize, uint32_t strechRate = 1);
@@ -19,7 +20,7 @@ public:
 
 
 	// スペクトラム解析結果を描画を描画します
-	void paint(juce::Graphics& g, float x, float y, float width, float height);
+	void paint(juce::Graphics& g)override;
 
 private:
 	float mSampleFreq; // [hz]

@@ -64,7 +64,7 @@ void SpectrumAnalyzer::write(const Signal<float>& sig)
 	mInputBuffer2ch.erase(mInputBuffer2ch.begin(), mInputBuffer2ch.begin() + signal_samples);
 }
 
-void SpectrumAnalyzer::paint(juce::Graphics& g, const float left, const float top, const float width, const float height)
+void SpectrumAnalyzer::paint(juce::Graphics& g)
 {
 	// 信号出力をブロックしないように描画用信号バッファへコピー
 	{
@@ -77,7 +77,7 @@ void SpectrumAnalyzer::paint(juce::Graphics& g, const float left, const float to
 	g.saveState();
 	auto fin_act_restore_state = finally([&] {g.restoreState(); });
 
-	const juce::Rectangle<float>  rect{ left, top, width, height };
+	const juce::Rectangle<float>  rect{ static_cast<float>(getX()), static_cast<float>(getY()), static_cast<float>(getWidth()), static_cast<float>(getHeight())};
 	juce::Path clipPath;
 	clipPath.addRectangle(rect);
 	g.reduceClipRegion(clipPath);
@@ -89,8 +89,12 @@ void SpectrumAnalyzer::paint(juce::Graphics& g, const float left, const float to
 	static const float log_max_dbfs = +60; // dbFS(power)
 	static const float horizontal_resolution = 0.5f; // px ※高周波部分の描画間引用
 
+	const float left = rect.getX();
+	const float top = rect.getY();
 	const float right = rect.getRight();
 	const float bottom = rect.getBottom();
+	const float width = rect.getWidth();
+	const float height = rect.getHeight();
 
 	const float mid_x = (left + right) / 2;
 	const float mid_y = (top + bottom) / 2;

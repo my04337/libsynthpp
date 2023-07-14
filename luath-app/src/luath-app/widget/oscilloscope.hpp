@@ -5,11 +5,12 @@
 namespace luath::app::widget
 {
 
-class OscilloScope
+class OscilloScope final
+	: public juce::Component
 {
 public:
 	OscilloScope();
-	~OscilloScope();
+	~OscilloScope()override;
 
 	// 表示パラメータを指定します
 	void setParams(float sampleFreq, float span);
@@ -18,7 +19,7 @@ public:
 	void write(const lsp::Signal<float>& sig);
 
 	// オシロスコープを描画します
-	void paint(juce::Graphics& g, float x, float y, float width, float height);
+	void paint(juce::Graphics& g)override;
 	
 private:
 	float mSampleFreq;	// [Hz]

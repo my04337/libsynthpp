@@ -93,7 +93,6 @@ MainContent::MainContent(const lsp::synth::LuathSynth& synth, const juce::AudioD
 	: mSynth(synth)
 	, mAudioDeviceManager(audioDeviceManager)
 {
-
 	// デフォルトフォントのロード
 	auto createTypefaceFromFile = [](const std::filesystem::path& path) {
 		std::ifstream ifs(path, std::ios_base::in | std::ios_base::binary);
@@ -111,6 +110,33 @@ MainContent::MainContent(const lsp::synth::LuathSynth& synth, const juce::AudioD
 	// OpenGL関連初期化
 	// MEMO デフォルトではソフトウェアレンダリングとなるが、これがとても遅く実用に耐えないためOpenGLを利用している
 	openGLContext.setComponentPaintingEnabled(true);
+
+	// 子コンポーネントのセットアップ
+	const int margin = 5; // unsecaledx
+	mLissajousWidget.setBounds(
+		10 + margin,
+		340 + margin,
+		150 - margin * 2, 
+		150 - margin * 2
+		);
+	addAndMakeVisible(mLissajousWidget);
+
+	mOscilloScopeWidget.setBounds(
+		160 + margin,
+		340 + margin,
+		300 - margin * 2,
+		150 - margin * 2
+	);
+	addAndMakeVisible(mOscilloScopeWidget);
+
+	mSpectrumAnalyzerWidget.setBounds(
+		10 + margin,
+		490 + margin,
+		450 - margin * 2,
+		150 - margin * 2
+	);
+	addAndMakeVisible(mSpectrumAnalyzerWidget);
+
 
 	// その他ウィンドウ設定
 	setSize(SCREEN_WIDTH, SCREEN_HEIGHT);
@@ -336,31 +362,10 @@ void MainContent::paint(juce::Graphics& g)
 			drawSmallText(col(), y, state2text(vd.state));
 		}
 	}
-	// 波形情報
-	{
-		const float margin = 5; // unsecaledx
-		mLissajousWidget.paint(
-			g,
-			10 + margin,
-			340 + margin,
-			150 - margin * 2,
-			150 - margin * 2
-		);
-		mOscilloScopeWidget.paint(
-			g,
-			160 + margin,
-			340 + margin,
-			300 - margin * 2,
-			150 - margin * 2
-		);
-		mSpectrumAnalyzerWidget.paint(
-			g,
-			10 + margin,
-			490 + margin,
-			450 - margin * 2,
-			150 - margin * 2
-		);
-	}
+	// 子ウィジット描画
+	mLissajousWidget.paint(g);
+	mOscilloScopeWidget.paint(g);
+	mSpectrumAnalyzerWidget.paint(g);
 
 
 	// 描画終了

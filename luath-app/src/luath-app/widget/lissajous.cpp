@@ -46,7 +46,7 @@ void Lissajous::write(const Signal<float>& sig)
 	mInputBuffer.erase(mInputBuffer.begin(), mInputBuffer.begin() + signal_samples);
 }
 
-void Lissajous::paint(juce::Graphics& g, const float left, const float top, const float width, const float height)
+void Lissajous::paint(juce::Graphics& g)
 {
 	// 信号出力をブロックしないように描画用信号バッファへコピー
 	{
@@ -58,14 +58,18 @@ void Lissajous::paint(juce::Graphics& g, const float left, const float top, cons
 	g.saveState();
 	auto fin_act_restore_state = finally([&] {g.restoreState(); });
 
-	const juce::Rectangle<float>  rect{ left, top, width, height };
+	const juce::Rectangle<float>  rect{ static_cast<float>(getX()), static_cast<float>(getY()), static_cast<float>(getWidth()), static_cast<float>(getHeight())};
 	juce::Path clipPath;
 	clipPath.addRectangle(rect);
 	g.reduceClipRegion(clipPath);
 
 	// よく使う値を先に計算
+	const float left = rect.getX();
+	const float top = rect.getY();
 	const float right = rect.getRight();
 	const float bottom = rect.getBottom();
+	const float width = rect.getWidth();
+	const float height = rect.getHeight();
 
 	const float mid_x = (left + right) / 2;
 	const float mid_y = (top + bottom) / 2;
