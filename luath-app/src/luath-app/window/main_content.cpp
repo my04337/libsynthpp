@@ -353,7 +353,7 @@ void MainContent::paint(juce::Graphics& g)
 			float y = ofsY + height * ((i % voicePerRow) + 1);
 			ci = 0;
 
-			g.setColour(getMidiChannelColor(vd.ch).withMultipliedAlpha(0.5f));
+			g.setColour(getMidiChannelColor(vd.ch).withMultipliedAlpha(std::clamp(vd.envelope * 0.4f + 0.1f, 0.f, 1.f)));
 			g.fillRect(x, y, width, height);
 
 			drawSmallText(col(), y, std::format(L"{:02}", vd.ch));
