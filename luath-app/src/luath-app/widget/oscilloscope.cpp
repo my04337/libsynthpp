@@ -1,7 +1,6 @@
 ﻿#include <luath-app/widget/oscilloscope.hpp>
 
-using namespace luath;
-using namespace luath::widget;
+using namespace luath::app::widget;
 
 OscilloScope::OscilloScope()
 {
@@ -48,7 +47,7 @@ void OscilloScope::write(const Signal<float>& sig)
 	mInputBuffer2ch.erase(mInputBuffer2ch.begin(), mInputBuffer2ch.begin() + signal_samples);
 }
 
-void OscilloScope::draw(ID2D1RenderTarget& renderer, const float left, const float top, const float width, const float height)
+void OscilloScope::paint(juce::Graphics& g)
 {
 	// 信号出力をブロックしないように描画用信号バッファへコピー
 	{
@@ -58,63 +57,70 @@ void OscilloScope::draw(ID2D1RenderTarget& renderer, const float left, const flo
 	}
 
 	// 描画開始
-	CComPtr<ID2D1Factory> factory;
-	renderer.GetFactory(&factory);
-	check(factory != nullptr);
+	g.saveState();
+	auto fin_act_restore_state = finally([&] {g.restoreState(); });
 
-	CComPtr<ID2D1SolidColorBrush> brush;
-	renderer.CreateSolidColorBrush({ 0.f, 0.f, 0.f, 1.f }, &brush);
+	const juce::Rectangle<float>  rect{ static_cast<float>(getX()), static_cast<float>(getY()), static_cast<float>(getWidth()), static_cast<float>(getHeight())};
+	if(rect.isEmpty())return;
 
-	// ステータス & クリッピング
-	CComPtr<ID2D1DrawingStateBlock> drawingState;
-	check(SUCCEEDED(factory->CreateDrawingStateBlock(&drawingState)));
-	renderer.SaveDrawingState(drawingState);
-
-	const D2D1_RECT_F  rect{ left, top, left + width, top + height };
-	renderer.PushAxisAlignedClip(rect, D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
-	auto fin_act= finally([&renderer, &drawingState] {
-		renderer.PopAxisAlignedClip(); 
-		renderer.RestoreDrawingState(drawingState);
-	});
+	juce::Path clipPath;
+	clipPath.addRectangle(rect);
+	g.reduceClipRegion(clipPath);
 
 	// よく使う値を先に計算
-	const float right  = rect.right;
-	const float bottom = rect.bottom;
+	const float left = rect.getX();
+	const float top = rect.getY();
+	const float right = rect.getRight();
+	const float bottom = rect.getBottom();
+	const float width = rect.getWidth();
+	const float height = rect.getHeight();
 
 	const float mid_x = (left + right) / 2;
 	const float mid_y = (top + bottom) / 2;
 
 	const size_t buffer_size = mBufferSize;
-	const float sample_pitch = width / buffer_size;
+	const float speed_ratio = buffer_size / width;
+
+	auto& interpolated = mInterpolatedSignalBuffer;
+	const size_t interpolated_size = static_cast<size_t>(std::ceil(width));
+	interpolated.resize(interpolated_size);
+
 
 	// 罫線描画
-	brush->SetColor({0.5f, 1.f, 0.125f, 1.f});
+	g.setColour(juce::Colour::fromFloatRGBA(0.5f, 1.f, 0.125f, 1.f));
 	for (int i = 1; i <= 9; ++i) {
 		float x = left + width  * 0.1f * i;
 		float y = top  + height * 0.1f * i;
-		renderer.DrawLine({ left, y }, { right, y }, brush);
-		renderer.DrawLine({ x, top }, { x, bottom }, brush);
+		g.drawLine(left, y, right, y);
+		g.drawLine(x, top, x, bottom);
 	}
 
 	// 信号描画
-	auto drawSignal = [&](const D2D1_COLOR_F& color, const std::vector<float>& buffer) {
-		brush->SetColor(color);
-		auto getPoint = [&](size_t pos) -> D2D1_POINT_2F {
-			return { left + pos * sample_pitch , mid_y - height / 2.0f * normalize(buffer[pos]) };
-		};
-		auto prev = getPoint(0);
-		for(size_t i = 1; i < buffer_size; ++i) {
-			auto pt = getPoint(i);
-			if(prev.x != pt.x || prev.y != pt.y) {
-				renderer.DrawLine(prev, pt, brush);
-			}
-			prev = pt;
+	auto drawSignal = [&](const juce::Colour& color, const std::vector<float>& buffer) {
+		// そのまま全サンプルを描画すると重いため、描画画素数に応じた値まで間引く
+		juce::LinearInterpolator().process(
+			speed_ratio,
+			buffer.data(),
+			interpolated.data(),
+			static_cast<int>(interpolated_size),
+			static_cast<int>(buffer_size),
+			0
+		);
+
+		// 複数回のdrawLine呼び出しは重いため、Pathとして一括で描画する
+		auto getY = [&](float v) {return mid_y - height / 2.0f * normalize(v); };		
+		juce::Path path;		
+		path.startNewSubPath(left, getY(interpolated[0]));
+		for(size_t i = 1; i < interpolated_size; ++i) {
+			path.lineTo(left + static_cast<float>(i), getY(interpolated[i]));
 		}
+		g.setColour(color);
+		g.strokePath(path, juce::PathStrokeType(1));
 	};
-	drawSignal({ 1.f, 0.f, 0.f, 0.5f }, mDrawingBuffer1ch);
-	drawSignal({ 0.f, 0.f, 1.f, 0.5f }, mDrawingBuffer2ch);
+	drawSignal(juce::Colour::fromFloatRGBA(1.f, 0.f, 0.f, 0.5f), mDrawingBuffer1ch);
+	drawSignal(juce::Colour::fromFloatRGBA(0.f, 0.f, 1.f, 0.5f), mDrawingBuffer2ch);
 
 	// 枠描画
-	brush->SetColor({ 0.f, 0.f, 0.f, 1.f });
-	renderer.DrawRectangle(rect, brush);
+	g.setColour(juce::Colour::fromFloatRGBA(0.f, 0.f, 0.f, 1.f ));
+	g.drawRect(rect);
 }

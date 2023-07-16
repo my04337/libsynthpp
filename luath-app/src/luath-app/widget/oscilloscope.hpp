@@ -2,10 +2,11 @@
 
 #include <luath-app/core/core.hpp>
 
-namespace luath::widget
+namespace luath::app::widget
 {
 
 class OscilloScope
+	: public juce::Component
 {
 public:
 	OscilloScope();
@@ -18,7 +19,7 @@ public:
 	void write(const lsp::Signal<float>& sig);
 
 	// オシロスコープを描画します
-	void draw(ID2D1RenderTarget& renderer, float x, float y, float width, float height);
+	void paint(juce::Graphics& g);
 	
 private:
 	float mSampleFreq;	// [Hz]
@@ -30,6 +31,7 @@ private:
 	std::deque<float> mInputBuffer2ch; // リングバッファ
 	std::vector<float> mDrawingBuffer1ch; // 描画用バッファ。排他不要。
 	std::vector<float> mDrawingBuffer2ch; // 描画用バッファ。排他不要。
+	std::vector<float> mInterpolatedSignalBuffer; // 描画用バッファ。排他不要。
 };
 
 

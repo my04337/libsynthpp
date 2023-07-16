@@ -6,12 +6,12 @@ set(THIRD_PARTY_DIR  "${CMAKE_CURRENT_LIST_DIR}/third_party")
 ###########################################################
 ### JUCE 
 # 
-# 注意 : ISC Licenseで提供されるモジュールのみ利用可能
-#      * juce_core
-#      * juce_audio_basics
-#      * juce_audio_devices
-#      * juce_events
-#        
+# 注意 : libsynth++では ISC Licenseで提供されるモジュールのみ利用可能。
+#          * juce_core
+#          * juce_audio_basics
+#          * juce_audio_devices
+#          * juce_events
+#        上記以外のライブラリは GPLv3 または商用ライセンスであることに注意。
 
 set(JUCE_MODULES_ONLY YES)
 set(JUCE_BUILD_EXTRAS NO)
@@ -60,20 +60,24 @@ else()
     )
 endif()
 
-#[[
-FetchContent_Populate(
-    juce
-    GIT_REPOSITORY  https://github.com/juce-framework/JUCE
-    GIT_TAG         69795dc8e589a9eb5df251b6dd994859bf7b3fab # 7.0.5
-    SOURCE_DIR      ${THIRD_PARTY_DIR}/JUCE
-)
-]]
 include("${JUCE_SOURCE_DIR}/extras/Build/CMake/JUCEModuleSupport.cmake")
 
+
+# ISC License
 juce_add_modules(
     ALIAS_NAMESPACE juce
     "${JUCE_MODULES_DIR}/juce_core"
     "${JUCE_MODULES_DIR}/juce_audio_basics"
     "${JUCE_MODULES_DIR}/juce_audio_devices"
     "${JUCE_MODULES_DIR}/juce_events"
+)
+
+# GPL License or Commercial
+juce_add_modules(
+    ALIAS_NAMESPACE juce
+    "${JUCE_MODULES_DIR}/juce_data_structures"
+    "${JUCE_MODULES_DIR}/juce_graphics"
+    "${JUCE_MODULES_DIR}/juce_gui_basics"
+    "${JUCE_MODULES_DIR}/juce_gui_extra"
+    "${JUCE_MODULES_DIR}/juce_opengl"
 )

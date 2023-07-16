@@ -1,24 +1,12 @@
-﻿#include <luath-app/app/application.hpp>
+﻿/**
+	luath-app
 
-using namespace lsp;
-using namespace luath;
+	Copyright(c) 2023 my04337
 
-int WINAPI WinMain(
-	HINSTANCE /* hInstance */,
-	HINSTANCE /* hPrevInstance */,
-	LPSTR /* lpCmdLine */,
-	int /* nCmdShow */
-)
-{
-	// ログ出力機構 セットアップ
-	OutputDebugStringLogger logger;
-	Log::addLogger(&logger);
-	auto fin_act_logger = finally([&] { lsp::Log::removeLogger(&logger); });
-	Log::setLogLevel(lsp::LogLevel::Debug);
+	This software is released under the GPLv3 License.
+	https://opensource.org/license/gpl-3-0/
+*/
 
-	// アプリケーション初期化
-	Application app(__argc, __argv);
+#include <luath-app/app/application.hpp>
 
-	// アプリケーション起動
-	return app.exec();
-}
+START_JUCE_APPLICATION(luath::app::Application)

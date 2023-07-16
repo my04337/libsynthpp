@@ -2,14 +2,15 @@
 
 #include <luath-app/core/core.hpp>
 
-namespace luath::widget
+namespace luath::app::widget
 {
 
 class SpectrumAnalyzer
+	: public juce::Component
 {
 public:
 	SpectrumAnalyzer();
-	~SpectrumAnalyzer();
+	~SpectrumAnalyzer()override;
 
 	// 表示パラメータを指定します
 	void setParams(float sampleFreq, size_t bufferSize, uint32_t strechRate = 1);
@@ -19,7 +20,7 @@ public:
 
 
 	// スペクトラム解析結果を描画を描画します
-	void draw(ID2D1RenderTarget& renderer, float x, float y, float width, float height);
+	void paint(juce::Graphics& g)override;
 
 private:
 	float mSampleFreq; // [hz]
