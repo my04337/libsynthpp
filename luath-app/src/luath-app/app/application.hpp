@@ -28,6 +28,9 @@ public:
 	juce::Typeface::Ptr getDefaultTypeface()const noexcept;
 
 private:
+	static juce::Typeface::Ptr createTypefaceFromCompressedBinary(const void* compressedData, size_t compressedSize, juce::GZIPDecompressorInputStream::Format format);
+
+private:
 	std::list<std::unique_ptr<ILogger>> mLoggers;
 	std::unique_ptr<juce::DocumentWindow> mMainWindow;
 	juce::Typeface::Ptr mDefaultTypeface;

@@ -33,7 +33,11 @@ void Application::initialise(const juce::String& commandLineParameters)
 	Log::setLogLevel(lsp::LogLevel::Debug);
 
 	// デフォルトフォントのロード
-	mDefaultTypeface = juce::Typeface::createSystemTypefaceFor(detail::ume_tgo4_ttf_bin.data(), detail::ume_tgo4_ttf_bin.size());
+	mDefaultTypeface = createTypefaceFromCompressedBinary(
+		detail::ume_tgo4_ttf_gz_bin.data(),
+		detail::ume_tgo4_ttf_gz_bin.size(),
+		juce::GZIPDecompressorInputStream::Format::gzipFormat
+	);
 
 	// メインウィンドウ表示
 	mMainWindow = std::make_unique<MainWindow>();
@@ -68,4 +72,14 @@ const juce::String Application::getApplicationVersion()
 juce::Typeface::Ptr Application::getDefaultTypeface()const noexcept
 {
 	return mDefaultTypeface;
+}
+juce::Typeface::Ptr Application::createTypefaceFromCompressedBinary(const void* compressedData, size_t compressedSize, juce::GZIPDecompressorInputStream::Format format)
+{
+	juce::MemoryInputStream mis(compressedData, compressedSize, /*keepInternalCopyOfData*/false);
+	juce::GZIPDecompressorInputStream gzis(&mis, false, format);
+	
+	juce::MemoryBlock decompressed;
+	size_t read = gzis.readIntoMemoryBlock(decompressed);
+
+	return juce::Typeface::createSystemTypefaceFor(decompressed.getData(), decompressed.getSize());
 }

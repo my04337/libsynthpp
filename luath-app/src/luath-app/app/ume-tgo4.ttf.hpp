@@ -75,5 +75,5 @@ THESE FONTS ARE PROVIDED "AS IS" WITHOUT WARRANTY.
 
 namespace luath::app::detail 
 {
-    extern std::array<std::uint8_t, 4'150'100> ume_tgo4_ttf_bin;
+    extern std::array<std::uint8_t, 2'091'155> ume_tgo4_ttf_gz_bin;
 }
