@@ -8,8 +8,8 @@
 */
 
 #include <luath-app/window/main_content.hpp>
+#include <luath-app/app/application.hpp>
 #include <lsp/synth/synth.hpp>
-#include <fstream>
 
 using namespace std::string_literals;
 using namespace luath::app;
@@ -93,18 +93,12 @@ MainContent::MainContent(const lsp::synth::LuathSynth& synth, const juce::AudioD
 	: mSynth(synth)
 	, mAudioDeviceManager(audioDeviceManager)
 {
-	// デフォルトフォントのロード
-	auto createTypefaceFromFile = [](const std::filesystem::path& path) {
-		std::ifstream ifs(path, std::ios_base::in | std::ios_base::binary);
-		std::vector<char> fontData((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
-		ifs.close();
+	auto app = dynamic_cast<luath::app::Application*>(juce::JUCEApplication::getInstance());
+	check(app != nullptr);
 
-		return juce::Typeface::createSystemTypefaceFor(fontData.data(), fontData.size());
-	};
-	mDefaultTypeface = createTypefaceFromFile(std::filesystem::current_path().append(L"assets/font/ume-tgo4.ttf"s));
-	mDefaultFont = juce::Font(mDefaultTypeface);
+	mDefaultFont = juce::Font(app->getDefaultTypeface());
 	mDefaultFont.setHeight(12);
-	mSmallFont = juce::Font(mDefaultTypeface);
+	mSmallFont = juce::Font(app->getDefaultTypeface());
 	mSmallFont.setHeight(10);
 
 	// OpenGL関連初期化

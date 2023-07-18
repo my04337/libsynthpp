@@ -9,7 +9,10 @@
 
 
 #include <luath-app/app/application.hpp>
+#include <luath-app/app/ume-tgo4.ttf.hpp>
 #include <luath-app/window/main_window.hpp>
+
+#include <fstream>
 
 using namespace luath::app;
 
@@ -28,6 +31,9 @@ void Application::initialise(const juce::String& commandLineParameters)
 	mLoggers.emplace_back(std::move(logger));
 
 	Log::setLogLevel(lsp::LogLevel::Debug);
+
+	// デフォルトフォントのロード
+	mDefaultTypeface = juce::Typeface::createSystemTypefaceFor(detail::ume_tgo4_ttf_bin.data(), detail::ume_tgo4_ttf_bin.size());
 
 	// メインウィンドウ表示
 	mMainWindow = std::make_unique<MainWindow>();
@@ -58,4 +64,8 @@ const juce::String Application::getApplicationName()
 const juce::String Application::getApplicationVersion()
 {
 	return L"";
+}
+juce::Typeface::Ptr Application::getDefaultTypeface()const noexcept
+{
+	return mDefaultTypeface;
 }

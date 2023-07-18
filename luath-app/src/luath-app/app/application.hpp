@@ -25,9 +25,12 @@ public:
 	const juce::String getApplicationName()override;
 	const juce::String getApplicationVersion()override;
 
+	juce::Typeface::Ptr getDefaultTypeface()const noexcept;
+
 private:
 	std::list<std::unique_ptr<ILogger>> mLoggers;
 	std::unique_ptr<juce::DocumentWindow> mMainWindow;
+	juce::Typeface::Ptr mDefaultTypeface;
 };
 
 }

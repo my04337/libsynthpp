@@ -1,16 +1,14 @@
 ﻿cmake_minimum_required(VERSION 3.24)
 
 file(GLOB_RECURSE srcs 
-	src/*.h
 	src/*.hpp
-	src/*.c
 	src/*.cpp
 	)
 	
 add_executable(
 	luath-app WIN32 
 	${srcs}
-	)
+)
 target_sources(
 	luath-app 
 	PRIVATE src/luath-app/luath-app.exe.manifest
@@ -68,11 +66,7 @@ get_property(LUATH_APP_SOURCEY_DIR TARGET luath-app PROPERTY SOURCE_DIR )
 
 add_custom_command(TARGET luath-app POST_BUILD
 	COMMAND ${CMAKE_COMMAND} -E make_directory ${LUATH_APP_BINARY_DIR}/assets
-	COMMAND ${CMAKE_COMMAND} -E make_directory ${LUATH_APP_BINARY_DIR}/assets/font
 	COMMAND ${CMAKE_COMMAND} -E make_directory ${LUATH_APP_BINARY_DIR}/assets/sample_midi
-
-	COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_LIST_DIR}/../third_party/UmeFont/ume-tgo4.ttf ${LUATH_APP_BINARY_DIR}/assets/font
-	COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_LIST_DIR}/../third_party/UmeFont/license.html ${LUATH_APP_BINARY_DIR}/assets/font
 
 	COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_LIST_DIR}/assets ${LUATH_APP_BINARY_DIR}/assets
 )

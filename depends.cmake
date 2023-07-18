@@ -1,7 +1,8 @@
 ﻿cmake_minimum_required(VERSION 3.26)
 
 
-set(THIRD_PARTY_DIR  "${CMAKE_CURRENT_LIST_DIR}/third_party")
+set(THIRD_PARTY_SOURCE_DIR  "${CMAKE_CURRENT_LIST_DIR}/third_party")
+set(THIRD_PARTY_BINARY_DIR  "${CMAKE_CURRENT_BINARY_DIR}/third_party")
 
 ###########################################################
 ### JUCE 
@@ -17,7 +18,7 @@ set(JUCE_MODULES_ONLY YES)
 set(JUCE_BUILD_EXTRAS NO)
 set(JUCE_BUILD_EXAMPLES NO)
 
-set(JUCE_SOURCE_DIR  "${THIRD_PARTY_DIR}/JUCE")
+set(JUCE_SOURCE_DIR  "${THIRD_PARTY_SOURCE_DIR}/JUCE")
 set(JUCE_MODULES_DIR "${JUCE_SOURCE_DIR}/modules")
 set(JUCE_GIT_REPOSITORY https://github.com/juce-framework/JUCE)
 set(JUCE_GIT_TAG        "7.0.5")
@@ -81,3 +82,15 @@ juce_add_modules(
     "${JUCE_MODULES_DIR}/juce_gui_extra"
     "${JUCE_MODULES_DIR}/juce_opengl"
 )
+
+###########################################################
+### UmeFont 
+
+# 下記を有効にして.cppファイルに埋め込むための文字列表現を生成します
+if(0)
+    file(READ "${THIRD_PARTY_SOURCE_DIR}/UmeFont/ume-tgo4.ttf" UME_FONT_HEX HEX)
+    string(REGEX REPLACE "(................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................)" "\\1\n" UME_FONT_HEX ${UME_FONT_HEX})
+    string(REGEX REPLACE "([0-9a-f][0-9a-f])" "0x\\1, " UME_FONT_HEX ${UME_FONT_HEX})
+    message(STATUS ${UME_FONT_HEX})
+endif()
+ 

@@ -39,7 +39,6 @@ private:
 	const juce::AudioDeviceManager& mAudioDeviceManager;
 
 	// 描画関連
-	juce::Typeface::Ptr mDefaultTypeface;
 	juce::Font mDefaultFont;
 	juce::Font mSmallFont;
 
