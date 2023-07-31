@@ -15,12 +15,12 @@
 namespace luath::plugin
 {
 
-class LuathSynthPlugin final
+class LuathSynthProcessor final
 	: public juce::AudioProcessor
 {
 public:
-    LuathSynthPlugin();
-	~LuathSynthPlugin()override;
+    LuathSynthProcessor();
+	~LuathSynthProcessor()override;
 
     synth::LuathSynth& synth()noexcept;
 

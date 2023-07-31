@@ -11,7 +11,7 @@
 
 #include <lsp/core/core.hpp>
 #include <luath-plugin/core/core.hpp>
-#include <luath-plugin/plugin/plugin.hpp>
+#include <luath-plugin/plugin/processor.hpp>
 
 #ifdef small
 #undef small // Win32API : rpcndr.h が small というマクロを定義する大迷惑なことをしたことでビルドエラーが起きる事への対処

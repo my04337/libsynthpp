@@ -7,93 +7,94 @@
 	https://opensource.org/license/gpl-3-0/
 */
 
-#include <luath-plugin/plugin/plugin.hpp>
+#include <luath-plugin/plugin/processor.hpp>
+#include <luath-plugin/plugin/editor.hpp>
 
 using namespace luath::plugin;
 
-LuathSynthPlugin::LuathSynthPlugin()
+LuathSynthProcessor::LuathSynthProcessor()
 	: AudioProcessor(BusesProperties()
 		.withOutput("Output", juce::AudioChannelSet::stereo(), true)
 	)
 {
 }
 
-LuathSynthPlugin::~LuathSynthPlugin() = default;
+LuathSynthProcessor::~LuathSynthProcessor() = default;
 
-synth::LuathSynth& LuathSynthPlugin::synth()noexcept
+synth::LuathSynth& LuathSynthProcessor::synth()noexcept
 {
     return mSynth;
 }
 
 //==============================================================================
 
-const juce::String LuathSynthPlugin::getName() const
+const juce::String LuathSynthProcessor::getName() const
 {
     static const juce::String name {L"luath"};
     return name;
 }
 
-bool LuathSynthPlugin::acceptsMidi() const
+bool LuathSynthProcessor::acceptsMidi() const
 {
     // MIDIメッセージ : 要求する
     return true;
 }
 
-bool LuathSynthPlugin::producesMidi() const
+bool LuathSynthProcessor::producesMidi() const
 {
     // MIDIメッセージ : 生成しない
     return false;
 }
 
-bool LuathSynthPlugin::isMidiEffect() const
+bool LuathSynthProcessor::isMidiEffect() const
 {
     // MIDIエフェクトプラグインではない
     return false;
 }
 
-double LuathSynthPlugin::getTailLengthSeconds() const
+double LuathSynthProcessor::getTailLengthSeconds() const
 {
     return 0.0; 
 }
 
-int LuathSynthPlugin::getNumPrograms()
+int LuathSynthProcessor::getNumPrograms()
 {
     return 1;  // dummy
 }
 
-int LuathSynthPlugin::getCurrentProgram()
+int LuathSynthProcessor::getCurrentProgram()
 {
     return 0; // dummy
 }
 
-void LuathSynthPlugin::setCurrentProgram(int index)
+void LuathSynthProcessor::setCurrentProgram(int index)
 {
     // nop
 }
 
-const juce::String LuathSynthPlugin::getProgramName(int index)
+const juce::String LuathSynthProcessor::getProgramName(int index)
 {
     return {}; // dummy
 }
 
-void LuathSynthPlugin::changeProgramName(int index, const juce::String& newName)
+void LuathSynthProcessor::changeProgramName(int index, const juce::String& newName)
 {
     // nop
 }
 
 //==============================================================================
 
-void LuathSynthPlugin::prepareToPlay(double sampleRate, int samplesPerBlock)
+void LuathSynthProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
     mSynth.setCurrentPlaybackSampleRate(sampleRate);
 }
 
-void LuathSynthPlugin::releaseResources()
+void LuathSynthProcessor::releaseResources()
 {
     // nop
 }
 
-bool LuathSynthPlugin::isBusesLayoutSupported(const BusesLayout& layouts) const
+bool LuathSynthProcessor::isBusesLayoutSupported(const BusesLayout& layouts) const
 {
     if(layouts.getMainOutputChannelSet() != juce::AudioChannelSet::stereo()) {
         return false;
@@ -101,32 +102,32 @@ bool LuathSynthPlugin::isBusesLayoutSupported(const BusesLayout& layouts) const
     return true;
 }
 
-void LuathSynthPlugin::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
+void LuathSynthProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
     mSynth.renderNextBlock(buffer, midiMessages, 0, buffer.getNumSamples());
 }
 
 //==============================================================================
 
-bool LuathSynthPlugin::hasEditor() const
+bool LuathSynthProcessor::hasEditor() const
 {
-    return false; 
+    return true; 
 }
 
-juce::AudioProcessorEditor* LuathSynthPlugin::createEditor()
+juce::AudioProcessorEditor* LuathSynthProcessor::createEditor()
 {
-    return nullptr;
+    return new LuathSynthProcessorEditor(*this);
 }
 
 //==============================================================================
-void LuathSynthPlugin::getStateInformation(juce::MemoryBlock& destData)
+void LuathSynthProcessor::getStateInformation(juce::MemoryBlock& destData)
 {
     // You should use this method to store your parameters in the memory block.
     // You could do that either as raw data, or use the XML or ValueTree classes
     // as intermediaries to make it easy to save and load complex data.
 }
 
-void LuathSynthPlugin::setStateInformation(const void* data, int sizeInBytes)
+void LuathSynthProcessor::setStateInformation(const void* data, int sizeInBytes)
 {
     // You should use this method to restore your parameters from this memory block,
     // whose contents will have been created by the getStateInformation() call.

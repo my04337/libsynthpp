@@ -28,5 +28,8 @@ namespace luath::plugin
 	// 利便性のため、lsp名前空間をusing指定する
 	using namespace lsp;
 
+	// 前方宣言
+	class LuathSynthProcessor;
+	class LuathSynthProcessorEditor;
 
 }

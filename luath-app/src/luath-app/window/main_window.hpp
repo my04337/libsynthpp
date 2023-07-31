@@ -72,7 +72,7 @@ private:
 	std::atomic<float> mPostAmpVolume = 1.0f;
 
 	// シーケンサ,シンセサイザ
-	plugin::LuathSynthPlugin mSynth;
+	plugin::LuathSynthProcessor mSynth;
 	midi::Sequencer mSequencer;
 	
 	// コンポーネント
