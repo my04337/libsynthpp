@@ -6,7 +6,7 @@ file(GLOB_RECURSE srcs
 	)
 
 add_library(
-	libsynth++ STATIC 
+	libsynth++ OBJECT 
 	${srcs}
 )
 

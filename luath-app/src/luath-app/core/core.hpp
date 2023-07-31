@@ -10,7 +10,8 @@
 #pragma once
 
 #include <lsp/core/core.hpp>
-#include <juce_gui_basics/juce_gui_basics.h>
+#include <luath-plugin/core/core.hpp>
+#include <luath-plugin/plugin/plugin.hpp>
 
 #ifdef small
 #undef small // Win32API : rpcndr.h が small というマクロを定義する大迷惑なことをしたことでビルドエラーが起きる事への対処

@@ -37,7 +37,7 @@ public:
 private:
 	const lsp::synth::LuathSynth& mSynth;
 	const juce::AudioDeviceManager& mAudioDeviceManager;
-
+	
 	// 描画関連
 	juce::Font mDefaultFont;
 	juce::Font mSmallFont;

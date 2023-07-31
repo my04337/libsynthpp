@@ -23,12 +23,11 @@ MainWindow::MainWindow()
 		juce::DocumentWindow::TitleBarButtons::minimiseButton | juce::DocumentWindow::TitleBarButtons::closeButton
 	)
 	, mSequencer(*this)
-	, mSynthesizer()
 {
 	using namespace std::string_literals;
 
 	// ウィンドウ周りセットアップ
-	mMainContent = std::make_unique<MainContent>(mSynthesizer, mAudioDeviceManager);
+	mMainContent = std::make_unique<MainContent>(mSynth.synth(), mAudioDeviceManager);
 	setUsingNativeTitleBar(true);
 	setContentOwned(mMainContent.get(), true);
 	centreWithSize(getWidth(), getHeight());
@@ -60,7 +59,7 @@ MainWindow::~MainWindow()
 	mSequencer.stop();
 
 	// トーンジェネレータ停止
-	mSynthesizer.dispose();
+	mSynth.synth().dispose();
 }
 
 void MainWindow::closeButtonPressed()
@@ -139,7 +138,7 @@ void MainWindow::audioDeviceIOCallbackWithContext(
 	// シンセサイザ発音
 	{
 		juce::ScopedLock sl(mMidiBufferLock);
-		mSynthesizer.renderNextBlock(sig.data(), mMidiBuffer, 0, numSamples);
+		mSynth.processBlock(sig.data(), mMidiBuffer);
 		mMidiBuffer.clear();
 	}
 
@@ -163,13 +162,12 @@ void MainWindow::audioDeviceAboutToStart(juce::AudioIODevice* device)
 	mMainContent->audioDeviceAboutToStart(device);
 
 	if(device) {
-		auto sampleFreq = static_cast<float>(device->getCurrentSampleRate());
-		mSynthesizer.setCurrentPlaybackSampleRate(device->getCurrentSampleRate());
+		mSynth.prepareToPlay(device->getCurrentSampleRate(), device->getCurrentBufferSizeSamples());
 	}
 }
 void MainWindow::audioDeviceStopped()
 {
-	// nop
+	mSynth.releaseResources();
 }
 void MainWindow::audioDeviceError(const juce::String& errorMessage)
 {
