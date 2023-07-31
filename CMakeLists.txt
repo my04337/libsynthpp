@@ -28,4 +28,5 @@ include(depends.cmake)
 # ---
 
 add_subdirectory(libsynthpp)
+add_subdirectory(luath-plugin)
 add_subdirectory(luath-app)

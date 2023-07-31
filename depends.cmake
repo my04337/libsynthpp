@@ -81,6 +81,8 @@ juce_add_modules(
     "${JUCE_MODULES_DIR}/juce_gui_basics"
     "${JUCE_MODULES_DIR}/juce_gui_extra"
     "${JUCE_MODULES_DIR}/juce_opengl"
+    "${JUCE_MODULES_DIR}/juce_audio_processors"
+    "${JUCE_MODULES_DIR}/juce_audio_plugin_client"
 )
 
 ###########################################################

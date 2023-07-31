@@ -28,6 +28,7 @@ target_link_libraries(
 	luath-app 
 	PRIVATE 
 		libsynth++
+		luath-plugin
 )
 
 # link JUCE modules
@@ -47,6 +48,8 @@ list(
 	juce_gui_basics
 	juce_gui_extra
 	juce_opengl
+	juce_audio_processors
+	juce_audio_plugin_client
 )
 
 # JUCEのライブラリをそのままtarget_link_libraryすると、不要なwarningが表示されるので
