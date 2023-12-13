@@ -56,71 +56,94 @@ void OscilloScope::paint(juce::Graphics& g)
 		std::copy(mInputBuffer2ch.begin(), mInputBuffer2ch.end(), mDrawingBuffer2ch.begin());
 	}
 
-	// 描画開始
-	g.saveState();
-	auto fin_act_restore_state = finally([&] {g.restoreState(); });
+	// 描画サイズが0ならなにも描画しない
+	if(getWidth() <= 0 || getHeight() <= 0) return;
 
-	const juce::Rectangle<float>  rect{ static_cast<float>(getX()), static_cast<float>(getY()), static_cast<float>(getWidth()), static_cast<float>(getHeight())};
-	if(rect.isEmpty())return;
+	// 静的部分の描画開始
+	if(mCachedStaticImage.getWidth() != getWidth() || mCachedStaticImage.getHeight() != getHeight()) {
+		mCachedStaticImage = juce::Image(juce::Image::ARGB, getWidth(), getHeight(), true);
+		juce::Graphics g(mCachedStaticImage);
 
-	juce::Path clipPath;
-	clipPath.addRectangle(rect);
-	g.reduceClipRegion(clipPath);
+		const juce::Rectangle<float>  rect{ 0.f, 0.f, static_cast<float>(getWidth()), static_cast<float>(getHeight()) };
 
-	// よく使う値を先に計算
-	const float left = rect.getX();
-	const float top = rect.getY();
-	const float right = rect.getRight();
-	const float bottom = rect.getBottom();
-	const float width = rect.getWidth();
-	const float height = rect.getHeight();
+		const float left = rect.getX();
+		const float top = rect.getY();
+		const float right = rect.getRight();
+		const float bottom = rect.getBottom();
+		const float width = rect.getWidth();
+		const float height = rect.getHeight();
 
-	const float mid_x = (left + right) / 2;
-	const float mid_y = (top + bottom) / 2;
+		// 罫線描画
+		g.setColour(juce::Colour::fromFloatRGBA(0.5f, 1.f, 0.125f, 1.f));
+		for(int i = 1; i <= 9; ++i) {
+			float x = left + width * 0.1f * i;
+			float y = top + height * 0.1f * i;
+			g.drawLine(left, y, right, y);
+			g.drawLine(x, top, x, bottom);
+		}
 
-	const size_t buffer_size = mBufferSize;
-	const float speed_ratio = buffer_size / width;
-
-	auto& interpolated = mInterpolatedSignalBuffer;
-	const size_t interpolated_size = static_cast<size_t>(std::ceil(width));
-	interpolated.resize(interpolated_size);
-
-
-	// 罫線描画
-	g.setColour(juce::Colour::fromFloatRGBA(0.5f, 1.f, 0.125f, 1.f));
-	for (int i = 1; i <= 9; ++i) {
-		float x = left + width  * 0.1f * i;
-		float y = top  + height * 0.1f * i;
-		g.drawLine(left, y, right, y);
-		g.drawLine(x, top, x, bottom);
+		// 枠描画
+		g.setColour(juce::Colour::fromFloatRGBA(0.f, 0.f, 0.f, 1.f));
+		g.drawRect(rect);
 	}
 
-	// 信号描画
-	auto drawSignal = [&](const juce::Colour& color, const std::vector<float>& buffer) {
-		// そのまま全サンプルを描画すると重いため、描画画素数に応じた値まで間引く
-		juce::LinearInterpolator().process(
-			speed_ratio,
-			buffer.data(),
-			interpolated.data(),
-			static_cast<int>(interpolated_size),
-			static_cast<int>(buffer_size),
-			0
-		);
 
-		// 複数回のdrawLine呼び出しは重いため、Pathとして一括で描画する
-		auto getY = [&](float v) {return mid_y - height / 2.0f * normalize(v); };		
-		juce::Path path;		
-		path.startNewSubPath(left, getY(interpolated[0]));
-		for(size_t i = 1; i < interpolated_size; ++i) {
-			path.lineTo(left + static_cast<float>(i), getY(interpolated[i]));
-		}
-		g.setColour(color);
-		g.strokePath(path, juce::PathStrokeType(1));
-	};
-	drawSignal(juce::Colour::fromFloatRGBA(1.f, 0.f, 0.f, 0.5f), mDrawingBuffer1ch);
-	drawSignal(juce::Colour::fromFloatRGBA(0.f, 0.f, 1.f, 0.5f), mDrawingBuffer2ch);
+	// 動的部分の描画開始
+	{
+		const juce::Rectangle<float>  rect{ static_cast<float>(getX()), static_cast<float>(getY()), static_cast<float>(getWidth()), static_cast<float>(getHeight()) };
 
-	// 枠描画
-	g.setColour(juce::Colour::fromFloatRGBA(0.f, 0.f, 0.f, 1.f ));
-	g.drawRect(rect);
+		const float left = rect.getX();
+		const float top = rect.getY();
+		const float right = rect.getRight();
+		const float bottom = rect.getBottom();
+		const float width = rect.getWidth();
+		const float height = rect.getHeight();
+
+		const float mid_x = (left + right) / 2;
+		const float mid_y = (top + bottom) / 2;
+
+		const size_t buffer_size = mBufferSize;
+		const float speed_ratio = buffer_size / width;
+
+		auto& interpolated = mInterpolatedSignalBuffer;
+		const size_t interpolated_size = static_cast<size_t>(std::ceil(width));
+		interpolated.resize(interpolated_size);
+
+		g.saveState();
+		auto fin_act_restore_state = finally([&] {g.restoreState(); });
+
+		// 描画済の静的部分を転写
+		g.drawImageAt(mCachedStaticImage, getX(), getY());
+
+		// 枠の内側に描画されるようにクリッピング
+		juce::Path clipPath;
+		auto clipRect = rect.expanded(-1.f);
+		clipPath.addRectangle(clipRect);
+		g.reduceClipRegion(clipPath);
+
+		// 信号描画
+		auto drawSignal = [&](const juce::Colour& color, const std::vector<float>& buffer) {
+			// そのまま全サンプルを描画すると重いため、描画画素数に応じた値まで間引く
+			juce::LinearInterpolator().process(
+				speed_ratio,
+				buffer.data(),
+				interpolated.data(),
+				static_cast<int>(interpolated_size),
+				static_cast<int>(buffer_size),
+				0
+			);
+
+			// 複数回のdrawLine呼び出しは重いため、Pathとして一括で描画する
+			auto getY = [&](float v) {return mid_y - height / 2.0f * normalize(v); };
+			juce::Path path;
+			path.startNewSubPath(left, getY(interpolated[0]));
+			for(size_t i = 1; i < interpolated_size; ++i) {
+				path.lineTo(left + static_cast<float>(i), getY(interpolated[i]));
+			}
+			g.setColour(color);
+			g.strokePath(path, juce::PathStrokeType(1));
+			};
+		drawSignal(juce::Colour::fromFloatRGBA(1.f, 0.f, 0.f, 0.5f), mDrawingBuffer1ch);
+		drawSignal(juce::Colour::fromFloatRGBA(0.f, 0.f, 1.f, 0.5f), mDrawingBuffer2ch);
+	}
 }

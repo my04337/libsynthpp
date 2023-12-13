@@ -54,11 +54,8 @@ void Lissajous::paint(juce::Graphics& g)
 		std::copy(mInputBuffer.begin(), mInputBuffer.end(), mDrawingBuffer.begin());
 	}
 
-	// 描画サイズが0ならなにもしない
+	// 描画サイズが0ならなにも描画しない
 	if(getWidth() <= 0 || getHeight() <= 0) return;
-
-	// 描画領域の算出
-	
 
 	// 静的部分の描画開始
 	if(mCachedStaticImage.getWidth() != getWidth() || mCachedStaticImage.getHeight() != getHeight()) {
@@ -109,7 +106,7 @@ void Lissajous::paint(juce::Graphics& g)
 
 
 		// 描画済の静的部分を転写
-		g.drawImageAt(mCachedStaticImage, left, top);
+		g.drawImageAt(mCachedStaticImage, getX(), getY());
 
 		// 枠の内側に描画されるようにクリッピング
 		juce::Path clipPath;

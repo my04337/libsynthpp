@@ -32,6 +32,8 @@ private:
 	std::vector<float> mDrawingBuffer1ch; // 描画用バッファ。排他不要。
 	std::vector<float> mDrawingBuffer2ch; // 描画用バッファ。排他不要。
 	std::vector<float> mInterpolatedSignalBuffer; // 描画用バッファ。排他不要。
+	// ---
+	juce::Image mCachedStaticImage;
 };
 
 

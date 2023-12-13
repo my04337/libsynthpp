@@ -38,6 +38,8 @@ private:
 	std::vector<float> mDrawingFftRealBuffer;  // 描画バッファ。 FFT実数部。
 	std::vector<float> mDrawingFftImageBuffer; // 描画バッファ。 FFT虚数部。
 	std::vector<float> mDrawingFftWindowCache; // 描画バッファ。 FFT窓関数。
+
+	juce::Image mCachedStaticImage;
 };
 
 //
