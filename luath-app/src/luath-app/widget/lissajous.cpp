@@ -54,59 +54,88 @@ void Lissajous::paint(juce::Graphics& g)
 		std::copy(mInputBuffer.begin(), mInputBuffer.end(), mDrawingBuffer.begin());
 	}
 
-	// 描画開始
-	g.saveState();
-	auto fin_act_restore_state = finally([&] {g.restoreState(); });
+	// 描画サイズが0ならなにもしない
+	if(getWidth() <= 0 || getHeight() <= 0) return;
 
-	const juce::Rectangle<float>  rect{ static_cast<float>(getX()), static_cast<float>(getY()), static_cast<float>(getWidth()), static_cast<float>(getHeight())};
-	if(rect.isEmpty()) return;
+	// 描画領域の算出
+	
 
-	juce::Path clipPath;
-	clipPath.addRectangle(rect);
-	g.reduceClipRegion(clipPath);
+	// 静的部分の描画開始
+	if(mCachedStaticImage.getWidth() != getWidth() || mCachedStaticImage.getHeight() != getHeight()) {
+		mCachedStaticImage = juce::Image(juce::Image::ARGB, getWidth(), getHeight(), true);
+		juce::Graphics g(mCachedStaticImage);
 
-	// よく使う値を先に計算
-	const float left = rect.getX();
-	const float top = rect.getY();
-	const float right = rect.getRight();
-	const float bottom = rect.getBottom();
-	const float width = rect.getWidth();
-	const float height = rect.getHeight();
+		const juce::Rectangle<float>  rect{ 0.f, 0.f, static_cast<float>(getWidth()), static_cast<float>(getHeight()) };
 
-	const float mid_x = (left + right) / 2;
-	const float mid_y = (top + bottom) / 2;
-	const size_t buffer_size = mBufferSize;
-	const float sample_pitch = width / buffer_size;
+		const float left = rect.getX();
+		const float top = rect.getY();
+		const float right = rect.getRight();
+		const float bottom = rect.getBottom();
+		const float width = rect.getWidth();
+		const float height = rect.getHeight();
 
-	// 罫線描画
-	g.setColour(juce::Colour::fromFloatRGBA(0.5f, 1.f, 0.125f, 1.f));
-	for (int i = 1; i <= 9; ++i) {
-		float x = left + width  * 0.1f * i;
-		float y = top  + height * 0.1f * i;
-		g.drawLine(left, y, right, y);
-		g.drawLine(x, top, x, bottom);
-	}
-
-	// 信号描画
-	auto getPoint = [&](size_t pos) -> juce::Point<float> {
-		auto [ch1, ch2] = mDrawingBuffer[pos];
-		return {
-			mid_x + width / 2.0f * normalize(ch1),
-			mid_y - height / 2.0f * normalize(ch2),
-		};
-	};
-	juce::Path signalPath;
-	signalPath.startNewSubPath(getPoint(0));
-	for(size_t i = 1; i < buffer_size; ++i) {
-		auto cur = getPoint(i);
-		if(cur.getDistanceFrom(signalPath.getCurrentPosition()) >= 1.f) {
-			signalPath.lineTo(cur);
+		// 罫線描画
+		g.setColour(juce::Colour::fromFloatRGBA(0.5f, 1.f, 0.125f, 1.f));
+		for(int i = 1; i <= 9; ++i) {
+			float x = left + width * 0.1f * i;
+			float y = top + height * 0.1f * i;
+			g.drawLine(left, y, right, y);
+			g.drawLine(x, top, x, bottom);
 		}
-	}
-	g.setColour(juce::Colour::fromFloatRGBA(1.f, 0.f, 0.f, 1.f));
-	g.strokePath(signalPath, juce::PathStrokeType(1));
 
-	// 枠描画
-	g.setColour(juce::Colour::fromFloatRGBA(0.f, 0.f, 0.f, 1.f));
-	g.drawRect(rect);
+		// 枠描画
+		g.setColour(juce::Colour::fromFloatRGBA(0.f, 0.f, 0.f, 1.f));
+		g.drawRect(rect);
+	}
+
+	// 動的部分の描画開始
+	{
+		const juce::Rectangle<float>  rect{ static_cast<float>(getX()), static_cast<float>(getY()), static_cast<float>(getWidth()), static_cast<float>(getHeight()) };
+
+		const float left = rect.getX();
+		const float top = rect.getY();
+		const float right = rect.getRight();
+		const float bottom = rect.getBottom();
+		const float width = rect.getWidth();
+		const float height = rect.getHeight();
+
+		const float mid_x = (left + right) / 2;
+		const float mid_y = (top + bottom) / 2;
+		const size_t buffer_size = mBufferSize;
+		const float sample_pitch = width / buffer_size;
+
+		g.saveState();
+		auto fin_act_restore_state = finally([&] {g.restoreState(); });
+
+
+		// 描画済の静的部分を転写
+		g.drawImageAt(mCachedStaticImage, left, top);
+
+		// 枠の内側に描画されるようにクリッピング
+		juce::Path clipPath;
+		auto clipRect = rect.expanded(-1.f);
+		clipPath.addRectangle(clipRect);
+		g.reduceClipRegion(clipPath);
+
+
+		// 信号描画
+		auto getPoint = [&](size_t pos) -> juce::Point<float> {
+			auto [ch1, ch2] = mDrawingBuffer[pos];
+			return {
+				mid_x + width / 2.0f * normalize(ch1),
+				mid_y - height / 2.0f * normalize(ch2),
+			};
+			};
+		juce::Path signalPath;
+		signalPath.startNewSubPath(getPoint(0));
+		for(size_t i = 1; i < buffer_size; ++i) {
+			auto cur = getPoint(i);
+			if(cur.getDistanceFrom(signalPath.getCurrentPosition()) >= 1.f) {
+				signalPath.lineTo(cur);
+			}
+		}
+		g.setColour(juce::Colour::fromFloatRGBA(1.f, 0.f, 0.f, 1.f));
+		g.strokePath(signalPath, juce::PathStrokeType(1));
+
+	}
 }

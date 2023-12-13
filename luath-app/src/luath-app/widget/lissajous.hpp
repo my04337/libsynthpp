@@ -29,6 +29,8 @@ private:
 	mutable std::mutex mInputMutex;
 	std::deque<std::pair<float, float>> mInputBuffer; // リングバッファ
 	std::vector<std::pair<float, float>> mDrawingBuffer; // 描画用バッファ。排他不要。
+	// ---
+	juce::Image mCachedStaticImage;
 };
 
 //
