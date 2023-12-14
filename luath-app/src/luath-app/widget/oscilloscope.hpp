@@ -26,13 +26,15 @@ private:
 	float mSpan;		// [second]
 	size_t mBufferSize;
 
+	// 入力用バッファ
 	mutable std::mutex mInputMutex;
-	std::deque<float> mInputBuffer1ch; // リングバッファ
-	std::deque<float> mInputBuffer2ch; // リングバッファ
-	std::vector<float> mDrawingBuffer1ch; // 描画用バッファ。排他不要。
-	std::vector<float> mDrawingBuffer2ch; // 描画用バッファ。排他不要。
-	std::vector<float> mInterpolatedSignalBuffer; // 描画用バッファ。排他不要。
-	// ---
+	std::array<std::deque<float>, 2> mInputBuffer; 
+	
+	// 描画用バッファ
+	std::array<std::vector<float>, 2> mDrawingBuffer;
+	std::vector<float> mInterpolatedSignalBuffer;
+
+	// 静的な表示の描画キャッシュ
 	juce::Image mCachedStaticImage;
 };
 

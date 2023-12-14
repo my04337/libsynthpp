@@ -31,6 +31,7 @@
 #include <mutex>
 #include <numbers>
 #include <optional>
+#include <ranges>
 #include <source_location>
 #include <stacktrace>
 #include <string_view>

@@ -28,17 +28,18 @@ private:
 	uint32_t mStrechRate;
 	size_t mUnitBufferSize;
 
+	
+	// 入力用バッファ
 	mutable std::mutex mInputMutex;
-	std::deque<float> mInputBuffer1ch; // リングバッファ
-	std::deque<float> mInputBuffer2ch; // リングバッファ
+	std::array<std::deque<float>, 2> mInputBuffer; 
+	
+	// 描画用バッファ
+	std::array<std::vector<float>, 2> mDrawingSignalBuffer;
+	std::array<std::vector<float>, 2> mDrawingFftRealBuffer;
+	std::array<std::vector<float>, 2> mDrawingFftImageBuffer;
+	std::vector<float> mDrawingFftWindowShape;
 
-	std::vector<float> mDrawingBuffer1ch; // 描画用バッファ。排他不要。
-	std::vector<float> mDrawingBuffer2ch; // 描画用バッファ。排他不要。
-
-	std::vector<float> mDrawingFftRealBuffer;  // 描画バッファ。 FFT実数部。
-	std::vector<float> mDrawingFftImageBuffer; // 描画バッファ。 FFT虚数部。
-	std::vector<float> mDrawingFftWindowCache; // 描画バッファ。 FFT窓関数。
-
+	// 描画キャッシュ
 	juce::Image mCachedStaticImage;
 };
 

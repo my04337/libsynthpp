@@ -117,7 +117,7 @@ void Lissajous::paint(juce::Graphics& g)
 
 		// 信号描画
 		auto getPoint = [&](size_t pos) -> juce::Point<float> {
-			auto [ch1, ch2] = mDrawingBuffer[pos];
+			auto& [ch1, ch2] = mDrawingBuffer[pos];
 			return {
 				mid_x + width / 2.0f * normalize(ch1),
 				mid_y - height / 2.0f * normalize(ch2),
