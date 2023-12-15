@@ -68,5 +68,6 @@ ThreadPool::~ThreadPool()
     // 全スレッドが起き上がれるようにスレッド数分だけセマフォを上げる
     _tasksSemaphore.release(_workers.size());
 
-    // スレッドの終了待機はデストラクタで暗黙的に行われるため、ここでは行わない
+    // 安全に全てのスレッドを全て停止させる
+    _workers.clear();
 }
