@@ -1,14 +1,30 @@
-﻿#include <luath-app/widget/lissajous.hpp>
+﻿/**
+	luath-app
+
+	Copyright(c) 2023 my04337
+
+	This software is released under the GPLv3 License.
+	https://opensource.org/license/gpl-3-0/
+*/
+
+#include <luath-app/widget/lissajous.hpp>
 
 using namespace luath::app::widget;
 
 Lissajous::Lissajous()
 {
 	setParams(1.f, 1.f);
+
+	mDrawingThead = std::jthread([this](std::stop_token stopToken) {renderThreadMain(stopToken); });
 }
 
 Lissajous::~Lissajous()
 {
+	// 描画スレッドを安全に停止
+	if(mDrawingThead.joinable()) {
+		mDrawingThead.request_stop();
+		mDrawingThead.join();
+	}
 }
 
 void Lissajous::setParams(float sampleFreq, float span)
@@ -21,11 +37,8 @@ void Lissajous::setParams(float sampleFreq, float span)
 
 	std::lock_guard lock(mInputMutex);
 	mSampleFreq = sampleFreq;
-	mSpan = span;
-	mBufferSize = bufferSize;
 
 	mInputBuffer.resize(bufferSize, std::make_pair(0.f, 0.f));
-	mDrawingBuffer.resize(bufferSize, std::make_pair(0.f, 0.f));
 }
 
 void Lissajous::write(const Signal<float>& sig)
@@ -48,91 +61,121 @@ void Lissajous::write(const Signal<float>& sig)
 
 void Lissajous::paint(juce::Graphics& g)
 {
-	// 信号出力をブロックしないように描画用信号バッファへコピー
+	// 描画済の画像をそのまま出力する
 	{
-		std::lock_guard lock(mInputMutex);
-		std::copy(mInputBuffer.begin(), mInputBuffer.end(), mDrawingBuffer.begin());
+		std::lock_guard lock(mDrawingMutex);
+		g.drawImageAt(mDrawnImage, getX(), getY());
+
+		// 描画パラメータ更新
+		mComponentWidthForDrawing = getWidth();
+		mComponentHeightForDrawing = getHeight();
+		mScaleFactorForDrawing = getApproximateScaleFactorForComponent(this);
 	}
+	// 描画リクエストを発行
+	mRequestDrawEvent.set();
+}
+void Lissajous::renderThreadMain(std::stop_token stopToken)
+{
+	// 描画用信号バッファ
+	std::vector<std::pair<float, float>> drawingBuffer;
 
-	// 描画サイズが0ならなにも描画しない
-	if(getWidth() <= 0 || getHeight() <= 0) return;
+	// 静的な表示部分の描画キャッシュ
+	juce::Image cachedStaticImage;
 
-	// 静的部分の描画開始
-	if(mCachedStaticImage.getWidth() != getWidth() || mCachedStaticImage.getHeight() != getHeight()) {
-		mCachedStaticImage = juce::Image(juce::Image::ARGB, getWidth(), getHeight(), true);
-		juce::Graphics g(mCachedStaticImage);
+	// 描画ループ 
+	while(mRequestDrawEvent.try_wait(stopToken, std::chrono::milliseconds(10))) {
+		// 信号出力をブロックしないように描画用信号バッファへコピー
+		juce::Rectangle<int> unscaledCanvasRect;
+		float scaleFactor;
+		{
+			std::lock_guard lock(mInputMutex);
 
-		const juce::Rectangle<float>  rect{ 0.f, 0.f, static_cast<float>(getWidth()), static_cast<float>(getHeight()) };
+			drawingBuffer.resize(mInputBuffer.size());
+			std::copy(mInputBuffer.begin(), mInputBuffer.end(), drawingBuffer.begin());
 
-		const float left = rect.getX();
-		const float top = rect.getY();
-		const float right = rect.getRight();
-		const float bottom = rect.getBottom();
-		const float width = rect.getWidth();
-		const float height = rect.getHeight();
-
-		// 罫線描画
-		g.setColour(juce::Colour::fromFloatRGBA(0.5f, 1.f, 0.125f, 1.f));
-		for(int i = 1; i <= 9; ++i) {
-			float x = left + width * 0.1f * i;
-			float y = top + height * 0.1f * i;
-			g.drawLine(left, y, right, y);
-			g.drawLine(x, top, x, bottom);
+			unscaledCanvasRect = juce::Rectangle<int>{ 0, 0, mComponentWidthForDrawing, mComponentHeightForDrawing };
+			scaleFactor = mScaleFactorForDrawing;
 		}
 
-		// 枠描画
-		g.setColour(juce::Colour::fromFloatRGBA(0.f, 0.f, 0.f, 1.f));
-		g.drawRect(rect);
-	}
+		// 描画サイズが0ならなにも描画しない
+		if(unscaledCanvasRect.getWidth() <= 0 || unscaledCanvasRect.getHeight() <= 0) return;
 
-	// 動的部分の描画開始
-	{
-		const juce::Rectangle<float>  rect{ static_cast<float>(getX()), static_cast<float>(getY()), static_cast<float>(getWidth()), static_cast<float>(getHeight()) };
-
-		const float left = rect.getX();
-		const float top = rect.getY();
-		const float right = rect.getRight();
-		const float bottom = rect.getBottom();
-		const float width = rect.getWidth();
-		const float height = rect.getHeight();
+		// よく使う値を先に計算
+		const auto left = static_cast<float>(unscaledCanvasRect.getX());
+		const auto top = static_cast<float>(unscaledCanvasRect.getY());
+		const auto right = static_cast<float>(unscaledCanvasRect.getRight());
+		const auto bottom = static_cast<float>(unscaledCanvasRect.getBottom());
+		const auto width = static_cast<float>(unscaledCanvasRect.getWidth());
+		const auto height = static_cast<float>(unscaledCanvasRect.getHeight());
 
 		const float mid_x = (left + right) / 2;
 		const float mid_y = (top + bottom) / 2;
-		const size_t buffer_size = mBufferSize;
+		const size_t buffer_size = drawingBuffer.size();
 		const float sample_pitch = width / buffer_size;
 
-		g.saveState();
-		auto fin_act_restore_state = finally([&] {g.restoreState(); });
+		const auto& rect = unscaledCanvasRect;
+		const auto scaledCanvasRect = unscaledCanvasRect * scaleFactor;
 
 
-		// 描画済の静的部分を転写
-		g.drawImageAt(mCachedStaticImage, getX(), getY());
-
-		// 枠の内側に描画されるようにクリッピング
-		juce::Path clipPath;
-		auto clipRect = rect.expanded(-1.f);
-		clipPath.addRectangle(clipRect);
-		g.reduceClipRegion(clipPath);
+		// 静的部分の描画開始
+		if(cachedStaticImage.getWidth() != scaledCanvasRect.getWidth() || cachedStaticImage.getHeight() != scaledCanvasRect.getHeight()) {
+			cachedStaticImage = juce::Image(juce::Image::ARGB, scaledCanvasRect.getWidth(), scaledCanvasRect.getHeight(), true);
+			juce::Graphics g(cachedStaticImage);
+			g.addTransform(juce::AffineTransform::scale(scaleFactor));
 
 
-		// 信号描画
-		auto getPoint = [&](size_t pos) -> juce::Point<float> {
-			auto& [ch1, ch2] = mDrawingBuffer[pos];
-			return {
-				mid_x + width / 2.0f * normalize(ch1),
-				mid_y - height / 2.0f * normalize(ch2),
-			};
-			};
-		juce::Path signalPath;
-		signalPath.startNewSubPath(getPoint(0));
-		for(size_t i = 1; i < buffer_size; ++i) {
-			auto cur = getPoint(i);
-			if(cur.getDistanceFrom(signalPath.getCurrentPosition()) >= 1.f) {
-				signalPath.lineTo(cur);
+			// 罫線描画
+			g.setColour(juce::Colour::fromFloatRGBA(0.5f, 1.f, 0.125f, 1.f));
+			for(int i = 1; i <= 9; ++i) {
+				float x = left + width * 0.1f * i;
+				float y = top + height * 0.1f * i;
+				g.drawLine(left, y, right, y);
+				g.drawLine(x, top, x, bottom);
 			}
-		}
-		g.setColour(juce::Colour::fromFloatRGBA(1.f, 0.f, 0.f, 1.f));
-		g.strokePath(signalPath, juce::PathStrokeType(1));
 
+			// 枠描画
+			g.setColour(juce::Colour::fromFloatRGBA(0.f, 0.f, 0.f, 1.f));
+			g.drawRect(rect);
+		}
+
+		// 動的部分の描画開始
+		juce::Image drawnImage = juce::Image(juce::Image::ARGB, scaledCanvasRect.getWidth(), scaledCanvasRect.getHeight(), true);
+		{
+			juce::Graphics g(drawnImage);
+			g.drawImageAt(cachedStaticImage, 0, 0); // 静的部分はスケーリングされる前に描画
+			g.addTransform(juce::AffineTransform::scale(scaleFactor));
+
+			// 枠の内側に描画されるようにクリッピング
+			juce::Path clipPath;
+			auto clipRect = rect.expanded(-1);
+			clipPath.addRectangle(clipRect);
+			g.reduceClipRegion(clipPath);
+
+
+			// 信号描画
+			auto getPoint = [&](size_t pos) -> juce::Point<float> {
+				auto& [ch1, ch2] = drawingBuffer[pos];
+				return {
+					mid_x + width / 2.0f * normalize(ch1),
+					mid_y - height / 2.0f * normalize(ch2),
+				};
+				};
+			juce::Path signalPath;
+			signalPath.startNewSubPath(getPoint(0));
+			for(size_t i = 1; i < buffer_size; ++i) {
+				auto cur = getPoint(i);
+				if(cur.getDistanceFrom(signalPath.getCurrentPosition()) >= 1.f) {
+					signalPath.lineTo(cur);
+				}
+			}
+			g.setColour(juce::Colour::fromFloatRGBA(1.f, 0.f, 0.f, 1.f));
+			g.strokePath(signalPath, juce::PathStrokeType(1));
+		}
+
+		// 描画結果を転送
+		{
+			std::lock_guard lock(mDrawingMutex);
+			mDrawnImage = std::move(drawnImage);
+		}
 	}
 }
