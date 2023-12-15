@@ -1,6 +1,16 @@
-﻿#pragma once
+﻿/**
+	luath-app
+
+	Copyright(c) 2023 my04337
+
+	This software is released under the GPLv3 License.
+	https://opensource.org/license/gpl-3-0/
+*/
+
+#pragma once
 
 #include <luath-app/core/core.hpp>
+#include <lsp/util/auto_reset_event.hpp>
 
 namespace luath::app::widget
 {
@@ -18,29 +28,34 @@ public:
 	// 表示波形を書き込みます
 	void write(const lsp::Signal<float>& sig);
 
-
 	// スペクトラム解析結果を描画を描画します
 	void paint(juce::Graphics& g)override;
 
 private:
+	void renderThreadMain(std::stop_token stopToken);
+
+private:
+	// 各種パラメータ ※mInputMutexにて保護される
 	float mSampleFreq; // [hz]
-	float mSpan;       // [second]
 	uint32_t mStrechRate;
-	size_t mUnitBufferSize;
 
 	
-	// 入力用バッファ
+	// 入力用バッファ ※mInputMutexにて保護される
 	mutable std::mutex mInputMutex;
 	std::array<std::deque<float>, 2> mInputBuffer; 
-	
-	// 描画用バッファ
-	std::array<std::vector<float>, 2> mDrawingSignalBuffer;
-	std::array<std::vector<float>, 2> mDrawingFftRealBuffer;
-	std::array<std::vector<float>, 2> mDrawingFftImageBuffer;
-	std::vector<float> mDrawingFftWindowShape;
 
-	// 描画キャッシュ
-	juce::Image mCachedStaticImage;
+	// 描画用パラメータ ※mInputMutexにて保護される
+	int mComponentWidthForDrawing = 0;
+	int mComponentHeightForDrawing = 0;
+	float mScaleFactorForDrawing = 1.f;
+
+	// 描画スレッド
+	std::jthread mDrawingThead;
+
+	// 描画キャッシュ ※mDrawingMutexにて保護される
+	mutable std::mutex mDrawingMutex;
+	AutoResetEvent mRequestDrawEvent;
+	std::array<juce::Image, 3> mDrawnImages;
 };
 
 //
