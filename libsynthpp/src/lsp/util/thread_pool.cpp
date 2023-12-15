@@ -12,7 +12,7 @@
 using namespace lsp;
 
 
-ThreadPool::ThreadPool(size_t numThreads, std::function<void()> onStart, std::function<void()>onEnd)
+ThreadPool::ThreadPool(size_t numThreads, std::optional<ThreadPriority> priority, std::function<void()> onStart, std::function<void()>onEnd)
     : _tasks(std::pmr::get_default_resource())
     , _tasksSemaphore(0)
 {
@@ -20,7 +20,12 @@ ThreadPool::ThreadPool(size_t numThreads, std::function<void()> onStart, std::fu
 
     // 必要数のスレッドを生成
     for(size_t i = 0; i < numThreads; ++i) {
-        _workers.emplace_back([this, onStart, onEnd](std::stop_token stopToken) {
+        _workers.emplace_back([this, priority, onStart, onEnd](std::stop_token stopToken) {
+            // スレッド優先度の設定
+            if(priority) {
+                this_thread::set_priority(*priority);
+            }
+
             // スレッド開始コールバック
             if(onStart) onStart();
 

@@ -11,6 +11,7 @@
 
 #include <lsp/core/core.hpp>
 #include <lsp/core/logging.hpp>
+#include <lsp/util/thread_priority.hpp>
 
 namespace lsp
 {
@@ -20,7 +21,7 @@ class ThreadPool
 public:
     using Task = std::function<void()>;
 
-    ThreadPool(size_t numThreads, std::function<void()> onStart = {}, std::function<void()>onEnd = {});
+    ThreadPool(size_t numThreads, std::optional<ThreadPriority> priority = std::nullopt, std::function<void()> onStart = {}, std::function<void()>onEnd = {});
     ~ThreadPool();
 
     // タスクを追加します
