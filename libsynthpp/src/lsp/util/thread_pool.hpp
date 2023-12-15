@@ -32,8 +32,7 @@ public:
             using FuncType = std::tuple_element_t<0, std::tuple<Funcs...>>;
             using ReturnType = decltype(std::declval<FuncType>()());
 
-            auto task = std::allocate_shared<std::packaged_task<ReturnType()>>(
-                &_mem,
+            auto task = std::make_shared<std::packaged_task<ReturnType()>>(
                 std::forward<FuncType>(std::get<0>(std::make_tuple(funcs...)))
             );
 
