@@ -10,13 +10,14 @@
 #pragma once
 
 #include <luath-app/core/core.hpp>
-#include <lsp/util/auto_reset_event.hpp>
+#include <luath-app/widget/abstract_signal_component.hpp>
+#include <lsp/util/thread_pool.hpp>
 
 namespace luath::app::widget
 {
 
-class SpectrumAnalyzer
-	: public juce::Component
+class SpectrumAnalyzer final
+	: public AbstractSignalComponent
 {
 public:
 	SpectrumAnalyzer();
@@ -25,37 +26,22 @@ public:
 	// 表示パラメータを指定します
 	void setParams(float sampleFreq, size_t bufferSize, uint32_t strechRate = 1);
 
-	// 表示波形を書き込みます
-	void write(const lsp::Signal<float>& sig);
-
-	// スペクトラム解析結果を描画を描画します
-	void paint(juce::Graphics& g)override;
+protected:
+	void onDrawStaticElements(juce::Graphics& g, int width, int height, Extras& extras)override;
+	void onDrawDynamicElements(juce::Graphics& g, int width, int height, Extras& extras, std::array<std::vector<float>, 2>& buffer)override;
 
 private:
-	void renderThreadMain(std::stop_token stopToken);
+	// 対数軸への変換関数
+	static float freq2horz(float width, float freq);
+	static float horz2freq(float width, float x);
+	static float power2vert(float height, float power);
 
 private:
-	// 各種パラメータ ※mInputMutexにて保護される
-	float mSampleFreq; // [hz]
-	uint32_t mStrechRate;
+	// 描画用スレッドプール
+	ThreadPool mThreadPoolForDynamicImage;
 
-	
-	// 入力用バッファ ※mInputMutexにて保護される
-	mutable std::mutex mInputMutex;
-	std::array<std::deque<float>, 2> mInputBuffer; 
-
-	// 描画用パラメータ ※mInputMutexにて保護される
-	int mComponentWidthForDrawing = 0;
-	int mComponentHeightForDrawing = 0;
-	float mScaleFactorForDrawing = 1.f;
-
-	// 描画スレッド
-	std::jthread mDrawingThead;
-
-	// 描画キャッシュ ※mDrawingMutexにて保護される
-	mutable std::mutex mDrawingMutex;
-	AutoResetEvent mRequestDrawEvent;
-	std::array<juce::Image, 3> mDrawnImages;
+	// FFTウィンドウ形状キャッシュ
+	std::vector<float> mDrawingFftWindowShapeCache;
 };
 
 //
