@@ -38,11 +38,14 @@ void Lissajous::setParams(float sampleFreq, float span)
 	std::lock_guard lock(mInputMutex);
 	mSampleFreq = sampleFreq;
 
-	mInputBuffer.resize(bufferSize, std::make_pair(0.f, 0.f));
+	for(auto& buffer : mInputBuffer) buffer.resize(bufferSize, 0.f);
 }
 
 void Lissajous::write(const Signal<float>& sig)
 {
+	using std::views::iota;
+	using std::views::zip;
+
 	std::lock_guard lock(mInputMutex);
 
 	const auto signal_channels = sig.channels();
@@ -50,13 +53,13 @@ void Lissajous::write(const Signal<float>& sig)
 
 	require(signal_channels == 2, "Lissajous : write - failed (channel count is mismatch)");
 
-	// バッファ末尾に追記
-	for(size_t i = 0; i < signal_samples; ++i) {
-		mInputBuffer.emplace_back(sig.data(0, i), sig.data(1, i));
-	}
+	for(auto&& [ch, buffer] : zip(iota(0), mInputBuffer)) {
+		// バッファ末尾に追記
+		buffer.insert(buffer.end(), sig.data(ch), sig.data(ch) + signal_samples);
 
-	// リングバッファとして振る舞うため、先頭から同じサイズを削除
-	mInputBuffer.erase(mInputBuffer.begin(), mInputBuffer.begin() + signal_samples);
+		// リングバッファとして振る舞うため、先頭から同じサイズを削除
+		buffer.erase(buffer.begin(), buffer.begin() + signal_samples);
+	}
 }
 
 void Lissajous::paint(juce::Graphics& g)
@@ -76,8 +79,10 @@ void Lissajous::paint(juce::Graphics& g)
 }
 void Lissajous::renderThreadMain(std::stop_token stopToken)
 {
+	using std::views::zip;
+
 	// 描画用信号バッファ
-	std::vector<std::pair<float, float>> drawingBuffer;
+	std::array<std::vector<float>, 2> drawingBuffer;
 
 	// 静的な表示部分の描画キャッシュ
 	juce::Image cachedStaticImage;
@@ -90,8 +95,10 @@ void Lissajous::renderThreadMain(std::stop_token stopToken)
 		{
 			std::lock_guard lock(mInputMutex);
 
-			drawingBuffer.resize(mInputBuffer.size());
-			std::copy(mInputBuffer.begin(), mInputBuffer.end(), drawingBuffer.begin());
+			for(auto&& [input, drawing] : zip(mInputBuffer, drawingBuffer)) {
+				drawing.resize(input.size());
+				std::copy(input.begin(), input.end(), drawing.begin());
+			}
 
 			unscaledCanvasRect = juce::Rectangle<int>{ 0, 0, mComponentWidthForDrawing, mComponentHeightForDrawing };
 			scaleFactor = mScaleFactorForDrawing;
@@ -110,7 +117,7 @@ void Lissajous::renderThreadMain(std::stop_token stopToken)
 
 		const float mid_x = (left + right) / 2;
 		const float mid_y = (top + bottom) / 2;
-		const size_t buffer_size = drawingBuffer.size();
+		const size_t buffer_size = drawingBuffer[0].size();
 		const float sample_pitch = width / buffer_size;
 
 		const auto& rect = unscaledCanvasRect;
@@ -154,7 +161,8 @@ void Lissajous::renderThreadMain(std::stop_token stopToken)
 
 			// 信号描画
 			auto getPoint = [&](size_t pos) -> juce::Point<float> {
-				auto& [ch1, ch2] = drawingBuffer[pos];
+				auto ch1 = drawingBuffer[0][pos];
+				auto ch2 = drawingBuffer[1][pos];
 				return {
 					mid_x + width / 2.0f * normalize(ch1),
 					mid_y - height / 2.0f * normalize(ch2),

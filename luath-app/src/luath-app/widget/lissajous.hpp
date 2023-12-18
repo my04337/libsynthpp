@@ -41,7 +41,7 @@ private:
 
 	// 入力用信号バッファ ※mInputMutexにて保護される
 	mutable std::mutex mInputMutex;
-	std::deque<std::pair<float, float>> mInputBuffer;
+	std::array<std::deque<float>, 2> mInputBuffer;
 
 	// 描画用パラメータ ※mInputMutexにて保護される
 	int mComponentWidthForDrawing = 0;
