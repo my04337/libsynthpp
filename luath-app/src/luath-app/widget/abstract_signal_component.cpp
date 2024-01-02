@@ -81,32 +81,31 @@ void AbstractSignalComponent::write(const Signal<float>& sig)
 	}
 }
 
-void AbstractSignalComponent::resized()
-{
-	std::lock_guard lock(mDrawingMutex);
-
-	// スレッドセーフに新たな描画サイズを記録
-	auto width = getWidth();
-	auto height = getHeight();
-	auto scaleFactor = getApproximateScaleFactorForComponent(this);
-
-	mExtras.insert_or_assign("width"s, std::make_any<int>(width));
-	mExtras.insert_or_assign("height"s, std::make_any<int>(height));
-	mExtras.insert_or_assign("scale_factor"s, std::make_any<float>(scaleFactor));
-
-	// 丸め方が混在すると混乱を招くため、スケール後のサイズ(整数値)もここで定義する
-	mExtras.insert_or_assign("scaled_width"s, static_cast<int>(width * scaleFactor));
-	mExtras.insert_or_assign("scaled_height"s, static_cast<int>(height * scaleFactor));
-}
-
 void AbstractSignalComponent::paint(juce::Graphics& g)
 {
-	// 描画済の画像をそのまま出力する
+	// 以前に描画した画像を出力する
 	{
 		std::lock_guard lock(mDrawingMutex);
-		g.drawImageAt(mDrawnImage, getX(), getY());
+
+		// スレッドセーフに新たな描画サイズを記録
+		int width = getWidth();
+		int height = getHeight();
+		float scaleFactor = g.getInternalContext().getPhysicalPixelScaleFactor();
+		int scaledWidth = static_cast<int>(width * scaleFactor);
+		int scaledHeight = static_cast<int>(height * scaleFactor);
+
+		mExtras.insert_or_assign("width"s, std::make_any<int>(width));
+		mExtras.insert_or_assign("height"s, std::make_any<int>(height));
+		mExtras.insert_or_assign("scale_factor"s, std::make_any<float>(scaleFactor));
+
+		// 丸め方が混在すると混乱を招くため、スケール後のサイズ(整数値)もここで定義する
+		mExtras.insert_or_assign("scaled_width"s, scaledWidth);
+		mExtras.insert_or_assign("scaled_height"s, scaledHeight);
+
+		// 描画済画像を出力
+		g.drawImage(mDrawnImage, getX(), getY(), width, height, 0, 0, scaledWidth, scaledHeight);
 	}
-	// 描画リクエストを発行
+	// 新たな描画をリクエストする
 	mRequestDrawEvent.set();
 }
 void AbstractSignalComponent::drawingThreadMain(std::stop_token stopToken)

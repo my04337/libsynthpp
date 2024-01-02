@@ -31,9 +31,6 @@ public:
 	// リサージュ曲線を描画を描画します
 	void paint(juce::Graphics& g)override final;
 
-	// サイズ変更時のコールバック
-	void resized()override;
-
 protected:
 	// バッファサイズを指定します
 	void setSpan(float sampleFreq, float span);

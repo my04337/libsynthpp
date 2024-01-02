@@ -224,6 +224,6 @@ void SpectrumAnalyzer::onDrawDynamicElements(juce::Graphics& g, const int width_
 
 	// 分割描画した物を統合
 	for(auto& future : dynamicImageFuture) {
-		g.drawImageAt(future.get(), 0, 0);
+		g.drawImageTransformed(future.get(), juce::AffineTransform::scale(1/scaleFactor));
 	}
 }
