@@ -37,11 +37,11 @@ private:
 	static float power2vert(float height, float power);
 
 private:
-	// 描画用スレッドプール
-	ThreadPool mThreadPoolForDynamicImage;
-
 	// FFTウィンドウ形状キャッシュ
 	std::vector<float> mDrawingFftWindowShapeCache;
+
+	// FFT並列実行用スレッドプール
+	ThreadPool mThreadPoolForFft;
 };
 
 //

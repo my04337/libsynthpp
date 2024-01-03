@@ -18,7 +18,7 @@ using namespace luath::app::widget;
 using namespace std::string_view_literals;
 
 SpectrumAnalyzer::SpectrumAnalyzer()
-	: mThreadPoolForDynamicImage(2)
+	: mThreadPoolForFft(2)
 {
 	setParams(1.f, 256);
 }
@@ -129,10 +129,6 @@ void SpectrumAnalyzer::onDrawDynamicElements(juce::Graphics& g, const int width_
 	const auto sampleFreq = get_any_or("sample_freq"sv, 1.f);
 	const auto stretchRate = get_any_or("stretch_rate"sv, 1ui32);
 
-	const auto scaledWidth_ = get_any_or("scaled_width"sv, 0);
-	const auto scaledHeight_ = get_any_or("scaled_height"sv, 0);
-	const auto scaleFactor = get_any_or("scale_factor"sv, 1.f);
-
 	const auto width = static_cast<float>(width_);
 	const auto height = static_cast<float>(height_);
 
@@ -154,27 +150,15 @@ void SpectrumAnalyzer::onDrawDynamicElements(juce::Graphics& g, const int width_
 		}
 	}
 
-	// 左右チャネルの動的部分の描画
-	static const std::array<juce::Colour, 2> channelColor{
-		juce::Colour::fromFloatRGBA(1.f, 0.f, 0.f, 0.5f),
-		juce::Colour::fromFloatRGBA(0.f, 0.f, 1.f, 0.5f),
-	};
-	std::array<std::future<juce::Image>, 2> dynamicImageFuture;
-	for(auto&& [drawingBuffer, color, future] : zip(buffer, channelColor, dynamicImageFuture))
+	// FFTの実施 & パスの算出 (並列)
+	std::array<std::future<juce::Path>, 2> signalPathFuture;
+	for(auto&& [drawingBuffer, future] : zip(buffer, signalPathFuture))
 	{
-		future = mThreadPoolForDynamicImage.enqueue([&] {
+		future = mThreadPoolForFft.enqueue([&] {
 			std::vector<float> real(bufferSize * stretchRate);
 			std::vector<float> image(bufferSize * stretchRate);
 
-			juce::Image drawnImage = juce::Image(juce::Image::ARGB, scaledWidth_,scaledHeight_, true);
-			juce::Graphics g(drawnImage);
-			g.addTransform(juce::AffineTransform::scale(scaleFactor));
-
-			// 枠の内側に描画されるようにクリッピング
-			auto clipRect = juce::Rectangle<int>(0, 0, width_, height_).expanded(-1);
-			g.reduceClipRegion(clipRect);
-
-			// FFT実施
+			// FFTの実施
 			auto& window = mDrawingFftWindowShapeCache;
 			if(stretchRate > 1) {
 				// 高速な解析のため、信号前後を0パディングしてかさ増しする手法があるためこれを採用した
@@ -214,16 +198,24 @@ void SpectrumAnalyzer::onDrawDynamicElements(juce::Graphics& g, const int width_
 					yPeak = bottom;
 				}
 			}
-			// 描画
-			g.setColour(color);
-			g.strokePath(signalPath, juce::PathStrokeType(1));
 
-			return drawnImage;
+			return signalPath;
 		});
 	}
 
-	// 分割描画した物を統合
-	for(auto& future : dynamicImageFuture) {
-		g.drawImageTransformed(future.get(), juce::AffineTransform::scale(1/scaleFactor));
+	// 枠の内側に描画されるようにクリッピング
+	auto clipRect = juce::Rectangle<int>(0, 0, width_, height_).expanded(-1);
+	g.reduceClipRegion(clipRect);
+
+	// 描画
+	static const std::array<juce::Colour, 2> channelColor{
+		juce::Colour::fromFloatRGBA(1.f, 0.f, 0.f, 0.5f),
+		juce::Colour::fromFloatRGBA(0.f, 0.f, 1.f, 0.5f),
+	};
+	for(auto&& [color, future] : zip(channelColor, signalPathFuture))
+	{
+		juce::Path signalPath = future.get();
+		g.setColour(color);
+		g.strokePath(signalPath, juce::PathStrokeType(1));
 	}
 }
