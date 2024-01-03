@@ -25,7 +25,7 @@ public:
 	const juce::String getApplicationName()override;
 	const juce::String getApplicationVersion()override;
 
-	juce::Typeface::Ptr getDefaultTypeface()const noexcept;
+	juce::Typeface::Ptr createDefaultTypeface()const noexcept;
 
 private:
 	static juce::Typeface::Ptr createTypefaceFromCompressedBinary(const void* compressedData, size_t compressedSize, juce::GZIPDecompressorInputStream::Format format);
@@ -33,7 +33,6 @@ private:
 private:
 	std::list<std::unique_ptr<ILogger>> mLoggers;
 	std::unique_ptr<juce::DocumentWindow> mMainWindow;
-	juce::Typeface::Ptr mDefaultTypeface;
 };
 
 }

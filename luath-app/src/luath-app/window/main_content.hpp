@@ -13,6 +13,7 @@
 #include <luath-app/widget/oscilloscope.hpp>
 #include <luath-app/widget/spectrum_analyzer.hpp>
 #include <luath-app/widget/lissajous.hpp>
+#include <luath-app/widget/channel_info.hpp>
 
 namespace lsp::synth { class LuathSynth; }
 namespace luath::app
@@ -43,6 +44,7 @@ private:
 	juce::Font mSmallFont;
 
 	// ウィジット類
+	widget::ChannelInfo mChannelInfoWidget;
 	widget::OscilloScope mOscilloScopeWidget;
 	widget::SpectrumAnalyzer mSpectrumAnalyzerWidget;
 	widget::Lissajous mLissajousWidget;
