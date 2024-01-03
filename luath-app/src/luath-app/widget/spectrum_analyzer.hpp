@@ -27,8 +27,8 @@ public:
 	void setParams(float sampleFreq, size_t bufferSize, uint32_t strechRate = 1);
 
 protected:
-	void onDrawStaticElements(juce::Graphics& g, int width, int height, Extras& extras)override;
-	void onDrawDynamicElements(juce::Graphics& g, int width, int height, Extras& extras, std::array<std::vector<float>, 2>& buffer)override;
+	void onDrawStaticElements(juce::Graphics& g, int width, int height, Params& params)override;
+	void onDrawDynamicElements(juce::Graphics& g, int width, int height, Params& params, std::array<std::vector<float>, 2>& buffer)override;
 
 private:
 	// 対数軸への変換関数

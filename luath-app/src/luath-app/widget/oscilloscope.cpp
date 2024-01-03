@@ -27,7 +27,7 @@ void OscilloScope::setParams(float sampleFreq, float span)
 	setSpan(sampleFreq, span);
 }
 
-void OscilloScope::onDrawStaticElements(juce::Graphics& g, const int width, const int height, Extras& extras)
+void OscilloScope::onDrawStaticElements(juce::Graphics& g, const int width, const int height, Params& params)
 {
 	// 罫線描画
 	g.setColour(juce::Colour::fromFloatRGBA(0.5f, 1.f, 0.125f, 1.f));
@@ -43,7 +43,7 @@ void OscilloScope::onDrawStaticElements(juce::Graphics& g, const int width, cons
 	g.drawRect(juce::Rectangle<int>(0, 0, width, height));
 }
 
-void OscilloScope::onDrawDynamicElements(juce::Graphics& g, const int width, const int height, Extras& extras, std::array<std::vector<float>, 2>& buffer)
+void OscilloScope::onDrawDynamicElements(juce::Graphics& g, const int width, const int height, Params& params, std::array<std::vector<float>, 2>& buffer)
 {
 	using std::views::zip;
 

@@ -26,8 +26,8 @@ public:
 	void setParams(float sampleFreq, float span);
 
 protected:
-	void onDrawStaticElements(juce::Graphics& g, int width, int height, Extras& extras)override;
-	void onDrawDynamicElements(juce::Graphics& g, int width, int height, Extras& extras, std::array<std::vector<float>, 2>& buffer)override;
+	void onDrawStaticElements(juce::Graphics& g, int width, int height, Params& params)override;
+	void onDrawDynamicElements(juce::Graphics& g, int width, int height, Params& params, std::array<std::vector<float>, 2>& buffer)override;
 };
 
 //

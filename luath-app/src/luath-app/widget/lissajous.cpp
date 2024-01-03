@@ -28,7 +28,7 @@ void Lissajous::setParams(float sampleFreq, float span)
 	setSpan(sampleFreq, span);
 }
 
-void Lissajous::onDrawStaticElements(juce::Graphics& g, const int width, const int height, Extras& extras)
+void Lissajous::onDrawStaticElements(juce::Graphics& g, const int width, const int height, Params& params)
 {
 	// 罫線
 	g.setColour(juce::Colour::fromFloatRGBA(0.5f, 1.f, 0.125f, 1.f));
@@ -44,7 +44,7 @@ void Lissajous::onDrawStaticElements(juce::Graphics& g, const int width, const i
 	g.drawRect(juce::Rectangle<int>{0, 0, width, height});
 }
 
-void Lissajous::onDrawDynamicElements(juce::Graphics& g, const int width, const int height, Extras& extras, std::array<std::vector<float>, 2>& buffer)
+void Lissajous::onDrawDynamicElements(juce::Graphics& g, const int width, const int height, Params& params, std::array<std::vector<float>, 2>& buffer)
 {
 	const float midX = width / 2;
 	const float midY = height / 2;

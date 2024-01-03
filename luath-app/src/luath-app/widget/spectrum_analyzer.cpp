@@ -33,7 +33,7 @@ void SpectrumAnalyzer::setParams(float sampleFreq, size_t bufferSize, uint32_t s
 	require(stretchRate >= 1 && std::has_single_bit(stretchRate));
 
 	setBufferSize(sampleFreq, bufferSize);
-	setExtra("stretch_rate", std::make_any<uint32_t>(stretchRate));
+	setParam("stretch_rate", std::make_any<uint32_t>(stretchRate));
 }
 
 // よく使われる定数群
@@ -64,7 +64,7 @@ float SpectrumAnalyzer::power2vert(float height, float power)
 	return std::clamp(height - (dbfs - log_min_dbfs) / (log_max_dbfs - log_min_dbfs) * height, 0.f, height - 1.f);
 }
 
-void SpectrumAnalyzer::onDrawStaticElements(juce::Graphics& g, const int width_, const int height_, Extras& extras)
+void SpectrumAnalyzer::onDrawStaticElements(juce::Graphics& g, const int width_, const int height_, Params& params)
 {
 	const auto width = static_cast<float>(width_);
 	const auto height = static_cast<float>(height_);
@@ -117,13 +117,13 @@ void SpectrumAnalyzer::onDrawStaticElements(juce::Graphics& g, const int width_,
 	g.drawRect(juce::Rectangle<int>(0, 0, width_, height_));
 }
 
-void SpectrumAnalyzer::onDrawDynamicElements(juce::Graphics& g, const int width_, const int height_, Extras& extras, std::array<std::vector<float>, 2>& buffer)
+void SpectrumAnalyzer::onDrawDynamicElements(juce::Graphics& g, const int width_, const int height_, Params& params, std::array<std::vector<float>, 2>& buffer)
 {
 	using std::views::zip;
 
-	const auto get_any_or = [&extras]<class value_type>(std::string_view key, value_type && value)
+	const auto get_any_or = [&params]<class value_type>(std::string_view key, value_type && value)
 	{
-		return lsp::get_any_or(extras, key, std::forward<value_type>(value));
+		return lsp::get_any_or(params, key, std::forward<value_type>(value));
 	};
 
 	const auto sampleFreq = get_any_or("sample_freq"sv, 1.f);
