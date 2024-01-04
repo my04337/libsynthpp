@@ -65,7 +65,13 @@ void AbstractDrawableComponent::paint(juce::Graphics& g)
 		mParams.insert_or_assign("scaled_height"s, scaledHeight);
 
 		// 描画済画像を出力
-		g.drawImage(mDrawnImage, getX(), getY(), width, height, 0, 0, scaledWidth, scaledHeight);
+		g.drawImage(*mDrawnImageForPaint, getX(), getY(), width, height, 0, 0, scaledWidth, scaledHeight);
+
+		// 必要に応じて次の描画対象を現在の描画サイズに変更
+		// MEMO この操作はUIスレッドで行う必要がある。 スレッド間を跨いだ juce::Imageのやりとりはスレッドセーフではない
+		if(mDrawnImageForDraw->getWidth() != scaledWidth || mDrawnImageForDraw->getHeight() != scaledHeight) {
+			*mDrawnImageForDraw = juce::Image(juce::Image::ARGB, scaledWidth, scaledHeight, true);
+		}
 	}
 	// 新たな描画をリクエストする
 	mRequestDrawEvent.set();
@@ -77,8 +83,8 @@ void AbstractDrawableComponent::drawingThreadMain(std::stop_token stopToken)
 	// 描画用信号バッファ
 	std::array<std::vector<float>, 2> drawingBuffer;
 
-	// 静的な表示部分の描画キャッシュ
-	juce::Image cachedStaticImage;
+	// 描画スレッド用の描画バッファ
+	juce::Image drawnImage;
 
 
 	// 描画ループ 
@@ -102,10 +108,20 @@ void AbstractDrawableComponent::drawingThreadMain(std::stop_token stopToken)
 		const juce::Rectangle<int> unscaledCanvasRect = juce::Rectangle<int>{ 0, 0, width, height };
 		const juce::Rectangle<int> scaledCanvasRect = juce::Rectangle<int>{ 0, 0, scaledWidth, scaledHeight };
 
-		juce::Image drawnImage = juce::Image(juce::Image::ARGB, scaledCanvasRect.getWidth(), scaledCanvasRect.getHeight(), true);
+		// 描画サイズが0ならば描画しない
+		if(scaledWidth <= 0 || scaledHeight <= 0) continue;
+
+		// 描画バッファの更新
+		if(drawnImage.getWidth() != scaledCanvasRect.getWidth() || drawnImage.getHeight() != scaledCanvasRect.getHeight()) {
+			drawnImage = juce::Image(juce::Image::ARGB, scaledCanvasRect.getWidth(), scaledCanvasRect.getHeight(), true);
+		}
+		else {
+			drawnImage.clear(drawnImage.getBounds());
+		}
+
+		// 描画開始
 		{
 			juce::Graphics g(drawnImage);
-			g.drawImageAt(cachedStaticImage, 0, 0); // 静的部分はスケーリングされる前に描画
 			g.addTransform(juce::AffineTransform::scale(scaleFactor));
 
 			if(unscaledCanvasRect.getWidth() > 0 && unscaledCanvasRect.getHeight() > 0) {
@@ -113,10 +129,15 @@ void AbstractDrawableComponent::drawingThreadMain(std::stop_token stopToken)
 			}
 		}
 
-		// 描画結果を転送
+		// 描画結果を描画スレッド外に安全に転送する
 		{
 			std::lock_guard lock(mDrawingMutex);
-			mDrawnImage = std::move(drawnImage);
+			if(!mDrawnImageForDraw->isNull()){
+				mDrawnImageForDraw->clear(mDrawnImageForDraw->getBounds());
+				juce::Graphics g(*mDrawnImageForDraw);
+				g.drawImageAt(drawnImage, 0, 0);
+			}
+			std::swap(mDrawnImageForPaint, mDrawnImageForDraw); // flip
 		}
 	}
 }

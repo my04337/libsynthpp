@@ -52,9 +52,12 @@ private:
 	std::jthread mDrawingThead;
 
 	// 描画キャッシュ ※mDrawingMutexにて保護される
+	// MEMO juce::Imageの内部にある参照カウント式リソース管理はスレッドセーフではないため、ダブルバッファリングを行う
 	mutable std::mutex mDrawingMutex;
 	AutoResetEvent mRequestDrawEvent;
-	juce::Image mDrawnImage;
+	std::array<juce::Image, 2> mDrawnImages;
+	juce::Image* mDrawnImageForPaint = &mDrawnImages[0];
+	juce::Image* mDrawnImageForDraw = &mDrawnImages[1];
 };
 
 } // namespace luath::app::widget
