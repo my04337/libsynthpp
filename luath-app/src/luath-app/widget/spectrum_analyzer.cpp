@@ -15,7 +15,10 @@
 #include <array>
 
 using namespace luath::app::widget;
+using namespace std::string_literals;
 using namespace std::string_view_literals;
+using std::views::iota;
+using std::views::zip;
 
 SpectrumAnalyzer::SpectrumAnalyzer()
 	: mThreadPoolForFft(2)
@@ -32,9 +35,29 @@ void SpectrumAnalyzer::setParams(float sampleFreq, size_t bufferSize, uint32_t s
 	require(bufferSize > 0 && std::has_single_bit(bufferSize));
 	require(stretchRate >= 1 && std::has_single_bit(stretchRate));
 
-	setBufferSize(sampleFreq, bufferSize);
+	setParam("sample_freq"s, std::make_any<float>(sampleFreq));
+	setParam("buffer_size"s, std::make_any<size_t>(bufferSize));
 	setParam("stretch_rate", std::make_any<uint32_t>(stretchRate));
+
+	for(auto& buffer : mInputBuffer) buffer.resize(bufferSize, 0.f);
+	repaintAsync();
 }
+void SpectrumAnalyzer::write(const Signal<float>& sig)
+{
+	std::lock_guard lock(mInputMutex);
+
+	const auto signal_channels = sig.channels();
+	const auto signal_samples = sig.samples();
+
+	require(signal_channels == 2, "write - failed (channel count is mismatch)");
+
+	for(auto&& [ch, buffer] : zip(iota(0), mInputBuffer)) {
+		buffer.insert(buffer.end(), sig.data(ch), sig.data(ch) + signal_samples);
+		buffer.erase(buffer.begin(), buffer.begin() + signal_samples);
+	}
+	repaintAsync();
+}
+
 
 // よく使われる定数群
 static const float log_min_freq = std::log10f(20); // Hz
@@ -64,8 +87,20 @@ float SpectrumAnalyzer::power2vert(float height, float power)
 	return std::clamp(height - (dbfs - log_min_dbfs) / (log_max_dbfs - log_min_dbfs) * height, 0.f, height - 1.f);
 }
 
-void SpectrumAnalyzer::onDrawStaticElements(juce::Graphics& g, const int width_, const int height_, Params& params)
+void SpectrumAnalyzer::onRendering(juce::Graphics& g, const int width_, const int height_, Params& params)
 {
+	// 信号出力をブロックしないように描画用信号バッファへコピー
+	std::array<std::vector<float>, 2> buffer;
+	{
+		std::lock_guard lock(mInputMutex);
+
+		for(auto&& [input, drawing] : zip(mInputBuffer, buffer)) {
+			drawing.resize(input.size());
+			std::copy(input.begin(), input.end(), drawing.begin());
+		}
+	}
+
+	// よく使う定数などの計算
 	const auto width = static_cast<float>(width_);
 	const auto height = static_cast<float>(height_);
 
@@ -73,84 +108,21 @@ void SpectrumAnalyzer::onDrawStaticElements(juce::Graphics& g, const int width_,
 	const auto top = 0.f;
 	const auto right = width;
 	const auto bottom = height;
-
-	// グラフ目盛り描画 - 薄い区切り線
-	juce::Path scalePath;
-	for(float digit = 1; digit < 5; ++digit) {
-		float base_freq = std::powf(10, digit);
-		for(int i = 1; i < 10; ++i) {
-			float x = left + freq2horz(width, base_freq * i);
-			scalePath.startNewSubPath(x, top);
-			scalePath.lineTo(x, bottom - 1.f);
-		}
-	}
-	for(float digit = log_min_dbfs / 10; digit < log_max_dbfs / 10; ++digit) {
-		float base_v = std::powf(10, digit);
-		for(int i = 1; i < 10; ++i) {
-			float y = top + power2vert(height, base_v * i);
-			scalePath.startNewSubPath(left, y);
-			scalePath.lineTo(right - 1.f, y);
-		}
-	}
-	g.setColour(juce::Colour::fromFloatRGBA(0.5f, 1.f, 0.125f, 1.f));
-	g.strokePath(scalePath, juce::PathStrokeType(1));
-
-	// グラフ目盛り描画 - 濃い区切り線
-	scalePath.clear();
-	for(float digit = 1; digit < 5; ++digit) {
-		float base_freq = std::powf(10, digit);
-		float x = left + freq2horz(width, base_freq);
-		scalePath.startNewSubPath(x, top);
-		scalePath.lineTo(x, bottom - 1.f);
-	}
-	for(float digit = log_min_dbfs / 10; digit < log_max_dbfs / 10; ++digit) {
-		float base_v = std::powf(10, digit);
-		float y = top + power2vert(height, base_v);
-		scalePath.startNewSubPath(left, y);
-		scalePath.lineTo(right - 1.f, y);
-	}
-	g.setColour(juce::Colour::fromFloatRGBA(0.25f, 0.75f, 0.125f, 1.f));
-	g.strokePath(scalePath, juce::PathStrokeType(1));
-
-	// 枠描画
-	g.setColour(juce::Colour::fromFloatRGBA(0.f, 0.f, 0.f, 1.f));
-	g.drawRect(juce::Rectangle<int>(0, 0, width_, height_));
-}
-
-void SpectrumAnalyzer::onDrawDynamicElements(juce::Graphics& g, const int width_, const int height_, Params& params, std::array<std::vector<float>, 2>& buffer)
-{
-	using std::views::zip;
 
 	const auto get_any_or = [&params]<class value_type>(std::string_view key, value_type && value)
 	{
 		return lsp::get_any_or(params, key, std::forward<value_type>(value));
 	};
-
 	const auto sampleFreq = get_any_or("sample_freq"sv, 1.f);
 	const auto stretchRate = get_any_or("stretch_rate"sv, 1ui32);
-
-	const auto width = static_cast<float>(width_);
-	const auto height = static_cast<float>(height_);
-
-	const auto left = 0.f;
-	const auto top = 0.f;
-	const auto right = width;
-	const auto bottom = height;
 
 	const float midX = width / 2;
 	const float midY = height / 2;
 	const size_t bufferSize = buffer[0].size();
 	const float frequencyResolution = static_cast<float>(sampleFreq) / static_cast<float>(bufferSize); // 周波数分解能
 
-	// ウィンドウ関数の再計算 ※必要に応じて
-	if(mDrawingFftWindowShapeCache.size() != bufferSize) {
-		mDrawingFftWindowShapeCache.resize(bufferSize, 0.f);
-		for(size_t i = 0; i < bufferSize; ++i) {
-			mDrawingFftWindowShapeCache[i] = lsp::dsp::fft::HammingWf(i / (float)bufferSize);
-		}
-	}
 
-	// FFTの実施 & パスの算出 (並列)
+	// FFTの実施 & パスの算出 (並列度を高めるため早いタイミングで開始している)
 	std::array<std::future<juce::Path>, 2> signalPathFuture;
 	for(auto&& [drawingBuffer, future] : zip(buffer, signalPathFuture))
 	{
@@ -203,11 +175,64 @@ void SpectrumAnalyzer::onDrawDynamicElements(juce::Graphics& g, const int width_
 		});
 	}
 
+	// ウィンドウ関数の再計算 ※必要に応じて
+	if(mDrawingFftWindowShapeCache.size() != bufferSize) {
+		mDrawingFftWindowShapeCache.resize(bufferSize, 0.f);
+		for(size_t i = 0; i < bufferSize; ++i) {
+			mDrawingFftWindowShapeCache[i] = lsp::dsp::fft::HammingWf(i / (float)bufferSize);
+		}
+	}
+
+	// 背景塗りつぶし
+	g.fillAll(juce::Colour::fromFloatRGBA(1.f, 1.f, 1.f, 1.f));
+
+	// グラフ目盛り描画 - 薄い区切り線
+	juce::Path scalePath;
+	for(float digit = 1; digit < 5; ++digit) {
+		float base_freq = std::powf(10, digit);
+		for(int i = 1; i < 10; ++i) {
+			float x = left + freq2horz(width, base_freq * i);
+			scalePath.startNewSubPath(x, top);
+			scalePath.lineTo(x, bottom - 1.f);
+		}
+	}
+	for(float digit = log_min_dbfs / 10; digit < log_max_dbfs / 10; ++digit) {
+		float base_v = std::powf(10, digit);
+		for(int i = 1; i < 10; ++i) {
+			float y = top + power2vert(height, base_v * i);
+			scalePath.startNewSubPath(left, y);
+			scalePath.lineTo(right - 1.f, y);
+		}
+	}
+	g.setColour(juce::Colour::fromFloatRGBA(0.5f, 1.f, 0.125f, 1.f));
+	g.strokePath(scalePath, juce::PathStrokeType(1));
+
+	// グラフ目盛り描画 - 濃い区切り線
+	scalePath.clear();
+	for(float digit = 1; digit < 5; ++digit) {
+		float base_freq = std::powf(10, digit);
+		float x = left + freq2horz(width, base_freq);
+		scalePath.startNewSubPath(x, top);
+		scalePath.lineTo(x, bottom - 1.f);
+	}
+	for(float digit = log_min_dbfs / 10; digit < log_max_dbfs / 10; ++digit) {
+		float base_v = std::powf(10, digit);
+		float y = top + power2vert(height, base_v);
+		scalePath.startNewSubPath(left, y);
+		scalePath.lineTo(right - 1.f, y);
+	}
+	g.setColour(juce::Colour::fromFloatRGBA(0.25f, 0.75f, 0.125f, 1.f));
+	g.strokePath(scalePath, juce::PathStrokeType(1));
+
+	// 枠描画
+	g.setColour(juce::Colour::fromFloatRGBA(0.f, 0.f, 0.f, 1.f));
+	g.drawRect(juce::Rectangle<int>(0, 0, width_, height_));
+
 	// 枠の内側に描画されるようにクリッピング
 	auto clipRect = juce::Rectangle<int>(0, 0, width_, height_).expanded(-1);
 	g.reduceClipRegion(clipRect);
 
-	// 描画
+	// スペクトル描画
 	static const std::array<juce::Colour, 2> channelColor{
 		juce::Colour::fromFloatRGBA(1.f, 0.f, 0.f, 0.5f),
 		juce::Colour::fromFloatRGBA(0.f, 0.f, 1.f, 0.5f),

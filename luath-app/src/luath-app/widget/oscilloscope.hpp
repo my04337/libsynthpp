@@ -10,13 +10,13 @@
 #pragma once
 
 #include <luath-app/core/core.hpp>
-#include <luath-app/widget/abstract_signal_component.hpp>
+#include <luath-app/widget/base_component.hpp>
 
 namespace luath::app::widget
 {
 
 class OscilloScope final
-	: public AbstractSignalComponent
+	: public BaseComponent
 {
 public:
 	OscilloScope();
@@ -25,9 +25,16 @@ public:
 	// 表示パラメータを指定します
 	void setParams(float sampleFreq, float span);
 
+	// 表示波形を書き込みます
+	void write(const lsp::Signal<float>& sig);
+
 protected:
-	void onDrawStaticElements(juce::Graphics& g, int width, int height, Params& params)override;
-	void onDrawDynamicElements(juce::Graphics& g, int width, int height, Params& params, std::array<std::vector<float>, 2>& buffer)override;
+	void onRendering(juce::Graphics& g, int width, int height, Params& params)override;
+
+private:
+	// 入力用信号バッファ ※mInputMutexにて保護される
+	mutable std::mutex mInputMutex;
+	std::array<std::deque<float>, 2> mInputBuffer;
 };
 
 

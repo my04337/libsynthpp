@@ -7,33 +7,33 @@
 	https://opensource.org/license/gpl-3-0/
 */
 
-#include <luath-app/widget/abstract_drawable_component.hpp>
+#include <luath-app/widget/base_component.hpp>
 
 using namespace luath::app::widget;
 using namespace std::string_literals;
 using namespace std::string_view_literals;
 
-AbstractDrawableComponent::AbstractDrawableComponent()
+BaseComponent::BaseComponent()
 {
-	mDrawingThead = std::jthread([this](std::stop_token stopToken) {drawingThreadMain(stopToken); });
+	mRenderingThread = std::jthread([this](std::stop_token stopToken) {renderingThreadMain(stopToken); });
 }
 
-AbstractDrawableComponent::~AbstractDrawableComponent()
+BaseComponent::~BaseComponent()
 {
 	// 描画スレッドを安全に停止
-	if(mDrawingThead.joinable()) {
-		mDrawingThead.request_stop();
-		mDrawingThead.join();
+	if(mRenderingThread.joinable()) {
+		mRenderingThread.request_stop();
+		mRenderingThread.join();
 	}
 }
 
-void AbstractDrawableComponent::setParam(std::string_view key, std::any&& value)
+void BaseComponent::setParam(std::string_view key, std::any&& value)
 {
 	std::lock_guard lock(mMutexForParams);
 	mParams.insert_or_assign(std::string(key), std::move(value));
 }
 
-void AbstractDrawableComponent::unsetParam(std::string_view key)
+void BaseComponent::unsetParam(std::string_view key)
 {
 	std::lock_guard lock(mMutexForParams);
 	auto found = mParams.find(key);
@@ -42,12 +42,21 @@ void AbstractDrawableComponent::unsetParam(std::string_view key)
 	mParams.erase(found);
 }
 
+void BaseComponent::repaintAsync()
+{
+	juce::MessageManager::callAsync([target = juce::WeakReference<Component>{ this }]
+	{
+		if(target != nullptr) {
+			target->repaint();
+		}
+	});
+}
 
-void AbstractDrawableComponent::paint(juce::Graphics& g)
+void BaseComponent::paint(juce::Graphics& g)
 {
 	// 以前に描画した画像を出力する
 	{
-		std::lock_guard lock(mDrawingMutex);
+		std::lock_guard lock(mRenderingMutex);
 
 		// スレッドセーフに新たな描画サイズを記録
 		int width = getWidth();
@@ -65,18 +74,18 @@ void AbstractDrawableComponent::paint(juce::Graphics& g)
 		mParams.insert_or_assign("scaled_height"s, scaledHeight);
 
 		// 描画済画像を出力
-		g.drawImage(*mDrawnImageForPaint, getX(), getY(), width, height, 0, 0, scaledWidth, scaledHeight);
+		g.drawImage(*mRenderedImageForPaint, 0, 0, width, height, 0, 0, scaledWidth, scaledHeight);
 
 		// 必要に応じて次の描画対象を現在の描画サイズに変更
 		// MEMO この操作はUIスレッドで行う必要がある。 スレッド間を跨いだ juce::Imageのやりとりはスレッドセーフではない
-		if(mDrawnImageForDraw->getWidth() != scaledWidth || mDrawnImageForDraw->getHeight() != scaledHeight) {
-			*mDrawnImageForDraw = juce::Image(juce::Image::ARGB, scaledWidth, scaledHeight, true);
+		if(mRenderedImageForRendering->getWidth() != scaledWidth || mRenderedImageForRendering->getHeight() != scaledHeight) {
+			*mRenderedImageForRendering = juce::Image(juce::Image::ARGB, scaledWidth, scaledHeight, true);
 		}
 	}
 	// 新たな描画をリクエストする
-	mRequestDrawEvent.set();
+	mRenderingRequestEvent.set();
 }
-void AbstractDrawableComponent::drawingThreadMain(std::stop_token stopToken)
+void BaseComponent::renderingThreadMain(std::stop_token stopToken)
 {
 	using std::views::zip;
 
@@ -88,7 +97,7 @@ void AbstractDrawableComponent::drawingThreadMain(std::stop_token stopToken)
 
 
 	// 描画ループ 
-	while(mRequestDrawEvent.try_wait(stopToken, std::chrono::milliseconds(10))) {
+	while(mRenderingRequestEvent.try_wait(stopToken, std::chrono::milliseconds(10))) {
 		std::unique_lock lockForParams(mMutexForParams);
 		Params params = mParams;
 		lockForParams.unlock();
@@ -125,19 +134,19 @@ void AbstractDrawableComponent::drawingThreadMain(std::stop_token stopToken)
 			g.addTransform(juce::AffineTransform::scale(scaleFactor));
 
 			if(unscaledCanvasRect.getWidth() > 0 && unscaledCanvasRect.getHeight() > 0) {
-				onDrawElements(g, unscaledCanvasRect.getWidth(), unscaledCanvasRect.getHeight(), params);
+				onRendering(g, unscaledCanvasRect.getWidth(), unscaledCanvasRect.getHeight(), params);
 			}
 		}
 
 		// 描画結果を描画スレッド外に安全に転送する
 		{
-			std::lock_guard lock(mDrawingMutex);
-			if(!mDrawnImageForDraw->isNull()){
-				mDrawnImageForDraw->clear(mDrawnImageForDraw->getBounds());
-				juce::Graphics g(*mDrawnImageForDraw);
+			std::lock_guard lock(mRenderingMutex);
+			if(!mRenderedImageForRendering->isNull()){
+				mRenderedImageForRendering->clear(mRenderedImageForRendering->getBounds());
+				juce::Graphics g(*mRenderedImageForRendering);
 				g.drawImageAt(drawnImage, 0, 0);
 			}
-			std::swap(mDrawnImageForPaint, mDrawnImageForDraw); // flip
+			std::swap(mRenderedImageForPaint, mRenderedImageForRendering); // flip
 		}
 	}
 }

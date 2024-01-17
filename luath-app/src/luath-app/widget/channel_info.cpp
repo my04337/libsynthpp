@@ -33,9 +33,10 @@ ChannelInfo::~ChannelInfo()
 void ChannelInfo::update(const std::shared_ptr<const lsp::synth::LuathSynth::Digest>& digest)
 {
 	setParam("synth_digest"s, std::make_any<std::shared_ptr<const lsp::synth::LuathSynth::Digest>>(digest));
+	repaintAsync();
 }
 
-void ChannelInfo::onDrawElements(juce::Graphics& g, int width_, int height_, Params& params)
+void ChannelInfo::onRendering(juce::Graphics& g, int width_, int height_, Params& params)
 {
 	// 描画準備
 	const auto get_any_or = [&params]<class value_type>(std::string_view key, value_type && value)
@@ -46,9 +47,6 @@ void ChannelInfo::onDrawElements(juce::Graphics& g, int width_, int height_, Par
 	if(!sharedDigest) return;
 	auto& channelDigests = sharedDigest->channels;
 	auto& voiceDigests = sharedDigest->voices;
-
-	g.saveState();
-	auto fin_act_restore_state = finally([&] {g.restoreState(); });
 
 	auto drawText = [&](float x, float y, std::wstring_view str) {
 		g.setColour(juce::Colours::black);
@@ -69,7 +67,10 @@ void ChannelInfo::onDrawElements(juce::Graphics& g, int width_, int height_, Par
 		++poly[vd.ch - 1];
 	}
 
-	// 描画開始
+	// 背景塗りつぶし
+	g.fillAll(juce::Colour::fromFloatRGBA(1.f, 1.f, 1.f, 1.f));
+
+	// チャネル情報描画
 	const float width = static_cast<float>(width_);
 	const float heightPerChannel = 15;
 	check(height_ == heightPerChannel * (channelDigests.size() + 1));

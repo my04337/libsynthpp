@@ -10,14 +10,14 @@
 #pragma once
 
 #include <luath-app/core/core.hpp>
-#include <luath-app/widget/abstract_signal_component.hpp>
+#include <luath-app/widget/base_component.hpp>
 #include <lsp/util/thread_pool.hpp>
 
 namespace luath::app::widget
 {
 
 class SpectrumAnalyzer final
-	: public AbstractSignalComponent
+	: public BaseComponent
 {
 public:
 	SpectrumAnalyzer();
@@ -26,10 +26,12 @@ public:
 	// 表示パラメータを指定します
 	void setParams(float sampleFreq, size_t bufferSize, uint32_t strechRate = 1);
 
-protected:
-	void onDrawStaticElements(juce::Graphics& g, int width, int height, Params& params)override;
-	void onDrawDynamicElements(juce::Graphics& g, int width, int height, Params& params, std::array<std::vector<float>, 2>& buffer)override;
+	// 表示波形を書き込みます
+	void write(const lsp::Signal<float>& sig);
 
+protected:
+	void onRendering(juce::Graphics& g, int width, int height, Params& params)override;
+	
 private:
 	// 対数軸への変換関数
 	static float freq2horz(float width, float freq);
@@ -37,6 +39,10 @@ private:
 	static float power2vert(float height, float power);
 
 private:
+	// 入力用信号バッファ ※mInputMutexにて保護される
+	mutable std::mutex mInputMutex;
+	std::array<std::deque<float>, 2> mInputBuffer;
+
 	// FFTウィンドウ形状キャッシュ
 	std::vector<float> mDrawingFftWindowShapeCache;
 

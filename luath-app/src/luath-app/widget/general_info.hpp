@@ -16,15 +16,15 @@
 namespace luath::app::widget
 {
 
-class ChannelInfo final
+class GeneralInfo final
 	: public BaseComponent
 {
 public:
-	ChannelInfo();
-	~ChannelInfo();
+	GeneralInfo();
+	~GeneralInfo();
 
 	// 表示パラメータを指定します
-	void update(const std::shared_ptr<const lsp::synth::LuathSynth::Digest>& digest);
+	void update(const juce::AudioDeviceManager& manager, const std::shared_ptr<const lsp::synth::LuathSynth::Digest>& digest);
 
 protected:
 	// 描画時にコールバックされます

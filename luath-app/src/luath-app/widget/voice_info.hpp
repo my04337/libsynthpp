@@ -16,12 +16,12 @@
 namespace luath::app::widget
 {
 
-class ChannelInfo final
+class VoiceInfo final
 	: public BaseComponent
 {
 public:
-	ChannelInfo();
-	~ChannelInfo();
+	VoiceInfo();
+	~VoiceInfo();
 
 	// 表示パラメータを指定します
 	void update(const std::shared_ptr<const lsp::synth::LuathSynth::Digest>& digest);
@@ -32,6 +32,7 @@ protected:
 
 private:
 	juce::Font mFont;
+	juce::Font mSmallFont;
 };
 
 } // namespace luath::app::widget
