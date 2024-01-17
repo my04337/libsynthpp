@@ -1,6 +1,19 @@
-﻿#include <luath-app/widget/oscilloscope.hpp>
+﻿/**
+	luath-app
+
+	Copyright(c) 2023 my04337
+
+	This software is released under the GPLv3 License.
+	https://opensource.org/license/gpl-3-0/
+*/
+
+#include <luath-app/widget/oscilloscope.hpp>
 
 using namespace luath::app::widget;
+using namespace std::string_literals;
+using namespace std::string_view_literals;
+using std::views::iota;
+using std::views::zip;
 
 OscilloScope::OscilloScope()
 {
@@ -16,17 +29,13 @@ void OscilloScope::setParams(float sampleFreq, float span)
 	require(span > 0);
 
 	auto bufferSize = static_cast<size_t>(sampleFreq * span);
-	require(bufferSize > 0);
 
-	std::lock_guard lock(mInputMutex);
-	mSampleFreq = sampleFreq;
-	mSpan = span;
-	mBufferSize = bufferSize;
+	setParam("sample_freq"s, std::make_any<float>(sampleFreq));
+	setParam("buffer_size"s, std::make_any<size_t>(bufferSize));
+	setParam("span"s, std::make_any<float>(span));
 
-	mInputBuffer1ch.resize(mBufferSize, 0.f);
-	mInputBuffer2ch.resize(mBufferSize, 0.f);
-	mDrawingBuffer1ch.resize(mBufferSize, 0.f);
-	mDrawingBuffer2ch.resize(mBufferSize, 0.f);
+	for(auto& buffer : mInputBuffer) buffer.resize(bufferSize, 0.f);
+	repaintAsync();
 }
 
 void OscilloScope::write(const Signal<float>& sig)
@@ -36,91 +45,81 @@ void OscilloScope::write(const Signal<float>& sig)
 	const auto signal_channels = sig.channels();
 	const auto signal_samples = sig.samples();
 
-	require(signal_channels == 2, "OscilloScope : write - failed (channel count is mismatch)");
+	require(signal_channels == 2, "write - failed (channel count is mismatch)");
 
-	// バッファ末尾に追記
-	mInputBuffer1ch.insert(mInputBuffer1ch.end(), sig.data(0), sig.data(0) + signal_samples);
-	mInputBuffer2ch.insert(mInputBuffer2ch.end(), sig.data(1), sig.data(1) + signal_samples);
-
-	// リングバッファとして振る舞うため、先頭から同じサイズを削除
-	mInputBuffer1ch.erase(mInputBuffer1ch.begin(), mInputBuffer1ch.begin() + signal_samples);
-	mInputBuffer2ch.erase(mInputBuffer2ch.begin(), mInputBuffer2ch.begin() + signal_samples);
+	for(auto&& [ch, buffer] : zip(iota(0), mInputBuffer)) {
+		buffer.insert(buffer.end(), sig.data(ch), sig.data(ch) + signal_samples);
+		buffer.erase(buffer.begin(), buffer.begin() + signal_samples);
+	}
+	repaintAsync();
 }
 
-void OscilloScope::paint(juce::Graphics& g)
+void OscilloScope::onRendering(juce::Graphics& g, const int width_, const int height_, Params& params)
 {
 	// 信号出力をブロックしないように描画用信号バッファへコピー
+	std::array<std::vector<float>, 2> buffer;
 	{
 		std::lock_guard lock(mInputMutex);
-		std::copy(mInputBuffer1ch.begin(), mInputBuffer1ch.end(), mDrawingBuffer1ch.begin());
-		std::copy(mInputBuffer2ch.begin(), mInputBuffer2ch.end(), mDrawingBuffer2ch.begin());
+
+		for(auto&& [input, drawing] : zip(mInputBuffer, buffer)) {
+			drawing.resize(input.size());
+			std::copy(input.begin(), input.end(), drawing.begin());
+		}
 	}
 
-	// 描画開始
-	g.saveState();
-	auto fin_act_restore_state = finally([&] {g.restoreState(); });
+	// よく使う定数などの計算
+	const float width = static_cast<float>(width_);
+	const float height = static_cast<float>(height_);
+	const float midX = width / 2;
+	const float midY = height / 2;
+	const size_t bufferSize = buffer[0].size();
+	const float speedRatio = bufferSize / width;
 
-	const juce::Rectangle<float>  rect{ static_cast<float>(getX()), static_cast<float>(getY()), static_cast<float>(getWidth()), static_cast<float>(getHeight())};
-	if(rect.isEmpty())return;
-
-	juce::Path clipPath;
-	clipPath.addRectangle(rect);
-	g.reduceClipRegion(clipPath);
-
-	// よく使う値を先に計算
-	const float left = rect.getX();
-	const float top = rect.getY();
-	const float right = rect.getRight();
-	const float bottom = rect.getBottom();
-	const float width = rect.getWidth();
-	const float height = rect.getHeight();
-
-	const float mid_x = (left + right) / 2;
-	const float mid_y = (top + bottom) / 2;
-
-	const size_t buffer_size = mBufferSize;
-	const float speed_ratio = buffer_size / width;
-
-	auto& interpolated = mInterpolatedSignalBuffer;
-	const size_t interpolated_size = static_cast<size_t>(std::ceil(width));
-	interpolated.resize(interpolated_size);
-
+	// 背景塗りつぶし
+	g.fillAll(juce::Colour::fromFloatRGBA(1.f, 1.f, 1.f, 1.f));
 
 	// 罫線描画
 	g.setColour(juce::Colour::fromFloatRGBA(0.5f, 1.f, 0.125f, 1.f));
-	for (int i = 1; i <= 9; ++i) {
-		float x = left + width  * 0.1f * i;
-		float y = top  + height * 0.1f * i;
-		g.drawLine(left, y, right, y);
-		g.drawLine(x, top, x, bottom);
+	for(int i = 1; i <= 9; ++i) {
+		float x = width * 0.1f * i;
+		float y = height * 0.1f * i;
+		g.drawLine(0, y, width, y);
+		g.drawLine(x, 0, x, height);
 	}
 
+	// 枠描画
+	g.setColour(juce::Colour::fromFloatRGBA(0.f, 0.f, 0.f, 1.f));
+	g.drawRect(juce::Rectangle<int>(0, 0, width_, height_));
+
+	// 枠の内側に描画されるようにクリッピング
+	auto clipRect = juce::Rectangle<int>(0, 0, width_, height_).expanded(-1);
+	g.reduceClipRegion(clipRect);
+
 	// 信号描画
-	auto drawSignal = [&](const juce::Colour& color, const std::vector<float>& buffer) {
+	static const std::array<juce::Colour, 2> channelColor{
+		juce::Colour::fromFloatRGBA(1.f, 0.f, 0.f, 0.5f),
+		juce::Colour::fromFloatRGBA(0.f, 0.f, 1.f, 0.5f),
+	};
+	std::vector<float> interpolated(static_cast<size_t>(width));
+	for(auto&& [buffer, color] : zip(buffer, channelColor)) {
 		// そのまま全サンプルを描画すると重いため、描画画素数に応じた値まで間引く
 		juce::LinearInterpolator().process(
-			speed_ratio,
+			speedRatio,
 			buffer.data(),
 			interpolated.data(),
-			static_cast<int>(interpolated_size),
-			static_cast<int>(buffer_size),
+			static_cast<int>(interpolated.size()),
+			static_cast<int>(bufferSize),
 			0
 		);
 
 		// 複数回のdrawLine呼び出しは重いため、Pathとして一括で描画する
-		auto getY = [&](float v) {return mid_y - height / 2.0f * normalize(v); };		
-		juce::Path path;		
-		path.startNewSubPath(left, getY(interpolated[0]));
-		for(size_t i = 1; i < interpolated_size; ++i) {
-			path.lineTo(left + static_cast<float>(i), getY(interpolated[i]));
+		auto getY = [&](float v) {return midY - height / 2.0f * normalize(v); };
+		juce::Path path;
+		path.startNewSubPath(0, getY(interpolated[0]));
+		for(size_t i = 1; i < interpolated.size(); ++i) {
+			path.lineTo(static_cast<float>(i), getY(interpolated[i]));
 		}
 		g.setColour(color);
 		g.strokePath(path, juce::PathStrokeType(1));
-	};
-	drawSignal(juce::Colour::fromFloatRGBA(1.f, 0.f, 0.f, 0.5f), mDrawingBuffer1ch);
-	drawSignal(juce::Colour::fromFloatRGBA(0.f, 0.f, 1.f, 0.5f), mDrawingBuffer2ch);
-
-	// 枠描画
-	g.setColour(juce::Colour::fromFloatRGBA(0.f, 0.f, 0.f, 1.f ));
-	g.drawRect(rect);
+	}
 }

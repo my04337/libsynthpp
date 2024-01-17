@@ -1,12 +1,23 @@
-﻿#pragma once
+﻿/**
+	luath-app
+
+	Copyright(c) 2023 my04337
+
+	This software is released under the GPLv3 License.
+	https://opensource.org/license/gpl-3-0/
+*/
+
+#pragma once
 
 #include <luath-app/core/core.hpp>
+#include <luath-app/widget/base_component.hpp>
+#include <lsp/util/thread_pool.hpp>
 
 namespace luath::app::widget
 {
 
-class SpectrumAnalyzer
-	: public juce::Component
+class SpectrumAnalyzer final
+	: public BaseComponent
 {
 public:
 	SpectrumAnalyzer();
@@ -18,26 +29,25 @@ public:
 	// 表示波形を書き込みます
 	void write(const lsp::Signal<float>& sig);
 
-
-	// スペクトラム解析結果を描画を描画します
-	void paint(juce::Graphics& g)override;
+protected:
+	void onRendering(juce::Graphics& g, int width, int height, Params& params)override;
+	
+private:
+	// 対数軸への変換関数
+	static float freq2horz(float width, float freq);
+	static float horz2freq(float width, float x);
+	static float power2vert(float height, float power);
 
 private:
-	float mSampleFreq; // [hz]
-	float mSpan;       // [second]
-	uint32_t mStrechRate;
-	size_t mUnitBufferSize;
-
+	// 入力用信号バッファ ※mInputMutexにて保護される
 	mutable std::mutex mInputMutex;
-	std::deque<float> mInputBuffer1ch; // リングバッファ
-	std::deque<float> mInputBuffer2ch; // リングバッファ
+	std::array<std::deque<float>, 2> mInputBuffer;
 
-	std::vector<float> mDrawingBuffer1ch; // 描画用バッファ。排他不要。
-	std::vector<float> mDrawingBuffer2ch; // 描画用バッファ。排他不要。
+	// FFTウィンドウ形状キャッシュ
+	std::vector<float> mDrawingFftWindowShapeCache;
 
-	std::vector<float> mDrawingFftRealBuffer;  // 描画バッファ。 FFT実数部。
-	std::vector<float> mDrawingFftImageBuffer; // 描画バッファ。 FFT虚数部。
-	std::vector<float> mDrawingFftWindowCache; // 描画バッファ。 FFT窓関数。
+	// FFT並列実行用スレッドプール
+	ThreadPool mThreadPoolForFft;
 };
 
 //

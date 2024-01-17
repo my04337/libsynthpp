@@ -11,31 +11,27 @@
 
 #include <luath-app/core/core.hpp>
 #include <luath-app/widget/base_component.hpp>
+#include <lsp/synth/synth.hpp>
 
 namespace luath::app::widget
 {
 
-class Lissajous final
+class GeneralInfo final
 	: public BaseComponent
 {
 public:
-	Lissajous();
-	~Lissajous();
+	GeneralInfo();
+	~GeneralInfo();
 
-	// 描画パラメータを指定します
-	void setParams(float sampleFreq, float span);
-
-	// 表示波形を書き込みます
-	void write(const lsp::Signal<float>& sig);
+	// 表示パラメータを指定します
+	void update(const juce::AudioDeviceManager& manager, const std::shared_ptr<const lsp::synth::LuathSynth::Digest>& digest);
 
 protected:
+	// 描画時にコールバックされます
 	void onRendering(juce::Graphics& g, int width, int height, Params& params)override;
 
 private:
-	// 入力用信号バッファ ※mInputMutexにて保護される
-	mutable std::mutex mInputMutex;
-	std::array<std::deque<float>, 2> mInputBuffer;
+	juce::Font mFont;
 };
 
-//
-}
+} // namespace luath::app::widget
