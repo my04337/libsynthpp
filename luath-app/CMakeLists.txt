@@ -38,6 +38,7 @@ list(
 	juce_core
 	juce_audio_basics
 	juce_audio_devices
+	juce_events
 )
 # - GPLv3 or Commerical
 list(

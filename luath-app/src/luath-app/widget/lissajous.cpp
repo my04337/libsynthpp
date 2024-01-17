@@ -1,6 +1,19 @@
-﻿#include <luath-app/widget/lissajous.hpp>
+﻿/**
+	luath-app
+
+	Copyright(c) 2023 my04337
+
+	This software is released under the GPLv3 License.
+	https://opensource.org/license/gpl-3-0/
+*/
+
+#include <luath-app/widget/lissajous.hpp>
 
 using namespace luath::app::widget;
+using namespace std::string_literals;
+using namespace std::string_view_literals;
+using std::views::iota;
+using std::views::zip;
 
 Lissajous::Lissajous()
 {
@@ -17,17 +30,14 @@ void Lissajous::setParams(float sampleFreq, float span)
 	require(span > 0);
 
 	auto bufferSize = static_cast<size_t>(sampleFreq * span);
-	require(bufferSize > 0);
 
-	std::lock_guard lock(mInputMutex);
-	mSampleFreq = sampleFreq;
-	mSpan = span;
-	mBufferSize = bufferSize;
+	setParam("sample_freq"s, std::make_any<float>(sampleFreq));
+	setParam("buffer_size"s, std::make_any<size_t>(bufferSize));
+	setParam("span"s, std::make_any<float>(span));
 
-	mInputBuffer.resize(bufferSize, std::make_pair(0.f, 0.f));
-	mDrawingBuffer.resize(bufferSize, std::make_pair(0.f, 0.f));
+	for(auto& buffer : mInputBuffer) buffer.resize(bufferSize, 0.f);
+	repaintAsync();
 }
-
 void Lissajous::write(const Signal<float>& sig)
 {
 	std::lock_guard lock(mInputMutex);
@@ -35,69 +45,69 @@ void Lissajous::write(const Signal<float>& sig)
 	const auto signal_channels = sig.channels();
 	const auto signal_samples = sig.samples();
 
-	require(signal_channels == 2, "Lissajous : write - failed (channel count is mismatch)");
+	require(signal_channels == 2, "write - failed (channel count is mismatch)");
 
-	// バッファ末尾に追記
-	for(size_t i = 0; i < signal_samples; ++i) {
-		mInputBuffer.emplace_back(sig.data(0, i), sig.data(1, i));
+	for(auto&& [ch, buffer] : zip(iota(0), mInputBuffer)) {
+		buffer.insert(buffer.end(), sig.data(ch), sig.data(ch) + signal_samples);
+		buffer.erase(buffer.begin(), buffer.begin() + signal_samples);
 	}
-
-	// リングバッファとして振る舞うため、先頭から同じサイズを削除
-	mInputBuffer.erase(mInputBuffer.begin(), mInputBuffer.begin() + signal_samples);
+	repaintAsync();
 }
 
-void Lissajous::paint(juce::Graphics& g)
+void Lissajous::onRendering(juce::Graphics& g, const int width_, const int height_, Params& params)
 {
 	// 信号出力をブロックしないように描画用信号バッファへコピー
+	std::array<std::vector<float>, 2> buffer;
 	{
 		std::lock_guard lock(mInputMutex);
-		std::copy(mInputBuffer.begin(), mInputBuffer.end(), mDrawingBuffer.begin());
+
+		for(auto&& [input, drawing] : zip(mInputBuffer, buffer)) {
+			drawing.resize(input.size());
+			std::copy(input.begin(), input.end(), drawing.begin());
+		}
 	}
 
-	// 描画開始
-	g.saveState();
-	auto fin_act_restore_state = finally([&] {g.restoreState(); });
+	// よく使う定数などの計算
+	const float width = static_cast<float>(width_);
+	const float height = static_cast<float>(height_);
+	const float midX = width / 2;
+	const float midY = height / 2;
+	const size_t bufferSize = buffer[0].size();
 
-	const juce::Rectangle<float>  rect{ static_cast<float>(getX()), static_cast<float>(getY()), static_cast<float>(getWidth()), static_cast<float>(getHeight())};
-	if(rect.isEmpty()) return;
+	// 背景塗りつぶし
+	g.fillAll(juce::Colour::fromFloatRGBA(1.f, 1.f, 1.f, 1.f));
 
-	juce::Path clipPath;
-	clipPath.addRectangle(rect);
-	g.reduceClipRegion(clipPath);
-
-	// よく使う値を先に計算
-	const float left = rect.getX();
-	const float top = rect.getY();
-	const float right = rect.getRight();
-	const float bottom = rect.getBottom();
-	const float width = rect.getWidth();
-	const float height = rect.getHeight();
-
-	const float mid_x = (left + right) / 2;
-	const float mid_y = (top + bottom) / 2;
-	const size_t buffer_size = mBufferSize;
-	const float sample_pitch = width / buffer_size;
-
-	// 罫線描画
+	// 罫線
 	g.setColour(juce::Colour::fromFloatRGBA(0.5f, 1.f, 0.125f, 1.f));
-	for (int i = 1; i <= 9; ++i) {
-		float x = left + width  * 0.1f * i;
-		float y = top  + height * 0.1f * i;
-		g.drawLine(left, y, right, y);
-		g.drawLine(x, top, x, bottom);
+	for(int i = 1; i <= 9; ++i) {
+		float x = width * 0.1f * i;
+		float y = height * 0.1f * i;
+		g.drawLine(0, y, width, y);
+		g.drawLine(x, 0, x, height);
 	}
 
-	// 信号描画
+	// 枠
+	g.setColour(juce::Colour::fromFloatRGBA(0.f, 0.f, 0.f, 1.f));
+	g.drawRect(juce::Rectangle<int>{0, 0, width_, height_});
+
+	// 枠の内側に描画されるようにクリッピング
+	juce::Path clipPath;
+	auto clipRect = juce::Rectangle<int>(0, 0, width_, height_).expanded(-1);
+	g.reduceClipRegion(clipRect);
+
+
+	// リサージュ曲線
 	auto getPoint = [&](size_t pos) -> juce::Point<float> {
-		auto [ch1, ch2] = mDrawingBuffer[pos];
+		auto ch1 = buffer[0][pos];
+		auto ch2 = buffer[1][pos];
 		return {
-			mid_x + width / 2.0f * normalize(ch1),
-			mid_y - height / 2.0f * normalize(ch2),
+			midX + width / 2.0f * normalize(ch1),
+			midY - height / 2.0f * normalize(ch2),
 		};
-	};
+		};
 	juce::Path signalPath;
 	signalPath.startNewSubPath(getPoint(0));
-	for(size_t i = 1; i < buffer_size; ++i) {
+	for(size_t i = 1; i < bufferSize; ++i) {
 		auto cur = getPoint(i);
 		if(cur.getDistanceFrom(signalPath.getCurrentPosition()) >= 1.f) {
 			signalPath.lineTo(cur);
@@ -105,8 +115,4 @@ void Lissajous::paint(juce::Graphics& g)
 	}
 	g.setColour(juce::Colour::fromFloatRGBA(1.f, 0.f, 0.f, 1.f));
 	g.strokePath(signalPath, juce::PathStrokeType(1));
-
-	// 枠描画
-	g.setColour(juce::Colour::fromFloatRGBA(0.f, 0.f, 0.f, 1.f));
-	g.drawRect(rect);
 }
