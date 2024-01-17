@@ -15,7 +15,14 @@ using namespace std::string_view_literals;
 
 BaseComponent::BaseComponent()
 {
+	// 自前で描画バッファを持つため、juce::Component側の描画バッファは不要
+	setBufferedToImage(false);
+
+	// 描画スレッド開始
 	mRenderingThread = std::jthread([this](std::stop_token stopToken) {renderingThreadMain(stopToken); });
+
+	// 初回の描画を予約
+	mRenderingRequestEvent.set();
 }
 
 BaseComponent::~BaseComponent()
