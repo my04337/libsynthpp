@@ -83,7 +83,7 @@ void VoiceInfo::onRendering(juce::Graphics& g, int width_, int height_, Params& 
 	g.fillAll(juce::Colour::fromFloatRGBA(1.f, 1.f, 1.f, 1.f));
 
 	// ボイス情報描画開始
-	const size_t maxRowCount = 2;
+	const size_t maxRowCount = 3;
 	const size_t voicePerRow = 45;
 	const float heightPerVoice = 12;
 	check(height_ == heightPerVoice * voicePerRow);

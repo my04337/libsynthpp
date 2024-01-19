@@ -22,7 +22,7 @@ namespace luath::app
 {
 
 class MainContent
-	: public juce::Component
+	: public juce::OpenGLAppComponent
 {
 public:
 	MainContent(const lsp::synth::LuathSynth& synth, const juce::AudioDeviceManager& audioDeviceManager);
@@ -30,6 +30,11 @@ public:
 
 	void audioDeviceAboutToStart(juce::AudioIODevice* device);
 	void writeAudio(const lsp::Signal<float>& sig);
+	void paint(juce::Graphics& g)override;
+
+	void initialise()override;
+	void shutdown()override;
+	void render()override;
 
 private:
 	const lsp::synth::LuathSynth& mSynth;

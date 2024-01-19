@@ -42,13 +42,13 @@ MainContent::MainContent(const lsp::synth::LuathSynth& synth, const juce::AudioD
 	// 子コンポーネントのセットアップ
 	const int margin = 5; // unsecaled
 
-	mGeneralInfoWidget.setBounds(0 + margin, +margin, SCREEN_WIDTH * margin * 2, 60 - margin * 2);
+	mGeneralInfoWidget.setBounds(0 + margin, +margin, SCREEN_WIDTH - margin * 2, 60 - margin * 2);
 	addAndMakeVisible(mGeneralInfoWidget);
 
 	mChannelInfoWidget.setBounds(10, 60, 435, 255);
 	addAndMakeVisible(mChannelInfoWidget);
 
-	mVoiceInfoWidget.setBounds(460, 60, 214, 540);
+	mVoiceInfoWidget.setBounds(460, 60, 321, 540);
 	addAndMakeVisible(mVoiceInfoWidget);
 
 	mLissajousWidget.setBounds(10 + margin, 340 + margin, 150 - margin * 2,  150 - margin * 2);
@@ -63,6 +63,7 @@ MainContent::MainContent(const lsp::synth::LuathSynth& synth, const juce::AudioD
 
 MainContent::~MainContent()
 {
+	shutdownOpenGL();
 }
 
 
@@ -87,4 +88,23 @@ void MainContent::writeAudio(const lsp::Signal<float>& sig)
 	mGeneralInfoWidget.update(mAudioDeviceManager, digest);
 	mChannelInfoWidget.update(digest);
 	mVoiceInfoWidget.update(digest);
+}
+
+void MainContent::paint(juce::Graphics& g)
+{
+	// 背景塗りつぶし
+	g.fillAll(juce::Colour::fromFloatRGBA(1.f, 1.f, 1.f, 1.f));
+}
+
+void MainContent::initialise()
+{
+
+}
+void MainContent::shutdown()
+{
+
+}
+void MainContent::render()
+{
+	repaint();
 }
