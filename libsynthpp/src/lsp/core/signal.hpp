@@ -32,40 +32,42 @@ public:
 		return Signal(std::move(buffer));
 	}
 
-	Signal() : mData() {}
+	Signal() : mBuffer() {}
 
 	Signal(Signal&& d)noexcept = default;
 	Signal& operator=(Signal&& d)noexcept = default;
 
-
-	juce::AudioBuffer<sample_type>& data()noexcept { return mData; }
-	const juce::AudioBuffer<sample_type>& data()const noexcept { return mData; }
+	// 信号をJUCEのAudioBuffer形式でを取得します
+	juce::AudioBuffer<sample_type>& buffer()noexcept { return mBuffer; }
+	const juce::AudioBuffer<sample_type>& buffer()const noexcept { return mBuffer; }
 
 	// チャネル数を取得します
-	uint32_t channels()const noexcept { return static_cast<uint32_t>(mData.getNumChannels()); }
+	uint32_t channels()const noexcept { return static_cast<uint32_t>(mBuffer.getNumChannels()); }
 
 	// サンプル数を取得します
-	size_t samples()const noexcept { return static_cast<size_t>(mData.getNumSamples()); }
+	size_t samples()const noexcept { return static_cast<size_t>(mBuffer.getNumSamples()); }
 
-	// 各サンプルの先頭ポインタを取得します
-	sample_type* mutableData(uint32_t channel)noexcept { return mData.getWritePointer(static_cast<int>(channel)); }
-	sample_type& mutableData(uint32_t channel, size_t index)noexcept { return *mData.getWritePointer(static_cast<int>(channel, static_cast<int>(index))); }
-	const sample_type* data(uint32_t channel)const noexcept { return mData.getReadPointer(static_cast<int>(channel)); }
-	sample_type data(uint32_t channel, size_t index)const noexcept { return mData.getSample(static_cast<int>(channel), static_cast<int>(index)); }
+	// 各サンプルの先頭ポインタを取得します(書き込み用)
+	sample_type* mutableData(uint32_t channel)noexcept { return mBuffer.getWritePointer(static_cast<int>(channel)); }
+	sample_type& mutableData(uint32_t channel, size_t index)noexcept { return *mBuffer.getWritePointer(static_cast<int>(channel, static_cast<int>(index))); }
+	
+	// 各サンプルの先頭ポインタを取得します(読み取り用)
+	const sample_type* data(uint32_t channel)const noexcept { return mBuffer.getReadPointer(static_cast<int>(channel)); }
+	sample_type data(uint32_t channel, size_t index)const noexcept { return mBuffer.getSample(static_cast<int>(channel), static_cast<int>(index)); }
 
 	// 信号レベルを算出します
-	const sample_type getRMSLevel(uint32_t channel)const noexcept { return mData.getRMSLevel(static_cast<int>(channel), 0, mData.getNumSamples()); }
+	const sample_type getRMSLevel(uint32_t channel)const noexcept { return mBuffer.getRMSLevel(static_cast<int>(channel), 0, mBuffer.getNumSamples()); }
 
 protected:
 	Signal(uint32_t channels, size_t frames)
-		: mData(static_cast<int>(channels), static_cast<int>(frames)) {
+		: mBuffer(static_cast<int>(channels), static_cast<int>(frames)) {
 	}
 	Signal(juce::AudioBuffer<sample_type>&& buffer)
-		: mData(std::move(buffer)) {
+		: mBuffer(std::move(buffer)) {
 	}
 
 private:
-	juce::AudioBuffer<sample_type> mData;
+	juce::AudioBuffer<sample_type> mBuffer;
 };
 
 }

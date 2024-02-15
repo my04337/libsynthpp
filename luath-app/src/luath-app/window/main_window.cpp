@@ -139,7 +139,7 @@ void MainWindow::audioDeviceIOCallbackWithContext(
 	// シンセサイザ発音
 	{
 		juce::ScopedLock sl(mMidiBufferLock);
-		mSynthesizer.renderNextBlock(sig.data(), mMidiBuffer, 0, numSamples);
+		mSynthesizer.renderNextBlock(sig.buffer(), mMidiBuffer, 0, numSamples);
 		mMidiBuffer.clear();
 	}
 
