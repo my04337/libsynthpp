@@ -19,36 +19,35 @@ template<class T> requires std::signed_integral<T> || std::floating_point<T>
 struct sample_traits {};
 
 template<std::signed_integral T> struct sample_traits<T> {
-	using _sample_type_tag = void; // for SFINAE
 	using sample_type = T;
-	static constexpr sample_type abs_max = std::numeric_limits<T>::max(); // C++20より、整数値は2の補数であることが保証された。 そのため絶対値の小さい正の最大値を基準に用いる。
-	static constexpr sample_type normalized_max = +abs_max;
-	static constexpr sample_type normalized_min = -abs_max;
+	
+	// C++20より、整数値は2の補数であることが保証された。 そのため絶対値の小さい正の最大値を基準に用いる。
+	static constexpr sample_type max = +std::numeric_limits<T>::max();
+	static constexpr sample_type min = -std::numeric_limits<T>::max();
 };
 template<std::floating_point T> struct sample_traits<T> {
-	using _sample_type_tag = void; // for SFINAE
 	using sample_type = T;
-	static constexpr sample_type abs_max = static_cast<T>(1.0);
-	static constexpr sample_type normalized_max = +abs_max;
-	static constexpr sample_type normalized_min = -abs_max;
+
+	// 浮動小数の場合、最大値は±1.0とする。
+	static constexpr sample_type max = +static_cast<T>(1.0);
+	static constexpr sample_type min = -static_cast<T>(1.0);
 };
 
 // ---
 
-// ノーマライズ : 値域を信号の標準的な幅に狭める
+// 値域を信号の表現可能な範囲にクリッピングする
 template<class sample_type> requires std::signed_integral<sample_type> || std::floating_point<sample_type>
-constexpr sample_type normalize(sample_type in) noexcept 
+constexpr sample_type clamp(sample_type in) noexcept 
 {
 	// MEMO できるだけconstexprで解決し、実行時コストを純粋に変換処理のみとしたい。
-	// MEMO 整数型でもノーマライズは必要 (2の補数を用いている処理系の場合、負の方向に1減らす必要が有るかもしれない)
 
-	constexpr auto normalized_min = sample_traits<sample_type>::normalized_min;
-	constexpr auto normalized_max = sample_traits<sample_type>::normalized_max;
+	constexpr auto min = sample_traits<sample_type>::min;
+	constexpr auto max = sample_traits<sample_type>::max;
 
-	return std::clamp(in, normalized_min, normalized_max);
+	return std::clamp(in, min, max);
 }
 
-// 再量子化 : サンプルのフォーマットを変更
+// サンプルのフォーマットを変更
 template<
 	class Tout,
 	class Tin
@@ -79,11 +78,11 @@ constexpr Tout requantize(Tin in) noexcept
 			return static_cast<Tout>(in * (1 << (out_bits - in_bits)));
 		}
 	} else if constexpr (std::is_floating_point_v<Tin> && std::is_integral_v<Tout>) {
-		// 浮動小数点数→整数 : ノーマライズしてから増幅
-		return static_cast<Tout>(normalize(in) * sample_traits<Tout>::abs_max);
+		// 浮動小数点数→整数 : クリッピングしてから増幅
+		return static_cast<Tout>(lsp::clamp(in) * sample_traits<Tout>::max);
 	} else if constexpr (std::is_integral_v<Tin> && std::is_floating_point_v<Tout>) {
 		// 整数→浮動小数点数 : 最大振れ幅で割るだけ
-		return static_cast<Tout>(in) / sample_traits<Tin>::abs_max;
+		return static_cast<Tout>(in) / sample_traits<Tin>::max;
 	} else {
 		// 変換未対応
 		static_assert(false_v, "Unsupported type.");

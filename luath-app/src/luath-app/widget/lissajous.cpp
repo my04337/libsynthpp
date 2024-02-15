@@ -101,8 +101,8 @@ void Lissajous::onRendering(juce::Graphics& g, const int width_, const int heigh
 		auto ch1 = buffer[0][pos];
 		auto ch2 = buffer[1][pos];
 		return {
-			midX + width / 2.0f * normalize(ch1),
-			midY - height / 2.0f * normalize(ch2),
+			midX + width / 2.0f * clamp(ch1),
+			midY - height / 2.0f * clamp(ch2),
 		};
 		};
 	juce::Path signalPath;

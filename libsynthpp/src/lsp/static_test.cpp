@@ -22,12 +22,12 @@ static_assert(math::PI<long double> != 0,  "math::PI<> failed");
 
 // ############################################################################
 // ### Base/Signal 
-static_assert(normalize(+2.0) == +1.0,  "Filter::Normalizer failed");
-static_assert(normalize(-2.0) == -1.0,  "Filter::Normalizer failed");
+static_assert(clamp(+2.0) == +1.0,  "Filter::clampr failed");
+static_assert(clamp(-2.0) == -1.0,  "Filter::clampr failed");
 
-static_assert(normalize(static_cast<int8_t>(+0x7F)) == +0x7F,  "Filter::Normalizer failed");
-static_assert(normalize(static_cast<int8_t>(-0x7F)) == -0x7F,  "Filter::Normalizer failed");
-static_assert(normalize(static_cast<int8_t>(-0x80)) == -0x7F,  "Filter::Normalizer failed");
+static_assert(clamp(static_cast<int8_t>(+0x7F)) == +0x7F,  "Filter::clampr failed");
+static_assert(clamp(static_cast<int8_t>(-0x7F)) == -0x7F,  "Filter::clampr failed");
+static_assert(clamp(static_cast<int8_t>(-0x80)) == -0x7F,  "Filter::clampr failed");
 
 static_assert(requantize<int8_t>(static_cast<int8_t>(0)) == 0, "Filter::Requantizer failed");
 static_assert(requantize<int8_t>(static_cast<int8_t>(0)) == 0, "Filter::Requantizer failed");

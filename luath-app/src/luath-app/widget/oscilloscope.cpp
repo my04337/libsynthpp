@@ -113,7 +113,7 @@ void OscilloScope::onRendering(juce::Graphics& g, const int width_, const int he
 		);
 
 		// 複数回のdrawLine呼び出しは重いため、Pathとして一括で描画する
-		auto getY = [&](float v) {return midY - height / 2.0f * normalize(v); };
+		auto getY = [&](float v) {return midY - height / 2.0f * clamp(v); };
 		juce::Path path;
 		path.startNewSubPath(0, getY(interpolated[0]));
 		for(size_t i = 1; i < interpolated.size(); ++i) {
