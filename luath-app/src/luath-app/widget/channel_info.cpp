@@ -20,7 +20,7 @@ using lsp::synth::LuathVoice;
 ChannelInfo::ChannelInfo()
 {
 	auto app = dynamic_cast<luath::app::Application*>(juce::JUCEApplication::getInstance());
-	check(app != nullptr);
+	lsp_check(app != nullptr);
 
 	mFont = juce::Font(app->createDefaultTypeface());
 	mFont.setHeight(12);
@@ -73,10 +73,10 @@ void ChannelInfo::onRendering(juce::Graphics& g, int width_, int height_, Params
 	// チャネル情報描画
 	const float width = static_cast<float>(width_);
 	const float heightPerChannel = 15;
-	check(height_ == heightPerChannel * (channelDigests.size() + 1));
+	lsp_check(height_ == heightPerChannel * (channelDigests.size() + 1));
 
 	constexpr std::array<float, 10> columnWidth{ 25, 75, 40, 40, 60, 35, 75, 25, 25, 35 }; // 435
-	check(width_ == static_cast<int>(std::round(std::accumulate(columnWidth.begin(), columnWidth.end(), 0.0f))));
+	lsp_check(width_ == static_cast<int>(std::round(std::accumulate(columnWidth.begin(), columnWidth.end(), 0.0f))));
 
 	float x = 0;
 	size_t ci = 0;

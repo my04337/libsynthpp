@@ -25,8 +25,8 @@ OscilloScope::~OscilloScope()
 }
 void OscilloScope::setParams(float sampleFreq, float span)
 {
-	require(sampleFreq > 0);
-	require(span > 0);
+	lsp_require(sampleFreq > 0);
+	lsp_require(span > 0);
 
 	auto bufferSize = static_cast<size_t>(sampleFreq * span);
 
@@ -45,7 +45,7 @@ void OscilloScope::write(const Signal<float>& sig)
 	const auto signal_channels = sig.channels();
 	const auto signal_samples = sig.samples();
 
-	require(signal_channels == 2, "write - failed (channel count is mismatch)");
+	lsp_require(signal_channels == 2);
 
 	for(auto&& [ch, buffer] : zip(iota(0), mInputBuffer)) {
 		buffer.insert(buffer.end(), sig.data(ch), sig.data(ch) + signal_samples);

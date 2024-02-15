@@ -89,7 +89,7 @@ void LuathVoice::renderNextBlock(juce::AudioBuffer<float>& outputBuffer, int sta
 {
 	if(getCurrentlyPlayingSound() == nullptr) return;
 
-	require(outputBuffer.getNumChannels() == 2);
+	lsp_require(outputBuffer.getNumChannels() == 2);
 
 	auto& midich = getChannelState();
 
@@ -152,7 +152,7 @@ LuathVoice::EnvelopeGenerator& LuathVoice::envolopeGenerator() noexcept
 const ChannelState& LuathVoice::getChannelState()const noexcept
 {
 	auto sound = dynamic_cast<LuathSound*>(getCurrentlyPlayingSound().get());
-	check(sound != nullptr);
+	lsp_check(sound != nullptr);
 	auto& synth = sound->synth();
 	return synth.getChannelState(sound->midiChannel());
 

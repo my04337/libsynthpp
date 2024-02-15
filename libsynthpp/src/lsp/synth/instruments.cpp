@@ -61,7 +61,7 @@ auto Instruments::createSquareGenerator(int overtoneOrder, float volume)
 		return tables;
 	}();
 
-	require(overtoneOrder >= 0 && static_cast<size_t>(overtoneOrder) < MAX_OVERTONE_ORDER + 1);
+	lsp_require(overtoneOrder >= 0 && static_cast<size_t>(overtoneOrder) < MAX_OVERTONE_ORDER + 1);
 	return WaveTableGenerator(tables[static_cast<size_t>(overtoneOrder)], volume);
 }
 

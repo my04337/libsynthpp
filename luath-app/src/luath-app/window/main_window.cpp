@@ -126,8 +126,8 @@ void MainWindow::audioDeviceIOCallbackWithContext(
 )
 {
 	// 出力先の準備
-	check(numOutputChannels == 2);
-	check(numSamples >= 0);
+	lsp_check(numOutputChannels == 2);
+	lsp_check(numSamples >= 0);
 	auto sig = lsp::Signal<float>::fromAudioBuffer(
 		juce::AudioBuffer<float>(
 			outputChannelData,	// 出力先バッファに直接書き込むようにする

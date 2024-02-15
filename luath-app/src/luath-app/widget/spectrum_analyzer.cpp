@@ -31,9 +31,9 @@ SpectrumAnalyzer::~SpectrumAnalyzer()
 }
 void SpectrumAnalyzer::setParams(float sampleFreq, size_t bufferSize, uint32_t stretchRate)
 {
-	require(sampleFreq > 0);
-	require(bufferSize > 0 && std::has_single_bit(bufferSize));
-	require(stretchRate >= 1 && std::has_single_bit(stretchRate));
+	lsp_require(sampleFreq > 0);
+	lsp_require(bufferSize > 0 && std::has_single_bit(bufferSize));
+	lsp_require(stretchRate >= 1 && std::has_single_bit(stretchRate));
 
 	setParam("sample_freq"s, std::make_any<float>(sampleFreq));
 	setParam("buffer_size"s, std::make_any<size_t>(bufferSize));
@@ -49,7 +49,7 @@ void SpectrumAnalyzer::write(const Signal<float>& sig)
 	const auto signal_channels = sig.channels();
 	const auto signal_samples = sig.samples();
 
-	require(signal_channels == 2, "write - failed (channel count is mismatch)");
+	lsp_require(signal_channels == 2);
 
 	for(auto&& [ch, buffer] : zip(iota(0), mInputBuffer)) {
 		buffer.insert(buffer.end(), sig.data(ch), sig.data(ch) + signal_samples);

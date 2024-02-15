@@ -28,7 +28,7 @@ MainContent::MainContent(const lsp::synth::LuathSynth& synth, const juce::AudioD
 	, mAudioDeviceManager(audioDeviceManager)
 {
 	auto app = dynamic_cast<luath::app::Application*>(juce::JUCEApplication::getInstance());
-	check(app != nullptr);
+	lsp_check(app != nullptr);
 
 	auto typeface = app->createDefaultTypeface();
 	mDefaultFont = juce::Font(typeface);

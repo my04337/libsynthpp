@@ -196,37 +196,18 @@ namespace lsp
 #endif
 
 // アサーション機構
-namespace lsp::inline assertion
-{
-// require : 引数チェック向け
-inline static void require(bool succeeded, std::source_location location = std::source_location::current()) {
-	if(!succeeded) [[unlikely]] {
-		auto stacks = std::stacktrace::current(1);
-		lsp::Log::write(LogLevel::f, [&](std::ostringstream& o) { o << std::format("{}:{} - illegal argument.", location.file_name(), location.line()); }, &stacks, true);
-		std::unreachable();
-	}
-}
-inline static void require(bool succeeded, std::string_view description, std::source_location location = std::source_location::current()) {
-	if(!succeeded) [[unlikely]] {
-		auto stacks = std::stacktrace::current(1);
-		lsp::Log::write(LogLevel::f, [&](std::ostringstream& o) { o << std::format("{}:{} - {}", location.file_name(), location.line(), description); }, &stacks, true);
-		std::unreachable();
-	}
-}
+// MEMO 契約プログラミングのアノテーション形式で記述したいが、実装まではマクロとする。 C++モジュールは当分考慮しない。
 
-// check : 関数の内部での状態チェック向け
-inline static void check(bool succeeded, std::source_location location = std::source_location::current()) {
-	if(!succeeded) [[unlikely]] {
-		auto stacks = std::stacktrace::current(1);
-		lsp::Log::write(LogLevel::f, [&](std::ostringstream& o) { o << std::format("{}:{} - illegal state.", location.file_name(), location.line()); }, &stacks, true);
-		std::unreachable();
+// require : 引数チェック用
+#define lsp_require(...) \
+	if(!(__VA_ARGS__)) [[unlikely]] { \
+		lsp::Log::f(std::stacktrace::current(), "illegal argument. expected : '{}'.", #__VA_ARGS__ ); \
+		std::unreachable(); \
 	}
-}
-inline static void check(bool succeeded, std::string_view description, std::source_location location = std::source_location::current()) {
-	if(!succeeded) [[unlikely]] {
-		auto stacks = std::stacktrace::current(1);
-		lsp::Log::write(LogLevel::f, [&](std::ostringstream& o) { o << std::format("{}:{} - {}", location.file_name(), location.line(), description); }, &stacks, true);
-		std::unreachable();
+
+// check : 関数の内部での状態チェック用
+#define lsp_check(...) \
+	if(!(__VA_ARGS__)) [[unlikely]] { \
+		lsp::Log::f(std::stacktrace::current(), "illegal state. expected : '{}'.", #__VA_ARGS__ ); \
+		std::unreachable(); \
 	}
-}
-}

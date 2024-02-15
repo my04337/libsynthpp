@@ -27,13 +27,13 @@ LuathSynth::LuathSynth()
 		mChannelState.emplace_back(*this, ch);
 		addSound(new LuathSound(*this, ch));
 	}
-	check(getNumSounds() == 16);
+	lsp_check(getNumSounds() == 16);
 
 	// ボイスのセットアップ
 	for(int id = 0; id < MAX_VOICE_COUNT; ++id) {
 		addVoice(new LuathVoice(*this));
 	}
-	check(getNumVoices() == MAX_VOICE_COUNT);
+	lsp_check(getNumVoices() == MAX_VOICE_COUNT);
 
 
 	// 周波数 仮指定 ※間接的にMIDIリセット
@@ -78,12 +78,12 @@ void LuathSynth::reset(midi::SystemType type)
 }
 ChannelState& LuathSynth::getChannelState(int ch)noexcept 
 {
-	require(ch >= 1 && ch <= 16);
+	lsp_require(ch >= 1 && ch <= 16);
 	return mChannelState[static_cast<size_t>(ch - 1)];
 }
 const ChannelState& LuathSynth::getChannelState(int ch)const noexcept
 {
-	require(ch >= 1 && ch <= 16);
+	lsp_require(ch >= 1 && ch <= 16);
 	return mChannelState[static_cast<size_t>(ch - 1)];
 }
 
@@ -93,7 +93,7 @@ void LuathSynth::renderNextBlock(juce::AudioBuffer<float>& outputAudio, const ju
 {
 	auto cycleBegin = clock::now();
 
-	require(outputAudio.getNumChannels() == 2);
+	lsp_require(outputAudio.getNumChannels() == 2);
 
 	// 演奏開始
 	juce::ScopedLock sl(lock);
@@ -149,7 +149,7 @@ LuathSynth::Digest LuathSynth::digest()const
 	digest.voices.reserve(numVoice);
 	for(int i = 0; i < numVoice; ++i) {
 		auto voice = dynamic_cast<LuathVoice*>(getVoice(i));
-		check(voice != nullptr);
+		lsp_check(voice != nullptr);
 		digest.voices.emplace_back(voice->digest());
 	}
 

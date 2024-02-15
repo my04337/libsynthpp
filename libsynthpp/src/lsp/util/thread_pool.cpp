@@ -16,7 +16,7 @@ ThreadPool::ThreadPool(size_t numThreads, std::optional<ThreadPriority> priority
     : _tasks(std::pmr::get_default_resource())
     , _tasksSemaphore(0)
 {
-    require(numThreads > 0, "numThreads must be greater than 0");
+    lsp_require(numThreads > 0);
 
     // 必要数のスレッドを生成
     for(size_t i = 0; i < numThreads; ++i) {

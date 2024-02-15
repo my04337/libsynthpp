@@ -20,7 +20,7 @@ using lsp::synth::LuathVoice;
 GeneralInfo::GeneralInfo()
 {
 	auto app = dynamic_cast<luath::app::Application*>(juce::JUCEApplication::getInstance());
-	check(app != nullptr);
+	lsp_check(app != nullptr);
 
 	mFont = juce::Font(app->createDefaultTypeface());
 	mFont.setHeight(12);

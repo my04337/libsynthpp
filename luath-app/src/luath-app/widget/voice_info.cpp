@@ -20,7 +20,7 @@ using lsp::synth::LuathVoice;
 VoiceInfo::VoiceInfo()
 {
 	auto app = dynamic_cast<luath::app::Application*>(juce::JUCEApplication::getInstance());
-	check(app != nullptr);
+	lsp_check(app != nullptr);
 
 	mFont = juce::Font(app->createDefaultTypeface());
 	mFont.setHeight(12);
@@ -86,10 +86,10 @@ void VoiceInfo::onRendering(juce::Graphics& g, int width_, int height_, Params& 
 	const size_t maxRowCount = 3;
 	const size_t voicePerRow = 45;
 	const float heightPerVoice = 12;
-	check(height_ == heightPerVoice * voicePerRow);
+	lsp_check(height_ == heightPerVoice * voicePerRow);
 
 	constexpr std::array<float, 4> columnWidth{ 15, 22, 30, 40 }; // 214
-	check(width_ == static_cast<int>(std::round(std::accumulate(columnWidth.begin(), columnWidth.end(), 0.0f))* maxRowCount));
+	lsp_check(width_ == static_cast<int>(std::round(std::accumulate(columnWidth.begin(), columnWidth.end(), 0.0f))* maxRowCount));
 
 	float x = 0;
 	size_t ci = 0;
