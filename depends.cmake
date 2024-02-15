@@ -21,8 +21,8 @@ set(JUCE_BUILD_EXAMPLES NO)
 set(JUCE_SOURCE_DIR  "${THIRD_PARTY_SOURCE_DIR}/JUCE")
 set(JUCE_MODULES_DIR "${JUCE_SOURCE_DIR}/modules")
 set(JUCE_GIT_REPOSITORY https://github.com/juce-framework/JUCE)
-set(JUCE_GIT_TAG        "7.0.9")
-set(JUCE_GIT_COMMIT     d054f0d14dcac387aebda44ce5d792b5e7a625b3)
+set(JUCE_GIT_TAG        "7.0.10")
+set(JUCE_GIT_COMMIT     a8ae6edda6d3be78a139ec5e429dc57ef047e82a)
 
 find_package(Git REQUIRED)
 
@@ -41,7 +41,7 @@ else()
     )
     # 指定のタグのコミットがローカルにあるかを確認し、無ければfetchする
     execute_process(
-        COMMAND ${GIT_EXECUTABLE} branch --contains ${69795dc8e589a9eb5df251b6dd994859bf7b3fab}
+        COMMAND ${GIT_EXECUTABLE} branch --contains ${JUCE_GIT_COMMIT}
         WORKING_DIRECTORY ${JUCE_SOURCE_DIR}
         RESULT_VARIABLE ret
         OUTPUT_QUIET
