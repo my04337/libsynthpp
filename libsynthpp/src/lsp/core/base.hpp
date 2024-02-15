@@ -70,8 +70,6 @@
 	#define NOMINMAX 
 	#include <sdkddkver.h>
 	#include <Windows.h>
-	#include <atlbase.h>
-	#include <atlcom.h>
 #endif
 
 // --- 基本的な型 ---

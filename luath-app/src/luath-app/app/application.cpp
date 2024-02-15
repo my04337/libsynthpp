@@ -20,11 +20,6 @@ Application::~Application() = default;
 
 void Application::initialise(const juce::String& commandLineParameters)
 {
-	// Win32 : COM セットアップ
-#ifdef WIN32
-	check(SUCCEEDED(CoInitialize(NULL)));
-#endif
-
 	// ログ出力機構 セットアップ
 	auto logger = std::make_unique<OutputDebugStringLogger>();
 	Log::addLogger(logger.get());
@@ -47,11 +42,6 @@ void Application::shutdown()
 		Log::removeLogger(logger.get());
 	}
 	mLoggers.clear();
-
-	// Win32 : COM シャットダウン
-#ifdef WIN32
-	CoUninitialize();
-#endif
 }
 
 const juce::String Application::getApplicationName()
