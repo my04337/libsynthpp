@@ -67,45 +67,31 @@ public:
 	// ログ出力先除去
 	static void removeLogger(ILogger* logger);
 
-	// ログ書き込み [例外送出禁止]
-	
-	static void v(std::string_view text)noexcept 
-	{ write(LogLevel::v, [text](std::ostringstream& o) {o << text; }); }
+	// ログ書き込み [例外送出禁止]	
 	template<typename... Args>
 	static void v(std::format_string<Args...> s, Args&&... args)noexcept 
-	{ write(LogLevel::v, [&](std::ostringstream& o) {o << std::format(s, std::forward<Args>(args)...); }); }
+	{ write(LogLevel::v, [&, s = std::move(s)](std::ostringstream& o) {o << std::format(s, std::forward<Args>(args)...); }); }
 
-	static void d(std::string_view text)noexcept
-	{ write(LogLevel::d, [text](std::ostringstream& o) {o << text; }); }
 	template<typename... Args>
 	static void d(std::format_string<Args...> s, Args&&... args)noexcept 
-	{ write(LogLevel::d, [&](std::ostringstream& o) {o << std::format(s, std::forward<Args>(args)...); }); }
+	{ write(LogLevel::d, [&, s = std::move(s)](std::ostringstream& o) {o << std::format(s, std::forward<Args>(args)...); }); }
 
-	static void i(std::string_view text)noexcept 
-	{ write(LogLevel::i, [text](std::ostringstream& o) {o << text; }); }
 	template<typename... Args>
 	static void i(std::format_string<Args...> s, Args&&... args)noexcept 
-	{ write(LogLevel::i, [&](std::ostringstream& o) {o << std::format(s, std::forward<Args>(args)...); }); }
+	{ write(LogLevel::i, [&, s = std::move(s)](std::ostringstream& o) {o << std::format(s, std::forward<Args>(args)...); }); }
 
-	static void w(std::string_view text)noexcept 
-	{ write(LogLevel::w, [text](std::ostringstream& o) {o << text; }); }
 	template<typename... Args>
 	static void w(std::format_string<Args...> s, Args&&... args)noexcept 
-	{ write(LogLevel::w, [&](std::ostringstream& o) {o << std::format(s, std::forward<Args>(args)...); }); }
+	{ write(LogLevel::w, [&, s = std::move(s)](std::ostringstream& o) {o << std::format(s, std::forward<Args>(args)...); }); }
 
-	static void e(std::string_view text)noexcept
-	{ write(LogLevel::e, [text](std::ostringstream& o) {o << text; }); }
 	template<typename... Args>
 	static void e(std::format_string<Args...> s, Args&&... args)noexcept 
-	{ write(LogLevel::e, [&](std::ostringstream& o) {o << std::format(s, std::forward<Args>(args)...); }); }
+	{ write(LogLevel::e, [&, s = std::move(s)](std::ostringstream& o) {o << std::format(s, std::forward<Args>(args)...); }); }
 
-	[[noreturn]]
-	static void f(std::string_view text, const std::stacktrace& stacks = std::stacktrace::current())noexcept
-	{ write(LogLevel::f, [text](std::ostringstream& o) {o << text; }, &stacks, true); std::unreachable(); }
 	template<typename... Args>
 	[[noreturn]]
 	static void f(const std::stacktrace& stacks, std::format_string<Args...> s, Args&&... args)noexcept
-	{ write(LogLevel::f, [&](std::ostringstream& o) {o << std::format(s, std::forward<Args>(args)...); }, &stacks, true); std::unreachable(); }
+	{ write(LogLevel::f, [&, s = std::move(s)](std::ostringstream& o) {o << std::format(s, std::forward<Args>(args)...); }, &stacks, true); std::unreachable(); }
 
 
 	// ログ フラッシュ [例外送出禁止]
