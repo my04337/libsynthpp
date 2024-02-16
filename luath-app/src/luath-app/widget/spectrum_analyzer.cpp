@@ -122,6 +122,14 @@ void SpectrumAnalyzer::onRendering(juce::Graphics& g, const int width_, const in
 	const float frequencyResolution = static_cast<float>(sampleFreq) / static_cast<float>(bufferSize); // 周波数分解能
 
 
+	// ウィンドウ関数の再計算 ※必要に応じて
+	if(mDrawingFftWindowShapeCache.size() != bufferSize) {
+		mDrawingFftWindowShapeCache.resize(bufferSize, 0.f);
+		for(size_t i = 0; i < bufferSize; ++i) {
+			mDrawingFftWindowShapeCache[i] = lsp::dsp::fft::HammingWf(i / (float)bufferSize);
+		}
+	}
+
 	// FFTの実施 & パスの算出 (並列度を高めるため早いタイミングで開始している)
 	std::array<std::future<juce::Path>, 2> signalPathFuture;
 	for(auto&& [drawingBuffer, future] : zip(buffer, signalPathFuture))
@@ -173,14 +181,6 @@ void SpectrumAnalyzer::onRendering(juce::Graphics& g, const int width_, const in
 
 			return signalPath;
 		});
-	}
-
-	// ウィンドウ関数の再計算 ※必要に応じて
-	if(mDrawingFftWindowShapeCache.size() != bufferSize) {
-		mDrawingFftWindowShapeCache.resize(bufferSize, 0.f);
-		for(size_t i = 0; i < bufferSize; ++i) {
-			mDrawingFftWindowShapeCache[i] = lsp::dsp::fft::HammingWf(i / (float)bufferSize);
-		}
 	}
 
 	// 背景塗りつぶし
