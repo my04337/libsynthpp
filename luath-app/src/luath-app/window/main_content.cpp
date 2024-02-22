@@ -63,7 +63,6 @@ MainContent::MainContent(const lsp::synth::LuathSynth& synth, const juce::AudioD
 
 MainContent::~MainContent()
 {
-	shutdownOpenGL();
 }
 
 
@@ -94,17 +93,4 @@ void MainContent::paint(juce::Graphics& g)
 {
 	// 背景塗りつぶし
 	g.fillAll(juce::Colour::fromFloatRGBA(1.f, 1.f, 1.f, 1.f));
-}
-
-void MainContent::initialise()
-{
-
-}
-void MainContent::shutdown()
-{
-
-}
-void MainContent::render()
-{
-	repaint();
 }
