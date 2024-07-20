@@ -21,8 +21,8 @@ set(JUCE_BUILD_EXAMPLES NO)
 set(JUCE_SOURCE_DIR  "${THIRD_PARTY_SOURCE_DIR}/JUCE")
 set(JUCE_MODULES_DIR "${JUCE_SOURCE_DIR}/modules")
 set(JUCE_GIT_REPOSITORY https://github.com/juce-framework/JUCE)
-set(JUCE_GIT_TAG        "7.0.10")
-set(JUCE_GIT_COMMIT     a8ae6edda6d3be78a139ec5e429dc57ef047e82a)
+set(JUCE_GIT_TAG        "7.0.12")
+set(JUCE_GIT_COMMIT     4f43011b96eb0636104cb3e433894cda98243626)
 
 find_package(Git REQUIRED)
 
