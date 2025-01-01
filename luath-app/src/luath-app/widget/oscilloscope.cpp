@@ -1,11 +1,5 @@
-﻿/**
-	luath-app
-
-	Copyright(c) 2023 my04337
-
-	This software is released under the GPLv3 License.
-	https://opensource.org/license/gpl-3-0/
-*/
+﻿// SPDX-FileCopyrightText: 2023 my04337
+// SPDX-License-Identifier: GPL-3.0
 
 #include <luath-app/widget/oscilloscope.hpp>
 
