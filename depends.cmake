@@ -59,6 +59,18 @@ juce_add_modules(
 )
 
 # ============================================================
+# SDL2 : Simple UI Library (zlib License)
+# ============================================================
+message(STATUS "[deps] Fetching SDL2")
+FetchContent_Declare(SDL2
+    GIT_REPOSITORY "https://github.com/libsdl-org/SDL.git"  
+    GIT_TAG        a8589a84226a6202831a3d49ff4edda4acab9acd # v3.2.24
+    GIT_SHALLOW    TRUE
+    EXCLUDE_FROM_ALL
+)
+FetchContent_MakeAvailable(SDL2)
+
+# ============================================================
 # Midifile : SMF Parser (BSD-2-Clause license)
 # ============================================================
 message(STATUS "[deps] Fetching Midifile")
