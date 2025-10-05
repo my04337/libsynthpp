@@ -1,5 +1,7 @@
 ﻿cmake_minimum_required(VERSION 3.26)
 
+include(FetchContent)
+set(FETCHCONTENT_UPDATES_DISCONNECTED ON)
 
 set(THIRD_PARTY_SOURCE_DIR  "${CMAKE_CURRENT_LIST_DIR}/third_party")
 set(THIRD_PARTY_BINARY_DIR  "${CMAKE_CURRENT_BINARY_DIR}/third_party")
@@ -55,6 +57,18 @@ juce_add_modules(
     "${JUCE_MODULES_DIR}/juce_gui_extra"
     "${JUCE_MODULES_DIR}/juce_opengl"
 )
+
+# ============================================================
+# Midifile : SMF Parser (BSD-2-Clause license)
+# ============================================================
+message(STATUS "[deps] Fetching Midifile")
+FetchContent_Declare(midifile
+    GIT_REPOSITORY "https://github.com/craigsapp/midifile.git"  
+    GIT_TAG        "98917df5b1bf0d6e8d4c0e5fff86d6b05343e793" # master
+    GIT_SHALLOW    TRUE
+    EXCLUDE_FROM_ALL
+)
+FetchContent_MakeAvailable(midifile)
 
 ###########################################################
 ### UmeFont 
