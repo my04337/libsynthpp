@@ -70,6 +70,18 @@ FetchContent_Declare(midifile
 )
 FetchContent_MakeAvailable(midifile)
 
+# ============================================================
+# miniaudio : Audio I/O Library (public domain or MIT No Attribution)
+# ============================================================
+message(STATUS "[deps] Fetching miniaudio")
+FetchContent_Declare(miniaudio
+    GIT_REPOSITORY "https://github.com/mackron/miniaudio.git" 
+    GIT_TAG        f40cf03f80cdb7e741d43e53b7e706e8c1394bcf # v0.11.23
+    GIT_SHALLOW    TRUE
+    EXCLUDE_FROM_ALL
+)
+FetchContent_MakeAvailable(miniaudio)
+
 ###########################################################
 ### UmeFont 
 
