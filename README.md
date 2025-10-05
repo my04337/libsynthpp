@@ -10,16 +10,18 @@ Multiplatoform MIDI synthesizer library.
 - C++ 23を全面的に活用した信号処理フレームワーク
 - 軽量でシンプルな波形テーブル音源のシンセサイザ「luath」のコア実装を提供します
 - ライセンス : MIT License ( https://opensource.org/license/mit/ )
-- フレームワークには JUCE 7.0 ライブラリを使用
-    - ただし ISC Licenseで提供される juce_core, juce_audio_devices, juce_audio_basics, juce_events のみを使用
+- ~~フレームワークには JUCE 7.0 ライブラリを使用~~
+    - ~~ただし ISC Licenseで提供される juce_core, juce_audio_devices, juce_audio_basics, juce_events のみを使用~~
+    - JUCEライブラリ廃止のため、ライブラリ構成変更中
 - マルチプラットフォーム対応
 - CMakeプロジェクト
     - 現状はMSVC 2022環境でのみビルドを確認しています
     
 ## luath-app (luath-appディレクトリ以下)
 - シンセサイザ「luath」を搭載した実験用アプリケーション
-- ライセンス GPLv3 License ( https://opensource.org/license/gpl-3-0/ )
-    - JUCE 7.0ライブラリのGPLv3ライセンスに依存しています
+- ~~ライセンス GPLv3 License ( https://opensource.org/license/gpl-3-0/ )~~
+    - ~~JUCE 7.0ライブラリのGPLv3ライセンスに依存しています~~
+    - JUCEライブラリ廃止のため、ライブラリ構成変更中
 - マルチプラットフォーム対応
 
 
@@ -37,14 +39,18 @@ Multiplatoform MIDI synthesizer library.
 - [x] v0.0.5
   - 描画処理の大幅に高速化
 - [ ] v0.0.6
-  - シンセサイザ部分をJUCEを用いて VST3/AU対応化する(luath-pluginとして切り出し)
-  - アプリ部分(luath-app)側をJUCEを用いてVST3/AUホストにする(luath-testbedへ改名)
+  - JUCEライブラリを全面廃止、他OSSライブラリに置換
+
+## 廃止されたロードマップ (JUCE廃止のためキャンセル済)
+- [x] v0.0.6
+  - ~~シンセサイザ部分をJUCEを用いて VST3/AU対応化する(luath-pluginとして切り出し)~~
+  - ~~アプリ部分(luath-app)側をJUCEを用いてVST3/AUホストにする(luath-testbedへ改名)~~
 - [ ] v0.0.7
-  - 各種プリセットや設定などをインタラクティブなUIとして構築したり保存できるようにする
+  - ~~各種プリセットや設定などをインタラクティブなUIとして構築したり保存できるようにする~~
 - [ ] v0.0.8
-  - 音色関連の拡充、演奏の品質向上
+  - ~~音色関連の拡充、演奏の品質向上~~
 - [ ] v0.1.0
-  - 全体的な体裁の調整、ドキュメント類の整備
+  - ~~全体的な体裁の調整、ドキュメント類の整備~~
 
 
 ## 補足事項
