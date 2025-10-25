@@ -78,9 +78,16 @@ FetchContent_Declare(midifile
     GIT_REPOSITORY "https://github.com/craigsapp/midifile.git"  
     GIT_TAG        "98917df5b1bf0d6e8d4c0e5fff86d6b05343e793" # master
     GIT_SHALLOW    TRUE
+    CMAKE_ARGS     -DBUILD_MIDILIBRARY_ONLY=ON
     EXCLUDE_FROM_ALL
 )
 FetchContent_MakeAvailable(midifile)
+
+# Patch : 標準ではインクルードパスがエクスポートされていないため手動で追加
+target_include_directories(midifile INTERFACE
+  $<BUILD_INTERFACE:${midifile_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+)
 
 # ============================================================
 # miniaudio : Audio I/O Library (public domain or MIT No Attribution)
