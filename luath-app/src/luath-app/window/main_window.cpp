@@ -88,15 +88,9 @@ void MainWindow::loadMidi(const std::filesystem::path& path) {
 	mSequencer.stop();
 
 	// MIDIファイルをロード
-	juce::FileInputStream midiInputStream(juce::File(path.wstring().c_str()));
-	juce::MidiFile midiFile;
-	if(!midiFile.readFrom(midiInputStream)) {
-		// ロード失敗
-		Log::e("Broken midi file : {}", path.string());
-	}
-	
+	mSequencer.load(path);
+
 	// 再生開始
-	mSequencer.load(std::move(midiFile));
 	mSequencer.start();
 }
 

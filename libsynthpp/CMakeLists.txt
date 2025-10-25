@@ -36,3 +36,11 @@ foreach(juce_module IN LISTS juce_modules)
 	get_target_property(juce_module_include_dirs ${juce_module} INTERFACE_INCLUDE_DIRECTORIES)
 	target_include_directories(libsynth++ PUBLIC ${juce_module_include_dirs})
 endforeach()
+
+
+# JUCE以外のライブラリ
+# - MidiFile
+target_link_libraries(
+	libsynth++ 
+	PRIVATE midifile
+)

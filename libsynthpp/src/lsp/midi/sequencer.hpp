@@ -17,7 +17,7 @@ public:
 	~Sequencer();
 
 	// SMFを開きます
-	void load(juce::MidiFile&& midiFile);
+	void load(const std::filesystem::path& path);
 
 	// 先頭から再生を開始/再開します
 	void start();
@@ -29,12 +29,12 @@ public:
 	bool isPlaying()const;
 
 private:
-	void playThreadMain(std::stop_token stopToken, const juce::MidiMessageSequence& messages);
+	void playThreadMain(std::stop_token stopToken, const smf::MidiFile& parsedMidiFile);
 
 private:
 	juce:: MidiInputCallback& mReceiver;
 	std::jthread mPlayThread;
-	juce::MidiMessageSequence mSequence;
+	std::unique_ptr<const smf::MidiFile> mParsedMidiFile;
 
 };
 

@@ -9,3 +9,8 @@
 #include <lsp/core/math.hpp>
 #include <lsp/core/sample.hpp>
 #include <lsp/core/signal.hpp>
+
+namespace smf
+{
+	class MidiFile;
+}
