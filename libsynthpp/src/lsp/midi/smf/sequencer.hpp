@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include <lsp/core/core.hpp>
+#include <lsp/midi/system_type.hpp>
 #include <lsp/midi/message_receiver.hpp>
 #include <lsp/midi/smf/parser.hpp>
 

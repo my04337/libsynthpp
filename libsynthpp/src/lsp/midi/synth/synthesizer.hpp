@@ -39,7 +39,7 @@ public:
 	};
 
 public:
-	Synthesizer(uint32_t sampleFreq, midi::SystemType defaultSystemType = midi::SystemType::GS);
+	Synthesizer(uint32_t sampleFreq, midi::SystemType defaultSystemType = midi::SystemType::GS());
 	~Synthesizer();
 
 	void dispose();

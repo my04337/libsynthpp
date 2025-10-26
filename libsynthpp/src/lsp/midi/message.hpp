@@ -5,15 +5,6 @@
 namespace lsp::midi
 {
 
-// MIDI システム種別
-enum class SystemType
-{
-	GM1,
-	GM2,
-	GS,
-	XG,
-};
-
 /// MIDIメッセージ  抽象クラス
 class Message
 {

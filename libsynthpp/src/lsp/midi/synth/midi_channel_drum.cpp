@@ -103,7 +103,7 @@ std::unique_ptr<Voice> MidiChannel::createDrumVoice(uint8_t noteNo, uint8_t vel)
 
 	float cutOffFreqRate = 2.f;
 	float overtuneGain = 0.f; // dB
-	if(mSystemType != midi::SystemType::GM1) {
+	if(mSystemType.isGS() || mSystemType.isXG()) {
 		cutOffFreqRate = getNRPN_MSB(1, 32).value_or(64) / 128.f * 2.f + 1.f;
 		overtuneGain = (getNRPN_MSB(1, 33).value_or(64) / 128.f - 0.5f) * 5.f;
 	}

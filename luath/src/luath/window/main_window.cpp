@@ -287,7 +287,7 @@ void MainWindow::onDpiChanged(float scale)
 }
 void MainWindow::loadMidi(const std::filesystem::path& midi_path) {
 	mSequencer.stop();
-	mSequencer.reset(midi::SystemType::GM1);
+	mSequencer.reset(midi::SystemType::GM1());
 
 	try {
 		auto parsed = midi::smf::Parser::parse(midi_path);
@@ -413,13 +413,7 @@ void MainWindow::onDraw(ID2D1RenderTarget& renderer)
 
 	// 演奏情報
 	{
-		const wchar_t* systemType = L"";
-		switch(synthDigest.systemType) {
-		case midi::SystemType::GM1:	systemType = L"GM1";	break;
-		case midi::SystemType::GM2:	systemType = L"GM2";	break;
-		case midi::SystemType::GS:	systemType = L"GS";		break;
-		case midi::SystemType::XG:	systemType = L"XG";		break;
-		}
+		const wchar_t* systemType = synthDigest.systemType.toPrintableWString();
 
 		drawText(150, 0, std::format(L"生成時間 : {}[msec]  failed : {}[msec]  buffered : {:04}[msec]",
 			tgStatistics.created_samples * 1000ull / SAMPLE_FREQ,

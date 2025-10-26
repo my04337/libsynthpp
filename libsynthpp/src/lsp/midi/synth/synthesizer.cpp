@@ -192,11 +192,11 @@ void Synthesizer::sysExMessage(const uint8_t* data, size_t len)
 	auto peek = [&](size_t offset = 0) -> std::optional<uint8_t> {
 		if(pos + offset >= len) return {};
 		return data[pos + offset];
-	};
+		};
 	auto read = [&]() -> std::optional<uint8_t> {
 		if(pos >= len) return {};
 		return data[pos++];
-	};
+		};
 	auto match = [&](const std::vector<std::optional<uint8_t>>& pattern) -> bool {
 		for(size_t i = 0; i < pattern.size(); ++i) {
 			auto v = peek(i);
@@ -204,7 +204,7 @@ void Synthesizer::sysExMessage(const uint8_t* data, size_t len)
 			if(pattern[i].has_value() && pattern[i].value() != v.value()) return false;
 		}
 		return true;
-	};
+		};
 
 	auto makerId = read();
 	if(makerId == 0x7E) {
@@ -213,42 +213,37 @@ void Synthesizer::sysExMessage(const uint8_t* data, size_t len)
 
 		if(match({ 0x7F, 0x09, 0x01 })) {
 			// GM1 System On
-			reset(midi::SystemType::GM1);
-		}
-		else if(match({ 0x7F, 0x09, 0x03 })) {
+			reset(midi::SystemType::GM1());
+		} else if(match({ 0x7F, 0x09, 0x03 })) {
 			// GM2 System On
-			reset(midi::SystemType::GM2);
-		}
-		else if(match({ 0x7F, 0x09, 0x02 })) {
+			reset(midi::SystemType::GM2());
+		} else if(match({ 0x7F, 0x09, 0x02 })) {
 			// GM System Off → GS Reset
-			reset(midi::SystemType::GS);
+			reset(midi::SystemType::GS());
 		}
-	}
-	else if(makerId == 0x41) {
+	} else if(makerId == 0x41) {
 		// Roland
-		if(
-			match({ {/*dev:any*/}, 0x42, 0x12, 0x40, 0x00, 0x7F, 0x00, 0x41 }) || // GS Reset
-			match({ {/*dev:any*/}, 0x42, 0x12, 0x00, 0x00, 0x7F, 0x00, 0x01 }) || // System Mode Set 1 // ※32パートで1音源
-			match({ {/*dev:any*/}, 0x42, 0x12, 0x00, 0x00, 0x7F, 0x01, 0x00 })    // System Mode Set 2 // ※16パートを2音源扱いにする。現在ほぼ使われないとのこと
-			) {
-			reset(midi::SystemType::GS); // TODO System Mode Set 1/2に正確に対応する
-		} else if(match({ {/*dev:any*/}, 0x42, 0x12, 0x40, 0x00, 0x7F, 0x00, 0x41 })) {
-				// GS Reset
-				reset(midi::SystemType::GS);
-			}
-		else if(match({ {/*dev:any*/}, 0x42, 0x12, 0x40, {/*1x:part*/}, 0x15, {/*mn*/}}) && (*peek(4) & 0xF0) == 0x10) {
+		if(match({ {/*dev:any*/}, 0x42, 0x12, 0x40, 0x00, 0x7F, 0x00, 0x41 })) {
+			// GS Reset
+			reset(midi::SystemType::GS());
+		} else if(match({ {/*dev:any*/}, 0x42, 0x12, 0x00, 0x00, 0x7F, 0x00, 0x01 })) {
+			// System Mode Set 1 // ※32パートで1音源
+			reset(midi::SystemType::SystemModeSet1());
+		} else if(match({ {/*dev:any*/}, 0x42, 0x12, 0x00, 0x00, 0x7F, 0x01, 0x00 })) {
+			// System Mode Set 2 // ※16パートを2音源扱いにする。現在ほぼ使われないとのこと
+			reset(midi::SystemType::SystemModeSet2());
+		} else if(match({ {/*dev:any*/}, 0x42, 0x12, 0x40, {/*1x:part*/}, 0x15, {/*mn*/} }) && (*peek(4) & 0xF0) == 0x10) {
 			// ドラムパート指定
 			//   see https://ssw.co.jp/dtm/drums/drsetup.html
 			auto ch = static_cast<uint8_t>(*peek(4) & 0x0F);
 			auto mapNo = *peek(6);
 			mMidiChannels[ch].setDrumMode(mapNo != 0);
 		}
-	}
-	else if(makerId == 0x43) {
+	} else if(makerId == 0x43) {
 		// YAMAHA
 		if(match({ {/*dev:any*/}, 0x4C, 0x00, 0x00, 0x7E, 0x00 })) {
 			// XG Reset
-			reset(midi::SystemType::XG);
+			reset(midi::SystemType::XG());
 		}
 	}
 }

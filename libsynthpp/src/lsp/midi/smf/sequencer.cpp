@@ -118,20 +118,22 @@ bool Sequencer::isPlaying()const
 }
 void Sequencer::reset(SystemType type)
 {
+	// TODO System Mode Set 1/2には非対応
 	std::shared_ptr<Message> msg;
-	switch (type) {
-	case SystemType::GM1:
+	if(type.isOnlyGM1()) {
 		msg = std::make_shared<messages::SysExMessage>(std::vector<uint8_t>{ 0x7E, 0x7F, 0x09, 0x01 });
-		break;
-	case SystemType::GM2:
+	} else if (type.isGM2()) {
 		msg = std::make_shared<messages::SysExMessage>(std::vector<uint8_t>{ 0x7E, 0x7F, 0x09, 0x03 });
-		break;
-	case SystemType::GS:
-		msg = std::make_shared<messages::SysExMessage>(std::vector<uint8_t>{ 0x7E, 0x7F, 0x09, 0x02 });
-		break;
-	case SystemType::XG:
+	} else if (type.isOnlyGS()) {
+		msg = std::make_shared<messages::SysExMessage>(std::vector<uint8_t>{ 0x41, 0x10, 0x42, 0x12, 0x40, 0x00, 0x7F, 0x00, 0x41 });
+	} else if (type.isSystemModeSet1()) {
+		msg = std::make_shared<messages::SysExMessage>(std::vector<uint8_t>{ 0x41, 0x10, 0x42, 0x12, 0x00, 0x00, 0x7F, 0x00, 0x01 });
+	} else if (type.isSystemModeSet2()) {
+		msg = std::make_shared<messages::SysExMessage>(std::vector<uint8_t>{ 0x41, 0x10, 0x42, 0x12, 0x00, 0x00, 0x7F, 0x01, 0x00 });
+	} else if (type.isXG()) {
 		msg = std::make_shared<messages::SysExMessage>(std::vector<uint8_t>{ 0x43, 0x10, 0x4C, 0x00, 0x00, 0x7E, 0x00 });
-		break;
+	} else {
+		lsp_check(false); // Unsupported SystemType
 	}
 	if (msg) {
 		mReceiver.onMidiMessageReceived(std::chrono::steady_clock::time_point::min(), msg);
