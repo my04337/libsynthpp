@@ -5,7 +5,7 @@
 #include <luath/widget/spectrum_analyzer.hpp>
 #include <luath/widget/lissajous.hpp>
 #include <luath/drawing/font_loader.hpp>
-#include <lsp/midi/synth/synthesizer.hpp>
+#include <lsp/synth/synthesizer.hpp>
 #include <lsp/midi/smf/sequencer.hpp>
 #include <lsp/audio/wasapi_output.hpp>
 
@@ -52,7 +52,7 @@ private:
 	std::atomic<float> mPostAmpVolume = 1.0f;
 
 	// シーケンサ,シンセサイザ
-	midi::synth::Synthesizer mSynthesizer;
+	synth::Synthesizer mSynthesizer;
 	midi::smf::Sequencer mSequencer;
 
 	// 各種ウィジット

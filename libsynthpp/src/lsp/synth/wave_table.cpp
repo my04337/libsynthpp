@@ -1,9 +1,9 @@
-﻿#include <lsp/midi/synth/wave_table.hpp>
+﻿#include <lsp/synth/wave_table.hpp>
 #include <lsp/dsp/function_generator.hpp>
 #include <lsp/dsp/biquadratic_filter.hpp>
 
 using namespace lsp;
-using namespace lsp::midi::synth;
+using namespace lsp::synth;
 
 WaveTable::WaveTable()
 {

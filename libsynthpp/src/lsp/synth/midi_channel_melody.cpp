@@ -1,6 +1,6 @@
-﻿#include <lsp/midi/synth/midi_channel.hpp>
+﻿#include <lsp/synth/midi_channel.hpp>
 
-using namespace lsp::midi::synth;
+using namespace lsp::synth;
 
 
 static const std::unordered_map<

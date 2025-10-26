@@ -3,7 +3,7 @@
 #include <lsp/core/core.hpp>
 #include <lsp/dsp/wave_table_generator.hpp>
 
-namespace lsp::midi::synth
+namespace lsp::synth
 {
 
 // 波形テーブル

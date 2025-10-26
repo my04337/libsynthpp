@@ -2,12 +2,11 @@
 
 #include <lsp/core/core.hpp>
 #include <lsp/midi/system_type.hpp>
-#include <lsp/midi/synth/voice.hpp>
 #include <lsp/midi/message.hpp>
-
+#include <lsp/synth/voice.hpp>
 #include <array>
 
-namespace lsp::midi::synth
+namespace lsp::synth
 {
 class WaveTable;
 

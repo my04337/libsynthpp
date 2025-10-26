@@ -1,13 +1,13 @@
 ﻿#pragma once
 
 #include <lsp/core/core.hpp>
-#include <lsp/midi/synth/wave_table.hpp>
+#include <lsp/synth/wave_table.hpp>
 
 #include <lsp/dsp/envelope_generator.hpp>
 #include <lsp/dsp/biquadratic_filter.hpp>
 #include <lsp/dsp/wave_table_generator.hpp>
 
-namespace lsp::midi::synth
+namespace lsp::synth
 {
 // ボイス識別番号
 struct _voice_id_tag {};

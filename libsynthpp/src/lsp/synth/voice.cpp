@@ -1,6 +1,6 @@
-﻿#include <lsp/midi/synth/voice.hpp>
+﻿#include <lsp/synth/voice.hpp>
 
-using namespace lsp::midi::synth;
+using namespace lsp::synth;
 
 Voice::Voice(uint32_t sampleFreq, float noteNo, float pitchBend, float volume, bool hold)
 	: mSampleFreq(sampleFreq)

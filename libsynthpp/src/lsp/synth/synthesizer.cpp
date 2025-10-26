@@ -1,8 +1,8 @@
-﻿#include <lsp/midi/synth/synthesizer.hpp>
+﻿#include <lsp/synth/synthesizer.hpp>
 #include <lsp/midi/messages/basic_message.hpp>
 #include <lsp/midi/messages/sysex_message.hpp>
 
-using namespace lsp::midi::synth;
+using namespace lsp::synth;
 
 Synthesizer::Synthesizer(uint32_t sampleFreq, midi::SystemType defaultSystemType)
 	: mSampleFreq(sampleFreq)

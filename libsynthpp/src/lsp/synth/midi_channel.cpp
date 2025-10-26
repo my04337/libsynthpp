@@ -1,8 +1,8 @@
-﻿#include <lsp/midi/synth/midi_channel.hpp>
-#include <lsp/midi/synth/wave_table.hpp>
-#include <lsp/midi/synth/voice.hpp>
+﻿#include <lsp/synth/midi_channel.hpp>
+#include <lsp/synth/wave_table.hpp>
+#include <lsp/synth/voice.hpp>
 
-using namespace lsp::midi::synth;
+using namespace lsp::synth;
 
 MidiChannel::MidiChannel(uint32_t sampleFreq, uint8_t ch, const WaveTable& waveTable)
 	: mSampleFreq(sampleFreq)
