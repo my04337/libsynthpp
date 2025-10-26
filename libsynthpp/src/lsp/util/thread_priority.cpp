@@ -1,4 +1,7 @@
-﻿#include <lsp/util/thread_priority.hpp>
+﻿// SPDX-FileCopyrightText: 2018 my04337
+// SPDX-License-Identifier: MIT
+
+#include <lsp/util/thread_priority.hpp>
 
 #ifdef WIN32
 #include <Windows.h>
