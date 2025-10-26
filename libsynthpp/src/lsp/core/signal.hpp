@@ -48,7 +48,7 @@ public:
 		return allocate(std::pmr::get_default_resource(), channels, frames);
 	}
 	static Signal allocate(std::pmr::memory_resource* mem, size_t frames) {
-		return allocate<sample_type>(mem, 1, frames);
+		return allocate(mem, 1, frames);
 	}
 	static Signal allocate(std::pmr::memory_resource* mem, uint32_t channels, size_t frames) {
 		return Signal(mem, channels, frames);
