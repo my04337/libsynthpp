@@ -1,4 +1,4 @@
-﻿#include <lsp/io/wasapi_output.hpp>
+﻿#include <lsp/audio/wasapi_output.hpp>
 
 #include <Mmdeviceapi.h>
 #include <Audioclient.h>
@@ -7,7 +7,7 @@
 
 
 using namespace lsp;
-using namespace lsp::io;
+using namespace lsp::audio;
 
 // 参考URL : https://charatsoft.sakura.ne.jp/develop/toaru2/index.php?did=7
 

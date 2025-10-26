@@ -13,7 +13,7 @@
 
 struct IAudioClient3;
 
-namespace lsp::io {
+namespace lsp::audio {
 
 // WASAPI 出力
 class WasapiOutput final
