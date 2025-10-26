@@ -1,7 +1,6 @@
 ﻿#pragma once
 
 #include <lsp/core/core.hpp>
-#include <lsp/synth/wave_table.hpp>
 
 #include <lsp/dsp/envelope_generator.hpp>
 #include <lsp/dsp/biquadratic_filter.hpp>
@@ -80,9 +79,9 @@ public:
 
 
 public:
-	WaveTableVoice(uint32_t sampleFreq, const WaveTableGenerator& wg,float noteNo, float pitchBend, float volume, bool hold)
+	WaveTableVoice(uint32_t sampleFreq, WaveTableGenerator&& wg, float noteNo, float pitchBend, float volume, bool hold)
 		: Voice(sampleFreq, noteNo, pitchBend, volume, hold)
-		, mWG(wg)
+		, mWG(std::move(wg))
 	{}
 
 

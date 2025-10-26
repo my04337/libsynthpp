@@ -1,13 +1,11 @@
 ﻿#include <lsp/synth/midi_channel.hpp>
-#include <lsp/synth/wave_table.hpp>
 #include <lsp/synth/voice.hpp>
 
 using namespace lsp::synth;
 
-MidiChannel::MidiChannel(uint32_t sampleFreq, uint8_t ch, const WaveTable& waveTable)
+MidiChannel::MidiChannel(uint32_t sampleFreq, uint8_t ch)
 	: mSampleFreq(sampleFreq)
 	, mMidiCh(ch)
-	, mWaveTable(waveTable)
 {
 	reset(midi::SystemType::GM1());
 }

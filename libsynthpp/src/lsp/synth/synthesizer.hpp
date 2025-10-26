@@ -2,7 +2,6 @@
 
 #include <lsp/core/core.hpp>
 #include <lsp/synth/midi_channel.hpp>
-#include <lsp/synth/wave_table.hpp>
 
 #include <lsp/midi/message_receiver.hpp>
 
@@ -79,7 +78,6 @@ private:
 	// all channel parameters
 	const uint32_t mSampleFreq;
 	midi::SystemType mSystemType;
-	WaveTable mWaveTable;
 
 	// midi channel parameters
 	std::vector<MidiChannel> mMidiChannels;

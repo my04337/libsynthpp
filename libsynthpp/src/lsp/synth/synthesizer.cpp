@@ -1,4 +1,5 @@
 ﻿#include <lsp/synth/synthesizer.hpp>
+#include <lsp/synth/instruments.hpp>
 #include <lsp/midi/messages/basic_message.hpp>
 #include <lsp/midi/messages/sysex_message.hpp>
 
@@ -8,9 +9,11 @@ Synthesizer::Synthesizer(uint32_t sampleFreq, midi::SystemType defaultSystemType
 	: mSampleFreq(sampleFreq)
 	, mPlayingThreadAborted(false)
 {
+	Instruments::prepareWaveTable();
+
 	mMidiChannels.reserve(MAX_CHANNELS);
 	for (uint8_t ch = 0; ch < MAX_CHANNELS; ++ch) {
-		mMidiChannels.emplace_back(sampleFreq, ch, mWaveTable);
+		mMidiChannels.emplace_back(sampleFreq, ch);
 	}
 
 	reset(defaultSystemType);
@@ -98,7 +101,6 @@ void Synthesizer::playingThreadMain()
 void Synthesizer::reset(midi::SystemType type)
 {
 	mSystemType = type;
-	mWaveTable.reset();
 
 	for (auto& midich : mMidiChannels) {
 		midich.reset(type);

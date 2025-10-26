@@ -1,10 +1,11 @@
 ﻿#include <lsp/synth/midi_channel.hpp>
+#include <lsp/synth/instruments.hpp>
 
 using namespace lsp::synth;
 
 
 static const std::unordered_map<
-	uint8_t, std::tuple<
+	int, std::tuple<
 	float, // v: volume(adjuster)
 	float, // a: sec
 	float, // h: sec
@@ -159,8 +160,8 @@ std::unique_ptr<Voice> MidiChannel::createMelodyVoice(uint8_t noteNo, uint8_t ve
 		std::tie(v, a, h, d, s, f, r) = found->second;
 	}
 
-	// リズム系の楽器は若干パラメータを補正 ※ドラムほど強くパラメータは変更しない
-	size_t waveTableId = WaveTable::Preset::SquareWave;
+	// 楽器毎の調整
+	bool isDrumLikeInstrument = false;
 	float noteNoAdjuster = 0;
 	switch(mProgId)
 	{
@@ -170,9 +171,31 @@ std::unique_ptr<Voice> MidiChannel::createMelodyVoice(uint8_t noteNo, uint8_t ve
 	case 125:
 	case 126:
 	case 127:
-		waveTableId = WaveTable::Preset::DrumNoise;
+		isDrumLikeInstrument = true;
 		noteNoAdjuster -= 12; // 1オクターブ下げる
 		break;
+	}
+
+	// 音色の反映
+	auto wg = Instruments::createZeroWaveTable();
+	if(isDrumLikeInstrument) {
+		// ドラム系 : ノイズジェネレータを使用
+		wg = Instruments::createDrumNoiseGenerator();
+	} else {
+		// その他楽器系 : 現状は矩形波ジェネレータを利用する
+		// 素の矩形波は結構どぎつい倍音を持つため、折り返しノイズ等を避けるために大まかなノート番号によって倍音成分を変化させる
+		// ※正弦波の倍音は1～50まで用意してあるため、良い感じにマッピングする
+		static constexpr float min_note_no = 0;  // C-1 : 8.2[Hz]
+		static constexpr float max_note_no = 108; // C8 : 4186.0[Hz]
+		static constexpr int min_dim = 5;
+		static constexpr int max_dim = 30;
+
+		auto waveTableId = std::clamp(
+			static_cast<int>(min_dim + (1.f - (noteNo - min_note_no) / (max_note_no - min_note_no)) * (max_dim - min_dim)),
+			min_dim,
+			max_dim
+		);
+		wg = Instruments::createSquareGenerator(waveTableId);
 	}
 
 
@@ -185,7 +208,7 @@ std::unique_ptr<Voice> MidiChannel::createMelodyVoice(uint8_t noteNo, uint8_t ve
 	// MEMO 人間の聴覚ではボリュームは対数的な特性を持つため、ベロシティを指数的に補正する
 	// TODO sustain_levelで除算しているのは旧LibSynth++からの移植コード。 補正が不要になったら削除すること
 	float volume = powf(10.f, -20.f * (1.f - vel / 127.f) / 20.f) * v / ((s > 0.8f && s != 0.f) ? s : 0.8f);
-	float cutoffLevel = 0.01f;
+	float cutoffLevel = 0.01f;  // ほぼ無音を長々再生するのを防ぐため、ほぼ聞き取れないレベルまで落ちたらカットオフする
 	static const dsp::EnvelopeGenerator<float>::Curve curveExp3(3.0f);
 
 	float overtuneGain = 0.f; // dB
@@ -193,8 +216,7 @@ std::unique_ptr<Voice> MidiChannel::createMelodyVoice(uint8_t noteNo, uint8_t ve
 		overtuneGain = (getNRPN_MSB(1, 33).value_or(64) / 128.f - 0.5f) * 5.f;
 	}
 
-	auto wg = mWaveTable.get(waveTableId);
-	auto voice = std::make_unique<WaveTableVoice>(mSampleFreq, wg, noteNo + noteNoAdjuster, mCalculatedPitchBend, volume, ccPedal);
+	auto voice = std::make_unique<WaveTableVoice>(mSampleFreq, std::move(wg), noteNo + noteNoAdjuster, mCalculatedPitchBend, volume, ccPedal);
 	voice->setResonance(2.f, overtuneGain);
 
 	auto& eg = voice->envolopeGenerator();
