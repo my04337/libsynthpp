@@ -7,8 +7,8 @@ Lissajous::Lissajous(uint32_t sampleFreq, uint32_t bufferLength)
 	: mSampleFreq(sampleFreq)
 	, mBufferLength(bufferLength)
 {
-	require(sampleFreq > 0);
-	require(bufferLength > 0);
+	lsp_require(sampleFreq > 0);
+	lsp_require(bufferLength > 0);
 
 	mInputBuffer.resize(mBufferLength, std::make_pair(0.f, 0.f));
 	mDrawingBuffer.resize(mBufferLength, std::make_pair(0.f, 0.f));
@@ -25,7 +25,7 @@ void Lissajous::write(const Signal<float>& sig)
 	const auto signal_channels = sig.channels();
 	const auto signal_frames = sig.frames();
 
-	require(signal_channels == 2, "Lissajous : write - failed (channel count is mismatch)");
+	lsp_require(signal_channels == 2, "Lissajous : write - failed (channel count is mismatch)");
 
 	// バッファ末尾に追記
 	for(size_t i = 0; i < signal_frames; ++i) {
@@ -48,14 +48,14 @@ void Lissajous::draw(ID2D1RenderTarget& renderer, const float left, const float 
 	// 描画開始
 	CComPtr<ID2D1Factory> factory;
 	renderer.GetFactory(&factory);
-	check(factory != nullptr);
+	lsp_check(factory != nullptr);
 
 	CComPtr<ID2D1SolidColorBrush> brush;
 	renderer.CreateSolidColorBrush({ 0.f, 0.f, 0.f, 1.f }, &brush);
 
 	// ステータス & クリッピング
 	CComPtr<ID2D1DrawingStateBlock> drawingState;
-	check(SUCCEEDED(factory->CreateDrawingStateBlock(&drawingState)));
+	lsp_check(SUCCEEDED(factory->CreateDrawingStateBlock(&drawingState)));
 	renderer.SaveDrawingState(drawingState);
 
 	const D2D1_RECT_F  rect{ left, top, left + width, top + height };
@@ -89,8 +89,8 @@ void Lissajous::draw(ID2D1RenderTarget& renderer, const float left, const float 
 	D2D1_POINT_2F prev;
 	for(uint32_t i = 0; i < buffer_length; ++i) {
 		auto [ch1, ch2] = mDrawingBuffer[i];
-		float x = mid_x + width / 2.0f * normalize(ch1);
-		float y = mid_y - height / 2.0f * normalize(ch2);
+		float x = mid_x + width / 2.0f * clamp(ch1);
+		float y = mid_y - height / 2.0f * clamp(ch2);
 		D2D1_POINT_2F pt{ x, y };
 		if(i > 0 && (prev.x != pt.x || prev.y != pt.y)) {
 			renderer.DrawLine(prev, pt, brush);

@@ -1,4 +1,7 @@
-﻿#pragma once
+﻿// SPDX-FileCopyrightText: 2018 my04337
+// SPDX-License-Identifier: MIT
+
+#pragma once
 
 // #  基本的なヘッダおよびマクロ ---
 // プラットフォーム非依存
@@ -22,6 +25,8 @@
 #include <mutex>
 #include <numbers>
 #include <optional>
+#include <ranges>
+#include <semaphore>
 #include <source_location>
 #include <stacktrace>
 #include <string_view>
@@ -107,9 +112,27 @@ std::string demangle(const char* mangled_name);
 inline std::string demangle(const std::type_info& v) { return lsp::demangle(v.name()); }
 inline std::string demangle(const std::type_index& v) { return lsp::demangle(v.name()); }
 
-// 添字演算子可能である事を表すコンセプト
-template<typename Tcontainer, typename Telement>
-concept subscript_operator_available = requires(Tcontainer a, size_t index) {
-	{a[index]} -> std::convertible_to<Telement>;
+// C++20 透過的ハッシュ用関数オブジェクト
+// https://cpprefjp.github.io/reference/functional/hash.html
+struct string_hash 
+{
+	using is_transparent = void;
+	// string/string_view/const char*共用ハッシュ計算
+	size_t operator()(std::string_view sv) const {
+		return std::hash<std::string_view>{}(sv);
+	}
 };
-}
+
+// std::anyアクセス用便利関数
+template <class map_type, class key_type, class value_type>
+auto get_any_or(map_type& map, key_type&& key, value_type&& defaultValue) 
+{
+	if(const auto it = map.find(key); it != map.end() && it->second.has_value()) {
+		return std::any_cast<std::decay_t<value_type>>(it->second);
+	}
+	else {
+		return std::forward<value_type>(defaultValue);
+	}
+};
+
+} // namespace lsp

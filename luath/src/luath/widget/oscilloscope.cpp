@@ -7,8 +7,8 @@ OscilloScope::OscilloScope(uint32_t sampleFreq, uint32_t bufferLength)
 	: mSampleFreq(sampleFreq)
 	, mBufferLength(bufferLength)
 {
-	require(sampleFreq > 0);
-	require(bufferLength > 0);
+	lsp_require(sampleFreq > 0);
+	lsp_require(bufferLength > 0);
 
 	mInputBuffer1ch.resize(mBufferLength, 0.f);
 	mInputBuffer2ch.resize(mBufferLength, 0.f);
@@ -27,7 +27,7 @@ void OscilloScope::write(const Signal<float>& sig)
 	const auto signal_channels = sig.channels();
 	const auto signal_frames = sig.frames();
 
-	require(signal_channels == 2, "OscilloScope : write - failed (channel count is mismatch)");
+	lsp_require(signal_channels == 2, "OscilloScope : write - failed (channel count is mismatch)");
 
 	// バッファ末尾に追記
 	for(size_t i = 0; i < signal_frames; ++i) {
@@ -53,14 +53,14 @@ void OscilloScope::draw(ID2D1RenderTarget& renderer, const float left, const flo
 	// 描画開始
 	CComPtr<ID2D1Factory> factory;
 	renderer.GetFactory(&factory);
-	check(factory != nullptr);
+	lsp_check(factory != nullptr);
 
 	CComPtr<ID2D1SolidColorBrush> brush;
 	renderer.CreateSolidColorBrush({ 0.f, 0.f, 0.f, 1.f }, &brush);
 
 	// ステータス & クリッピング
 	CComPtr<ID2D1DrawingStateBlock> drawingState;
-	check(SUCCEEDED(factory->CreateDrawingStateBlock(&drawingState)));
+	lsp_check(SUCCEEDED(factory->CreateDrawingStateBlock(&drawingState)));
 	renderer.SaveDrawingState(drawingState);
 
 	const D2D1_RECT_F  rect{ left, top, left + width, top + height };
@@ -93,7 +93,7 @@ void OscilloScope::draw(ID2D1RenderTarget& renderer, const float left, const flo
 	auto drawSignal = [&](const D2D1_COLOR_F& color, const std::vector<float>& buffer) {
 		brush->SetColor(color);
 		auto getPoint = [&](size_t pos) -> D2D1_POINT_2F {
-			return { left + pos * sample_pitch , mid_y - height / 2.0f * normalize(buffer[pos]) };
+			return { left + pos * sample_pitch , mid_y - height / 2.0f * clamp(buffer[pos]) };
 		};
 		auto prev = getPoint(0);
 		for(uint32_t i = 1; i < buffer_length; ++i) {

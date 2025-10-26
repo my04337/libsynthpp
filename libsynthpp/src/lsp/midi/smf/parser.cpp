@@ -27,7 +27,7 @@ std::optional<T> read_big(std::istream& s, size_t bytes = sizeof(T))
 {
 	// TODO リトルエンディアンでの実行前提
 	// TODO アラインメントが適切ではない可能性あり
-	require(bytes <= sizeof(T));
+	lsp_require(bytes <= sizeof(T));
 	std::array<uint8_t, sizeof(T)> buff = {0};
 	for (size_t i = 0; i < bytes; ++i) {
 		int b = s.get();

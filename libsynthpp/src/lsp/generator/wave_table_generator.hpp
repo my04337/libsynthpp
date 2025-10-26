@@ -19,8 +19,8 @@ public:
 		, mVolume(volume)
 		, mCycles(cycles)
 	{
-		require(table.frames() > 0);
-		require(table.channels() == 1);
+		lsp_require(table.frames() > 0);
+		lsp_require(table.channels() == 1);
 	}
 
 	sample_type update(uint32_t sampleFreq, parameter_type freq)

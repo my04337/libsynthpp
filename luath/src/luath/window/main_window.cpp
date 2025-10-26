@@ -121,7 +121,7 @@ bool MainWindow::initialize()
 	using namespace std::string_literals;
 
 	// D2D描画関連初期化
-	check(SUCCEEDED(D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, &mD2DFactory)));
+	lsp_check(SUCCEEDED(D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, &mD2DFactory)));
 	mFontLoader.createFontCollection(L"UmeFont"s, std::filesystem::current_path().append(L"assets/font/ume-tgo4.ttf"s));
 	mDrawingContext = std::make_unique<DrawingContext>();
 
@@ -138,7 +138,7 @@ bool MainWindow::initialize()
 		wcex.lpszMenuName = nullptr;
 		wcex.hCursor = LoadCursor(nullptr, IDI_APPLICATION);
 		wcex.lpszClassName = L"luath_main_window";
-		check(RegisterClassEx(&wcex) != 0);
+		lsp_check(RegisterClassEx(&wcex) != 0);
 	});
 
 	// ウィンドウの生成
@@ -156,7 +156,7 @@ bool MainWindow::initialize()
 		nullptr,
 		instanceHandle,
 		this);
-	check(mWindowHandle != nullptr);
+	lsp_check(mWindowHandle != nullptr);
 
 	// - Step2 : ウィンドウが所属するディスプレイが確定したため、このウィンドウのDPI値を用いてリサイズする
 	onDpiChanged(static_cast<float>(GetDpiForWindow(mWindowHandle)) / 96.0f);
@@ -336,7 +336,7 @@ void MainWindow::onDraw()
 	renderHwndTargetProperties.presentOptions = D2D1_PRESENT_OPTIONS_IMMEDIATELY;
 
 	CComPtr<ID2D1HwndRenderTarget> renderTarget;
-	check(SUCCEEDED(mD2DFactory->CreateHwndRenderTarget(
+	lsp_check(SUCCEEDED(mD2DFactory->CreateHwndRenderTarget(
 		renderTargetProperties,
 		renderHwndTargetProperties,
 		&renderTarget
@@ -374,9 +374,9 @@ void MainWindow::onDraw(ID2D1RenderTarget& renderer)
 	
 	// 描画開始
 	CComPtr<ID2D1SolidColorBrush> brush; // 汎用ブラシ
-	check(SUCCEEDED(renderer.CreateSolidColorBrush({ 0.f, 0.f, 0.f, 1.f }, &brush)));
+	lsp_check(SUCCEEDED(renderer.CreateSolidColorBrush({ 0.f, 0.f, 0.f, 1.f }, &brush)));
 	CComPtr<ID2D1SolidColorBrush> blackBrush; // 色指定ブラシ : ■
-	check(SUCCEEDED(renderer.CreateSolidColorBrush({ 0.f, 0.f, 0.f, 1.f }, &blackBrush)));
+	lsp_check(SUCCEEDED(renderer.CreateSolidColorBrush({ 0.f, 0.f, 0.f, 1.f }, &blackBrush)));
 	renderer.Clear({ 1.f, 1.f, 1.f, 1.f });
 
 
@@ -516,7 +516,7 @@ void MainWindow::onDraw(ID2D1RenderTarget& renderer)
 			voiceDigests[i] = std::make_tuple(found->first, std::get<0>(found->second), std::get<1>(found->second));
 			unsortedVoiceDigests.erase(found);
 		}
-		check(unsortedVoiceDigests.empty());
+		lsp_check(unsortedVoiceDigests.empty());
 		context.prevVoiceEndPos = 0;
 		context.prevVoicePosMap.clear();
 		for(size_t i = 0; i < voiceDigests.size(); ++i) {

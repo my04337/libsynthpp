@@ -1,4 +1,7 @@
-﻿#include <lsp/core/logging.hpp>
+﻿// SPDX-FileCopyrightText: 2018 my04337
+// SPDX-License-Identifier: MIT
+
+#include <lsp/core/logging.hpp>
 #include <iostream>
 
 #ifdef WIN32

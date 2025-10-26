@@ -20,7 +20,7 @@ WasapiOutput::WasapiOutput()
 	, mSampleFormat(SampleFormat::Unknown)
 {
 	mAudioEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
-	check(mAudioEvent != nullptr);
+	lsp_check(mAudioEvent != nullptr);
 
 	initialize();
 }
@@ -78,7 +78,7 @@ void WasapiOutput::initialize()
 		Log::e("WasapiOutput : initialize - failed (getting mix format)");
 		return;
 	}
-	check(pWaveFormatEx != nullptr);
+	lsp_check(pWaveFormatEx != nullptr);
 	auto fin_act_freeMexedFormat = finally([&pWaveFormatEx]{CoTaskMemFree(pWaveFormatEx); pWaveFormatEx = nullptr;});
 
 	// フォーマットが扱える種類かを判定する
@@ -217,22 +217,22 @@ bool WasapiOutput::stop()
 
 uint32_t WasapiOutput::getDeviceSampleFreq()const noexcept
 {
-	check(valid());
+	lsp_check(valid());
 	return mWaveFormatEx->nSamplesPerSec;
 }
 uint32_t WasapiOutput::getDeviceChannels()const noexcept
 {
-	check(valid());
+	lsp_check(valid());
 	return mWaveFormatEx->nChannels;
 }
 WasapiOutput::SampleFormat WasapiOutput::getDeviceFormat()const noexcept
 {
-	check(valid());
+	lsp_check(valid());
 	return mSampleFormat;
 }
 std::string_view WasapiOutput::getDeviceFormatString()const noexcept
 {
-	check(valid());
+	lsp_check(valid());
 	return getDeviceFormatString(mSampleFormat);
 }
 std::string_view WasapiOutput::getDeviceFormatString(SampleFormat format)noexcept
@@ -249,7 +249,7 @@ std::string_view WasapiOutput::getDeviceFormatString(SampleFormat format)noexcep
 }
 size_t WasapiOutput::getDeviceBufferFrameCount()const noexcept
 {
-	check(valid());
+	lsp_check(valid());
 	return mAudioBufferFrameCount;
 }
 
@@ -341,7 +341,7 @@ void WasapiOutput::playThreadMain()
 			Log::w("WasapiOutput : playThread - failed (GetCurrentPadding)");
 			continue;
 		}
-		check(maxFrameCount >= paddingFrameCount);
+		lsp_check(maxFrameCount >= paddingFrameCount);
 		UINT32 availableFrameCount = maxFrameCount - paddingFrameCount;
 		if(availableFrameCount == 0) {
 			// no data

@@ -31,7 +31,7 @@ public:
 		, mDutyRate(0)
 		, mSamplePerPhase(0)
 		, mRandomEngine(std::random_device()())
-		, mUniDist(sample_traits<parameter_type>::normalized_min, sample_traits<parameter_type>::normalized_max)
+		, mUniDist(sample_traits<parameter_type>::min, sample_traits<parameter_type>::max)
 	{
 	}
 

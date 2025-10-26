@@ -1,4 +1,7 @@
-﻿#pragma once
+﻿// SPDX-FileCopyrightText: 2018 my04337
+// SPDX-License-Identifier: MIT
+
+#pragma once
 
 #include <lsp/core/base.hpp>
 

@@ -6,7 +6,7 @@ using namespace luath;
 
 Application::Application(int argc, char** argv)
 {
-	check(SUCCEEDED(CoInitialize(NULL)));
+	lsp_check(SUCCEEDED(CoInitialize(NULL)));
 }
 Application::~Application()
 {
@@ -17,7 +17,7 @@ int Application::exec()
 {
 	// ウィンドウ生成
 	luath::window::MainWindow main_window;
-    check(main_window.initialize());
+	lsp_check(main_window.initialize());
     
 	// メッセージループ 開始
 
