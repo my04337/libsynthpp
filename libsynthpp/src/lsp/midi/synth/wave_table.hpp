@@ -1,7 +1,7 @@
 ﻿#pragma once
 
 #include <lsp/core/core.hpp>
-#include <lsp/generator/wave_table_generator.hpp>
+#include <lsp/dsp/wave_table_generator.hpp>
 
 namespace lsp::midi::synth
 {
@@ -42,7 +42,7 @@ public:
 	size_t add(Signal<float>&& wav, float preAmp = -1, float cycles = 1);
 
 	// 波形テーブルジェネレータを取得します
-	generator::WaveTableGenerator<float> get(size_t id)const;
+	dsp::WaveTableGenerator<float> get(size_t id)const;
 
 
 private:

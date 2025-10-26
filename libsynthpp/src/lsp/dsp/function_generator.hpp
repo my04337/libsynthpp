@@ -1,10 +1,13 @@
-﻿#pragma once
+﻿// SPDX-FileCopyrightText: 2018 my04337
+// SPDX-License-Identifier: MIT
+
+#pragma once
 
 #include <lsp/core/core.hpp>
 
 #include <random>
 
-namespace lsp::generator {
+namespace lsp::dsp {
 
 // 波形種別
 enum class WaveFormType
@@ -40,28 +43,28 @@ public:
 		mType = WaveFormType::Ground;
 		mSamplePerPhase = 0;
 	}
-	void setSinWave(uint32_t sampleFreq, parameter_type freq, bool keepPhase = false)noexcept 
+	void setSinWave(parameter_type sampleFreq, parameter_type freq, bool keepPhase = false)noexcept 
 	{
 		auto freq_ = std::abs(freq);  // 負の位相はこの実装では対応不可
 		mType = WaveFormType::Sin;
 		mSamplePerPhase = 2.0f * math::PI<parameter_type> * (freq_ / sampleFreq);
 		if(!keepPhase) mPhase = 0;
 	}
-	void setSawWave(uint32_t sampleFreq, parameter_type freq, bool keepPhase = false)noexcept
+	void setSawWave(parameter_type sampleFreq, parameter_type freq, bool keepPhase = false)noexcept
 	{
 		auto freq_ = std::abs(freq);  // 負の位相はこの実装では対応不可
 		mType = WaveFormType::Saw;
 		mSamplePerPhase = 2.0f * math::PI<parameter_type> * (freq_ / sampleFreq);
 		if (!keepPhase) mPhase = 0;
 	}
-	void setTriangleWave(uint32_t sampleFreq, parameter_type freq, bool keepPhase = false)noexcept
+	void setTriangleWave(parameter_type sampleFreq, parameter_type freq, bool keepPhase = false)noexcept
 	{
 		auto freq_ = std::abs(freq);  // 負の位相はこの実装では対応不可
 		mType = WaveFormType::Triangle;
 		mSamplePerPhase = 2.0f * math::PI<parameter_type> * (freq_ / sampleFreq);
 		if (!keepPhase) mPhase = 0;
 	}
-	void setSquareWave(uint32_t sampleFreq, parameter_type freq, parameter_type duty=math::PI<parameter_type>, bool keepPhase = false)noexcept
+	void setSquareWave(parameter_type sampleFreq, parameter_type freq, parameter_type duty=math::PI<parameter_type>, bool keepPhase = false)noexcept
 	{
 		auto freq_ = std::abs(freq);  // 負の位相はこの実装では対応不可
 		mType = WaveFormType::Square;

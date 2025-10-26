@@ -1,5 +1,5 @@
 ﻿#include <luath/widget/spectrum_analyzer.hpp>
-#include <lsp/util/fft.hpp>
+#include <lsp/dsp/fft.hpp>
 
 #include <bitset>
 #include <array>
@@ -23,7 +23,7 @@ SpectrumAnalyzer::SpectrumAnalyzer(uint32_t sampleFreq, uint32_t bufferLength)
 	mDrawingFftImageBuffer.resize(mBufferLength, 0.f);
 	mDrawingFftWindowCache.resize(mBufferLength);
 	for(size_t i = 0; i < bufferLength; ++i) {
-		mDrawingFftWindowCache[i] = lsp::fft::HammingWf(i / (float)mBufferLength);
+		mDrawingFftWindowCache[i] = lsp::dsp::fft::HammingWf(i / (float)mBufferLength);
 	}
 }
 
@@ -147,7 +147,7 @@ void SpectrumAnalyzer::draw(ID2D1RenderTarget& renderer, const float left, const
 			real[i] = buffer[i] * window[i];
 		}
 		std::fill(image.begin(), image.end(), 0.f);
-		lsp::fft::fft1d<float>(real, image, static_cast<int>(buffer.size()), 0, false);
+		lsp::dsp::fft::fft1d<float>(real.data(), image.data(), static_cast<int>(buffer.size()), 0, false);
 
 		// 各点の位置を求める
 		auto getPoint = [&](size_t pos) -> D2D1_POINT_2F {
