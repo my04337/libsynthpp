@@ -64,6 +64,10 @@ void Voice::setPitchBend(float pitchBend)noexcept
 	mPitchBend = pitchBend;
 	updateFreq();
 }
+void Voice::setPolyPressure(float pressure)noexcept
+{
+	mPolyPressure = pressure;
+}
 
 void Voice::setCutOff(float freqRate, float cutOffGain)
 {

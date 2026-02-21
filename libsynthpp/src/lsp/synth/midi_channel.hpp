@@ -24,6 +24,7 @@ public:
 		float pan = 0.5f; // パン
 		float volume = 1.0f; // チャネルボリューム
 		float expression = 1.0f; // エクスプレッション
+		float channelPressure = 1.0f; // チャネルプレッシャー
 		float pitchBend = 0.0f; // ピッチベンド(ピッチベンドセンシティビティ考慮済み)
 		size_t poly = 0; // 同時発音数
 		uint8_t attackTime = 64; // アタックタイム
@@ -47,6 +48,8 @@ public:
 	void noteCut(uint32_t noteNo);
 	void programChange(uint8_t progId);
 	void controlChange(uint8_t ctrlNo, uint8_t value);
+	void channelPressure(uint8_t value);
+	void polyphonicKeyPressure(uint8_t noteNo, uint8_t value);
 	void pitchBend(int16_t pitch);
 	void updateHold();
 	void setDrumMode(bool isDrumMode);
@@ -100,6 +103,8 @@ private:
 	uint8_t ccAttackTime;	// CC:73 - アタックタイム
 	uint8_t ccDecayTime;	// CC:75 - ディケイタイム
 
+	// チャネルプレッシャー  [0.0, 1.0]
+	float mChannelPressure;
 
 	// ピッチベンド
 	int16_t mRawPitchBend;

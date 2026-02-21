@@ -53,6 +53,8 @@ public:
 	{}
 
 	uint8_t channel()const noexcept override final { return mChannel; } 
+	uint8_t noteNo()const noexcept { return mNoteNo; }
+	uint8_t value()const noexcept { return mValue; }
 
 private:
 	uint8_t mChannel;
@@ -60,7 +62,7 @@ private:
 	uint8_t mValue;
 };
 
-/// コントロールチェンジ & チャネルモードメッセージ
+/// コントロールチェンジ
 class ControlChange
 	: public ChannelVoiceMessage
 {
@@ -106,6 +108,7 @@ public:
 	{}
 
 	uint8_t channel()const noexcept override final { return mChannel; } 
+	uint8_t value()const noexcept { return mValue; }
 
 private:
 	uint8_t mChannel;

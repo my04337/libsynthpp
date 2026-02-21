@@ -29,6 +29,7 @@ void MidiChannel::resetParameters()
 	mIsDrumPart = (mMidiCh == 9);
 	mRawPitchBend = 0;
 	mCalculatedPitchBend = 0;
+	mChannelPressure = 1.0f;
 
 	// コントロールチェンジ系
 	ccVolume = 1.0;
@@ -228,6 +229,19 @@ void MidiChannel::pitchBend(int16_t pitch)
 	mRawPitchBend = pitch;
 	updatePitchBend();
 }
+void MidiChannel::channelPressure(uint8_t value)
+{
+	mChannelPressure = value / 127.0f;
+}
+void MidiChannel::polyphonicKeyPressure(uint8_t noteNo, uint8_t value)
+{
+	float pressure = value / 127.0f;
+	for (auto& [id, voice] : mVoices) {
+		if (static_cast<uint8_t>(voice->noteNo()) == noteNo) {
+			voice->setPolyPressure(pressure);
+		}
+	}
+}
 
 StereoFrame MidiChannel::update()
 {
@@ -271,6 +285,9 @@ StereoFrame MidiChannel::update()
 	ret.first *= ccExpression;
 	ret.second *= ccExpression;
 
+	// チャネルプレッシャーは現状未適用
+	// 対応するインストゥルメントが存在しないため、Voice出力への反映は保留とする
+
 	return ret;
 }
 MidiChannel::Digest MidiChannel::digest()const
@@ -283,6 +300,7 @@ MidiChannel::Digest MidiChannel::digest()const
 	digest.bankSelectLSB = ccBankSelectLSB;
 	digest.volume = ccVolume; 
 	digest.expression = ccExpression;
+	digest.channelPressure = mChannelPressure;
 	digest.pan = ccPan;
 	digest.pitchBend = mCalculatedPitchBend;
 	digest.attackTime = ccAttackTime;

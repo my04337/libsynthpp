@@ -46,6 +46,7 @@ public:
 	void setPan(float pan)noexcept;
 
 	void setPitchBend(float pitchBend)noexcept;
+	void setPolyPressure(float pressure)noexcept;
 	EnvelopeGenerator& envelopeGenerator() noexcept;
 
 	void setCutOff(float freqRate, float cutOffGain);
@@ -66,6 +67,7 @@ protected:
 	float mPitchBend;
 	float mCalculatedFreq = 0;
 	float mVolume;
+	float mPolyPressure = 1.0f; // ポリフォニックキープレッシャー [0.0, 1.0]
 	std::optional<float> mPan; // ドラムなど、ボイス毎にパンが指定される場合のヒント
 };
 
@@ -94,6 +96,7 @@ public:
 		v = mHarmonicContentFilter.update(v);
 		v *= mEG.update();
 		v *= mVolume;
+		v *= mPolyPressure;
 		return v;
 	}
 

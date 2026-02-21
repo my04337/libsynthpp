@@ -186,6 +186,12 @@ void Synthesizer::dispatchMessage(const std::shared_ptr<const midi::Message>& ms
 	} else if (auto pitchBend = std::dynamic_pointer_cast<const PitchBend>(msg)) {
 		auto& midich = mMidiChannels[pitchBend->channel()];
 		midich.pitchBend(pitchBend->pitch());
+	} else if (auto polyPressure = std::dynamic_pointer_cast<const PolyphonicKeyPressure>(msg)) {
+		auto& midich = mMidiChannels[polyPressure->channel()];
+		midich.polyphonicKeyPressure(polyPressure->noteNo(), polyPressure->value());
+	} else if (auto chanPressure = std::dynamic_pointer_cast<const ChannelPressure>(msg)) {
+		auto& midich = mMidiChannels[chanPressure->channel()];
+		midich.channelPressure(chanPressure->value());
 	} else if (auto sysEx = std::dynamic_pointer_cast<const SysExMessage>(msg)) {
 		sysExMessage(sysEx->data().data(), sysEx->data().size());
 	}
