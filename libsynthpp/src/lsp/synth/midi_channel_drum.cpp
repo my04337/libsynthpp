@@ -87,13 +87,22 @@ std::unique_ptr<Voice> MidiChannel::createDrumVoice(uint8_t noteNo, uint8_t vel)
 		std::tie(pitch, v, a, h, d, pan) = found->second;
 	}
 
-	// NRPN : パンが指定されている場合、オーバーライドする
-	if(auto panFromRPN = getNRPN_MSB(28, noteNo)) {
-		pan = panFromRPN.value_or(rand() % 128 - 64) / 127.f + 0.5f;
+	// NRPN (28, noteNo) : ドラムパン
+	// value 0 = ランダム、1 = 左端、64 = 中央、127 = 右端
+	if(auto panFromNRPN = getNRPN_MSB(28, noteNo)) {
+		uint8_t panValue = *panFromNRPN;
+		if(panValue == 0) {
+			pan = static_cast<float>(rand() % 127 + 1) / 127.f;
+		} else {
+			pan = std::clamp((panValue - 1) / 126.0f, 0.0f, 1.0f);
+		}
 	}
 
-	// NRPN : ドラムの音程微調整
-	float resolvedNoteNo = static_cast<float>(pitch + getNRPN_MSB(24, noteNo).value_or(64) - 64);
+	// NRPN (24, noteNo) : ドラムピッチ粗調整 (中心値64 = 変化なし、±半音単位)
+	// NRPN (25, noteNo) : ドラムピッチ微調整 (中心値64 = 変化なし、±1半音の範囲)
+	float coarseOffset = static_cast<float>(getNRPN_MSB(24, noteNo).value_or(64) - 64);
+	float fineOffset = (getNRPN_MSB(25, noteNo).value_or(64) - 64) / 64.0f;
+	float resolvedNoteNo = static_cast<float>(pitch) + coarseOffset + fineOffset;
 
 
 	// MEMO 人間の聴覚ではボリュームは対数的な特性を持つため、ベロシティを指数的に補正する

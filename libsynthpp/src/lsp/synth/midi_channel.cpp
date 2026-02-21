@@ -131,7 +131,7 @@ void MidiChannel::controlChange(uint8_t ctrlNo, uint8_t value)
 		apply_RPN_NRPN_state = true; // MSBのみでよいものはこのタイミングで適用する
 		break;
 	case 64: // Hold1(ホールド1:ダンパーペダル)
-		ccPedal = (value >= 0x64);
+		ccPedal = (value >= 0x40);
 		updateHold();
 		break;
 	case 72: // Release Time(リリースタイム)
@@ -182,7 +182,7 @@ void MidiChannel::controlChange(uint8_t ctrlNo, uint8_t value)
 
 	// RPN/NRPN 適用
 	if (apply_RPN_NRPN_state) {
-		if(ccRPN_MSB == 0x7F && ccRPN_MSB == 0x7F) {
+		if(ccRPN_MSB == 0x7F && ccRPN_LSB == 0x7F) {
 			// RPNヌル
 			resetParameterNumberState();
 		}
@@ -329,12 +329,12 @@ std::optional<uint8_t> MidiChannel::getNRPN_LSB(uint8_t msb, uint8_t lsb)const n
 }
 void MidiChannel::updatePitchBend()
 {
-	auto pitchBendSensitivity = getNRPN_MSB(0, 0).value_or(mSystemType.isOnlyGM1() ? 12 : 2);
-	auto masterCourseTuning = getNRPN_MSB(0, 2).value_or(64) - 64;
-	auto masterFineTuning = ((getNRPN_MSB(0, 1).value_or(64) - 64) * 128 + (getNRPN_LSB(0, 1).value_or(64) - 64)) / 8192.f;
+	auto pitchBendSensitivity = getRPN_MSB(0, 0).value_or(mSystemType.isOnlyGM1() ? 12 : 2);
+	auto masterCoarseTuning = getRPN_MSB(0, 2).value_or(64) - 64;
+	auto masterFineTuning = ((getRPN_MSB(0, 1).value_or(64) - 64) * 128 + (getRPN_LSB(0, 1).value_or(64) - 64)) / 8192.f;
 	mCalculatedPitchBend 
 		= pitchBendSensitivity * (mRawPitchBend / 8192.0f)
-		+ masterCourseTuning
+		+ masterCoarseTuning
 		+ masterFineTuning;
 
 	for (auto& kvp : mVoices) {
