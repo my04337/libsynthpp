@@ -61,8 +61,9 @@ public:
 	void setPolyPressure(float pressure)noexcept;
 	EnvelopeGenerator& envelopeGenerator() noexcept;
 
-	void setCutOff(float freqRate, float cutOffGain);
-	void setHarmonicContent(float freqRate, float harmonicContentGain);
+	// ローパスフィルタのパラメータを設定します
+	// CC#74 (Brightness) でカットオフ周波数、CC#71 (Resonance) でQ値を制御します
+	void setFilter(float cutoffFreq, float Q)noexcept;
 
 	// ベースリリースタイム(楽器定義から決まる値)を設定します
 	void setBaseReleaseTime(float timeSec)noexcept;
@@ -77,8 +78,7 @@ protected:
 protected:
 	const uint32_t mSampleFreq;
 	EnvelopeGenerator mEG;
-	BiquadraticFilter mCutOffFilter;
-	BiquadraticFilter mHarmonicContentFilter;
+	BiquadraticFilter mFilter; // ローパスフィルタ (CC#74: cutoff, CC#71: Q)
 	float mNoteNo;
 	bool mPendingNoteOff = false; // Hold/Sostenutoによりリリースが保留されている場合にtrue
 	bool mHold = false;            // CC:64 ダンパーペダル(チャネル全体)
@@ -112,8 +112,7 @@ public:
 	virtual float update()override
 	{
 		auto v = mWG.update(mSampleFreq, mCalculatedFreq);
-		v = mCutOffFilter.update(v);
-		v = mHarmonicContentFilter.update(v);
+		v = mFilter.update(v);
 		v *= mEG.update();
 		v *= mVolume;
 		v *= mPolyPressure;

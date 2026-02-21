@@ -223,13 +223,11 @@ std::unique_ptr<Voice> MidiChannel::createMelodyVoice(uint8_t noteNo, uint8_t ve
 	float thresholdLevel = 0.01f;  // ほぼ無音を長々再生するのを防ぐため、ほぼ聞き取れないレベルまで落ちたら止音する
 	static const dsp::EnvelopeGenerator<float>::Curve curveExp3(3.0f);
 
-	float harmonicContentGain = 0.f; // dB
-	if(mSystemType.isGS() || mSystemType.isXG()) {
-		harmonicContentGain = (getNRPN_MSB(1, 33).value_or(64) / 128.f - 0.5f) * 5.f;
-	}
-
 	auto voice = std::make_unique<WaveTableVoice>(mSampleFreq, std::move(wg), noteNo + noteNoAdjuster, mCalculatedPitchBend, volume, ccPedal);
-	voice->setHarmonicContent(2.f, harmonicContentGain);
+	{
+		float noteFreq = 440.f * exp2f((noteNo + noteNoAdjuster - 69.f) / 12.f);
+		voice->setFilter(calcFilterCutoff(noteFreq), calcFilterQ());
+	}
 	voice->setBaseReleaseTime(baseReleaseTime);
 
 	auto& eg = voice->envelopeGenerator();

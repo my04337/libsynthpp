@@ -122,17 +122,13 @@ std::unique_ptr<Voice> MidiChannel::createDrumVoice(uint8_t noteNo, uint8_t vel)
 	float threshold_level = 0.01f;  // ほぼ無音を長々再生するのを防ぐため、ほぼ聞き取れないレベルまで落ちたら止音する
 	static const dsp::EnvelopeGenerator<float>::Curve curveExp3(3.0f);
 
-	float cutOffFreqRate = 2.f;
-	float harmonicContentGain = 0.f; // dB
-	if(mSystemType.isGS() || mSystemType.isXG()) {
-		cutOffFreqRate = getNRPN_MSB(1, 32).value_or(64) / 128.f * 2.f + 1.f;
-		harmonicContentGain = (getNRPN_MSB(1, 33).value_or(64) / 128.f - 0.5f) * 5.f;
-	}
-
 	auto wg = Instruments::createDrumNoiseGenerator();
 	auto voice = std::make_unique<WaveTableVoice>(mSampleFreq, std::move(wg), resolvedNoteNo, mCalculatedPitchBend, volume, ccPedal);
 	voice->setPan(pan);
-	voice->setHarmonicContent(cutOffFreqRate, harmonicContentGain);
+	{
+		float noteFreq = 440.f * exp2f((resolvedNoteNo - 69.f) / 12.f);
+		voice->setFilter(calcFilterCutoff(noteFreq), calcFilterQ());
+	}
 
 	auto& eg = voice->envelopeGenerator();
 	eg.setDrumEnvelope(

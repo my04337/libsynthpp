@@ -47,6 +47,8 @@ void MidiChannel::resetParameters()
 	ccAttackTime = 64;
 	ccDecayTime = 64;
 	ccReleaseTime = 64;
+	ccResonance = 64;
+	ccBrightness = 64;
 
 	mMonoMode = false;
 
@@ -148,12 +150,20 @@ void MidiChannel::controlChange(uint8_t ctrlNo, uint8_t value)
 		ccSostenuto = (value >= 0x40);
 		updateSostenuto();
 		break;
+	case 71: // Resonance(レゾナンス / ハーモニックコンテント)
+		ccResonance = value;
+		updateFilter();
+		break;
 	case 72: // Release Time(リリースタイム)
 		ccReleaseTime = value;
 		updateReleaseTime();
 		break;
 	case 73: // Attack Time(アタックタイム)
 		ccAttackTime = value;
+		break;
+	case 74: // Brightness(ブライトネス / カットオフ)
+		ccBrightness = value;
+		updateFilter();
 		break;
 	case 75: // Decay Time(ディケイタイム)
 		ccDecayTime = value;
@@ -246,6 +256,11 @@ void MidiChannel::controlChange(uint8_t ctrlNo, uint8_t value)
 			if((mSystemType.isGS() || mSystemType.isXG()) && ccNRPN_MSB == 1 && ccNRPN_LSB == 102) {
 				updateReleaseTime();
 			}
+
+			// - NRPN(GS/XG) : カットオフ / レゾナンス
+			if((mSystemType.isGS() || mSystemType.isXG()) && ccNRPN_MSB == 1 && (ccNRPN_LSB == 32 || ccNRPN_LSB == 33)) {
+				updateFilter();
+			}
 		}
 	}
 
@@ -335,6 +350,8 @@ MidiChannel::Digest MidiChannel::digest()const
 	digest.attackTime = ccAttackTime;
 	digest.decayTime = ccDecayTime;
 	digest.releaseTime = ccReleaseTime;
+	digest.brightness = ccBrightness;
+	digest.resonance = ccResonance;
 	digest.poly = mVoices.size();
 	digest.pedal = ccPedal;
 	digest.sostenuto = ccSostenuto;
@@ -416,6 +433,62 @@ void MidiChannel::updateReleaseTime()
 	float scale = calcReleaseTimeScale();
 	for (auto& [id, voice] : mVoices) {
 		voice->setReleaseTimeScale(scale);
+	}
+}
+float MidiChannel::calcFilterCutoff(float noteFreq)const
+{
+	// CC#74 (Brightness) → ローパスフィルタのカットオフ周波数
+	// CC値を対数スケーリングでカットオフ周波数に変換します
+	// CC 0 → noteFreq × 1 (基本周波数 = 暗い音)
+	// CC 64 → noteFreq × 16 (デフォルト、ほぼフルオープン)
+	// CC 127 → noteFreq × 256 (完全にフルオープン)
+	float ccRate = exp2f(ccBrightness / 16.f); // 2^0=1 ~ 2^(127/16)≈2^8=256
+
+	// NRPN (1, 32) : GS/XGのパート別カットオフオフセット (中心值64でオフセットなし)
+	// ±4オクターブの範囲で調整
+	float nrpnScale = 1.f;
+	if(mSystemType.isGS() || mSystemType.isXG()) {
+		int nrpnOffset = static_cast<int>(getNRPN_MSB(1, 32).value_or(64)) - 64;
+		nrpnScale = exp2f(nrpnOffset / 16.f); // ±4オクターブ
+	}
+
+	float cutoff = noteFreq * ccRate * nrpnScale;
+
+	// ナイキスト周波数以下に制限
+	float nyquist = mSampleFreq / 2.f;
+	return std::clamp(cutoff, 20.f, nyquist * 0.95f);
+}
+float MidiChannel::calcFilterQ()const
+{
+	// CC#71 (Resonance) → ローパスフィルタのQ値
+	// CC 0 → Q = 0.707 (バターワース、共振なし)
+	// CC 64 → Q = 0.707 (デフォルト、フラット)
+	// CC 127 → Q ≈ 12 (強い共振ピーク)
+	float baseQ = 0.707f;
+	if(ccResonance > 64) {
+		// 64超で共振が増加 : 65→微小な共振、127→強い共振
+		float t = (ccResonance - 64) / 63.f; // 0.0 ~ 1.0
+		baseQ = 0.707f + t * t * 11.3f; // 0.707 ~ 12.0 (二次曲線で急峻に上昇)
+	}
+
+	// NRPN (1, 33) : GS/XGのパート別レゾナンスオフセット (中心值64でオフセットなし)
+	if(mSystemType.isGS() || mSystemType.isXG()) {
+		int nrpnValue = static_cast<int>(getNRPN_MSB(1, 33).value_or(64));
+		if(nrpnValue > 64) {
+			float t = (nrpnValue - 64) / 63.f;
+			baseQ += t * t * 5.f; // NRPNで追加の共振
+		}
+	}
+
+	return std::clamp(baseQ, 0.5f, 20.f);
+}
+void MidiChannel::updateFilter()
+{
+	float Q = calcFilterQ();
+	for (auto& [id, voice] : mVoices) {
+		float noteFreq = 440.f * exp2f((voice->noteNo() - 69.f) / 12.f);
+		float cutoff = calcFilterCutoff(noteFreq);
+		voice->setFilter(cutoff, Q);
 	}
 }
 // ソステヌートペダル(CC:66)の状態変化時に呼ばれます

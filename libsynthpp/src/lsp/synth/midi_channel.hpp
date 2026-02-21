@@ -30,6 +30,8 @@ public:
 		uint8_t attackTime = 64; // アタックタイム
 		uint8_t decayTime = 64; // ディケイタイム
 		uint8_t releaseTime = 64; // リリースタイム
+		uint8_t brightness = 64; // ブライトネス (カットオフ)
+		uint8_t resonance = 64; // レゾナンス (ハーモニックコンテント)
 		bool pedal = false; // ペダルOn/Off
 		bool sostenuto = false; // ソステヌートOn/Off
 		bool mono = false; // モノモードOn/Off
@@ -70,10 +72,15 @@ private:
 
 	void updatePitchBend();
 	void updateReleaseTime();
+	void updateFilter();
 
 	// CC 72/73/75 および対応するNRPNからEGタイムスケーリング係数を計算します
 	static float calcEGTimeScale(uint8_t ccValue);
 	float calcReleaseTimeScale()const;
+
+	// CC 71/74 および対応するNRPN(1,32/33)からフィルタパラメータを計算します
+	float calcFilterCutoff(float noteFreq)const;
+	float calcFilterQ()const;
 
 	// RPN and NRPN
 	std::optional<uint8_t> getRPN_MSB(uint8_t msb, uint8_t lsb)const noexcept;
@@ -111,6 +118,8 @@ private:
 	uint8_t ccReleaseTime;	// CC:72 - リリースタイム
 	uint8_t ccAttackTime;	// CC:73 - アタックタイム
 	uint8_t ccDecayTime;	// CC:75 - ディケイタイム
+	uint8_t ccResonance;	// CC:71 - レゾナンス (ハーモニックコンテント)
+	uint8_t ccBrightness;	// CC:74 - ブライトネス (カットオフ)
 
 	// チャネルモードメッセージ
 	bool mMonoMode;         // CC:126/127 - モノ/ポリモード

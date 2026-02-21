@@ -442,7 +442,7 @@ void MainWindow::onDraw(ID2D1RenderTarget& renderer)
 		const float ofsY = 60;
 		const float height = 15;
 
-		constexpr std::array<float, 10> columnWidth{ 25, 75, 40, 40, 60, 35, 75, 25, 25, 25 };
+		constexpr std::array<float, 11> columnWidth{ 25, 75, 40, 40, 45, 35, 75, 25, 25, 25 };
 		float x = ofsX;
 		size_t ci = 0;
 		auto col = [&] {
@@ -481,7 +481,7 @@ void MainWindow::onDraw(ID2D1RenderTarget& renderer)
 			drawText(col(), y, std::format(L"{:03}:{:03}.{:03}", cd.progId, cd.bankSelectMSB, cd.bankSelectLSB));
 			drawText(col(), y, std::format(L"{:0.3f}", cd.volume));
 			drawText(col(), y, std::format(L"{:0.3f}", cd.expression));
-			drawText(col(), y, std::format(L"{:+0.4f}", cd.pitchBend));
+			drawText(col(), y, std::format(L"{:+0.3f}", cd.pitchBend));
 			drawText(col(), y, std::format(L"{:0.2f}", cd.pan));
 			drawText(col(), y, std::format(L"{:03}.{:03}.{:03}", cd.attackTime, cd.decayTime, cd.releaseTime));
 			drawText(col(), y, cd.pedal ? L"on" : L"off");

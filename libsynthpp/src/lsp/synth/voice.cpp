@@ -86,15 +86,16 @@ void Voice::setPolyPressure(float pressure)noexcept
 	mPolyPressure = pressure;
 }
 
-void Voice::setCutOff(float freqRate, float cutOffGain)
+void Voice::setFilter(float cutoffFreq, float Q)noexcept
 {
-	float freq = mCalculatedFreq * freqRate;
-	mCutOffFilter.setHighshelfParam(mSampleFreq, freq, 1.f, cutOffGain);
-}
-void Voice::setHarmonicContent(float freqRate, float harmonicContentGain)
-{
-	float freq = mCalculatedFreq * freqRate;
-	mHarmonicContentFilter.setPeakingParam(mSampleFreq, freq, 1.f, harmonicContentGain);
+	// カットオフ周波数がナイキスト周波数の半分以上の場合、フィルタをパススルーにする
+	// (ナイキスト周波数以上のカットオフは双二次フィルタでは不安定になる)
+	float nyquist = mSampleFreq / 2.f;
+	if(cutoffFreq >= nyquist * 0.95f) {
+		mFilter.resetParam();
+	} else {
+		mFilter.setLopassParam(static_cast<float>(mSampleFreq), cutoffFreq, Q);
+	}
 }
 Voice::EnvelopeGenerator& Voice::envelopeGenerator() noexcept
 {
