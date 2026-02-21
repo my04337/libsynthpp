@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <luath/core/core.hpp>
 
