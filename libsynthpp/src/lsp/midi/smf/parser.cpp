@@ -34,7 +34,7 @@ std::optional<T> read_big(std::istream& s, size_t bytes = sizeof(T))
 		if(b < 0) return {};
 		buff[bytes-i-1] = static_cast<uint8_t>(b);
 	}
-	return *reinterpret_cast<T*>(&buff[0]);
+	return std::bit_cast<T>(buff);
 }
 
 // 1バイトを読み出します
@@ -153,9 +153,9 @@ void Parser::stageHeader(Header& header)
 	auto track_num = require(read_big<uint16_t>(s));
 	
 	// 時間単位
-	auto time_division = require(read_big<uint16_t>(s));
+	auto time_division = require(read_big<int16_t>(s));
 	if(time_division < 0) throw decoding_exception("invalid header chunk : unsupported time division - SMPTE format");
-	auto ticks_per_quarter_note = time_division;
+	auto ticks_per_quarter_note = static_cast<uint16_t>(time_division);
 
 	// ---
 

@@ -27,13 +27,12 @@ Synthesizer::~Synthesizer()
 
 void Synthesizer::dispose()
 {
-	std::lock_guard lock(mMutex);
-
-	// コールバック破棄
-	mRenderingCallback = nullptr;
-
-	// 演奏スレッド停止
-	mPlayingThreadAborted = true;
+	{
+		std::lock_guard lock(mMutex);
+		mRenderingCallback = nullptr;
+		mPlayingThreadAborted = true;
+	}
+	// ロック解放後にjoin
 	if (mPlayingThread.joinable()) {
 		mPlayingThread.join();
 	}
@@ -182,7 +181,7 @@ void Synthesizer::dispatchMessage(const std::shared_ptr<const midi::Message>& ms
 		auto& midich = mMidiChannels[pitchBend->channel()];
 		midich.pitchBend(pitchBend->pitch());
 	} else if (auto sysEx = std::dynamic_pointer_cast<const SysExMessage>(msg)) {
-		sysExMessage(&sysEx->data()[0], sysEx->data().size());
+		sysExMessage(sysEx->data().data(), sysEx->data().size());
 	}
 }
 // ---
