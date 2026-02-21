@@ -260,10 +260,13 @@ void MainWindow::onDropFile(const std::vector<std::filesystem::path>& paths)
 
 bool MainWindow::onKeyDown(uint16_t key, bool shift, bool ctrl, bool alt)
 {
+	// シーケンサのキー操作
 	if (key == VK_UP) {
+		// 出力音量を上げる ※TOCTOUは無視可能。この操作がメインスレッド以外から行われることはない。
 		mPostAmpVolume.store(mPostAmpVolume.load() * 1.5f);
 		return true;
 	} else if(key == VK_DOWN) {
+		// 出力音量を下げる ※TOCTOUは無視可能。この操作がメインスレッド以外から行われることはない。
 		mPostAmpVolume.store(mPostAmpVolume.load() / 1.5f);
 		return true;
 	}

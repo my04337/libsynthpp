@@ -10,7 +10,7 @@ WavFileOutput::WavFileOutput(uint32_t sampleFreq, uint32_t bitsPerSample, uint32
 		return;
 	}
 	if(bitsPerSample != 16 && bitsPerSample != 32) {
-		Log::e("WavFileOutput : initialize - failed (invalid bits per sampe)");
+		Log::e("WavFileOutput : initialize - failed (invalid bits per sample)");
 		return;
 	}
 

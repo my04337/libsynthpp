@@ -7,7 +7,7 @@
 
 namespace lsp::audio {
 
-// WASAPI 出力
+// WavFileOutput
 class WavFileOutput final
 	: non_copy_move
 {
@@ -52,10 +52,10 @@ void WavFileOutput::write(const Signal<sample_type>& sig)
 	if(signal_frames == 0) return;
 
 	if (fail()) {
-		Log::e("WasapiOutput : write - failed (invalid)");
+		Log::e("WavFileOutput : write - failed (invalid)");
 		return;
 	}
-	lsp_require(signal_channels == mChannels, "WasapiOutput : write - failed (channel count is mismatch)");
+	lsp_require(signal_channels == mChannels, "WavFileOutput : write - failed (channel count is mismatch)");
 
 	const auto bitsPerSample = mBitsPerSample; 
 	const auto bytesPerSample = bitsPerSample/8;
