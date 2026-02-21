@@ -30,13 +30,13 @@ public:
 
 private:
 	// --- valid時のみ有効 ---
-	uint32_t mSampleFreq;
-	uint32_t mBitsPerSample;
-	uint32_t mChannels;
-	
+	uint32_t mSampleFreq = 0;
+	uint32_t mBitsPerSample = 0;
+	uint32_t mChannels = 0;
+
 	std::ofstream mFile;
-	std::ofstream::pos_type mFilePos_RiffSize;
-	std::ofstream::pos_type mFilePos_DataSize;
+	std::ofstream::pos_type mFilePos_RiffSize = 0;
+	std::ofstream::pos_type mFilePos_DataSize = 0;
 
 };
 
@@ -51,11 +51,11 @@ void WavFileOutput::write(const Signal<sample_type>& sig)
 	if(signal_channels == 0) return;
 	if(signal_frames == 0) return;
 
-	if (fail()) {
+	if (!mFile.is_open() || fail()) {
 		Log::e("WavFileOutput : write - failed (invalid)");
 		return;
 	}
-	lsp_require(signal_channels == mChannels, "WavFileOutput : write - failed (channel count is mismatch)");
+	lsp_require(signal_channels == mChannels);
 
 	const auto bitsPerSample = mBitsPerSample; 
 	const auto bytesPerSample = bitsPerSample/8;

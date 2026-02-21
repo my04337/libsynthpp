@@ -204,6 +204,7 @@ LRESULT MainWindow::wndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 		}	break;
 		case WM_DROPFILES: {
 			auto hDrop = reinterpret_cast<HDROP>(wParam);
+			auto fin_act_dragFinish = finally([hDrop]{ DragFinish(hDrop); });
 			std::vector<std::filesystem::path> paths;
 			UINT files = DragQueryFile(hDrop, 0xFFFFFFFF, nullptr, 0);
 			for(size_t i = 0; i < files; ++i) {

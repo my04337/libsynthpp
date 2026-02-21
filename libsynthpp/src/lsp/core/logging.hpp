@@ -174,20 +174,3 @@ namespace lsp
 	};
 }
 #endif
-
-// アサーション機構
-// MEMO 契約プログラミングのアノテーション形式で記述したいが、実装まではマクロとする。 C++モジュールは当分考慮しない。
-
-// require : 引数チェック用
-#define lsp_require(...) \
-	if(!(__VA_ARGS__)) [[unlikely]] { \
-		lsp::Log::f(std::stacktrace::current(), "illegal argument. expected : '{}'.", #__VA_ARGS__ ); \
-		std::unreachable(); \
-	}
-
-// check : 関数の内部での状態チェック用
-#define lsp_check(...) \
-	if(!(__VA_ARGS__)) [[unlikely]] { \
-		lsp::Log::f(std::stacktrace::current(), "illegal state. expected : '{}'.", #__VA_ARGS__ ); \
-		std::unreachable(); \
-	}

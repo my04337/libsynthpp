@@ -121,6 +121,12 @@ lsp::Signal<float> Synthesizer::generate(size_t len)
 		for (size_t ch = 0; ch < MAX_CHANNELS; ++ch) {
 			auto& midich = mMidiChannels[ch];
 			auto v = midich.update();
+
+			// NaN/Inf検出時は無音で継続 (RTスレッド上のため中断不可)
+			if(!std::isfinite(v.first) || !std::isfinite(v.second)) {
+				lsp_rt_fail(continue, "generate: NaN/Inf detected on ch={}", ch);
+			}
+
 			frame[0] += v.first;
 			frame[1] += v.second;
 		}

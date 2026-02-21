@@ -6,12 +6,10 @@ using namespace lsp::audio;
 WavFileOutput::WavFileOutput(uint32_t sampleFreq, uint32_t bitsPerSample, uint32_t channels, const std::filesystem::path& filePath)
 {
 	if(channels < 1 || channels > 2) {
-		Log::e("WavFileOutput : initialize - failed (invalid channel num)");
-		return;
+		throw std::invalid_argument("WavFileOutput : invalid channel count");
 	}
 	if(bitsPerSample != 16 && bitsPerSample != 32) {
-		Log::e("WavFileOutput : initialize - failed (invalid bits per sample)");
-		return;
+		throw std::invalid_argument("WavFileOutput : invalid bits per sample");
 	}
 
 	std::ofstream fs;
@@ -117,6 +115,4 @@ void WavFileOutput::close()noexcept
 		Log::e("WavFileOutput : finalize - failed (file size)");
 		return;
 	}
-
-	mFile.close();
 }

@@ -27,7 +27,7 @@ void OscilloScope::write(const Signal<float>& sig)
 	const auto signal_channels = sig.channels();
 	const auto signal_frames = sig.frames();
 
-	lsp_require(signal_channels == 2, "OscilloScope : write - failed (channel count is mismatch)");
+	lsp_require(signal_channels == 2);
 
 	// バッファ末尾に追記
 	for(size_t i = 0; i < signal_frames; ++i) {
