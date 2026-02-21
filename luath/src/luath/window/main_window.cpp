@@ -76,7 +76,7 @@ static std::wstring freq2scale(float freq) {
 	if(roundedNoteNo < 0) {
 		return L"<LOW>";
 	}
-	else if(roundedNoteNo > 128) {
+	else if(roundedNoteNo >= 128) {
 		return L"<HIGH>";
 	}
 	else [[likely]] {
@@ -300,8 +300,8 @@ void MainWindow::loadMidi(const std::filesystem::path& midi_path) {
 		// ロード失敗
 		MessageBox(
 			mWindowHandle,
-			L"ファイルエラー",
 			std::wstring(L"MIDIファイルを開けません : " + midi_path.wstring()).c_str(),
+			L"ファイルエラー",
 			MB_OK | MB_ICONWARNING
 		);
 	}
