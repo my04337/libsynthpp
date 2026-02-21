@@ -30,7 +30,7 @@ void Instruments::prepareWaveTable()
 	});
 }
 
-// 正弦波のジェネレータを返します
+// 矩形波（バンドリミテッド）のジェネレータを返します
 auto Instruments::createSquareGenerator(int overtoneOrder, float volume)
 	-> WaveTableGenerator
 {

@@ -32,7 +32,7 @@ public:
 		: mType(WaveFormType::Ground)
 		, mPhase(0)
 		, mDutyRate(0)
-		, mSamplePerPhase(0)
+		, mPhasePerSample(0)
 		, mRandomEngine(std::random_device()())
 		, mUniDist(sample_traits<parameter_type>::min, sample_traits<parameter_type>::max)
 	{
@@ -41,48 +41,48 @@ public:
 	void setGround()noexcept 
 	{
 		mType = WaveFormType::Ground;
-		mSamplePerPhase = 0;
+		mPhasePerSample = 0;
 	}
 	void setSinWave(parameter_type sampleFreq, parameter_type freq, bool keepPhase = false)noexcept 
 	{
 		auto freq_ = std::abs(freq);  // 負の位相はこの実装では対応不可
 		mType = WaveFormType::Sin;
-		mSamplePerPhase = 2.0f * math::PI<parameter_type> * (freq_ / sampleFreq);
+		mPhasePerSample = 2.0f * math::PI<parameter_type> * (freq_ / sampleFreq);
 		if(!keepPhase) mPhase = 0;
 	}
 	void setSawWave(parameter_type sampleFreq, parameter_type freq, bool keepPhase = false)noexcept
 	{
 		auto freq_ = std::abs(freq);  // 負の位相はこの実装では対応不可
 		mType = WaveFormType::Saw;
-		mSamplePerPhase = 2.0f * math::PI<parameter_type> * (freq_ / sampleFreq);
+		mPhasePerSample = 2.0f * math::PI<parameter_type> * (freq_ / sampleFreq);
 		if (!keepPhase) mPhase = 0;
 	}
 	void setTriangleWave(parameter_type sampleFreq, parameter_type freq, bool keepPhase = false)noexcept
 	{
 		auto freq_ = std::abs(freq);  // 負の位相はこの実装では対応不可
 		mType = WaveFormType::Triangle;
-		mSamplePerPhase = 2.0f * math::PI<parameter_type> * (freq_ / sampleFreq);
+		mPhasePerSample = 2.0f * math::PI<parameter_type> * (freq_ / sampleFreq);
 		if (!keepPhase) mPhase = 0;
 	}
 	void setSquareWave(parameter_type sampleFreq, parameter_type freq, parameter_type duty=math::PI<parameter_type>, bool keepPhase = false)noexcept
 	{
 		auto freq_ = std::abs(freq);  // 負の位相はこの実装では対応不可
 		mType = WaveFormType::Square;
-		mSamplePerPhase = 2.0f * math::PI<parameter_type> * (freq_ / sampleFreq);
+		mPhasePerSample = 2.0f * math::PI<parameter_type> * (freq_ / sampleFreq);
 		mDutyRate = duty;
 		if (!keepPhase) mPhase = 0;
 	}
 	void setWhiteNoise()noexcept 
 	{
 		mType = WaveFormType::WhiteNoise;
-		mSamplePerPhase = 0;
+		mPhasePerSample = 0;
 	}
 
 
 	sample_type update() 
 	{
 		constexpr auto period = 2.0f * math::PI<parameter_type>; // 一周期 : 2π
-		constexpr auto half_period = math::PI<parameter_type>; // 一周期 : 2π
+		constexpr auto half_period = math::PI<parameter_type>; // 半周期 : π
 
 		sample_type s = 0;
 		switch (mType) {
@@ -120,7 +120,7 @@ public:
 			break;
 		}
 
-		mPhase = math::floored_division(mPhase + mSamplePerPhase, period);
+		mPhase = math::floored_division(mPhase + mPhasePerSample, period);
 		return s;
 	}
 
@@ -128,7 +128,7 @@ private:
 	WaveFormType mType;
 	parameter_type mPhase; // 現在の位相 [0, 1)
 	parameter_type mDutyRate;	// デューティー比
-	parameter_type mSamplePerPhase; // 1サンプル当たりの位相角(rad)
+	parameter_type mPhasePerSample; // 1サンプル当たりの位相角(rad)
 
 	std::mt19937 mRandomEngine;
 	std::uniform_real_distribution<parameter_type> mUniDist; // 一様分布

@@ -256,7 +256,7 @@ StereoFrame MidiChannel::update()
 
 
 		// 発音終了済のボイスを破棄
-		if (iter->second->envolopeGenerator().isBusy()) {
+		if (iter->second->envelopeGenerator().isBusy()) {
 			++iter;
 		} else {
 			iter = mVoices.erase(iter);

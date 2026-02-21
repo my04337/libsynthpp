@@ -208,18 +208,18 @@ std::unique_ptr<Voice> MidiChannel::createMelodyVoice(uint8_t noteNo, uint8_t ve
 	// MEMO 人間の聴覚ではボリュームは対数的な特性を持つため、ベロシティを指数的に補正する
 	// TODO sustain_levelで除算しているのは旧LibSynth++からの移植コード。 補正が不要になったら削除すること
 	float volume = powf(10.f, -20.f * (1.f - vel / 127.f) / 20.f) * v / ((s > 0.8f && s != 0.f) ? s : 0.8f);
-	float cutoffLevel = 0.01f;  // ほぼ無音を長々再生するのを防ぐため、ほぼ聞き取れないレベルまで落ちたらカットオフする
+	float thresholdLevel = 0.01f;  // ほぼ無音を長々再生するのを防ぐため、ほぼ聞き取れないレベルまで落ちたら止音する
 	static const dsp::EnvelopeGenerator<float>::Curve curveExp3(3.0f);
 
-	float overtuneGain = 0.f; // dB
+	float harmonicContentGain = 0.f; // dB
 	if(mSystemType.isGS() || mSystemType.isXG()) {
-		overtuneGain = (getNRPN_MSB(1, 33).value_or(64) / 128.f - 0.5f) * 5.f;
+		harmonicContentGain = (getNRPN_MSB(1, 33).value_or(64) / 128.f - 0.5f) * 5.f;
 	}
 
 	auto voice = std::make_unique<WaveTableVoice>(mSampleFreq, std::move(wg), noteNo + noteNoAdjuster, mCalculatedPitchBend, volume, ccPedal);
-	voice->setResonance(2.f, overtuneGain);
+	voice->setHarmonicContent(2.f, harmonicContentGain);
 
-	auto& eg = voice->envolopeGenerator();
+	auto& eg = voice->envelopeGenerator();
 	eg.setMelodyEnvelope(
 		mSampleFreq, curveExp3,
 		std::max(0.001f, a),
@@ -228,7 +228,7 @@ std::unique_ptr<Voice> MidiChannel::createMelodyVoice(uint8_t noteNo, uint8_t ve
 		s,
 		f,
 		std::max(0.001f, r),
-		cutoffLevel
+		thresholdLevel
 	);
 	eg.noteOn();
 	return voice;

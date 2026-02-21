@@ -46,10 +46,10 @@ public:
 	void setPan(float pan)noexcept;
 
 	void setPitchBend(float pitchBend)noexcept;
-	EnvelopeGenerator& envolopeGenerator() noexcept;
+	EnvelopeGenerator& envelopeGenerator() noexcept;
 
 	void setCutOff(float freqRate, float cutOffGain);
-	void setResonance(float freqRate, float overtoneGain);
+	void setHarmonicContent(float freqRate, float harmonicContentGain);
 
 
 protected:
@@ -59,7 +59,7 @@ protected:
 	const uint32_t mSampleFreq;
 	EnvelopeGenerator mEG;
 	BiquadraticFilter mCutOffFilter;
-	BiquadraticFilter mResonanceFilter;
+	BiquadraticFilter mHarmonicContentFilter;
 	float mNoteNo;
 	bool mPendingNoteOff = false;
 	bool mHold = false;
@@ -91,7 +91,7 @@ public:
 	{
 		auto v = mWG.update(mSampleFreq, mCalculatedFreq);
 		v = mCutOffFilter.update(v);
-		v = mResonanceFilter.update(v);
+		v = mHarmonicContentFilter.update(v);
 		v *= mEG.update();
 		v *= mVolume;
 		return v;

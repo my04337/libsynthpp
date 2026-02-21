@@ -29,7 +29,7 @@ public:
 	// エンベロープモデル
 	enum class Model
 	{
-		Melody,	// メロディパート用 : AHDFSR
+		Melody,	// メロディパート用 : AHDSFR
 		Drum,	// ドラムパート用 : ADR ※ノートオフ無視
 	}; 
 	// エンベロープ カーブ形状
@@ -102,7 +102,7 @@ public:
 		parameter_type sustain_level,	// level
 		float fade_slope,				// Linear : level/sec, Exp : dBFS/sec
 		float release_time,				// sec
-		parameter_type cutoff_level		// level
+		parameter_type threshold_level		// level
 	)
 	{
 		mModel = Model::Melody;
@@ -115,7 +115,7 @@ public:
 		mReleaseTime  = std::max<uint64_t>(0, static_cast<uint64_t>(sampleFreq * release_time));
 		mSustainLevel = std::clamp<parameter_type>(sustain_level, 0, 1);
 		mFadeSlope    = std::min<parameter_type>(fade_slope, 0) / sampleFreq; // 減衰率なので負の値
-		mCutOffLevel  = std::clamp<parameter_type>(cutoff_level, 0, 1);
+		mThresholdLevel  = std::clamp<parameter_type>(threshold_level, 0, 1);
 	}
 	// エンベロープ形状パラメータを指定します (ドラム用)
 	void setDrumEnvelope(
@@ -124,7 +124,7 @@ public:
 		float attack_time,				// sec
 		float hold_time,				// sec
 		float decay_time,				// sec
-		parameter_type cutoff_level		// level
+		parameter_type threshold_level		// level
 	)
 	{
 		mModel = Model::Drum;
@@ -137,7 +137,7 @@ public:
 		mReleaseTime = 0; // unused
 		mSustainLevel = 0; // unused
 		mFadeSlope = 0; // unused
-		mCutOffLevel = std::clamp<parameter_type>(cutoff_level, 0, 1);
+		mThresholdLevel = std::clamp<parameter_type>(threshold_level, 0, 1);
 	}
 
 	// ノートオン (Attackへ遷移)
@@ -237,8 +237,8 @@ public:
 				break;
 			}
 			else if(mModel == Model::Drum) {
-				if(v <= mCutOffLevel) {
-					// ドラム : 音量が規定値を下回った場合 : ノートオフを待たずに止音
+				if(v <= mThresholdLevel) {
+						// ドラム : 音量が規定値を下回った場合 : ノートオフを待たずに止音
 					switchToFree();
 				}
 				else {
@@ -253,7 +253,7 @@ public:
 			[[fallthrough]];
 		case EnvelopeState::Fade:
 			// フェード中
-			if (v <= mCutOffLevel) {
+			if (v <= mThresholdLevel) {
 				// 音量が規定値を下回った場合 : ノートオフを待たずに止音
 				switchToFree();
 			}
@@ -263,7 +263,7 @@ public:
 			if(mTime >= mReleaseTime) {
 				// リリース時間終了 => 止音
 				switchToFree();
-			} else if(v <= mCutOffLevel) {
+			} else if(v <= mThresholdLevel) {
 				// 音量が規定値を下回った場合 : ノートオフを待たずに止音
 				switchToFree();
 			}
@@ -346,7 +346,7 @@ private:
 	parameter_type mSustainLevel;	// level (0 <= x <= 1)
 	parameter_type mFadeSlope;		// Linear : level/sample, Exp : dBFS/sample
 	uint64_t mReleaseTime;			// sample
-	parameter_type mCutOffLevel;	// level (0 <= x <= 1)
+	parameter_type mThresholdLevel;	// level (0 <= x <= 1)
 };
 
 

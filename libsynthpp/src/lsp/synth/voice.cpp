@@ -70,12 +70,12 @@ void Voice::setCutOff(float freqRate, float cutOffGain)
 	float freq = mCalculatedFreq * freqRate;
 	mCutOffFilter.setHighshelfParam(mSampleFreq, freq, 1.f, cutOffGain);
 }
-void Voice::setResonance(float freqRate, float overtoneGain)
+void Voice::setHarmonicContent(float freqRate, float harmonicContentGain)
 {
 	float freq = mCalculatedFreq * freqRate;
-	mResonanceFilter.setPeakingParam(mSampleFreq, freq, 1.f, overtoneGain);
+	mHarmonicContentFilter.setPeakingParam(mSampleFreq, freq, 1.f, harmonicContentGain);
 }
-Voice::EnvelopeGenerator& Voice::envolopeGenerator() noexcept
+Voice::EnvelopeGenerator& Voice::envelopeGenerator() noexcept
 {
 	return mEG;
 }

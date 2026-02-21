@@ -21,7 +21,7 @@ public:
 	// 常に0を返すジェネレータを作成します
 	static WaveTableGenerator createZeroWaveTable(float volume = 1.f);
 
-	// 正弦波のジェネレータを返します
+	// 矩形波（バンドリミテッド）のジェネレータを返します
 	static WaveTableGenerator createSquareGenerator(int overtoneOrder = 30, float volume = 1.f);
 
 	// ドラム用ノイズのジェネレータを返します
