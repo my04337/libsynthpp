@@ -64,6 +64,12 @@ public:
 	void setCutOff(float freqRate, float cutOffGain);
 	void setHarmonicContent(float freqRate, float harmonicContentGain);
 
+	// ベースリリースタイム(楽器定義から決まる値)を設定します
+	void setBaseReleaseTime(float timeSec)noexcept;
+	// リリースタイムのスケーリング係数を更新し、EGに反映します
+	// CC:72やNRPN(1,102)の変更時に呼び出されます
+	void setReleaseTimeScale(float scale)noexcept;
+
 
 protected:
 	void updateFreq()noexcept;
@@ -82,6 +88,7 @@ protected:
 	float mVolume;
 	float mPolyPressure = 1.0f; // ポリフォニックキープレッシャー [0.0, 1.0]
 	std::optional<float> mPan; // ドラムなど、ボイス毎にパンが指定される場合のヒント
+	float mBaseReleaseTimeSec = 0; // 楽器定義から決まるベースリリースタイム(秒)
 };
 
 

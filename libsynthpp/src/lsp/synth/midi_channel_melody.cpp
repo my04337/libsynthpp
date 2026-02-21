@@ -198,12 +198,24 @@ std::unique_ptr<Voice> MidiChannel::createMelodyVoice(uint8_t noteNo, uint8_t ve
 		wg = Instruments::createSquareGenerator(waveTableId);
 	}
 
+	// CC 72/73/75 によるEGタイム調整（全システムタイプで適用）
+	// 中心値64で等倍、0で約x0.006、127で約x190 の対数スケーリング
+	float attackScale = calcEGTimeScale(ccAttackTime);
+	float decayScale = calcEGTimeScale(ccDecayTime);
+	float releaseScale = calcReleaseTimeScale();
 
+	// NRPN (1, 99/100) によるアタック/ディケイタイム調整 (GS/XG)
 	if(mSystemType.isGS() || mSystemType.isXG()) {
-		a *= powf(10.0f, (ccAttackTime / 128.f - 0.5f) * 4.556f);
-		d *= powf(10.0f, (ccDecayTime / 128.f - 0.5f) * 4.556f);
-		r *= powf(10.0f, (ccReleaseTime / 128.f - 0.5f) * 4.556f);
+		attackScale *= calcEGTimeScale(getNRPN_MSB(1, 99).value_or(64));
+		decayScale *= calcEGTimeScale(getNRPN_MSB(1, 100).value_or(64));
 	}
+
+	a *= attackScale;
+	d *= decayScale;
+
+	// ベースリリースタイムを保存（CC/NRPNスケーリング適用前）
+	float baseReleaseTime = std::max(0.001f, r);
+	r *= releaseScale;
 
 	// MEMO 人間の聴覚ではボリュームは対数的な特性を持つため、ベロシティを指数的に補正する
 	// TODO sustain_levelで除算しているのは旧LibSynth++からの移植コード。 補正が不要になったら削除すること
@@ -218,6 +230,7 @@ std::unique_ptr<Voice> MidiChannel::createMelodyVoice(uint8_t noteNo, uint8_t ve
 
 	auto voice = std::make_unique<WaveTableVoice>(mSampleFreq, std::move(wg), noteNo + noteNoAdjuster, mCalculatedPitchBend, volume, ccPedal);
 	voice->setHarmonicContent(2.f, harmonicContentGain);
+	voice->setBaseReleaseTime(baseReleaseTime);
 
 	auto& eg = voice->envelopeGenerator();
 	eg.setMelodyEnvelope(

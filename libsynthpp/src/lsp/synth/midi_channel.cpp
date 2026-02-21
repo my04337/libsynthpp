@@ -150,6 +150,7 @@ void MidiChannel::controlChange(uint8_t ctrlNo, uint8_t value)
 		break;
 	case 72: // Release Time(リリースタイム)
 		ccReleaseTime = value;
+		updateReleaseTime();
 		break;
 	case 73: // Attack Time(アタックタイム)
 		ccAttackTime = value;
@@ -239,6 +240,11 @@ void MidiChannel::controlChange(uint8_t ctrlNo, uint8_t value)
 			// - NRPN(XG) : ドラムパートへ切替
 			if(mSystemType.isXG() && ccNRPN_MSB == 127) {
 				setDrumMode(true);
+			}
+
+			// - NRPN(GS/XG) : EGリリースタイム
+			if((mSystemType.isGS() || mSystemType.isXG()) && ccNRPN_MSB == 1 && ccNRPN_LSB == 102) {
+				updateReleaseTime();
 			}
 		}
 	}
@@ -388,6 +394,28 @@ void MidiChannel::updateHold()
 {
 	for (auto& [id, voice] : mVoices) {
 		voice->setHold(ccPedal);
+	}
+}
+float MidiChannel::calcEGTimeScale(uint8_t ccValue)
+{
+	// CC値(0-127, 中心值64)を対数スケーリング係数に変換します
+	// 中心值64で等倍(1.0)、最小値で0で約x0.006、最大值127で約x190
+	return powf(10.0f, (ccValue / 128.f - 0.5f) * 4.556f);
+}
+float MidiChannel::calcReleaseTimeScale()const
+{
+	float scale = calcEGTimeScale(ccReleaseTime);
+	// NRPN (1, 102) : GS/XGのパート別リリースタイムオフセット
+	if (mSystemType.isGS() || mSystemType.isXG()) {
+		scale *= calcEGTimeScale(getNRPN_MSB(1, 102).value_or(64));
+	}
+	return scale;
+}
+void MidiChannel::updateReleaseTime()
+{
+	float scale = calcReleaseTimeScale();
+	for (auto& [id, voice] : mVoices) {
+		voice->setReleaseTimeScale(scale);
 	}
 }
 // ソステヌートペダル(CC:66)の状態変化時に呼ばれます

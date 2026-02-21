@@ -154,6 +154,21 @@ public:
 		}
 	}
 
+	// リリースタイムを動的に更新します
+	// Release状態中に呼ばれた場合、現在の進行度を維持するよう時間を補正します
+	void setReleaseTime(float sampleFreq, float release_time)
+	{
+		auto newReleaseTime = std::max<uint64_t>(1, static_cast<uint64_t>(sampleFreq * release_time));
+
+		if (mState == EnvelopeState::Release && mReleaseTime > 0) {
+			// Release中: エンベロープレベルの不連続を防ぐため、進行度を維持する
+			auto progress = static_cast<parameter_type>(mTime) / static_cast<parameter_type>(mReleaseTime);
+			mTime = static_cast<uint64_t>(std::clamp(progress, static_cast<parameter_type>(0), static_cast<parameter_type>(1)) * newReleaseTime);
+		}
+
+		mReleaseTime = newReleaseTime;
+	}
+
 	// エンベロープを計算します
 	parameter_type envelope()const
 	{

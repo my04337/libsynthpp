@@ -101,6 +101,15 @@ Voice::EnvelopeGenerator& Voice::envelopeGenerator() noexcept
 	return mEG;
 }
 
+void Voice::setBaseReleaseTime(float timeSec)noexcept
+{
+	mBaseReleaseTimeSec = timeSec;
+}
+void Voice::setReleaseTimeScale(float scale)noexcept
+{
+	mEG.setReleaseTime(static_cast<float>(mSampleFreq), std::max(0.001f, mBaseReleaseTimeSec * scale));
+}
+
 void Voice::updateFreq()noexcept
 {
 	// TODO いずれ平均律以外にも対応したい

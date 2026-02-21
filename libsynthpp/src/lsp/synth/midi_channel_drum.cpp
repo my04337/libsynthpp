@@ -104,10 +104,21 @@ std::unique_ptr<Voice> MidiChannel::createDrumVoice(uint8_t noteNo, uint8_t vel)
 	float fineOffset = (getNRPN_MSB(25, noteNo).value_or(64) - 64) / 64.0f;
 	float resolvedNoteNo = static_cast<float>(pitch) + coarseOffset + fineOffset;
 
+	// NRPN (26, noteNo) : ドラムレベル (0-127、デフォルト127相当)
+	float drumLevelScale = 1.0f;
+	if(auto drumLevel = getNRPN_MSB(26, noteNo)) {
+		drumLevelScale = *drumLevel / 127.0f;
+	}
+
+	// CC 73/75 によるEGタイム調整（全システムタイプで適用）
+	float attackScale = calcEGTimeScale(ccAttackTime);
+	float decayScale = calcEGTimeScale(ccDecayTime);
+	a *= attackScale;
+	d *= decayScale;
 
 	// MEMO 人間の聴覚ではボリュームは対数的な特性を持つため、ベロシティを指数的に補正する
 	// TODO sustain_levelで除算しているのは旧LibSynth++からの移植コード。 補正が不要になったら削除すること
-	float volume = powf(10.f, -20.f * (1.f - vel / 127.f) / 20.f);
+	float volume = powf(10.f, -20.f * (1.f - vel / 127.f) / 20.f) * v * drumLevelScale;
 	float threshold_level = 0.01f;  // ほぼ無音を長々再生するのを防ぐため、ほぼ聞き取れないレベルまで落ちたら止音する
 	static const dsp::EnvelopeGenerator<float>::Curve curveExp3(3.0f);
 

@@ -69,6 +69,11 @@ private:
 	std::unique_ptr<Voice> createDrumVoice(uint8_t noteNo, uint8_t vel);
 
 	void updatePitchBend();
+	void updateReleaseTime();
+
+	// CC 72/73/75 および対応するNRPNからEGタイムスケーリング係数を計算します
+	static float calcEGTimeScale(uint8_t ccValue);
+	float calcReleaseTimeScale()const;
 
 	// RPN and NRPN
 	std::optional<uint8_t> getRPN_MSB(uint8_t msb, uint8_t lsb)const noexcept;
