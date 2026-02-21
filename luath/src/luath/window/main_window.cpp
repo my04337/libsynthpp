@@ -293,19 +293,25 @@ void MainWindow::loadMidi(const std::filesystem::path& midi_path) {
 	mSequencer.stop();
 	mSequencer.reset(midi::SystemType::GM1());
 
+#ifdef NDEBUG
 	try {
+#endif
 		auto parsed = midi::smf::Parser::parse(midi_path);
 		mSequencer.load(std::move(parsed.second));
 		mSequencer.start();
-	} catch (const midi::smf::decoding_exception&) {
+#ifdef NDEBUG
+	} catch (const midi::smf::decoding_exception& e) {
 		// ロード失敗
+		std::string_view detail = e.what();
+		std::wstring detailW(detail.begin(), detail.end());
 		MessageBox(
 			mWindowHandle,
-			std::wstring(L"MIDIファイルを開けません : " + midi_path.wstring()).c_str(),
+			std::format(L"MIDIファイルを開けません : {}\n\n{}", midi_path.wstring(), detailW).c_str(),
 			L"ファイルエラー",
-			MB_OK | MB_ICONWARNING
+			MB_OK | MB_ICONWARNING | MB_SETFOREGROUND
 		);
 	}
+#endif
 }
 
 struct MainWindow::DrawingContext
