@@ -248,7 +248,11 @@ void Synthesizer::sysExMessage(const uint8_t* data, size_t len)
 		} else if(match({ {/*dev:any*/}, 0x42, 0x12, 0x40, {/*1x:part*/}, 0x15, {/*mn*/} }) && (*peek(4) & 0xF0) == 0x10) {
 			// ドラムパート指定
 			//   see https://ssw.co.jp/dtm/drums/drsetup.html
-			auto ch = static_cast<uint8_t>(*peek(4) & 0x0F);
+			// GS Part番号 → MIDIチャネルのマッピング
+			//   Part 1 (0x10) → ch10, Part 2 (0x11) → ch1, ... Part 10 (0x19) → ch9, Part 11 (0x1A) → ch11, ...
+			static constexpr uint8_t gsPartToChannel[16] = { 9, 0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13, 14, 15 };
+			auto partIndex = static_cast<uint8_t>(*peek(4) & 0x0F);
+			auto ch = gsPartToChannel[partIndex];
 			auto mapNo = *peek(6);
 			mMidiChannels[ch].setDrumMode(mapNo != 0);
 		}
