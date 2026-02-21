@@ -36,6 +36,7 @@ void MidiChannel::resetParameters()
 	ccPan = 0.5f;
 	ccExpression = 1.0;
 	ccPedal = false;
+	ccSostenuto = false;
 
 	ccPrevCtrlNo = 0xFF; // invalid value
 	ccPrevValue = 0x00;
@@ -46,6 +47,8 @@ void MidiChannel::resetParameters()
 	ccAttackTime = 64;
 	ccDecayTime = 64;
 	ccReleaseTime = 64;
+
+	mMonoMode = false;
 
 	resetParameterNumberState();
 
@@ -68,6 +71,12 @@ void MidiChannel::noteOn(uint32_t noteNo, uint8_t vel)
 	noteOff(noteNo);
 	// ---
 	if (vel > 0) {
+		// モノモード時は既存の全ボイスを停止してから新しいボイスを発音
+		if (mMonoMode) {
+			for (auto& [id, voice] : mVoices) {
+				voice->noteOff();
+			}
+		}
 		auto id = VoiceId::issue();
 		auto voice = createVoice(noteNo, vel);
 		mVoices.emplace(id, std::move(voice));
@@ -135,6 +144,10 @@ void MidiChannel::controlChange(uint8_t ctrlNo, uint8_t value)
 		ccPedal = (value >= 0x40);
 		updateHold();
 		break;
+	case 66: // Sostenuto(ソステヌート)
+		ccSostenuto = (value >= 0x40);
+		updateSostenuto();
+		break;
 	case 72: // Release Time(リリースタイム)
 		ccReleaseTime = value;
 		break;
@@ -176,8 +189,18 @@ void MidiChannel::controlChange(uint8_t ctrlNo, uint8_t value)
 	case 122: // ローカルコントロール
 	case 124: // オムニオフ
 	case 125: // オムニオン
+		break;
 	case 126: // モノモード
-	case 127: // モノモード
+		mMonoMode = true;
+		for (auto& kvp : mVoices) {
+			kvp.second->noteOff();
+		}
+		break;
+	case 127: // ポリモード
+		mMonoMode = false;
+		for (auto& kvp : mVoices) {
+			kvp.second->noteOff();
+		}
 		break;
 	}
 
@@ -308,6 +331,8 @@ MidiChannel::Digest MidiChannel::digest()const
 	digest.releaseTime = ccReleaseTime;
 	digest.poly = mVoices.size();
 	digest.pedal = ccPedal;
+	digest.sostenuto = ccSostenuto;
+	digest.mono = mMonoMode;
 	digest.drum = mIsDrumPart;
 
 	for (auto& [id, voice] : mVoices) {
@@ -363,6 +388,30 @@ void MidiChannel::updateHold()
 {
 	for (auto& [id, voice] : mVoices) {
 		voice->setHold(ccPedal);
+	}
+}
+// ソステヌートペダル(CC:66)の状態変化時に呼ばれます
+// ダンパーペダル(CC:64)との違い :
+//   - ダンパーペダル : ペダルON中の全てのnoteOffを保留する(チャネル全体)
+//   - ソステヌート   : ペダルを踏んだ瞬間に打鍵中のボイスのみを保持対象とする
+//     ソステヌートON後に新たに打鍵された音は保持対象外となる
+// ※ createVoice()でソステヌート状態を渡さないのはこの仕様による意図的な設計です
+void MidiChannel::updateSostenuto()
+{
+	if (ccSostenuto) {
+		// ソステヌートON: 現在キーが押下中のボイスのみをソステヌート対象にする
+		// isNoteOn()はnoteOff未受信かつリリース/止音状態でないことを確認する
+		for (auto& [id, voice] : mVoices) {
+			if (voice->isNoteOn()) {
+				voice->setSostenuto(true);
+			}
+		}
+	} else {
+		// ソステヌートOFF: 全ボイスのソステヌートを解除
+		// Hold(CC:64)も無効であれば、保留中のnoteOffが実行される
+		for (auto& [id, voice] : mVoices) {
+			voice->setSostenuto(false);
+		}
 	}
 }
 void MidiChannel::setDrumMode(bool isDrum)

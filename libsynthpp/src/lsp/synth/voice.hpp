@@ -40,7 +40,19 @@ public:
 	void noteOff()noexcept;
 	void noteCut()noexcept;
 
+	// ダンパーペダル(CC:64)によるホールド状態を設定します
+	// Hold中にnoteOffを受信した場合、リリースを保留しHold解除時にリリースします
 	void setHold(bool hold)noexcept;
+
+	// ソステヌート(CC:66)状態を設定します
+	// ソステヌートはHoldと異なり、ペダルを踏んだ瞬間に打鍵中のボイスのみを保持対象とします
+	// ソステヌート対象のボイスがnoteOffを受信した場合、リリースを保留しソステヌート解除時にリリースします
+	// ※ HoldとSostenutoは独立して動作し、いずれか一方でも有効であればリリースは保留されます
+	void setSostenuto(bool sostenuto)noexcept;
+
+	// キーが現在押下中(noteOnされてからnoteOffもリリースもされていない)かどうかを返します
+	// ソステヌートペダルON時の対象ボイス判定に使用します
+	bool isNoteOn()const noexcept;
 
 	std::optional<float> pan()const noexcept;
 	void setPan(float pan)noexcept;
@@ -62,8 +74,9 @@ protected:
 	BiquadraticFilter mCutOffFilter;
 	BiquadraticFilter mHarmonicContentFilter;
 	float mNoteNo;
-	bool mPendingNoteOff = false;
-	bool mHold = false;
+	bool mPendingNoteOff = false; // Hold/Sostenutoによりリリースが保留されている場合にtrue
+	bool mHold = false;            // CC:64 ダンパーペダル(チャネル全体)
+	bool mSostenuto = false;       // CC:66 ソステヌート(ペダルON時に打鍵中だったボイスのみ)
 	float mPitchBend;
 	float mCalculatedFreq = 0;
 	float mVolume;

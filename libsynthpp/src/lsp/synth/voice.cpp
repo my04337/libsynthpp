@@ -32,7 +32,8 @@ float Voice::noteNo()const noexcept
 
 void Voice::noteOff()noexcept
 {
-	if (mHold) {
+	// HoldまたはSostenutoが有効な場合、実際のリリースを保留し、両方が解除されたタイミングでリリースする
+	if (mHold || mSostenuto) {
 		mPendingNoteOff = true;
 	} else {
 		mPendingNoteOff = false;
@@ -47,9 +48,25 @@ void Voice::noteCut()noexcept
 void Voice::setHold(bool hold)noexcept
 {
 	mHold = hold;
-	if (mPendingNoteOff && !hold) {
+	// Hold解除時 : Sostenutoも無効であれば、保留中のnoteOffを実行する
+	if (mPendingNoteOff && !hold && !mSostenuto) {
 		noteOff();
 	}
+}
+void Voice::setSostenuto(bool sostenuto)noexcept
+{
+	mSostenuto = sostenuto;
+	// Sostenuto解除時 : Holdも無効であれば、保留中のnoteOffを実行する
+	if (mPendingNoteOff && !sostenuto && !mHold) {
+		noteOff();
+	}
+}
+bool Voice::isNoteOn()const noexcept
+{
+	// キーが押下中 = noteOffが保留されておらず、かつEGがリリース/止音状態でない
+	return !mPendingNoteOff
+		&& mEG.state() != EnvelopeState::Release
+		&& mEG.state() != EnvelopeState::Free;
 }
 std::optional<float> Voice::pan()const noexcept
 {

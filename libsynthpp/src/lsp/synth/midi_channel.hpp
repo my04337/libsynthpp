@@ -31,6 +31,8 @@ public:
 		uint8_t decayTime = 64; // ディケイタイム
 		uint8_t releaseTime = 64; // リリースタイム
 		bool pedal = false; // ペダルOn/Off
+		bool sostenuto = false; // ソステヌートOn/Off
+		bool mono = false; // モノモードOn/Off
 		bool drum = false; // ドラムか否か
 
 		std::unordered_map<VoiceId, Voice::Digest> voices;
@@ -52,6 +54,7 @@ public:
 	void polyphonicKeyPressure(uint8_t noteNo, uint8_t value);
 	void pitchBend(int16_t pitch);
 	void updateHold();
+	void updateSostenuto();
 	void setDrumMode(bool isDrumMode);
 	// ---
 	StereoFrame update();
@@ -99,9 +102,13 @@ private:
 	float ccExpression;		// CC:11 - エクスプレッション [0.0, +1.0]
 	uint8_t ccBankSelectLSB;// CC:32 - バンクセレクトLSB
 	bool	ccPedal;        // CC:64 - Hold1(ペダル)
+	bool	ccSostenuto;    // CC:66 - ソステヌート
 	uint8_t ccReleaseTime;	// CC:72 - リリースタイム
 	uint8_t ccAttackTime;	// CC:73 - アタックタイム
 	uint8_t ccDecayTime;	// CC:75 - ディケイタイム
+
+	// チャネルモードメッセージ
+	bool mMonoMode;         // CC:126/127 - モノ/ポリモード
 
 	// チャネルプレッシャー  [0.0, 1.0]
 	float mChannelPressure;
