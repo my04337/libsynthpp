@@ -61,6 +61,10 @@ public:
 	void setPitchBend(float pitchBend)noexcept;
 	void setPolyPressure(float pressure)noexcept;
 
+	// レガート用 : エンベロープを再トリガせずにノート番号を変更します
+	// モノモード時に既存ボイスのピッチだけを切り替える際に使用します
+	void setNoteNo(float noteNo)noexcept;
+
 	// ノート番号オフセットを設定します (楽器定義による移調やドラムピッチ調整用)
 	// このオフセットは周波数計算にのみ使用され、noteNo()によるマッチングには影響しません
 	void setNoteOffset(float offset)noexcept;

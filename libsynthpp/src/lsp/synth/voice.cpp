@@ -86,6 +86,11 @@ void Voice::setPolyPressure(float pressure)noexcept
 {
 	mPolyPressure = pressure;
 }
+void Voice::setNoteNo(float noteNo)noexcept
+{
+	mNoteNo = noteNo;
+	updateFreq();
+}
 
 void Voice::setFilter(float cutoffFreq, float Q)noexcept
 {

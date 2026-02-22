@@ -130,6 +130,7 @@ private:
 
 	// チャネルモードメッセージ
 	bool mMonoMode;         // CC:126/127 - モノ/ポリモード
+	std::vector<uint8_t> mMonoNoteStack; // モノモード時のレガート用ノートスタック (最後が現在発音中)
 
 	// チャネルプレッシャー  [0.0, 1.0]
 	float mChannelPressure;

@@ -25,6 +25,7 @@ void MidiChannel::resetVoices()
 {
 	// 全発音を強制停止
 	mVoices.clear();
+	mMonoNoteStack.clear();
 }
 void MidiChannel::resetParameters()
 {
@@ -103,22 +104,63 @@ void MidiChannel::noteOn(uint32_t noteNo, uint8_t vel)
 	noteOff(noteNo);
 	// ---
 	if (vel > 0) {
-		// モノモード時は既存の全ボイスを停止してから新しいボイスを発音
-		if (mMonoMode) {
+		if (mMonoMode && !mIsDrumPart) {
+			// モノモード (ドラム以外) : レガート動作
+			// 既にボイスが発音中であれば、エンベロープを再トリガせずにピッチだけ変更する
+			mMonoNoteStack.push_back(static_cast<uint8_t>(noteNo));
+
+			// 発音中(Free/Release以外)のボイスを探す
+			Voice* activeVoice = nullptr;
 			for (auto& [id, voice] : mVoices) {
-				voice->noteOff();
+				if (voice->isNoteOn()) {
+					activeVoice = voice.get();
+					break;
+				}
 			}
+
+			if (activeVoice) {
+				// レガート : ピッチだけ変更
+				activeVoice->setNoteNo(static_cast<float>(noteNo));
+			} else {
+				// 最初の打鍵 : 通常通りボイスを生成
+				auto id = VoiceId::issue();
+				auto voice = createVoice(noteNo, vel);
+				mVoices.emplace(id, std::move(voice));
+			}
+		} else {
+			// ポリモードまたはドラム : 通常動作
+			auto id = VoiceId::issue();
+			auto voice = createVoice(noteNo, vel);
+			mVoices.emplace(id, std::move(voice));
 		}
-		auto id = VoiceId::issue();
-		auto voice = createVoice(noteNo, vel);
-		mVoices.emplace(id, std::move(voice));
 	}
 }
 void MidiChannel::noteOff(uint32_t noteNo)
 {
-	for (auto& [id, voice] : mVoices) {
-		if (voice->noteNo() == noteNo) {
-			voice->noteOff();
+	if (mMonoMode && !mIsDrumPart) {
+		// モノモード (ドラム以外) : ノートスタックから除去し、前のノートに復帰
+		std::erase(mMonoNoteStack, static_cast<uint8_t>(noteNo));
+
+		if (!mMonoNoteStack.empty()) {
+			// スタックに残りがある → 前のノートのピッチに戻す
+			uint8_t prevNote = mMonoNoteStack.back();
+			for (auto& [id, voice] : mVoices) {
+				if (voice->isNoteOn()) {
+					voice->setNoteNo(static_cast<float>(prevNote));
+				}
+			}
+		} else {
+			// スタックが空 → 全ボイスをnoteOff
+			for (auto& [id, voice] : mVoices) {
+				voice->noteOff();
+			}
+		}
+	} else {
+		// ポリモードまたはドラム : 通常動作
+		for (auto& [id, voice] : mVoices) {
+			if (voice->noteNo() == noteNo) {
+				voice->noteOff();
+			}
 		}
 	}
 }
@@ -222,6 +264,7 @@ void MidiChannel::controlChange(uint8_t ctrlNo, uint8_t value)
 		resetAllControllers();
 		break;
 	case 123: // オールノートオフ
+		mMonoNoteStack.clear();
 		for (auto& kvp : mVoices) {
 			kvp.second->noteOff();
 		}
@@ -233,12 +276,14 @@ void MidiChannel::controlChange(uint8_t ctrlNo, uint8_t value)
 		break;
 	case 126: // モノモード
 		mMonoMode = true;
+		mMonoNoteStack.clear();
 		for (auto& kvp : mVoices) {
 			kvp.second->noteOff();
 		}
 		break;
 	case 127: // ポリモード
 		mMonoMode = false;
+		mMonoNoteStack.clear();
 		for (auto& kvp : mVoices) {
 			kvp.second->noteOff();
 		}
