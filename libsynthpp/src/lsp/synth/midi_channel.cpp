@@ -314,7 +314,7 @@ StereoFrame MidiChannel::update()
 
 
 		// 発音終了済のボイスを破棄
-		if (iter->second->envelopeGenerator().isBusy()) {
+		if (iter->second->isBusy()) {
 			++iter;
 		} else {
 			iter = mVoices.erase(iter);
@@ -486,7 +486,7 @@ void MidiChannel::updateFilter()
 {
 	float Q = calcFilterQ();
 	for (auto& [id, voice] : mVoices) {
-		float noteFreq = 440.f * exp2f((voice->noteNo() - 69.f) / 12.f);
+		float noteFreq = 440.f * exp2f((voice->soundingNoteNo() - 69.f) / 12.f);
 		float cutoff = calcFilterCutoff(noteFreq);
 		voice->setFilter(cutoff, Q);
 	}

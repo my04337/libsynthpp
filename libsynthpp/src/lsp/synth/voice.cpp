@@ -20,8 +20,8 @@ Voice::Digest Voice::digest()const noexcept
 	Digest digest;
 
 	digest.freq = mCalculatedFreq;
-	digest.envelope = mEG.envelope();
-	digest.state = mEG.state();
+	digest.envelope = envelope();
+	digest.state = envelopeState();
 
 	return digest;
 }
@@ -37,13 +37,13 @@ void Voice::noteOff()noexcept
 		mPendingNoteOff = true;
 	} else {
 		mPendingNoteOff = false;
-		mEG.noteOff();
+		onNoteOff();
 	}
 }
 void Voice::noteCut()noexcept
 {
 	mPendingNoteOff = false;
-	mEG.reset();
+	onNoteCut();
 }
 void Voice::setHold(bool hold)noexcept
 {
@@ -64,9 +64,10 @@ void Voice::setSostenuto(bool sostenuto)noexcept
 bool Voice::isNoteOn()const noexcept
 {
 	// キーが押下中 = noteOffが保留されておらず、かつEGがリリース/止音状態でない
+	auto st = envelopeState();
 	return !mPendingNoteOff
-		&& mEG.state() != EnvelopeState::Release
-		&& mEG.state() != EnvelopeState::Free;
+		&& st != EnvelopeState::Release
+		&& st != EnvelopeState::Free;
 }
 std::optional<float> Voice::pan()const noexcept
 {
@@ -97,10 +98,6 @@ void Voice::setFilter(float cutoffFreq, float Q)noexcept
 		mFilter.setLopassParam(static_cast<float>(mSampleFreq), cutoffFreq, Q);
 	}
 }
-Voice::EnvelopeGenerator& Voice::envelopeGenerator() noexcept
-{
-	return mEG;
-}
 
 void Voice::setBaseReleaseTime(float timeSec)noexcept
 {
@@ -108,11 +105,20 @@ void Voice::setBaseReleaseTime(float timeSec)noexcept
 }
 void Voice::setReleaseTimeScale(float scale)noexcept
 {
-	mEG.setReleaseTime(static_cast<float>(mSampleFreq), std::max(0.001f, mBaseReleaseTimeSec * scale));
+	// デフォルト実装は何もしない (ドラムボイスではリリースタイムを使用しない)
 }
 
 void Voice::updateFreq()noexcept
 {
 	// TODO いずれ平均律以外にも対応したい
-	mCalculatedFreq = 440 * exp2((mNoteNo + mPitchBend - 69.0f) / 12.0f);
+	mCalculatedFreq = 440 * exp2((mNoteNo + mNoteOffset + mPitchBend - 69.0f) / 12.0f);
+}
+void Voice::setNoteOffset(float offset)noexcept
+{
+	mNoteOffset = offset;
+	updateFreq();
+}
+float Voice::soundingNoteNo()const noexcept
+{
+	return mNoteNo + mNoteOffset;
 }

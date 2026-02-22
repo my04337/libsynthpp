@@ -18,7 +18,8 @@ class Voice
 	: non_copy_move
 {
 public:
-	using EnvelopeGenerator = dsp::EnvelopeGenerator<float>;
+	using MelodyEG = dsp::MelodyEnvelopeGenerator<float>;
+	using DrumEG = dsp::DrumEnvelopeGenerator<float>;
 	using EnvelopeState = dsp::EnvelopeState;
 	using BiquadraticFilter = dsp::BiquadraticFilter<float>;
 
@@ -59,7 +60,19 @@ public:
 
 	void setPitchBend(float pitchBend)noexcept;
 	void setPolyPressure(float pressure)noexcept;
-	EnvelopeGenerator& envelopeGenerator() noexcept;
+
+	// ノート番号オフセットを設定します (楽器定義による移調やドラムピッチ調整用)
+	// このオフセットは周波数計算にのみ使用され、noteNo()によるマッチングには影響しません
+	void setNoteOffset(float offset)noexcept;
+
+	// 実際に発音しているノート番号 (noteNo + offset) を返します
+	// フィルタ計算等、実際の発音周波数に基づく処理に使用します
+	float soundingNoteNo()const noexcept;
+
+	// EG の状態取得 (派生クラスで実装)
+	virtual float envelope()const noexcept = 0;
+	virtual EnvelopeState envelopeState()const noexcept = 0;
+	virtual bool isBusy()const noexcept = 0;
 
 	// ローパスフィルタのパラメータを設定します
 	// CC#74 (Brightness) でカットオフ周波数、CC#71 (Resonance) でQ値を制御します
@@ -69,17 +82,21 @@ public:
 	void setBaseReleaseTime(float timeSec)noexcept;
 	// リリースタイムのスケーリング係数を更新し、EGに反映します
 	// CC:72やNRPN(1,102)の変更時に呼び出されます
-	void setReleaseTimeScale(float scale)noexcept;
+	virtual void setReleaseTimeScale(float scale)noexcept;
 
 
 protected:
 	void updateFreq()noexcept;
 
+	// 派生クラスで実装するEG操作
+	virtual void onNoteOff()noexcept = 0;
+	virtual void onNoteCut()noexcept = 0;
+
 protected:
 	const uint32_t mSampleFreq;
-	EnvelopeGenerator mEG;
 	BiquadraticFilter mFilter; // ローパスフィルタ (CC#74: cutoff, CC#71: Q)
 	float mNoteNo;
+	float mNoteOffset = 0; // 周波数計算用のノート番号オフセット (楽器定義による移調等)
 	bool mPendingNoteOff = false; // Hold/Sostenutoによりリリースが保留されている場合にtrue
 	bool mHold = false;            // CC:64 ダンパーペダル(チャネル全体)
 	bool mSostenuto = false;       // CC:66 ソステヌート(ペダルON時に打鍵中だったボイスのみ)
@@ -92,26 +109,24 @@ protected:
 };
 
 
-// 波形メモリ ボイス実装
-class WaveTableVoice
+// 波形メモリ ボイス実装 (メロディパート用)
+class MelodyWaveTableVoice
 	: public Voice
 {
 public:
 	using WaveTableGenerator = dsp::WaveTableGenerator<float>;
 
-
 public:
-	WaveTableVoice(uint32_t sampleFreq, WaveTableGenerator&& wg, float noteNo, float pitchBend, float volume, bool hold)
+	MelodyWaveTableVoice(uint32_t sampleFreq, WaveTableGenerator&& wg, float noteNo, float pitchBend, float volume, bool hold)
 		: Voice(sampleFreq, noteNo, pitchBend, volume, hold)
 		, mWG(std::move(wg))
 	{}
 
-
-	virtual ~WaveTableVoice() {}
+	virtual ~MelodyWaveTableVoice() {}
 
 	virtual float update()override
 	{
-		auto v = mWG.update(mSampleFreq, mCalculatedFreq);
+		auto v = mWG.update(static_cast<float>(mSampleFreq), mCalculatedFreq);
 		v = mFilter.update(v);
 		v *= mEG.update();
 		v *= mVolume;
@@ -119,8 +134,63 @@ public:
 		return v;
 	}
 
+	virtual float envelope()const noexcept override { return mEG.envelope(); }
+	virtual EnvelopeState envelopeState()const noexcept override { return mEG.state(); }
+	virtual bool isBusy()const noexcept override { return mEG.isBusy(); }
+	virtual void setReleaseTimeScale(float scale)noexcept override
+	{
+		mEG.setReleaseTime(static_cast<float>(mSampleFreq), std::max(0.001f, mBaseReleaseTimeSec * scale));
+	}
+
+	MelodyEG& envelopeGenerator() noexcept { return mEG; }
+
+protected:
+	virtual void onNoteOff()noexcept override { mEG.noteOff(); }
+	virtual void onNoteCut()noexcept override { mEG.reset(); }
+
 private:
 	WaveTableGenerator mWG;
+	MelodyEG mEG;
+};
+
+// 波形メモリ ボイス実装 (ドラムパート用)
+class DrumWaveTableVoice
+	: public Voice
+{
+public:
+	using WaveTableGenerator = dsp::WaveTableGenerator<float>;
+
+public:
+	DrumWaveTableVoice(uint32_t sampleFreq, WaveTableGenerator&& wg, float noteNo, float pitchBend, float volume, bool hold)
+		: Voice(sampleFreq, noteNo, pitchBend, volume, hold)
+		, mWG(std::move(wg))
+	{}
+
+	virtual ~DrumWaveTableVoice() {}
+
+	virtual float update()override
+	{
+		auto v = mWG.update(static_cast<float>(mSampleFreq), mCalculatedFreq);
+		v = mFilter.update(v);
+		v *= mEG.update();
+		v *= mVolume;
+		v *= mPolyPressure;
+		return v;
+	}
+
+	virtual float envelope()const noexcept override { return mEG.envelope(); }
+	virtual EnvelopeState envelopeState()const noexcept override { return mEG.state(); }
+	virtual bool isBusy()const noexcept override { return mEG.isBusy(); }
+
+	DrumEG& envelopeGenerator() noexcept { return mEG; }
+
+protected:
+	virtual void onNoteOff()noexcept override { mEG.noteOff(); }
+	virtual void onNoteCut()noexcept override { mEG.reset(); }
+
+private:
+	WaveTableGenerator mWG;
+	DrumEG mEG;
 };
 
 }

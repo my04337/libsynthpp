@@ -111,8 +111,9 @@ std::unique_ptr<Voice> MidiChannel::createDrumVoice(uint8_t noteNo, uint8_t vel)
 	}
 
 	// CC 73/75 によるEGタイム調整（全システムタイプで適用）
-	float attackScale = calcEGTimeScale(ccAttackTime);
-	float decayScale = calcEGTimeScale(ccDecayTime);
+	// ドラムは元々長いDecayを持つ楽器があるため、スケール係数を制限する (最大4倍)
+	float attackScale = std::min(calcEGTimeScale(ccAttackTime), 4.0f);
+	float decayScale = std::min(calcEGTimeScale(ccDecayTime), 4.0f);
 	a *= attackScale;
 	d *= decayScale;
 
@@ -120,10 +121,11 @@ std::unique_ptr<Voice> MidiChannel::createDrumVoice(uint8_t noteNo, uint8_t vel)
 	// TODO sustain_levelで除算しているのは旧LibSynth++からの移植コード。 補正が不要になったら削除すること
 	float volume = powf(10.f, -20.f * (1.f - vel / 127.f) / 20.f) * v * drumLevelScale;
 	float threshold_level = 0.01f;  // ほぼ無音を長々再生するのを防ぐため、ほぼ聞き取れないレベルまで落ちたら止音する
-	static const dsp::EnvelopeGenerator<float>::Curve curveExp3(3.0f);
+	static const dsp::EnvelopeCurve<float> curveExp3(3.0f);
 
 	auto wg = Instruments::createDrumNoiseGenerator();
-	auto voice = std::make_unique<WaveTableVoice>(mSampleFreq, std::move(wg), resolvedNoteNo, mCalculatedPitchBend, volume, ccPedal);
+	auto voice = std::make_unique<DrumWaveTableVoice>(mSampleFreq, std::move(wg), noteNo, mCalculatedPitchBend, volume, ccPedal);
+	voice->setNoteOffset(resolvedNoteNo - static_cast<float>(noteNo));
 	voice->setPan(pan);
 	{
 		float noteFreq = 440.f * exp2f((resolvedNoteNo - 69.f) / 12.f);
@@ -131,8 +133,8 @@ std::unique_ptr<Voice> MidiChannel::createDrumVoice(uint8_t noteNo, uint8_t vel)
 	}
 
 	auto& eg = voice->envelopeGenerator();
-	eg.setDrumEnvelope(
-		mSampleFreq, curveExp3,
+	eg.setEnvelope(
+		static_cast<float>(mSampleFreq), curveExp3,
 		std::max(0.005f, a),
 		h,
 		std::max(0.005f, d),

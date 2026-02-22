@@ -60,13 +60,16 @@ namespace
 {
 [[maybe_unused]]
 void unused_function_f_eg() {
-	dsp::EnvelopeGenerator<float> eg_float;
-	dsp::EnvelopeGenerator<double> eg_double;
-	eg_float.setMelodyEnvelope(1, 0, 0, 0, 0);
+	dsp::MelodyEnvelopeGenerator<float> eg_float;
+	dsp::MelodyEnvelopeGenerator<double> eg_double;
+	dsp::DrumEnvelopeGenerator<float> eg_drum;
+	eg_float.setEnvelope(1, 0, 0, 0, 0);
 	eg_float.noteOn();
 	eg_float.update();
 	eg_double.noteOff();
 	eg_double.update();
+	eg_drum.noteOn();
+	eg_drum.update();
 }
 }
 

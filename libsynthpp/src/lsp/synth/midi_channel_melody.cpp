@@ -210,37 +210,66 @@ std::unique_ptr<Voice> MidiChannel::createMelodyVoice(uint8_t noteNo, uint8_t ve
 		decayScale *= calcEGTimeScale(getNRPN_MSB(1, 100).value_or(64));
 	}
 
+	// ドラム風楽器はスケール係数を制限する (最大4倍)
+	if(isDrumLikeInstrument) {
+		attackScale = std::min(attackScale, 4.0f);
+		decayScale = std::min(decayScale, 4.0f);
+	}
+
 	a *= attackScale;
 	d *= decayScale;
-
-	// ベースリリースタイムを保存（CC/NRPNスケーリング適用前）
-	float baseReleaseTime = std::max(0.001f, r);
-	r *= releaseScale;
 
 	// MEMO 人間の聴覚ではボリュームは対数的な特性を持つため、ベロシティを指数的に補正する
 	// TODO sustain_levelで除算しているのは旧LibSynth++からの移植コード。 補正が不要になったら削除すること
 	float volume = powf(10.f, -20.f * (1.f - vel / 127.f) / 20.f) * v / ((s > 0.8f && s != 0.f) ? s : 0.8f);
 	float thresholdLevel = 0.01f;  // ほぼ無音を長々再生するのを防ぐため、ほぼ聞き取れないレベルまで落ちたら止音する
-	static const dsp::EnvelopeGenerator<float>::Curve curveExp3(3.0f);
+	static const dsp::EnvelopeCurve<float> curveExp3(3.0f);
 
-	auto voice = std::make_unique<WaveTableVoice>(mSampleFreq, std::move(wg), noteNo + noteNoAdjuster, mCalculatedPitchBend, volume, ccPedal);
-	{
-		float noteFreq = 440.f * exp2f((noteNo + noteNoAdjuster - 69.f) / 12.f);
-		voice->setFilter(calcFilterCutoff(noteFreq), calcFilterQ());
+	if(isDrumLikeInstrument) {
+		// ドラム風楽器 : DrumWaveTableVoice + DrumEnvelopeGenerator (AHD)
+		auto voice = std::make_unique<DrumWaveTableVoice>(mSampleFreq, std::move(wg), noteNo, mCalculatedPitchBend, volume, ccPedal);
+		voice->setNoteOffset(noteNoAdjuster);
+		{
+			float noteFreq = 440.f * exp2f((noteNo + noteNoAdjuster - 69.f) / 12.f);
+			voice->setFilter(calcFilterCutoff(noteFreq), calcFilterQ());
+		}
+
+		auto& eg = voice->envelopeGenerator();
+		eg.setEnvelope(
+			static_cast<float>(mSampleFreq), curveExp3,
+			std::max(0.005f, a),
+			h,
+			std::max(0.005f, d),
+			thresholdLevel
+		);
+		eg.noteOn();
+		return voice;
+	} else {
+		// 通常楽器 : MelodyWaveTableVoice + MelodyEnvelopeGenerator (AHDSFR)
+		// ベースリリースタイムを保存（CC/NRPNスケーリング適用前）
+		float baseReleaseTime = std::max(0.001f, r);
+		r *= releaseScale;
+
+		auto voice = std::make_unique<MelodyWaveTableVoice>(mSampleFreq, std::move(wg), noteNo, mCalculatedPitchBend, volume, ccPedal);
+		voice->setNoteOffset(noteNoAdjuster);
+		{
+			float noteFreq = 440.f * exp2f((noteNo + noteNoAdjuster - 69.f) / 12.f);
+			voice->setFilter(calcFilterCutoff(noteFreq), calcFilterQ());
+		}
+		voice->setBaseReleaseTime(baseReleaseTime);
+
+		auto& eg = voice->envelopeGenerator();
+		eg.setEnvelope(
+			static_cast<float>(mSampleFreq), curveExp3,
+			std::max(0.001f, a),
+			h,
+			std::max(0.001f, d),
+			s,
+			f,
+			std::max(0.001f, r),
+			thresholdLevel
+		);
+		eg.noteOn();
+		return voice;
 	}
-	voice->setBaseReleaseTime(baseReleaseTime);
-
-	auto& eg = voice->envelopeGenerator();
-	eg.setMelodyEnvelope(
-		mSampleFreq, curveExp3,
-		std::max(0.001f, a),
-		h,
-		std::max(0.001f, d),
-		s,
-		f,
-		std::max(0.001f, r),
-		thresholdLevel
-	);
-	eg.noteOn();
-	return voice;
 }
