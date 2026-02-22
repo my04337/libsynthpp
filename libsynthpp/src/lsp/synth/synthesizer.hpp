@@ -35,6 +35,7 @@ public:
 	};
 	struct Digest {
 		midi::SystemType systemType;
+		float masterVolume = 1.0f;
 
 		std::vector<MidiChannel::Digest> channels;
 	};
@@ -81,6 +82,7 @@ private:
 	const uint32_t mSampleFreq;
 	const InstrumentTable& mInstrumentTable;
 	midi::SystemType mSystemType;
+	float mMasterVolume = 1.0f; // SysEx Master Volume (0.0~1.0)
 
 	// midi channel parameters
 	std::vector<MidiChannel> mMidiChannels;

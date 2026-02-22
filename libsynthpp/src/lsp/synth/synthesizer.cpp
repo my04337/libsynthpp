@@ -105,6 +105,7 @@ void Synthesizer::playingThreadMain()
 void Synthesizer::reset(midi::SystemType type)
 {
 	mSystemType = type;
+	mMasterVolume = 1.0f;
 
 	for (auto& midich : mMidiChannels) {
 		midich.reset(type);
@@ -114,7 +115,8 @@ void Synthesizer::reset(midi::SystemType type)
 
 lsp::Signal<float> Synthesizer::generate(size_t len)
 {
-	constexpr float MASTER_VOLUME = 0.125f;
+	constexpr float MIXING_GAIN = 1.f / 16.f; // ほどよいミキシングゲイン (20-30和音クリップしないが小さすぎない程度の値)
+	const float masterGain = MIXING_GAIN * mMasterVolume;
 
 	auto sig = lsp::Signal<float>::allocate(&mMem, 2, len);
 
@@ -136,9 +138,9 @@ lsp::Signal<float> Synthesizer::generate(size_t len)
 			frame[1] += v.second;
 		}
 
-		// マスタボリューム適用
-		frame[0] *= MASTER_VOLUME;
-		frame[1] *= MASTER_VOLUME;
+		// ミキシングゲイン + マスタボリューム適用
+		frame[0] *= masterGain;
+		frame[1] *= masterGain;
 	}
 	return sig;
 }
@@ -165,6 +167,7 @@ Synthesizer::Digest Synthesizer::digest()const
 	std::shared_lock lock(mMutex);
 	Digest digest;
 	digest.systemType = mSystemType;
+	digest.masterVolume = mMasterVolume;
 
 	digest.channels.reserve(mMidiChannels.size());
 	for (auto& ch : mMidiChannels) {
@@ -238,6 +241,14 @@ void Synthesizer::sysExMessage(const uint8_t* data, size_t len)
 		} else if(match({ 0x7F, 0x09, 0x02 })) {
 			// GM System Off → GS Reset
 			reset(midi::SystemType::GS());
+		}
+	} else if(makerId == 0x7F) {
+		// リアルタイム ユニバーサルシステムエクスクルーシブ
+		if(match({ {/*dev:any*/}, 0x04, 0x01, {/*ll*/}, {/*mm*/} })) {
+			// Master Volume : F0 7F xx 04 01 ll mm F7
+			auto ll = *peek(3); // volume LSB
+			auto mm = *peek(4); // volume MSB
+			mMasterVolume = static_cast<float>(mm * 128 + ll) / 16383.0f;
 		}
 	} else if(makerId == 0x41) {
 		// Roland
