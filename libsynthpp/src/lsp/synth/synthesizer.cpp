@@ -5,15 +5,16 @@
 
 using namespace lsp::synth;
 
-Synthesizer::Synthesizer(uint32_t sampleFreq, midi::SystemType defaultSystemType)
+Synthesizer::Synthesizer(uint32_t sampleFreq, const InstrumentTable& instrumentTable, midi::SystemType defaultSystemType)
 	: mSampleFreq(sampleFreq)
+	, mInstrumentTable(instrumentTable)
 	, mPlayingThreadAborted(false)
 {
 	Instruments::prepareWaveTable();
 
 	mMidiChannels.reserve(MAX_CHANNELS);
 	for (uint8_t ch = 0; ch < MAX_CHANNELS; ++ch) {
-		mMidiChannels.emplace_back(sampleFreq, ch);
+		mMidiChannels.emplace_back(sampleFreq, ch, mInstrumentTable);
 	}
 
 	reset(defaultSystemType);

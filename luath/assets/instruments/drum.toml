@@ -1,0 +1,466 @@
+# ドラム音色定義ファイル (GM1準拠)
+# 各ノート番号に対応するドラム音色パラメータを定義
+
+[drum.24]  #
+pitch   = 64
+volume  = 2.00
+attack  = 0.00
+hold    = 0.00
+decay   = 0.30
+pan     = 0.35
+
+[drum.25]  #
+pitch   = 57
+volume  = 1.50
+attack  = 0.05
+hold    = 0.00
+decay   = 1.00
+pan     = 0.50
+
+[drum.26]  #
+pitch   = 81
+volume  = 2.00
+attack  = 0.00
+hold    = 0.00
+decay   = 0.20
+pan     = 0.50
+
+[drum.27]  # High Q
+pitch   = 64
+volume  = 2.00
+attack  = 0.00
+hold    = 0.00
+decay   = 0.20
+pan     = 0.50
+
+[drum.28]  # Slap
+pitch   = 69
+volume  = 2.00
+attack  = 0.00
+hold    = 0.00
+decay   = 0.30
+pan     = 0.42
+
+[drum.29]  # Scratch Push
+pitch   = 69
+volume  = 1.80
+attack  = 0.00
+hold    = 0.00
+decay   = 0.30
+pan     = 0.50
+
+[drum.30]  # Scratch Pull
+pitch   = 66
+volume  = 1.80
+attack  = 0.00
+hold    = 0.00
+decay   = 0.40
+pan     = 0.50
+
+[drum.31]  # Sticks
+pitch   = 69
+volume  = 3.00
+attack  = 0.00
+hold    = 0.00
+decay   = 0.20
+pan     = 0.50
+
+[drum.32]  # Square Click
+pitch   = 69
+volume  = 2.00
+attack  = 0.00
+hold    = 0.00
+decay   = 0.10
+pan     = 0.50
+
+[drum.33]  # Metronome Click
+pitch   = 66
+volume  = 2.00
+attack  = 0.00
+hold    = 0.00
+decay   = 0.10
+pan     = 0.50
+
+[drum.34]  # Metronome Bell
+pitch   = 78
+volume  = 2.00
+attack  = 0.00
+hold    = 0.00
+decay   = 0.30
+pan     = 0.50
+
+[drum.35]  # Acoustic Bass Drum
+pitch   = 32
+volume  = 4.59
+attack  = 0.00
+hold    = 0.00
+decay   = 0.20
+pan     = 0.50
+
+[drum.36]  # Bass Drum 1
+pitch   = 32
+volume  = 4.50
+attack  = 0.00
+hold    = 0.00
+decay   = 0.25
+pan     = 0.50
+
+[drum.37]  # Side Stick
+pitch   = 64
+volume  = 2.00
+attack  = 0.00
+hold    = 0.00
+decay   = 0.30
+pan     = 0.50
+
+[drum.38]  # Snare 1
+pitch   = 44
+volume  = 4.00
+attack  = 0.00
+hold    = 0.00
+decay   = 0.40
+pan     = 0.50
+
+[drum.39]  # Hand Clap
+pitch   = 57
+volume  = 2.00
+attack  = 0.00
+hold    = 0.05
+decay   = 0.40
+pan     = 0.42
+
+[drum.40]  # Snare 2
+pitch   = 64
+volume  = 3.00
+attack  = 0.00
+hold    = 0.00
+decay   = 0.40
+pan     = 0.50
+
+[drum.41]  # Low Floor Tom
+pitch   = 44
+volume  = 3.00
+attack  = 0.00
+hold    = 0.00
+decay   = 0.50
+pan     = 0.27
+
+[drum.42]  # Closed Hi-hat
+pitch   = 64
+volume  = 1.60
+attack  = 0.00
+hold    = 0.05
+decay   = 0.10
+pan     = 0.66
+
+[drum.43]  # High Floor Tom
+pitch   = 46
+volume  = 3.00
+attack  = 0.00
+hold    = 0.00
+decay   = 0.50
+pan     = 0.36
+
+[drum.44]  # Pedal Hi-hat
+pitch   = 66
+volume  = 1.60
+attack  = 0.00
+hold    = 0.05
+decay   = 0.10
+pan     = 0.66
+
+[drum.45]  # Low Tom
+pitch   = 48
+volume  = 3.00
+attack  = 0.00
+hold    = 0.00
+decay   = 0.50
+pan     = 0.45
+
+[drum.46]  # Open Hi-hat
+pitch   = 70
+volume  = 1.60
+attack  = 0.00
+hold    = 0.10
+decay   = 0.75
+pan     = 0.66
+
+[drum.47]  # Low-Mid Tom
+pitch   = 50
+volume  = 3.00
+attack  = 0.00
+hold    = 0.00
+decay   = 0.40
+pan     = 0.55
+
+[drum.48]  # High-Mid Tom
+pitch   = 53
+volume  = 3.00
+attack  = 0.00
+hold    = 0.00
+decay   = 0.40
+pan     = 0.64
+
+[drum.49]  # Crash Cymbal 1
+pitch   = 68
+volume  = 2.00
+attack  = 0.00
+hold    = 0.00
+decay   = 2.00
+pan     = 0.66
+
+[drum.50]  # High Tom
+pitch   = 56
+volume  = 3.50
+attack  = 0.00
+hold    = 0.00
+decay   = 0.40
+pan     = 0.73
+
+[drum.51]  # Ride Cymbal 1
+pitch   = 66
+volume  = 2.50
+attack  = 0.00
+hold    = 0.00
+decay   = 1.50
+pan     = 0.35
+
+[drum.52]  # Chinese Cymbal
+pitch   = 62
+volume  = 2.00
+attack  = 0.00
+hold    = 0.00
+decay   = 1.00
+pan     = 0.35
+
+[drum.53]  # Ride Bell
+pitch   = 80
+volume  = 2.00
+attack  = 0.00
+hold    = 0.00
+decay   = 1.00
+pan     = 0.35
+
+[drum.54]  # Tambourine
+pitch   = 100
+volume  = 2.00
+attack  = 0.00
+hold    = 0.00
+decay   = 0.20
+pan     = 0.58
+
+[drum.55]  # Splash Cymbal
+pitch   = 70
+volume  = 1.60
+attack  = 0.00
+hold    = 0.00
+decay   = 1.50
+pan     = 0.42
+
+[drum.56]  # Cowbell
+pitch   = 60
+volume  = 3.00
+attack  = 0.00
+hold    = 0.00
+decay   = 0.40
+pan     = 0.66
+
+[drum.57]  # Crash Cymbal 2
+pitch   = 72
+volume  = 2.00
+attack  = 0.00
+hold    = 0.00
+decay   = 1.50
+pan     = 0.35
+
+[drum.58]  # Vibra-slap
+pitch   = 60
+volume  = 2.00
+attack  = 0.00
+hold    = 0.00
+decay   = 1.50
+pan     = 0.22
+
+[drum.59]  # Ride Cymbal 2
+pitch   = 76
+volume  = 1.20
+attack  = 0.00
+hold    = 0.00
+decay   = 1.50
+pan     = 0.35
+
+[drum.60]  # High Bongo
+pitch   = 70
+volume  = 2.00
+attack  = 0.00
+hold    = 0.00
+decay   = 0.20
+pan     = 0.77
+
+[drum.61]  # Low Bongo
+pitch   = 64
+volume  = 2.00
+attack  = 0.00
+hold    = 0.00
+decay   = 0.30
+pan     = 0.77
+
+[drum.62]  # Mute Hi Conga
+pitch   = 70
+volume  = 3.00
+attack  = 0.00
+hold    = 0.00
+decay   = 0.10
+pan     = 0.30
+
+[drum.63]  # Open Hi Conga
+pitch   = 67
+volume  = 2.00
+attack  = 0.00
+hold    = 0.00
+decay   = 0.30
+pan     = 0.30
+
+[drum.64]  # Low Conga
+pitch   = 58
+volume  = 2.00
+attack  = 0.00
+hold    = 0.00
+decay   = 0.35
+pan     = 0.35
+
+[drum.65]  # High Timbale
+pitch   = 70
+volume  = 2.00
+attack  = 0.00
+hold    = 0.00
+decay   = 0.40
+pan     = 0.66
+
+[drum.66]  # Low Timbale
+pitch   = 64
+volume  = 2.00
+attack  = 0.00
+hold    = 0.00
+decay   = 0.40
+pan     = 0.66
+
+[drum.67]  # High Agogo
+pitch   = 70
+volume  = 2.00
+attack  = 0.00
+hold    = 0.00
+decay   = 0.20
+pan     = 0.22
+
+[drum.68]  # Low Agogo
+pitch   = 64
+volume  = 2.00
+attack  = 0.00
+hold    = 0.00
+decay   = 0.20
+pan     = 0.22
+
+[drum.69]  # Cabasa
+pitch   = 70
+volume  = 2.50
+attack  = 0.00
+hold    = 0.00
+decay   = 0.15
+pan     = 0.22
+
+[drum.70]  # Maracas
+pitch   = 66
+volume  = 2.00
+attack  = 0.00
+hold    = 0.00
+decay   = 0.20
+pan     = 0.19
+
+[drum.71]  # Short Whistle
+pitch   = 71
+volume  = 2.00
+attack  = 0.00
+hold    = 0.10
+decay   = 0.10
+pan     = 0.77
+
+[drum.72]  # Long Whistle
+pitch   = 69
+volume  = 2.00
+attack  = 0.00
+hold    = 0.30
+decay   = 0.10
+pan     = 0.77
+
+[drum.73]  # Short Guiro
+pitch   = 70
+volume  = 2.50
+attack  = 0.00
+hold    = 0.00
+decay   = 0.15
+pan     = 0.73
+
+[drum.74]  # Long Guiro
+pitch   = 68
+volume  = 1.50
+attack  = 0.00
+hold    = 0.30
+decay   = 0.10
+pan     = 0.73
+
+[drum.75]  # Claves
+pitch   = 76
+volume  = 2.00
+attack  = 0.00
+hold    = 0.00
+decay   = 0.20
+pan     = 0.66
+
+[drum.76]  # Hi Wood Block
+pitch   = 70
+volume  = 2.00
+attack  = 0.00
+hold    = 0.00
+decay   = 0.30
+pan     = 0.77
+
+[drum.77]  # Low Wood Block
+pitch   = 64
+volume  = 2.00
+attack  = 0.00
+hold    = 0.00
+decay   = 0.30
+pan     = 0.77
+
+[drum.78]  # Mute Cuica
+pitch   = 70
+volume  = 2.00
+attack  = 0.00
+hold    = 0.00
+decay   = 0.40
+pan     = 0.35
+
+[drum.79]  # Open Cuica
+pitch   = 64
+volume  = 2.00
+attack  = 0.00
+hold    = 0.00
+decay   = 0.40
+pan     = 0.35
+
+[drum.80]  # Mute Triangle
+pitch   = 86
+volume  = 2.00
+attack  = 0.00
+hold    = 0.00
+decay   = 0.35
+pan     = 0.19
+
+[drum.81]  # Open Triangle
+pitch   = 86
+volume  = 0.70
+attack  = 0.00
+hold    = 0.10
+decay   = 0.20
+pan     = 0.19

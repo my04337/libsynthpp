@@ -3,9 +3,10 @@
 
 using namespace lsp::synth;
 
-MidiChannel::MidiChannel(uint32_t sampleFreq, uint8_t ch)
+MidiChannel::MidiChannel(uint32_t sampleFreq, uint8_t ch, const InstrumentTable& instrumentTable)
 	: mSampleFreq(sampleFreq)
 	, mMidiCh(ch)
+	, mInstrumentTable(instrumentTable)
 {
 	reset(midi::SystemType::GM1());
 }

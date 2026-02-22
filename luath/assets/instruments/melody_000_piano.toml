@@ -1,0 +1,147 @@
+# メロディ音色定義: Piano (0-7) / Chromatic Percussion (8-15)
+
+# --- Piano (0-7) ---
+[melody.0]    # Acoustic Grand Piano
+volume  = 1.00
+attack  = 0.02
+hold    = 0.00
+decay   = 3.00
+sustain = 0.00
+fade    = 0.00
+release = 1.00
+
+[melody.1]    # Bright Acoustic Piano
+volume  = 1.00
+attack  = 0.02
+hold    = 0.00
+decay   = 5.00
+sustain = 0.00
+fade    = 0.00
+release = 1.00
+
+[melody.2]    # Electric Grand Piano
+volume  = 1.00
+attack  = 0.02
+hold    = 0.00
+decay   = 5.00
+sustain = 0.00
+fade    = 0.00
+release = 1.00
+
+[melody.3]    # Honky-tonk Piano
+volume  = 1.00
+attack  = 0.02
+hold    = 0.00
+decay   = 5.00
+sustain = 0.00
+fade    = 0.00
+release = 1.00
+
+[melody.4]    # Electric Piano 1
+volume  = 1.00
+attack  = 0.02
+hold    = 0.00
+decay   = 5.00
+sustain = 0.00
+fade    = 0.00
+release = 1.00
+
+[melody.5]    # Electric Piano 2
+volume  = 1.00
+attack  = 0.02
+hold    = 0.00
+decay   = 5.00
+sustain = 0.00
+fade    = 0.00
+release = 1.00
+
+[melody.6]    # Harpsichord
+volume  = 1.00
+attack  = 0.02
+hold    = 0.00
+decay   = 5.00
+sustain = 0.00
+fade    = 0.00
+release = 1.00
+
+[melody.7]    # Clavinet
+volume  = 1.00
+attack  = 0.02
+hold    = 0.00
+decay   = 6.00
+sustain = 0.00
+fade    = 0.00
+release = 0.10
+
+# --- Chromatic Percussion (8-15) ---
+[melody.8]    # Celesta
+volume  = 1.00
+attack  = 0.02
+hold    = 0.00
+decay   = 4.00
+sustain = 0.00
+fade    = 0.00
+release = 1.50
+
+[melody.9]    # Glockenspiel
+volume  = 1.00
+attack  = 0.02
+hold    = 0.00
+decay   = 4.00
+sustain = 0.00
+fade    = 0.00
+release = 2.00
+
+[melody.10]   # Music Box
+volume  = 1.00
+attack  = 0.02
+hold    = 0.00
+decay   = 4.00
+sustain = 0.00
+fade    = 0.00
+release = 2.00
+
+[melody.11]   # Vibraphone
+volume  = 1.00
+attack  = 0.02
+hold    = 0.00
+decay   = 7.00
+sustain = 0.00
+fade    = 0.00
+release = 1.00
+
+[melody.12]   # Marimba
+volume  = 1.00
+attack  = 0.02
+hold    = 0.00
+decay   = 3.00
+sustain = 0.00
+fade    = 0.00
+release = 2.00
+
+[melody.13]   # Xylophone
+volume  = 1.00
+attack  = 0.02
+hold    = 0.00
+decay   = 3.00
+sustain = 0.00
+fade    = 0.00
+release = 2.00
+
+[melody.14]   # Tubular Bells
+volume  = 1.00
+attack  = 0.02
+hold    = 0.00
+decay   = 7.00
+sustain = 0.00
+fade    = 0.00
+release = 5.00
+
+[melody.15]   # Dulcimer
+volume  = 1.00
+attack  = 0.02
+hold    = 0.00
+decay   = 3.00
+sustain = 0.00
+fade    = 0.00
+release = 2.00

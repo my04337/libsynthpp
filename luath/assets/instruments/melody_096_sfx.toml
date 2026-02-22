@@ -1,0 +1,303 @@
+# メロディ音色定義: Synth Effects (96-103) / Ethnic (104-111) / Percussive (112-119) / SFX (120-127)
+
+# --- Synth Effects (96-103) ---
+[melody.96]   # FX 1 (rain)
+volume  = 1.00
+attack  = 0.03
+hold    = 0.00
+decay   = 4.00
+sustain = 0.50
+fade    = 0.00
+release = 2.00
+
+[melody.97]   # FX 2 (soundtrack)
+volume  = 1.00
+attack  = 0.03
+hold    = 0.10
+decay   = 3.00
+sustain = 0.70
+fade    = 0.00
+release = 3.00
+
+[melody.98]   # FX 3 (crystal)
+volume  = 1.00
+attack  = 0.03
+hold    = 0.00
+decay   = 4.00
+sustain = 0.00
+fade    = 0.00
+release = 3.00
+
+[melody.99]   # FX 4 (atmosphere)
+volume  = 1.00
+attack  = 0.03
+hold    = 0.00
+decay   = 4.00
+sustain = 0.10
+fade    = 0.00
+release = 2.00
+
+[melody.100]  # FX 5 (brightness)
+volume  = 1.00
+attack  = 0.03
+hold    = 0.10
+decay   = 5.00
+sustain = 0.00
+fade    = 0.00
+release = 3.00
+
+[melody.101]  # FX 6 (goblins)
+volume  = 1.00
+attack  = 1.00
+hold    = 0.00
+decay   = 1.00
+sustain = 0.90
+fade    = 0.00
+release = 2.00
+
+[melody.102]  # FX 7 (echoes)
+volume  = 1.00
+attack  = 0.03
+hold    = 0.00
+decay   = 1.00
+sustain = 0.90
+fade    = 0.00
+release = 2.00
+
+[melody.103]  # FX 8 (sci-fi)
+volume  = 1.00
+attack  = 0.03
+hold    = 0.00
+decay   = 6.00
+sustain = 0.04
+fade    = 0.00
+release = 2.00
+
+# --- Ethnic (104-111) ---
+[melody.104]  # Sitar
+volume  = 1.00
+attack  = 0.03
+hold    = 0.03
+decay   = 9.00
+sustain = 0.00
+fade    = 0.00
+release = 1.00
+
+[melody.105]  # Banjo
+volume  = 1.00
+attack  = 0.03
+hold    = 0.00
+decay   = 6.00
+sustain = 0.00
+fade    = 0.00
+release = 1.00
+
+[melody.106]  # Shamisen
+volume  = 1.00
+attack  = 0.03
+hold    = 0.00
+decay   = 3.00
+sustain = 0.00
+fade    = 0.00
+release = 1.00
+
+[melody.107]  # Koto
+volume  = 1.00
+attack  = 0.03
+hold    = 0.00
+decay   = 3.00
+sustain = 0.00
+fade    = 0.00
+release = 2.00
+
+[melody.108]  # Kalimba
+volume  = 1.00
+attack  = 0.03
+hold    = 0.00
+decay   = 1.50
+sustain = 0.00
+fade    = 0.00
+release = 1.00
+
+[melody.109]  # Bag pipe
+volume  = 1.00
+attack  = 0.03
+hold    = 0.00
+decay   = 1.00
+sustain = 0.70
+fade    = 0.00
+release = 0.10
+
+[melody.110]  # Fiddle
+volume  = 1.00
+attack  = 0.03
+hold    = 0.00
+decay   = 1.00
+sustain = 0.70
+fade    = 0.00
+release = 0.10
+
+[melody.111]  # Shanai
+volume  = 1.00
+attack  = 0.03
+hold    = 0.00
+decay   = 1.00
+sustain = 0.70
+fade    = 0.00
+release = 0.10
+
+# --- Percussive (112-119) ---
+[melody.112]  # Tinkle Bell
+volume  = 1.00
+attack  = 0.03
+hold    = 0.00
+decay   = 3.00
+sustain = 0.00
+fade    = 0.00
+release = 1.00
+
+[melody.113]  # Agogo
+volume  = 1.00
+attack  = 0.03
+hold    = 0.00
+decay   = 0.40
+sustain = 0.00
+fade    = 0.00
+release = 0.30
+
+[melody.114]  # Steel Drums
+volume  = 1.00
+attack  = 0.03
+hold    = 0.00
+decay   = 3.00
+sustain = 0.00
+fade    = 0.00
+release = 2.00
+
+[melody.115]  # Woodblock
+volume  = 1.00
+attack  = 0.03
+hold    = 0.00
+decay   = 0.50
+sustain = 0.00
+fade    = 0.00
+release = 0.50
+
+[melody.116]  # Taiko Drum
+volume  = 1.00
+attack  = 0.03
+hold    = 0.00
+decay   = 3.00
+sustain = 0.00
+fade    = 0.00
+release = 3.00
+
+[melody.117]  # Melodic Tom
+volume  = 1.00
+attack  = 0.03
+hold    = 0.00
+decay   = 0.80
+sustain = 0.00
+fade    = 0.00
+release = 0.80
+
+[melody.118]  # Synth Drum
+volume  = 1.00
+attack  = 0.03
+hold    = 0.00
+decay   = 0.80
+sustain = 0.00
+fade    = 0.00
+release = 0.80
+
+[melody.119]  # Reverse Cymbal
+volume  = 1.00
+attack  = 2.00
+hold    = 0.00
+decay   = 0.10
+sustain = 0.00
+fade    = 0.00
+release = 0.10
+
+# --- SFX (120-127) ---
+[melody.120]  # Guitar Fret Noise
+volume  = 1.00
+attack  = 0.03
+hold    = 0.00
+decay   = 0.50
+sustain = 0.00
+fade    = 0.00
+release = 0.50
+
+[melody.121]  # Breath Noise
+volume  = 1.00
+attack  = 0.03
+hold    = 0.00
+decay   = 0.50
+sustain = 0.00
+fade    = 0.00
+release = 0.40
+drum_like   = true
+note_offset = -12.0
+
+[melody.122]  # Seashore
+volume  = 2.00
+attack  = 0.50
+hold    = 1.50
+decay   = 3.00
+sustain = 0.00
+fade    = 0.00
+release = 1.50
+drum_like   = true
+note_offset = -12.0
+
+[melody.123]  # Bird Tweet
+volume  = 2.00
+attack  = 0.50
+hold    = 0.80
+decay   = 4.00
+sustain = 0.00
+fade    = 0.00
+release = 0.50
+
+[melody.124]  # Telephone Ring
+volume  = 2.00
+attack  = 0.03
+hold    = 0.00
+decay   = 1.00
+sustain = 0.80
+fade    = 0.00
+release = 0.10
+
+[melody.125]  # Helicopter
+volume  = 2.00
+attack  = 3.50
+hold    = 0.00
+decay   = 1.00
+sustain = 0.80
+fade    = 0.00
+release = 0.70
+drum_like   = true
+note_offset = -12.0
+
+[melody.126]  # Applause
+volume  = 2.00
+attack  = 2.00
+hold    = 0.00
+decay   = 1.00
+sustain = 0.80
+fade    = 0.00
+release = 0.80
+drum_like   = true
+note_offset = -12.0
+
+[melody.127]  # Gunshot
+volume  = 2.50
+attack  = 0.03
+hold    = 0.00
+decay   = 1.50
+sustain = 0.00
+fade    = 0.00
+release = 1.50
+drum_like   = true
+note_offset = -12.0

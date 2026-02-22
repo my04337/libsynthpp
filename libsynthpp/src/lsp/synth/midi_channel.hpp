@@ -3,6 +3,7 @@
 #include <lsp/core/core.hpp>
 #include <lsp/midi/system_type.hpp>
 #include <lsp/midi/message.hpp>
+#include <lsp/synth/instrument_table.hpp>
 #include <lsp/synth/voice.hpp>
 #include <array>
 
@@ -40,7 +41,7 @@ public:
 		std::unordered_map<VoiceId, Voice::Digest> voices;
 	};
 
-	MidiChannel(uint32_t sampleFreq, uint8_t ch);
+	MidiChannel(uint32_t sampleFreq, uint8_t ch, const InstrumentTable& instrumentTable);
 
 	void reset(midi::SystemType type);
 	void resetVoices();
@@ -94,6 +95,8 @@ private:
 	const uint32_t mSampleFreq;
 	// チャネル番号(実行時に動的にセット)
 	const uint8_t mMidiCh;
+	// インストゥルメント情報テーブル
+	const InstrumentTable& mInstrumentTable;
 
 	// 発音中のボイス
 	std::unordered_map<VoiceId, std::unique_ptr<Voice>> mVoices;

@@ -1,0 +1,147 @@
+# メロディ音色定義: Organ (16-23) / Guitar (24-31)
+
+# --- Organ (16-23) ---
+[melody.16]   # Drawbar Organ
+volume  = 1.00
+attack  = 0.02
+hold    = 0.00
+decay   = 0.50
+sustain = 0.70
+fade    = 0.00
+release = 0.10
+
+[melody.17]   # Percussive Organ
+volume  = 1.00
+attack  = 0.02
+hold    = 0.00
+decay   = 0.50
+sustain = 0.70
+fade    = 0.00
+release = 0.10
+
+[melody.18]   # Rock Organ
+volume  = 1.00
+attack  = 0.02
+hold    = 0.00
+decay   = 0.50
+sustain = 0.70
+fade    = 0.00
+release = 0.10
+
+[melody.19]   # Church Organ
+volume  = 1.00
+attack  = 0.02
+hold    = 0.00
+decay   = 0.50
+sustain = 0.70
+fade    = 0.00
+release = 1.00
+
+[melody.20]   # Reed Organ
+volume  = 1.00
+attack  = 0.02
+hold    = 0.00
+decay   = 1.00
+sustain = 0.50
+fade    = 0.00
+release = 1.00
+
+[melody.21]   # Accordion
+volume  = 1.00
+attack  = 0.03
+hold    = 0.00
+decay   = 1.00
+sustain = 0.70
+fade    = 0.00
+release = 0.10
+
+[melody.22]   # Harmonica
+volume  = 1.00
+attack  = 0.03
+hold    = 0.00
+decay   = 1.00
+sustain = 0.70
+fade    = 0.00
+release = 0.10
+
+[melody.23]   # Tango Accordion
+volume  = 1.00
+attack  = 0.03
+hold    = 0.00
+decay   = 1.00
+sustain = 0.70
+fade    = 0.00
+release = 0.10
+
+# --- Guitar (24-31) ---
+[melody.24]   # Acoustic Guitar (nylon)
+volume  = 1.00
+attack  = 0.02
+hold    = 0.00
+decay   = 7.00
+sustain = 0.00
+fade    = 0.00
+release = 0.10
+
+[melody.25]   # Acoustic Guitar (steel)
+volume  = 1.00
+attack  = 0.02
+hold    = 0.00
+decay   = 5.00
+sustain = 0.00
+fade    = 0.00
+release = 0.20
+
+[melody.26]   # Electric Guitar (jazz)
+volume  = 1.00
+attack  = 0.02
+hold    = 0.00
+decay   = 6.00
+sustain = 0.00
+fade    = 0.00
+release = 0.20
+
+[melody.27]   # Electric Guitar (clean)
+volume  = 1.00
+attack  = 0.02
+hold    = 0.00
+decay   = 5.00
+sustain = 0.00
+fade    = 0.00
+release = 0.20
+
+[melody.28]   # Electric Guitar (muted)
+volume  = 1.00
+attack  = 0.02
+hold    = 0.00
+decay   = 5.00
+sustain = 0.00
+fade    = 0.00
+release = 0.20
+
+[melody.29]   # Overdriven Guitar
+volume  = 1.00
+attack  = 0.02
+hold    = 0.00
+decay   = 7.00
+sustain = 0.08
+fade    = 0.00
+release = 0.10
+
+[melody.30]   # Distortion Guitar
+volume  = 1.00
+attack  = 0.02
+hold    = 0.20
+decay   = 7.00
+sustain = 0.08
+fade    = 0.00
+release = 0.10
+
+[melody.31]   # Guitar Harmonics
+volume  = 1.00
+attack  = 0.02
+hold    = 0.20
+decay   = 10.00
+sustain = 0.00
+fade    = 0.00
+release = 0.10

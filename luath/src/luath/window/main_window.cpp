@@ -84,8 +84,9 @@ static std::wstring freq2scale(float freq) {
 	}
 }
 MainWindow::MainWindow()
-	: mSequencer(mSynthesizer)
-	, mSynthesizer(SAMPLE_FREQ)
+	: mInstrumentTable(InstrumentLoader::loadFromDirectory(std::filesystem::current_path() / L"assets/instruments"))
+	, mSequencer(mSynthesizer)
+	, mSynthesizer(SAMPLE_FREQ, mInstrumentTable)
 	, mOutput()
 	, mLissajousWidget(SAMPLE_FREQ, static_cast<uint32_t>(SAMPLE_FREQ * 250e-4f))
 	, mOscilloScopeWidget(SAMPLE_FREQ, static_cast<uint32_t>(SAMPLE_FREQ * 250e-4f))

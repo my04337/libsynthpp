@@ -5,6 +5,7 @@
 #include <luath/widget/spectrum_analyzer.hpp>
 #include <luath/widget/lissajous.hpp>
 #include <luath/drawing/font_loader.hpp>
+#include <luath/io/instrument_loader.hpp>
 #include <lsp/synth/synthesizer.hpp>
 #include <lsp/midi/smf/sequencer.hpp>
 #include <lsp/audio/wasapi_output.hpp>
@@ -50,6 +51,9 @@ private:
 
 	// 再生パラメータ
 	std::atomic<float> mPostAmpVolume = 1.0f;
+
+	// インストゥルメント情報
+	lsp::synth::InstrumentTable mInstrumentTable;
 
 	// シーケンサ,シンセサイザ
 	synth::Synthesizer mSynthesizer;

@@ -42,9 +42,22 @@ add_custom_command(TARGET luath POST_BUILD
 	COMMAND ${CMAKE_COMMAND} -E make_directory ${LUATH_BINARY_DIR}/assets
 	COMMAND ${CMAKE_COMMAND} -E make_directory ${LUATH_BINARY_DIR}/assets/font
 	COMMAND ${CMAKE_COMMAND} -E make_directory ${LUATH_BINARY_DIR}/assets/sample_midi
+	COMMAND ${CMAKE_COMMAND} -E make_directory ${LUATH_BINARY_DIR}/assets/instruments
 
 	COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_LIST_DIR}/../third_party/UmeFont/ume-tgo4.ttf ${LUATH_BINARY_DIR}/assets/font
 	COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_LIST_DIR}/../third_party/UmeFont/license.html ${LUATH_BINARY_DIR}/assets/font
 
 	COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_LIST_DIR}/assets ${LUATH_BINARY_DIR}/assets
 )
+
+# --- third party dependencies ---
+
+include(FetchContent)
+FetchContent_Declare(
+    tomlplusplus
+    GIT_REPOSITORY https://github.com/marzer/tomlplusplus.git
+    GIT_TAG        v3.4.0
+)
+FetchContent_MakeAvailable(tomlplusplus)
+
+target_link_libraries(luath PRIVATE tomlplusplus::tomlplusplus)

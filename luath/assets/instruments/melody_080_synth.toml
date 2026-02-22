@@ -1,0 +1,147 @@
+# メロディ音色定義: Synth Lead (80-87) / Synth Pad (88-95)
+
+# --- Synth Lead (80-87) ---
+[melody.80]   # Lead 1 (square)
+volume  = 1.00
+attack  = 0.02
+hold    = 0.00
+decay   = 1.00
+sustain = 0.70
+fade    = 0.00
+release = 0.10
+
+[melody.81]   # Lead 2 (sawtooth)
+volume  = 1.00
+attack  = 0.02
+hold    = 0.00
+decay   = 1.00
+sustain = 0.80
+fade    = 0.00
+release = 0.10
+
+[melody.82]   # Lead 3 (calliope)
+volume  = 1.00
+attack  = 0.02
+hold    = 0.00
+decay   = 1.00
+sustain = 0.60
+fade    = 0.00
+release = 0.10
+
+[melody.83]   # Lead 4 (chiff)
+volume  = 1.00
+attack  = 0.03
+hold    = 0.00
+decay   = 4.00
+sustain = 0.25
+fade    = 0.00
+release = 0.10
+
+[melody.84]   # Lead 5 (charang)
+volume  = 1.00
+attack  = 0.03
+hold    = 0.03
+decay   = 4.00
+sustain = 0.25
+fade    = 0.00
+release = 0.10
+
+[melody.85]   # Lead 6 (voice)
+volume  = 1.00
+attack  = 0.03
+hold    = 0.00
+decay   = 4.00
+sustain = 0.56
+fade    = 0.00
+release = 0.20
+
+[melody.86]   # Lead 7 (fifths)
+volume  = 1.00
+attack  = 0.03
+hold    = 0.15
+decay   = 4.00
+sustain = 0.31
+fade    = 0.00
+release = 0.30
+
+[melody.87]   # Lead 8 (bass + lead)
+volume  = 1.00
+attack  = 0.03
+hold    = 0.00
+decay   = 4.50
+sustain = 0.31
+fade    = 0.00
+release = 0.10
+
+# --- Synth Pad (88-95) ---
+[melody.88]   # Pad 1 (new age)
+volume  = 1.00
+attack  = 0.03
+hold    = 0.00
+decay   = 3.00
+sustain = 0.56
+fade    = 0.00
+release = 3.00
+
+[melody.89]   # Pad 2 (warm)
+volume  = 1.00
+attack  = 0.03
+hold    = 0.00
+decay   = 3.00
+sustain = 0.90
+fade    = 0.00
+release = 1.00
+
+[melody.90]   # Pad 3 (polysynth)
+volume  = 1.00
+attack  = 0.03
+hold    = 0.00
+decay   = 3.00
+sustain = 0.40
+fade    = 0.00
+release = 0.80
+
+[melody.91]   # Pad 4 (choir)
+volume  = 1.00
+attack  = 0.03
+hold    = 0.00
+decay   = 3.00
+sustain = 0.90
+fade    = 0.00
+release = 3.00
+
+[melody.92]   # Pad 5 (bowed)
+volume  = 1.00
+attack  = 0.03
+hold    = 0.00
+decay   = 3.00
+sustain = 0.90
+fade    = 0.00
+release = 2.50
+
+[melody.93]   # Pad 6 (metallic)
+volume  = 1.00
+attack  = 0.30
+hold    = 0.00
+decay   = 8.00
+sustain = 0.00
+fade    = 0.00
+release = 2.00
+
+[melody.94]   # Pad 7 (halo)
+volume  = 1.00
+attack  = 0.03
+hold    = 0.15
+decay   = 1.00
+sustain = 0.90
+fade    = 0.00
+release = 1.00
+
+[melody.95]   # Pad 8 (sweep)
+volume  = 1.00
+attack  = 0.30
+hold    = 0.00
+decay   = 5.00
+sustain = 0.50
+fade    = 0.00
+release = 2.00

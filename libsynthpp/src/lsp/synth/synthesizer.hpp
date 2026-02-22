@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include <lsp/core/core.hpp>
+#include <lsp/synth/instrument_table.hpp>
 #include <lsp/synth/midi_channel.hpp>
 
 #include <lsp/midi/message_receiver.hpp>
@@ -38,7 +39,7 @@ public:
 	};
 
 public:
-	Synthesizer(uint32_t sampleFreq, midi::SystemType defaultSystemType = midi::SystemType::GS());
+	Synthesizer(uint32_t sampleFreq, const InstrumentTable& instrumentTable, midi::SystemType defaultSystemType = midi::SystemType::GS());
 	~Synthesizer();
 
 	void dispose();
@@ -77,6 +78,7 @@ private:
 		
 	// all channel parameters
 	const uint32_t mSampleFreq;
+	const InstrumentTable& mInstrumentTable;
 	midi::SystemType mSystemType;
 
 	// midi channel parameters
