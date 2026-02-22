@@ -195,7 +195,7 @@ void MidiChannel::controlChange(uint8_t ctrlNo, uint8_t value)
 		break;
 	case 123: // オールノートオフ
 		for (auto& kvp : mVoices) {
-			kvp.second->noteCut();
+			kvp.second->noteOff();
 		}
 		break;
 	// --- チャネルモードメッセージ : not implemented ---
