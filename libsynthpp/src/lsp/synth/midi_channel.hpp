@@ -47,6 +47,7 @@ public:
 	void reset(midi::SystemType type);
 	void resetVoices();
 	void resetParameters();
+	void resetAllControllers();
 	void resetParameterNumberState();
 	// ---
 	void noteOn(uint32_t noteNo, uint8_t vel);

@@ -26,19 +26,13 @@ void MidiChannel::resetVoices()
 }
 void MidiChannel::resetParameters()
 {
-	// チャネル ボイス メッセージ系
+	// チャネル ボイス メッセージ系 (CC#121では維持される項目)
 	mProgId = 0; // Acoustic Piano
 	mIsDrumPart = (mMidiCh == 9);
-	mRawPitchBend = 0;
-	mCalculatedPitchBend = 0;
-	mChannelPressure = 1.0f;
 
-	// コントロールチェンジ系
+	// コントロールチェンジ系 (CC#121では維持される項目)
 	ccVolume = 1.0;
 	ccPan = 0.5f;
-	ccExpression = 1.0;
-	ccPedal = false;
-	ccSostenuto = false;
 
 	ccPrevCtrlNo = 0xFF; // invalid value
 	ccPrevValue = 0x00;
@@ -46,18 +40,14 @@ void MidiChannel::resetParameters()
 	ccBankSelectLSB = 0;
 	ccBankSelectMSB = 0;
 
-	ccAttackTime = 64;
-	ccDecayTime = 64;
-	ccReleaseTime = 64;
-	ccResonance = 64;
-	ccBrightness = 64;
-
 	mMonoMode = false;
 
-	resetParameterNumberState();
-
+	// RPN/NRPN 値のクリア (CC#121ではパラメータ番号のみリセットされ、値は維持される)
 	ccRPNs.clear();
 	ccNRPNs.clear();
+
+	// CC#121 リセットオールコントローラ相当の初期化
+	resetAllControllers();
 }
 
 void MidiChannel::resetParameterNumberState()
@@ -68,6 +58,42 @@ void MidiChannel::resetParameterNumberState()
 	ccNRPN_LSB.reset();
 	ccDE_MSB.reset();
 	ccDE_LSB.reset();
+}
+// MIDI RP-015 準拠 : CC#121 リセットオールコントローラ
+// Volume, Pan, Program, Bank Select 等は維持する
+void MidiChannel::resetAllControllers()
+{
+	// Expression → 127 (最大)
+	ccExpression = 1.0f;
+
+	// Hold(ダンパーペダル) → off
+	ccPedal = false;
+	updateHold();
+
+	// Sostenuto → off
+	ccSostenuto = false;
+	updateSostenuto();
+
+	// Pitch Bend → center
+	mRawPitchBend = 0;
+	updatePitchBend();
+
+	// Channel Pressure → 0
+	mChannelPressure = 0.0f;
+
+	// CC 72/73/75 → center(64)
+	ccAttackTime = 64;
+	ccDecayTime = 64;
+	ccReleaseTime = 64;
+	updateReleaseTime();
+
+	// CC 71/74 → center(64)
+	ccResonance = 64;
+	ccBrightness = 64;
+	updateFilter();
+
+	// RPN/NRPN パラメータ番号 → null
+	resetParameterNumberState();
 }
 void MidiChannel::noteOn(uint32_t noteNo, uint8_t vel)
 {
@@ -191,7 +217,7 @@ void MidiChannel::controlChange(uint8_t ctrlNo, uint8_t value)
 		resetVoices();
 		break;
 	case 121: // リセットオールコントローラ
-		resetParameters();
+		resetAllControllers();
 		break;
 	case 123: // オールノートオフ
 		for (auto& kvp : mVoices) {
