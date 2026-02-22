@@ -25,43 +25,29 @@ void Instruments::prepareWaveTable()
 {
 	static std::once_flag once;
 	std::call_once(once,[] {
-		createSquareGenerator(0, 0.f);
+		createSquareGenerator(0.f);
 		createSineGenerator(0.f);
-		createTriangleGenerator(0, 0.f);
-		createSawtoothGenerator(0, 0.f);
+		createTriangleGenerator(0.f);
+		createSawtoothGenerator(0.f);
 		createDrumNoiseGenerator(0.f);
 	});
 }
 
-// 矩形波（バンドリミテッド）のジェネレータを返します
-auto Instruments::createSquareGenerator(int overtoneOrder, float volume)
+// 矩形波のジェネレータを返します
+auto Instruments::createSquareGenerator(float volume)
 	-> WaveTableGenerator
 {
-	static constexpr size_t MAX_OVERTONE_ORDER = 50;
-	using FunctionGenerator = dsp::FunctionGenerator<float>;
-
-	static const auto tables = []() ->std::array<Signal<float>, MAX_OVERTONE_ORDER + 1> {
-		std::array <Signal<float>, MAX_OVERTONE_ORDER + 1> tables;
+	static const auto table = []() -> Signal<float> {
 		constexpr size_t samples = 512;
-
-		for(uint32_t order = 0; order < 51; ++order) {
-			auto table = Signal<float>::allocate(samples);
-			auto data = table.data();
-			std::fill(data, data + samples, 0.f);
-			for(uint32_t o = 0; o < order; ++o) {
-				FunctionGenerator fg;
-				fg.setSinWave(static_cast<float>(samples), static_cast<float>(1 + o * 2));
-				for(size_t i = 0; i < samples; ++i) {
-					data[i] += fg.update() / (1 + o * 2);
-				}
-			}
-			tables[order] = std::move(table);
+		auto table = Signal<float>::allocate(samples);
+		auto data = table.data();
+		for(size_t i = 0; i < samples; ++i) {
+			data[i] = (i < samples / 2) ? 1.0f : -1.0f;
 		}
-		return tables;
+		return table;
 	}();
 
-	lsp_require(overtoneOrder >= 0 && static_cast<size_t>(overtoneOrder) < MAX_OVERTONE_ORDER + 1);
-	return WaveTableGenerator(tables[static_cast<size_t>(overtoneOrder)], volume);
+	return WaveTableGenerator(table, volume);
 }
 
 // 正弦波のジェネレータを返します
@@ -85,74 +71,47 @@ auto Instruments::createSineGenerator(float volume)
 	return WaveTableGenerator(table, volume);
 }
 
-// 三角波（バンドリミテッド）のジェネレータを返します
-auto Instruments::createTriangleGenerator(int overtoneOrder, float volume)
+// 三角波のジェネレータを返します
+auto Instruments::createTriangleGenerator(float volume)
 	-> WaveTableGenerator
 {
-	// 三角波のフーリエ級数 : Σ (-1)^n / (2n+1)^2 * sin((2n+1)*x)
-	static constexpr size_t MAX_OVERTONE_ORDER = 50;
-	using FunctionGenerator = dsp::FunctionGenerator<float>;
-
-	static const auto tables = []() -> std::array<Signal<float>, MAX_OVERTONE_ORDER + 1> {
-		std::array<Signal<float>, MAX_OVERTONE_ORDER + 1> tables;
+	static const auto table = []() -> Signal<float> {
 		constexpr size_t samples = 512;
-
-		for(uint32_t order = 0; order < 51; ++order) {
-			auto table = Signal<float>::allocate(samples);
-			auto data = table.data();
-			std::fill(data, data + samples, 0.f);
-			for(uint32_t o = 0; o < order; ++o) {
-				FunctionGenerator fg;
-				uint32_t harmonic = 1 + o * 2; // 奇数倍音のみ
-				fg.setSinWave(static_cast<float>(samples), static_cast<float>(harmonic));
-				float sign = ((o % 2) == 0) ? 1.0f : -1.0f;
-				float coeff = sign / static_cast<float>(harmonic * harmonic);
-				for(size_t i = 0; i < samples; ++i) {
-					data[i] += fg.update() * coeff;
-				}
+		auto table = Signal<float>::allocate(samples);
+		auto data = table.data();
+		for(size_t i = 0; i < samples; ++i) {
+			// 0→+1→0→-1→0 の三角波
+			float phase = static_cast<float>(i) / static_cast<float>(samples);
+			if(phase < 0.25f) {
+				data[i] = phase * 4.0f;
+			} else if(phase < 0.75f) {
+				data[i] = 2.0f - phase * 4.0f;
+			} else {
+				data[i] = phase * 4.0f - 4.0f;
 			}
-			tables[order] = std::move(table);
 		}
-		return tables;
+		return table;
 	}();
 
-	lsp_require(overtoneOrder >= 0 && static_cast<size_t>(overtoneOrder) < MAX_OVERTONE_ORDER + 1);
-	return WaveTableGenerator(tables[static_cast<size_t>(overtoneOrder)], volume);
+	return WaveTableGenerator(table, volume);
 }
 
-// のこぎり波（バンドリミテッド）のジェネレータを返します
-auto Instruments::createSawtoothGenerator(int overtoneOrder, float volume)
+// のこぎり波のジェネレータを返します
+auto Instruments::createSawtoothGenerator(float volume)
 	-> WaveTableGenerator
 {
-	// のこぎり波のフーリエ級数 : Σ (-1)^(n+1) / n * sin(n*x)
-	static constexpr size_t MAX_OVERTONE_ORDER = 50;
-	using FunctionGenerator = dsp::FunctionGenerator<float>;
-
-	static const auto tables = []() -> std::array<Signal<float>, MAX_OVERTONE_ORDER + 1> {
-		std::array<Signal<float>, MAX_OVERTONE_ORDER + 1> tables;
+	static const auto table = []() -> Signal<float> {
 		constexpr size_t samples = 512;
-
-		for(uint32_t order = 0; order < 51; ++order) {
-			auto table = Signal<float>::allocate(samples);
-			auto data = table.data();
-			std::fill(data, data + samples, 0.f);
-			for(uint32_t o = 0; o < order; ++o) {
-				FunctionGenerator fg;
-				uint32_t harmonic = 1 + o; // 全倍音
-				fg.setSinWave(static_cast<float>(samples), static_cast<float>(harmonic));
-				float sign = ((o % 2) == 0) ? 1.0f : -1.0f;
-				float coeff = sign / static_cast<float>(harmonic);
-				for(size_t i = 0; i < samples; ++i) {
-					data[i] += fg.update() * coeff;
-				}
-			}
-			tables[order] = std::move(table);
+		auto table = Signal<float>::allocate(samples);
+		auto data = table.data();
+		for(size_t i = 0; i < samples; ++i) {
+			// -1→+1 の線形変化
+			data[i] = 2.0f * static_cast<float>(i) / static_cast<float>(samples) - 1.0f;
 		}
-		return tables;
+		return table;
 	}();
 
-	lsp_require(overtoneOrder >= 0 && static_cast<size_t>(overtoneOrder) < MAX_OVERTONE_ORDER + 1);
-	return WaveTableGenerator(tables[static_cast<size_t>(overtoneOrder)], volume);
+	return WaveTableGenerator(table, volume);
 }
 
 // ドラム用ノイズのジェネレータを返します

@@ -21,17 +21,17 @@ public:
 	// 常に0を返すジェネレータを作成します
 	static WaveTableGenerator createZeroWaveTable(float volume = 1.f);
 
-	// 矩形波（バンドリミテッド）のジェネレータを返します
-	static WaveTableGenerator createSquareGenerator(int overtoneOrder = 30, float volume = 1.f);
+	// 矩形波のジェネレータを返します
+	static WaveTableGenerator createSquareGenerator(float volume = 1.f);
 
 	// 正弦波のジェネレータを返します
 	static WaveTableGenerator createSineGenerator(float volume = 1.f);
 
-	// 三角波（バンドリミテッド）のジェネレータを返します
-	static WaveTableGenerator createTriangleGenerator(int overtoneOrder = 30, float volume = 1.f);
+	// 三角波のジェネレータを返します
+	static WaveTableGenerator createTriangleGenerator(float volume = 1.f);
 
-	// のこぎり波（バンドリミテッド）のジェネレータを返します
-	static WaveTableGenerator createSawtoothGenerator(int overtoneOrder = 30, float volume = 1.f);
+	// のこぎり波のジェネレータを返します
+	static WaveTableGenerator createSawtoothGenerator(float volume = 1.f);
 
 	// ドラム用ノイズのジェネレータを返します
 	static WaveTableGenerator createDrumNoiseGenerator(float volume = 1.f);

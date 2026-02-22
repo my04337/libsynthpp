@@ -31,35 +31,22 @@ std::unique_ptr<Voice> MidiChannel::createMelodyVoice(uint8_t noteNo, uint8_t ve
 		// ドラム系 (波形指定なし) : ノイズジェネレータを使用
 		wg = Instruments::createDrumNoiseGenerator();
 	} else {
-		// 素の波形は結構どぎつい倍音を持つため、折り返しノイズ等を避けるために大まかなノート番号によって倍音成分を変化させる
-		// ※正弦波の倍音は1～50まで用意してあるため、良い感じにマッピングする
-		static constexpr float min_note_no = 0;  // C-1 : 8.2[Hz]
-		static constexpr float max_note_no = 108; // C8 : 4186.0[Hz]
-		static constexpr int min_dim = 5;
-		static constexpr int max_dim = 30;
-
-		auto waveTableId = std::clamp(
-			static_cast<int>(min_dim + (1.f - (noteNo - min_note_no) / (max_note_no - min_note_no)) * (max_dim - min_dim)),
-			min_dim,
-			max_dim
-		);
-
 		switch(mp.waveForm) {
 		case MelodyWaveForm::Sine:
 			wg = Instruments::createSineGenerator();
 			break;
 		case MelodyWaveForm::Triangle:
-			wg = Instruments::createTriangleGenerator(waveTableId);
+			wg = Instruments::createTriangleGenerator();
 			break;
 		case MelodyWaveForm::Sawtooth:
-			wg = Instruments::createSawtoothGenerator(waveTableId);
+			wg = Instruments::createSawtoothGenerator();
 			break;
 		case MelodyWaveForm::Noise:
 			wg = Instruments::createDrumNoiseGenerator();
 			break;
 		case MelodyWaveForm::Square:
 		default:
-			wg = Instruments::createSquareGenerator(waveTableId);
+			wg = Instruments::createSquareGenerator();
 			break;
 		}
 	}
