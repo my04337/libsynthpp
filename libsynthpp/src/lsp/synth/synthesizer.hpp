@@ -7,6 +7,7 @@
 #include <lsp/midi/message_receiver.hpp>
 
 #include <array>
+#include <optional>
 #include <shared_mutex>
 
 namespace lsp::synth
@@ -39,7 +40,7 @@ public:
 	};
 
 public:
-	Synthesizer(uint32_t sampleFreq, const InstrumentTable& instrumentTable, midi::SystemType defaultSystemType = midi::SystemType::GS());
+	Synthesizer(uint32_t sampleFreq, const InstrumentTable& instrumentTable, midi::SystemType defaultSystemType = midi::SystemType::GS(), std::optional<uint32_t> randomSeed = std::nullopt);
 	~Synthesizer();
 
 	void dispose();

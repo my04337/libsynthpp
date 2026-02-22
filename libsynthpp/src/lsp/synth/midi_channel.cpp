@@ -3,10 +3,11 @@
 
 using namespace lsp::synth;
 
-MidiChannel::MidiChannel(uint32_t sampleFreq, uint8_t ch, const InstrumentTable& instrumentTable)
+MidiChannel::MidiChannel(uint32_t sampleFreq, uint8_t ch, const InstrumentTable& instrumentTable, std::optional<uint32_t> randomSeed)
 	: mSampleFreq(sampleFreq)
 	, mMidiCh(ch)
 	, mInstrumentTable(instrumentTable)
+	, mRandomEngine(randomSeed.value_or(std::random_device()()))
 {
 	reset(midi::SystemType::GM1());
 }

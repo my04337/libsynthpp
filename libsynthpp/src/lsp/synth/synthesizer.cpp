@@ -5,7 +5,7 @@
 
 using namespace lsp::synth;
 
-Synthesizer::Synthesizer(uint32_t sampleFreq, const InstrumentTable& instrumentTable, midi::SystemType defaultSystemType)
+Synthesizer::Synthesizer(uint32_t sampleFreq, const InstrumentTable& instrumentTable, midi::SystemType defaultSystemType, std::optional<uint32_t> randomSeed)
 	: mSampleFreq(sampleFreq)
 	, mInstrumentTable(instrumentTable)
 	, mPlayingThreadAborted(false)
@@ -14,7 +14,11 @@ Synthesizer::Synthesizer(uint32_t sampleFreq, const InstrumentTable& instrumentT
 
 	mMidiChannels.reserve(MAX_CHANNELS);
 	for (uint8_t ch = 0; ch < MAX_CHANNELS; ++ch) {
-		mMidiChannels.emplace_back(sampleFreq, ch, mInstrumentTable);
+		std::optional<uint32_t> chSeed;
+		if(randomSeed) {
+			chSeed = *randomSeed + ch;
+		}
+		mMidiChannels.emplace_back(sampleFreq, ch, mInstrumentTable, chSeed);
 	}
 
 	reset(defaultSystemType);

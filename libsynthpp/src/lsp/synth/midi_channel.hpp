@@ -6,6 +6,7 @@
 #include <lsp/synth/instrument_table.hpp>
 #include <lsp/synth/voice.hpp>
 #include <array>
+#include <random>
 
 namespace lsp::synth
 {
@@ -41,7 +42,7 @@ public:
 		std::unordered_map<VoiceId, Voice::Digest> voices;
 	};
 
-	MidiChannel(uint32_t sampleFreq, uint8_t ch, const InstrumentTable& instrumentTable);
+	MidiChannel(uint32_t sampleFreq, uint8_t ch, const InstrumentTable& instrumentTable, std::optional<uint32_t> randomSeed = std::nullopt);
 
 	void reset(midi::SystemType type);
 	void resetVoices();
@@ -97,6 +98,8 @@ private:
 	const uint8_t mMidiCh;
 	// インストゥルメント情報テーブル
 	const InstrumentTable& mInstrumentTable;
+	// 乱数エンジン
+	std::mt19937 mRandomEngine;
 
 	// 発音中のボイス
 	std::unordered_map<VoiceId, std::unique_ptr<Voice>> mVoices;

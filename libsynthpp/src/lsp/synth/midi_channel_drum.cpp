@@ -25,7 +25,8 @@ std::unique_ptr<Voice> MidiChannel::createDrumVoice(uint8_t noteNo, uint8_t vel)
 	if(auto panFromNRPN = getNRPN_MSB(28, noteNo)) {
 		uint8_t panValue = *panFromNRPN;
 		if(panValue == 0) {
-			pan = static_cast<float>(rand() % 127 + 1) / 127.f;
+			std::uniform_int_distribution<int> dist(1, 127);
+			pan = static_cast<float>(dist(mRandomEngine)) / 127.f;
 		} else {
 			pan = std::clamp((panValue - 1) / 126.0f, 0.0f, 1.0f);
 		}

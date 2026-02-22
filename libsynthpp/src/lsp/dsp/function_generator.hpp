@@ -28,12 +28,12 @@ template<
 class FunctionGenerator final
 {
 public:
-	FunctionGenerator()
+	explicit FunctionGenerator(std::optional<uint32_t> seed = std::nullopt)
 		: mType(WaveFormType::Ground)
 		, mPhase(0)
 		, mDutyRate(0)
 		, mPhasePerSample(0)
-		, mRandomEngine(std::random_device()())
+		, mRandomEngine(seed.value_or(std::random_device()()))
 		, mUniDist(sample_traits<parameter_type>::min, sample_traits<parameter_type>::max)
 	{
 	}
