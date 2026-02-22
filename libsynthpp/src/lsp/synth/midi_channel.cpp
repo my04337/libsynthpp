@@ -9,7 +9,9 @@ MidiChannel::MidiChannel(uint32_t sampleFreq, uint8_t ch, const InstrumentTable&
 	, mInstrumentTable(instrumentTable)
 	, mRandomEngine(randomSeed.value_or(std::random_device()()))
 {
-	reset(midi::SystemType::GM1());
+	// メンバ変数の初期化のみ行う
+	// システム種別に基づくリセットは Synthesizer::reset() から一括で行われる
+	resetParameters();
 }
 // チャネル毎パラメータ類 リセット
 void MidiChannel::reset(midi::SystemType type)
