@@ -226,7 +226,7 @@ void Synthesizer::sysExMessage(const uint8_t* data, size_t len)
 
 	auto makerId = read();
 	if(makerId == 0x7E) {
-		// リアルタイム ユニバーサルシステムエクスクルーシブ
+		// 非リアルタイム ユニバーサルシステムエクスクルーシブ
 		// https://www.g200kg.com/jp/docs/tech/universalsysex.html
 
 		if(match({ 0x7F, 0x09, 0x01 })) {
