@@ -226,7 +226,9 @@ LRESULT MainWindow::wndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 			result = 0;
 			break;
 		case WM_PAINT:
+			ValidateRect(hWnd, nullptr);
 			this_->onDraw();
+			InvalidateRect(hWnd, nullptr, FALSE);
 			result = 0;
 			break;
 		case WM_DESTROY:
