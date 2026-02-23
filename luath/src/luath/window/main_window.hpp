@@ -52,6 +52,9 @@ private:
 	// 再生パラメータ
 	std::atomic<float> mPostAmpVolume = 1.0f;
 
+	// ダイアログ表示中フラグ (MessageBox表示中はD2D描画を抑制する)
+	bool mShowingDialog = false;
+
 	// インストゥルメント情報
 	lsp::synth::InstrumentTable mInstrumentTable;
 

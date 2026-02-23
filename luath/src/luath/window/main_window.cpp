@@ -173,6 +173,8 @@ bool MainWindow::initialize()
 
 	// オーディオ出力 初期化
 	if(!mOutput.start()) {
+		mShowingDialog = true;
+		auto fin_act_dialogFinish = finally([this] { mShowingDialog = false; });
 		MessageBox(
 			mWindowHandle,
 			L"出力デバイスのオープンに失敗しました。",
@@ -307,6 +309,8 @@ void MainWindow::loadMidi(const std::filesystem::path& midi_path) {
 		// ロード失敗
 		std::string_view detail = e.what();
 		std::wstring detailW(detail.begin(), detail.end());
+		mShowingDialog = true;
+		auto fin_act_dialogFinish = finally([this] { mShowingDialog = false; });
 		MessageBox(
 			mWindowHandle,
 			std::format(L"MIDIファイルを開けません : {}\n\n{}", midi_path.wstring(), detailW).c_str(),
@@ -332,6 +336,12 @@ struct MainWindow::DrawingContext
 
 void MainWindow::onDraw()
 {
+	// ダイアログ表示中はD2D描画を抑制する (MessageBoxの描画と競合するため)
+	if(mShowingDialog) {
+		ValidateRect(mWindowHandle, nullptr);
+		return;
+	}
+
 	auto& context = *mDrawingContext;
 	auto drawingScale = static_cast<float>(GetDpiForWindow(mWindowHandle)) / 96.f;
 
@@ -611,4 +621,7 @@ void MainWindow::onRenderedSignal(Signal<float>&& sig)
 	mOscilloScopeWidget.write(sig);
 	mSpectrumAnalyzerWidget.write(sig);
 	mLissajousWidget.write(sig);
+
+	// 再描画を依頼
+	InvalidateRect(mWindowHandle, nullptr, FALSE);
 }
