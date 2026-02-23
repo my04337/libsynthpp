@@ -167,7 +167,9 @@ bool MainWindow::initialize()
 	// シーケンサセットアップ
 	auto midi_path = std::filesystem::current_path();
 	midi_path.append(L"assets/sample_midi/brambles_vsc3.mid"s); // 試験用MIDIファイル
-	loadMidi(midi_path);
+	if(std::filesystem::exists(midi_path)) {
+		loadMidi(midi_path);
+	}
 
 	// オーディオ出力 初期化
 	if(!mOutput.start()) {
