@@ -115,7 +115,7 @@ void Synthesizer::reset(midi::SystemType type)
 
 lsp::Signal<float> Synthesizer::generate(size_t len)
 {
-	constexpr float MIXING_GAIN = 1.f / 16.f; // ほどよいミキシングゲイン (20-30和音クリップしないが小さすぎない程度の値)
+	constexpr float MIXING_GAIN = 1.f / 12.f; // ほどよいミキシングゲイン (20-30和音クリップしないが小さすぎない程度の値)
 	const float masterGain = MIXING_GAIN * mMasterVolume;
 
 	auto sig = lsp::Signal<float>::allocate(&mMem, 2, len);

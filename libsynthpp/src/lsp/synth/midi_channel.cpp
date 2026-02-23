@@ -33,8 +33,11 @@ void MidiChannel::resetParameters()
 	mProgId = 0; // Acoustic Piano
 	mIsDrumPart = (mMidiCh == 9);
 
-	// コントロールチェンジ系 (CC#121では維持される項目)
-	ccVolume = 1.0;
+	// コントロールチェンジ系 (CC#121では維持される項目) - 二乗カーブ
+	{ // CC:7 Channel Volume (デフォルト値 100)
+		float t = 100.0f / 127.0f;
+		ccVolume = t * t;
+	}
 	ccPan = 0.5f;
 
 	ccPrevCtrlNo = 0xFF; // invalid value
@@ -209,12 +212,16 @@ void MidiChannel::controlChange(uint8_t ctrlNo, uint8_t value)
 		// MEMO 中央値は64。 1-127の範囲を取る実装が多い
 		ccPan = std::clamp((value - 1) / 126.0f, 0.0f, 1.0f);
 		break;
-	case 7: // Channel Volumeチャンネルボリューム）
-		ccVolume = (value / 127.0f);
+	case 7: { // Channel Volume（チャンネルボリューム） - 二乗カーブ
+		float t = value / 127.0f;
+		ccVolume = t * t;
 		break;
-	case 11: // Expression(エクスプレッション)
-		ccExpression = (value / 127.0f);
+	}
+	case 11: { // Expression（エクスプレッション） - 二乗カーブ
+		float t = value / 127.0f;
+		ccExpression = t * t;
 		break;
+	}
 	case 32: // Bank Select <LSB>（バンクセレクト）
 		ccBankSelectLSB = value;
 		break;

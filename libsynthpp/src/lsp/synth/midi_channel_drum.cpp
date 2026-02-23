@@ -38,10 +38,11 @@ std::unique_ptr<Voice> MidiChannel::createDrumVoice(uint8_t noteNo, uint8_t vel)
 	float fineOffset = (getNRPN_MSB(25, noteNo).value_or(64) - 64) / 64.0f;
 	float resolvedNoteNo = static_cast<float>(pitch) + coarseOffset + fineOffset;
 
-	// NRPN (26, noteNo) : ドラムレベル (0-127、デフォルト127相当)
+	// NRPN (26, noteNo) : ドラムレベル (0-127、デフォルト127相当) - 二乗カーブ
 	float drumLevelScale = 1.0f;
 	if(auto drumLevel = getNRPN_MSB(26, noteNo)) {
-		drumLevelScale = *drumLevel / 127.0f;
+		float t = *drumLevel / 127.0f;
+		drumLevelScale = t * t;
 	}
 
 	// CC 73/75 によるEGタイム調整（全システムタイプで適用）

@@ -117,7 +117,7 @@ protected:
 	float mPitchBend;
 	float mCalculatedFreq = 0;
 	float mVolume;
-	float mPolyPressure = 1.0f; // ポリフォニックキープレッシャー [0.0, 1.0]
+	float mPolyPressure = 1.0f; // ポリフォニックキープレッシャー [0.0, 1.0] ※現状は生かせるインストゥルメントが無いため未使用
 	std::optional<float> mPan; // ドラムなど、ボイス毎にパンが指定される場合のヒント
 	float mBaseReleaseTimeSec = 0; // 楽器定義から決まるベースリリースタイム(秒)
 
@@ -148,7 +148,6 @@ public:
 		v = mFilter.update(v);
 		v *= mEG.update();
 		v *= mVolume;
-		v *= mPolyPressure;
 		return v;
 	}
 
@@ -192,7 +191,6 @@ public:
 		v = mFilter.update(v);
 		v *= mEG.update();
 		v *= mVolume;
-		v *= mPolyPressure;
 		return v;
 	}
 
