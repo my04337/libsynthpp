@@ -28,6 +28,7 @@ public:
 		float expression = 1.0f; // エクスプレッション
 		float channelPressure = 1.0f; // チャネルプレッシャー
 		float pitchBend = 0.0f; // ピッチベンド(ピッチベンドセンシティビティ考慮済み)
+		uint8_t modulation = 0; // モジュレーション(CC#1)
 		size_t poly = 0; // 同時発音数
 		uint8_t attackTime = 64; // アタックタイム
 		uint8_t decayTime = 64; // ディケイタイム
@@ -76,6 +77,7 @@ private:
 	void updatePitchBend();
 	void updateReleaseTime();
 	void updateFilter();
+	void updateVibrato();
 
 	// CC 72/73/75 および対応するNRPNからEGタイムスケーリング係数を計算します
 	static float calcEGTimeScale(uint8_t ccValue);
@@ -84,6 +86,11 @@ private:
 	// CC 71/74 および対応するNRPN(1,32/33)からフィルタパラメータを計算します
 	float calcFilterCutoff(float noteFreq)const;
 	float calcFilterQ()const;
+
+	// CC#1 および対応するNRPN(1,8/9/10)からビブラートパラメータを計算します
+	float calcVibratoRate()const;
+	float calcVibratoDepth()const;
+	float calcVibratoDelay()const;
 
 	// RPN and NRPN
 	std::optional<uint8_t> getRPN_MSB(uint8_t msb, uint8_t lsb)const noexcept;
@@ -116,7 +123,8 @@ private:
 	uint8_t ccPrevCtrlNo;
 	uint8_t ccPrevValue;
 	uint8_t ccBankSelectMSB;// CC:0 - バンクセレクトMSB
-	float ccVolume;			// CC:7 - チャネルボリューム
+	uint8_t ccModulation;   // CC:1 - モジュレーション(ビブラート深度)
+	float ccVolume;         // CC:7 - チャネルボリューム
 	float ccPan;			// CC:10 - パン [0.0(左), +1.0(右)]
 	float ccExpression;		// CC:11 - エクスプレッション [0.0, +1.0]
 	uint8_t ccBankSelectLSB;// CC:32 - バンクセレクトLSB

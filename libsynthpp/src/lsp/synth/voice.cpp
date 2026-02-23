@@ -113,6 +113,23 @@ void Voice::setReleaseTimeScale(float scale)noexcept
 	// デフォルト実装は何もしない (ドラムボイスではリリースタイムを使用しない)
 }
 
+void Voice::setVibrato(float rate, float depth, float delaySec)noexcept
+{
+	mVibratoDepth = depth;
+	mVibratoLFO.setParam(static_cast<float>(mSampleFreq), rate, delaySec);
+}
+
+float Voice::applyVibrato()noexcept
+{
+	float lfo = mVibratoLFO.update();
+
+	if (mVibratoDepth <= 0.0f || lfo == 0.0f) {
+		return mCalculatedFreq;
+	}
+
+	return mCalculatedFreq * exp2f(lfo * mVibratoDepth / 12.0f);
+}
+
 void Voice::updateFreq()noexcept
 {
 	// TODO いずれ平均律以外にも対応したい

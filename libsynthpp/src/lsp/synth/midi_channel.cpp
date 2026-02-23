@@ -69,6 +69,10 @@ void MidiChannel::resetAllControllers()
 	// Expression → 127 (最大)
 	ccExpression = 1.0f;
 
+	// Modulation → 0 (ビブラートなし)
+	ccModulation = 0;
+	updateVibrato();
+
 	// Hold(ダンパーペダル) → off
 	ccPedal = false;
 	updateHold();
@@ -191,6 +195,10 @@ void MidiChannel::controlChange(uint8_t ctrlNo, uint8_t value)
 	// --- コントロールチェンジ ---
 	case 0: // Bank Select <MSB>（バンクセレクト）
 		ccBankSelectMSB = value;
+		break;
+	case 1: // Modulation（モジュレーション / ビブラート）
+		ccModulation = value;
+		updateVibrato();
 		break;
 	case 6: // Data Entry(MSB)
 		ccDE_MSB = value;
@@ -336,6 +344,11 @@ void MidiChannel::controlChange(uint8_t ctrlNo, uint8_t value)
 			if((mSystemType.isGS() || mSystemType.isXG()) && ccNRPN_MSB == 1 && (ccNRPN_LSB == 32 || ccNRPN_LSB == 33)) {
 				updateFilter();
 			}
+
+			// - NRPN(GS/XG) : ビブラートレート / デプス / ディレイ
+			if((mSystemType.isGS() || mSystemType.isXG()) && ccNRPN_MSB == 1 && (ccNRPN_LSB == 8 || ccNRPN_LSB == 9 || ccNRPN_LSB == 10)) {
+				updateVibrato();
+			}
 		}
 	}
 
@@ -422,6 +435,7 @@ MidiChannel::Digest MidiChannel::digest()const
 	digest.channelPressure = mChannelPressure;
 	digest.pan = ccPan;
 	digest.pitchBend = mCalculatedPitchBend;
+	digest.modulation = ccModulation;
 	digest.attackTime = ccAttackTime;
 	digest.decayTime = ccDecayTime;
 	digest.releaseTime = ccReleaseTime;
@@ -565,6 +579,51 @@ void MidiChannel::updateFilter()
 		float cutoff = calcFilterCutoff(noteFreq);
 		voice->setFilter(cutoff, Q);
 	}
+}
+void MidiChannel::updateVibrato()
+{
+	float rate = calcVibratoRate();
+	float depth = calcVibratoDepth();
+	float delay = calcVibratoDelay();
+	for (auto& [id, voice] : mVoices) {
+		voice->setVibrato(rate, depth, delay);
+	}
+}
+float MidiChannel::calcVibratoRate()const
+{
+	// ベースレート : 6.0 Hz
+	float rate = 6.0f;
+	// NRPN (1, 8) : GS/XG ビブラートレートオフセット (中心値64)
+	// 対数スケール : ±2オクターブの範囲
+	if(mSystemType.isGS() || mSystemType.isXG()) {
+		int nrpnOffset = static_cast<int>(getNRPN_MSB(1, 8).value_or(64)) - 64;
+		rate *= exp2f(nrpnOffset / 32.f);
+	}
+	return rate;
+}
+float MidiChannel::calcVibratoDepth()const
+{
+	// CC#1 = 0 → ビブラートなし, CC#1 = 127 → 最大深度(±0.5半音)
+	constexpr float MAX_DEPTH = 0.5f; // 半音
+	float depth = MAX_DEPTH * (ccModulation / 127.0f);
+	// NRPN (1, 9) : GS/XG ビブラートデプス倍率 (中心値64 = 1.0x)
+	if(mSystemType.isGS() || mSystemType.isXG()) {
+		float nrpnScale = getNRPN_MSB(1, 9).value_or(64) / 64.0f;
+		depth *= nrpnScale;
+	}
+	return depth;
+}
+float MidiChannel::calcVibratoDelay()const
+{
+	// NRPN (1, 10) : GS/XG ビブラートディレイ (中心値64 = ディレイなし)
+	// 64以下 : 0秒, 65-127 : 最大0.5秒
+	if(mSystemType.isGS() || mSystemType.isXG()) {
+		int nrpnValue = static_cast<int>(getNRPN_MSB(1, 10).value_or(64));
+		if(nrpnValue > 64) {
+			return (nrpnValue - 64) / 63.0f * 0.5f;
+		}
+	}
+	return 0.0f;
 }
 // ソステヌートペダル(CC:66)の状態変化時に呼ばれます
 // ダンパーペダル(CC:64)との違い :

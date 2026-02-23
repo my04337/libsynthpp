@@ -86,6 +86,7 @@ std::unique_ptr<Voice> MidiChannel::createMelodyVoice(uint8_t noteNo, uint8_t ve
 			float noteFreq = 440.f * exp2f((noteNo + noteNoAdjuster - 69.f) / 12.f);
 			voice->setFilter(calcFilterCutoff(noteFreq), calcFilterQ());
 		}
+		voice->setVibrato(calcVibratoRate(), calcVibratoDepth(), calcVibratoDelay());
 
 		auto& eg = voice->envelopeGenerator();
 		eg.setEnvelope(
@@ -110,6 +111,7 @@ std::unique_ptr<Voice> MidiChannel::createMelodyVoice(uint8_t noteNo, uint8_t ve
 			voice->setFilter(calcFilterCutoff(noteFreq), calcFilterQ());
 		}
 		voice->setBaseReleaseTime(baseReleaseTime);
+		voice->setVibrato(calcVibratoRate(), calcVibratoDepth(), calcVibratoDelay());
 
 		auto& eg = voice->envelopeGenerator();
 		eg.setEnvelope(

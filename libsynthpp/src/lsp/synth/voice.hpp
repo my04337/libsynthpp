@@ -5,6 +5,7 @@
 #include <lsp/dsp/envelope_generator.hpp>
 #include <lsp/dsp/biquadratic_filter.hpp>
 #include <lsp/dsp/wave_table_generator.hpp>
+#include <lsp/dsp/lfo.hpp>
 
 namespace lsp::synth
 {
@@ -22,6 +23,7 @@ public:
 	using DrumEG = dsp::DrumEnvelopeGenerator<float>;
 	using EnvelopeState = dsp::EnvelopeState;
 	using BiquadraticFilter = dsp::BiquadraticFilter<float>;
+	using LFO = dsp::LFO<float>;
 
 	struct Digest {
 		float freq = 0; // 基本周波数
@@ -88,9 +90,17 @@ public:
 	// CC:72やNRPN(1,102)の変更時に呼び出されます
 	virtual void setReleaseTimeScale(float scale)noexcept;
 
+	// ビブラート(CC#1 モジュレーション)パラメータを設定します
+	// rate: LFO周波数(Hz), depth: 変調深度(半音), delaySec: 開始までの遅延(秒)
+	void setVibrato(float rate, float depth, float delaySec)noexcept;
+
 
 protected:
 	void updateFreq()noexcept;
+
+	// ビブラートLFOを1サンプル進め、変調済み周波数を返します
+	// 派生クラスの update() 内で mCalculatedFreq の代わりに使用します
+	float applyVibrato()noexcept;
 
 	// 派生クラスで実装するEG操作
 	virtual void onNoteOff()noexcept = 0;
@@ -110,6 +120,10 @@ protected:
 	float mPolyPressure = 1.0f; // ポリフォニックキープレッシャー [0.0, 1.0]
 	std::optional<float> mPan; // ドラムなど、ボイス毎にパンが指定される場合のヒント
 	float mBaseReleaseTimeSec = 0; // 楽器定義から決まるベースリリースタイム(秒)
+
+	// ビブラート
+	LFO mVibratoLFO;                   // LFOインスタンス
+	float mVibratoDepth = 0.0f;        // 変調深度 (半音)
 };
 
 
@@ -130,7 +144,7 @@ public:
 
 	virtual float update()override
 	{
-		auto v = mWG.update(static_cast<float>(mSampleFreq), mCalculatedFreq);
+		auto v = mWG.update(static_cast<float>(mSampleFreq), applyVibrato());
 		v = mFilter.update(v);
 		v *= mEG.update();
 		v *= mVolume;
