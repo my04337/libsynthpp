@@ -1,267 +1,169 @@
-# メロディ音色定義: Synth Effects (96-103) / Ethnic (104-111) / Percussive (112-119) / SFX (120-127)
+﻿# メロディ音色定義: Synth Effects (96-103) / Ethnic (104-111) / Percussive (112-119) / SFX (120-127)
+#
+# デフォルト値:
+#   volume=1.00  attack=0.02  hold=0.00
+#   decay=3.00   sustain=0.00 fade=0.00
+#   release=1.00
 
 # --- Synth Effects (96-103) ---
 [melody.96]
 caption = "FX 1 (rain)"
-volume  = 1.00
 attack  = 0.03
-hold    = 0.00
 decay   = 4.00
 sustain = 0.50
-fade    = 0.00
 release = 2.00
 
 [melody.97]
 caption = "FX 2 (soundtrack)"
-volume  = 1.00
 attack  = 0.03
 hold    = 0.10
-decay   = 3.00
 sustain = 0.70
-fade    = 0.00
 release = 3.00
 
 [melody.98]
 caption = "FX 3 (crystal)"
-volume  = 1.00
 attack  = 0.03
-hold    = 0.00
 decay   = 4.00
-sustain = 0.00
-fade    = 0.00
 release = 3.00
 
 [melody.99]
 caption = "FX 4 (atmosphere)"
-volume  = 1.00
 attack  = 0.03
-hold    = 0.00
 decay   = 4.00
 sustain = 0.10
-fade    = 0.00
 release = 2.00
 
 [melody.100]
 caption = "FX 5 (brightness)"
-volume  = 1.00
 attack  = 0.03
 hold    = 0.10
 decay   = 5.00
-sustain = 0.00
-fade    = 0.00
 release = 3.00
 
 [melody.101]
 caption = "FX 6 (goblins)"
-volume  = 1.00
 attack  = 1.00
-hold    = 0.00
 decay   = 1.00
 sustain = 0.90
-fade    = 0.00
 release = 2.00
 
 [melody.102]
 caption = "FX 7 (echoes)"
-volume  = 1.00
 attack  = 0.03
-hold    = 0.00
 decay   = 1.00
 sustain = 0.90
-fade    = 0.00
 release = 2.00
 
 [melody.103]
 caption = "FX 8 (sci-fi)"
-volume  = 1.00
 attack  = 0.03
-hold    = 0.00
 decay   = 6.00
 sustain = 0.04
-fade    = 0.00
 release = 2.00
 
 # --- Ethnic (104-111) ---
 [melody.104]
 caption = "Sitar"
-volume  = 1.00
 attack  = 0.03
 hold    = 0.03
 decay   = 9.00
-sustain = 0.00
-fade    = 0.00
-release = 1.00
 
 [melody.105]
 caption = "Banjo"
-volume  = 1.00
 attack  = 0.03
-hold    = 0.00
 decay   = 6.00
-sustain = 0.00
-fade    = 0.00
-release = 1.00
 
 [melody.106]
 caption = "Shamisen"
-volume  = 1.00
 attack  = 0.03
-hold    = 0.00
-decay   = 3.00
-sustain = 0.00
-fade    = 0.00
-release = 1.00
 
 [melody.107]
 caption = "Koto"
-volume  = 1.00
 attack  = 0.03
-hold    = 0.00
-decay   = 3.00
-sustain = 0.00
-fade    = 0.00
 release = 2.00
 
 [melody.108]
 caption = "Kalimba"
-volume  = 1.00
 attack  = 0.03
-hold    = 0.00
 decay   = 1.50
-sustain = 0.00
-fade    = 0.00
-release = 1.00
 
 [melody.109]
 caption = "Bag pipe"
-volume  = 1.00
 attack  = 0.03
-hold    = 0.00
 decay   = 1.00
 sustain = 0.70
-fade    = 0.00
 release = 0.10
 
 [melody.110]
 caption = "Fiddle"
-volume  = 1.00
 attack  = 0.03
-hold    = 0.00
 decay   = 1.00
 sustain = 0.70
-fade    = 0.00
 release = 0.10
 
 [melody.111]
 caption = "Shanai"
-volume  = 1.00
 attack  = 0.03
-hold    = 0.00
 decay   = 1.00
 sustain = 0.70
-fade    = 0.00
 release = 0.10
 
 # --- Percussive (112-119) ---
 [melody.112]
 caption = "Tinkle Bell"
-volume  = 1.00
 attack  = 0.03
-hold    = 0.00
-decay   = 3.00
-sustain = 0.00
-fade    = 0.00
-release = 1.00
 
 [melody.113]
 caption = "Agogo"
-volume  = 1.00
 attack  = 0.03
-hold    = 0.00
 decay   = 0.40
-sustain = 0.00
-fade    = 0.00
 release = 0.30
 
 [melody.114]
 caption = "Steel Drums"
-volume  = 1.00
 attack  = 0.03
-hold    = 0.00
-decay   = 3.00
-sustain = 0.00
-fade    = 0.00
 release = 2.00
 
 [melody.115]
 caption = "Woodblock"
-volume  = 1.00
 attack  = 0.03
-hold    = 0.00
 decay   = 0.50
-sustain = 0.00
-fade    = 0.00
 release = 0.50
 
 [melody.116]
 caption = "Taiko Drum"
-volume  = 1.00
 attack  = 0.03
-hold    = 0.00
-decay   = 3.00
-sustain = 0.00
-fade    = 0.00
 release = 3.00
 
 [melody.117]
 caption = "Melodic Tom"
-volume  = 1.00
 attack  = 0.03
-hold    = 0.00
 decay   = 0.80
-sustain = 0.00
-fade    = 0.00
 release = 0.80
 
 [melody.118]
 caption = "Synth Drum"
-volume  = 1.00
 attack  = 0.03
-hold    = 0.00
 decay   = 0.80
-sustain = 0.00
-fade    = 0.00
 release = 0.80
 
 [melody.119]
 caption = "Reverse Cymbal"
-volume  = 1.00
 attack  = 2.00
-hold    = 0.00
 decay   = 0.10
-sustain = 0.00
-fade    = 0.00
 release = 0.10
 
 # --- SFX (120-127) ---
 [melody.120]
 caption = "Guitar Fret Noise"
-volume  = 1.00
 attack  = 0.03
-hold    = 0.00
 decay   = 0.50
-sustain = 0.00
-fade    = 0.00
 release = 0.50
 
 [melody.121]
 caption = "Breath Noise"
-volume  = 1.00
 attack  = 0.03
-hold    = 0.00
 decay   = 0.50
-sustain = 0.00
-fade    = 0.00
 release = 0.40
 drum_like   = true
 note_offset = -12.0
@@ -271,9 +173,6 @@ caption = "Seashore"
 volume  = 2.00
 attack  = 0.50
 hold    = 1.50
-decay   = 3.00
-sustain = 0.00
-fade    = 0.00
 release = 1.50
 drum_like   = true
 note_offset = -12.0
@@ -284,28 +183,22 @@ volume  = 2.00
 attack  = 0.50
 hold    = 0.80
 decay   = 4.00
-sustain = 0.00
-fade    = 0.00
 release = 0.50
 
 [melody.124]
 caption = "Telephone Ring"
 volume  = 2.00
 attack  = 0.03
-hold    = 0.00
 decay   = 1.00
 sustain = 0.80
-fade    = 0.00
 release = 0.10
 
 [melody.125]
 caption = "Helicopter"
 volume  = 2.00
 attack  = 3.50
-hold    = 0.00
 decay   = 1.00
 sustain = 0.80
-fade    = 0.00
 release = 0.70
 drum_like   = true
 note_offset = -12.0
@@ -314,10 +207,8 @@ note_offset = -12.0
 caption = "Applause"
 volume  = 2.00
 attack  = 2.00
-hold    = 0.00
 decay   = 1.00
 sustain = 0.80
-fade    = 0.00
 release = 0.80
 drum_like   = true
 note_offset = -12.0
@@ -326,10 +217,7 @@ note_offset = -12.0
 caption = "Gunshot"
 volume  = 2.50
 attack  = 0.03
-hold    = 0.00
 decay   = 1.50
-sustain = 0.00
-fade    = 0.00
 release = 1.50
 drum_like   = true
 note_offset = -12.0

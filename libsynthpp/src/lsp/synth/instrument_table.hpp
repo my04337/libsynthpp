@@ -63,6 +63,8 @@ struct MelodyParam
 // ドラム音色パラメータ
 struct DrumParam
 {
+	std::string caption; // GM1音色名
+
 	int32_t pitch = 69;   // NoteNo
 	float volume  = 1.0f; // 音量調整
 	float attack  = 0.0f; // sec

@@ -1,165 +1,109 @@
-# メロディ音色定義: Bass (32-39) / Strings (40-47) / Ensemble (48-55)
+﻿# メロディ音色定義: Bass (32-39) / Strings (40-47) / Ensemble (48-55)
+#
+# デフォルト値:
+#   volume=1.00  attack=0.02  hold=0.00
+#   decay=3.00   sustain=0.00 fade=0.00
+#   release=1.00
 
 # --- Bass (32-39) ---
 [melody.32]
 caption = "Acoustic Bass"
-volume  = 1.00
-attack  = 0.02
-hold    = 0.00
 decay   = 5.00
 sustain = 0.08
-fade    = 0.00
 release = 0.10
 
 [melody.33]
 caption = "Electric Bass (finger)"
-volume  = 1.00
-attack  = 0.02
-hold    = 0.00
 decay   = 5.00
 sustain = 0.03
-fade    = 0.00
 release = 0.10
 
 [melody.34]
 caption = "Electric Bass (pick)"
-volume  = 1.00
-attack  = 0.02
-hold    = 0.00
 decay   = 4.00
 sustain = 0.06
-fade    = 0.00
 release = 0.10
 
 [melody.35]
 caption = "Fretless Bass"
-volume  = 1.00
-attack  = 0.02
-hold    = 0.00
 decay   = 10.00
-sustain = 0.00
-fade    = 0.00
 release = 0.10
 
 [melody.36]
 caption = "Slap Bass 1"
-volume  = 1.00
-attack  = 0.02
-hold    = 0.00
-decay   = 3.00
 sustain = 0.01
-fade    = 0.00
 release = 0.10
 
 [melody.37]
 caption = "Slap Bass 2"
-volume  = 1.00
-attack  = 0.02
-hold    = 0.00
-decay   = 3.00
 sustain = 0.01
-fade    = 0.00
 release = 0.10
 
 [melody.38]
 caption = "Synth Bass 1"
-volume  = 1.00
-attack  = 0.02
-hold    = 0.00
 decay   = 1.50
 sustain = 0.07
-fade    = 0.00
 release = 0.10
 
 [melody.39]
 caption = "Synth Bass 2"
-volume  = 1.00
-attack  = 0.02
 hold    = 0.20
 decay   = 5.00
 sustain = 0.13
-fade    = 0.00
 release = 0.10
 
 # --- Strings (40-47) ---
 [melody.40]
 caption = "Violin"
-volume  = 1.00
 attack  = 0.03
 hold    = 0.20
 decay   = 5.00
 sustain = 0.66
-fade    = 0.00
 release = 0.20
 
 [melody.41]
 caption = "Viola"
-volume  = 1.00
 attack  = 0.03
 hold    = 0.35
 decay   = 5.00
 sustain = 0.66
-fade    = 0.00
 release = 0.20
 
 [melody.42]
 caption = "Cello"
-volume  = 1.00
 attack  = 0.03
-hold    = 0.00
 decay   = 1.00
 sustain = 0.80
-fade    = 0.00
 release = 0.20
 
 [melody.43]
 caption = "Contrabass"
-volume  = 1.00
 attack  = 0.03
-hold    = 0.00
 decay   = 1.00
 sustain = 0.80
-fade    = 0.00
 release = 0.20
 
 [melody.44]
 caption = "Tremolo Strings"
-volume  = 1.00
 attack  = 0.03
-hold    = 0.00
 decay   = 1.00
 sustain = 0.90
-fade    = 0.00
-release = 1.00
 
 [melody.45]
 caption = "Pizzicato Strings"
-volume  = 1.00
 attack  = 0.03
-hold    = 0.00
 decay   = 0.50
-sustain = 0.00
-fade    = 0.00
 release = 0.50
 
 [melody.46]
 caption = "Orchestral Harp"
-volume  = 1.00
-attack  = 0.02
-hold    = 0.00
 decay   = 4.00
-sustain = 0.00
-fade    = 0.00
 release = 3.00
 
 [melody.47]
 caption = "Timpani"
 volume  = 3.50
-attack  = 0.02
-hold    = 0.00
 decay   = 0.30
-sustain = 0.00
-fade    = 0.00
 release = 0.30
 drum_like   = true
 note_offset = -12.0
@@ -167,80 +111,55 @@ note_offset = -12.0
 # --- Ensemble (48-55) ---
 [melody.48]
 caption = "String Ensemble 1"
-volume  = 1.00
-attack  = 0.02
-hold    = 0.00
 decay   = 0.30
 sustain = 0.80
-fade    = 0.00
 release = 0.70
 
 [melody.49]
 caption = "String Ensemble 2"
-volume  = 1.00
 attack  = 0.03
-hold    = 0.00
 decay   = 0.30
 sustain = 0.80
-fade    = 0.00
 release = 1.20
 
 [melody.50]
 caption = "Synth Strings 1"
-volume  = 1.00
 attack  = 0.03
-hold    = 0.00
 decay   = 0.30
 sustain = 0.80
-fade    = 0.00
 release = 0.70
 
 [melody.51]
 caption = "Synth Strings 2"
-volume  = 1.00
 attack  = 0.03
-hold    = 0.00
 decay   = 0.30
 sustain = 0.80
-fade    = 0.00
 release = 1.20
 
 [melody.52]
 caption = "Choir Aahs"
-volume  = 1.00
 attack  = 0.03
-hold    = 0.00
 decay   = 0.30
 sustain = 0.80
-fade    = 0.00
 release = 0.70
 
 [melody.53]
 caption = "Voice Oohs"
-volume  = 1.00
 attack  = 0.03
-hold    = 0.00
 decay   = 0.30
 sustain = 0.80
-fade    = 0.00
 release = 0.70
 
 [melody.54]
 caption = "Synth Voice"
-volume  = 1.00
 attack  = 0.03
-hold    = 0.00
 decay   = 0.50
 sustain = 0.80
-fade    = 0.00
 release = 0.70
 
 [melody.55]
 caption = "Orchestra Hit"
 volume  = 2.00
-attack  = 0.02
 hold    = 0.10
 decay   = 0.60
-sustain = 0.00
-fade    = 0.00
 release = 0.40

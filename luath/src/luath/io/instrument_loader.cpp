@@ -89,8 +89,8 @@ void InstrumentLoader::loadFile(InstrumentTable& table, const std::filesystem::p
 			auto progTable = progValue.as_table();
 			if(!progTable) continue;
 
-			// パラメータフィールド(volume等)が直接あればbank 0/0のエントリ
-			if(progTable->contains("volume") || progTable->contains("attack") || progTable->contains("decay")) {
+			// パラメータフィールド(caption/volume等)が直接あればbank 0/0のエントリ
+			if(progTable->contains("caption") || progTable->contains("volume") || progTable->contains("attack") || progTable->contains("decay")) {
 				auto variant = readEntryVariant(*progTable, fileDefault);
 
 				MelodyParam param;
@@ -159,11 +159,12 @@ void InstrumentLoader::loadFile(InstrumentTable& table, const std::filesystem::p
 			auto noteTable = noteValue.as_table();
 			if(!noteTable) continue;
 
-			// パラメータフィールドが直接あればbank 0/0のエントリ
-			if(noteTable->contains("pitch") || noteTable->contains("volume") || noteTable->contains("decay")) {
+			// パラメータフィールド(caption/pitch等)が直接あればbank 0/0のエントリ
+			if(noteTable->contains("caption") || noteTable->contains("pitch") || noteTable->contains("volume") || noteTable->contains("decay")) {
 				auto variant = readEntryVariant(*noteTable, fileDefault);
 
 				DrumParam param;
+				param.caption = (*noteTable)["caption"].value_or(std::string{});
 				param.pitch   = (*noteTable)["pitch"].value_or(69);
 				param.volume  = (*noteTable)["volume"].value_or(1.0f);
 				param.attack  = (*noteTable)["attack"].value_or(0.0f);
@@ -194,6 +195,7 @@ void InstrumentLoader::loadFile(InstrumentTable& table, const std::filesystem::p
 					variant.bankLSB = static_cast<uint8_t>(*bankLSB);
 
 					DrumParam param;
+					param.caption = (*lsbTable)["caption"].value_or(std::string{});
 					param.pitch   = (*lsbTable)["pitch"].value_or(69);
 					param.volume  = (*lsbTable)["volume"].value_or(1.0f);
 					param.attack  = (*lsbTable)["attack"].value_or(0.0f);

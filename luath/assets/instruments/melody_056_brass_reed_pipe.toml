@@ -1,244 +1,174 @@
-# メロディ音色定義: Brass (56-63) / Reed (64-71) / Pipe (72-79)
+﻿# メロディ音色定義: Brass (56-63) / Reed (64-71) / Pipe (72-79)
+#
+# デフォルト値:
+#   volume=1.00  attack=0.02  hold=0.00
+#   decay=3.00   sustain=0.00 fade=0.00
+#   release=1.00
 
 # --- Brass (56-63) ---
 [melody.56]
 caption = "Trumpet"
-volume  = 1.00
 attack  = 0.03
-hold    = 0.00
 decay   = 0.50
 sustain = 0.60
-fade    = 0.00
 release = 0.10
 
 [melody.57]
 caption = "Trombone"
-volume  = 1.00
 attack  = 0.03
-hold    = 0.00
 decay   = 4.00
 sustain = 0.60
-fade    = 0.00
 release = 0.10
 
 [melody.58]
 caption = "Tuba"
-volume  = 1.00
 attack  = 0.03
-hold    = 0.00
 decay   = 2.00
 sustain = 0.60
-fade    = 0.00
 release = 0.10
 
 [melody.59]
 caption = "Muted Trumpet"
-volume  = 1.00
 attack  = 0.03
-hold    = 0.00
 decay   = 1.00
 sustain = 0.60
-fade    = 0.00
 release = 0.10
 
 [melody.60]
 caption = "French Horn"
-volume  = 1.00
 attack  = 0.03
-hold    = 0.00
 decay   = 2.00
 sustain = 0.60
-fade    = 0.00
 release = 0.10
 
 [melody.61]
 caption = "Brass Section"
-volume  = 1.00
 attack  = 0.03
-hold    = 0.00
 decay   = 1.50
 sustain = 0.50
-fade    = 0.00
 release = 0.10
 
 [melody.62]
 caption = "Synth Brass 1"
-volume  = 1.00
 attack  = 0.03
-hold    = 0.00
 decay   = 1.00
 sustain = 0.50
-fade    = 0.00
 release = 0.10
 
 [melody.63]
 caption = "Synth Brass 2"
-volume  = 1.00
 attack  = 0.03
-hold    = 0.00
 decay   = 2.00
 sustain = 0.50
-fade    = 0.00
 release = 0.10
 
 # --- Reed (64-71) ---
 [melody.64]
 caption = "Soprano Sax"
-volume  = 1.00
 attack  = 0.03
-hold    = 0.00
 decay   = 1.00
 sustain = 0.70
-fade    = 0.00
 release = 0.10
 
 [melody.65]
 caption = "Alto Sax"
-volume  = 1.00
 attack  = 0.03
-hold    = 0.00
 decay   = 1.00
 sustain = 0.70
-fade    = 0.00
 release = 0.10
 
 [melody.66]
 caption = "Tenor Sax"
-volume  = 1.00
 attack  = 0.03
-hold    = 0.00
 decay   = 1.00
 sustain = 0.70
-fade    = 0.00
 release = 0.10
 
 [melody.67]
 caption = "Baritone Sax"
-volume  = 1.00
 attack  = 0.03
-hold    = 0.00
 decay   = 1.00
 sustain = 0.70
-fade    = 0.00
 release = 0.10
 
 [melody.68]
 caption = "Oboe"
-volume  = 1.00
 attack  = 0.03
-hold    = 0.00
 decay   = 1.00
 sustain = 0.70
-fade    = 0.00
 release = 0.10
 
 [melody.69]
 caption = "English Horn"
-volume  = 1.00
 attack  = 0.03
-hold    = 0.00
 decay   = 0.50
 sustain = 0.80
-fade    = 0.00
 release = 0.10
 
 [melody.70]
 caption = "Bassoon"
-volume  = 1.00
 attack  = 0.03
-hold    = 0.00
 decay   = 1.00
 sustain = 0.70
-fade    = 0.00
 release = 0.10
 
 [melody.71]
 caption = "Clarinet"
-volume  = 1.00
 attack  = 0.03
-hold    = 0.00
 decay   = 1.00
 sustain = 0.70
-fade    = 0.00
 release = 0.10
 
 # --- Pipe (72-79) ---
 [melody.72]
 caption = "Piccolo"
-volume  = 1.00
 attack  = 0.03
-hold    = 0.00
 decay   = 1.00
 sustain = 0.70
-fade    = 0.00
 release = 0.10
 
 [melody.73]
 caption = "Flute"
-volume  = 1.00
-attack  = 0.02
-hold    = 0.00
 decay   = 1.00
 sustain = 0.70
-fade    = 0.00
 release = 0.10
 
 [melody.74]
 caption = "Recorder"
-volume  = 1.00
-attack  = 0.02
-hold    = 0.00
 decay   = 1.00
 sustain = 0.70
-fade    = 0.00
 release = 0.10
 
 [melody.75]
 caption = "Pan Flute"
-volume  = 1.00
-attack  = 0.02
-hold    = 0.00
 decay   = 1.00
 sustain = 0.70
-fade    = 0.00
 release = 0.10
 
 [melody.76]
 caption = "Blown Bottle"
-volume  = 1.00
 attack  = 0.10
-hold    = 0.00
 decay   = 0.50
 sustain = 0.80
-fade    = 0.00
 release = 0.10
 
 [melody.77]
 caption = "Shakuhachi"
-volume  = 1.00
 attack  = 0.03
-hold    = 0.00
 decay   = 1.00
 sustain = 0.80
-fade    = 0.00
 release = 0.10
 
 [melody.78]
 caption = "Whistle"
-volume  = 1.00
 attack  = 0.03
-hold    = 0.00
 decay   = 1.00
 sustain = 0.80
-fade    = 0.00
 release = 0.30
 
 [melody.79]
 caption = "Ocarina"
-volume  = 1.00
 attack  = 0.03
-hold    = 0.00
 decay   = 1.00
 sustain = 0.80
-fade    = 0.00
 release = 0.10
