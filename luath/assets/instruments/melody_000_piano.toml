@@ -1,7 +1,8 @@
 # メロディ音色定義: Piano (0-7) / Chromatic Percussion (8-15)
 
 # --- Piano (0-7) ---
-[melody.0]    # Acoustic Grand Piano
+[melody.0]
+caption = "Acoustic Grand Piano"
 volume  = 1.00
 attack  = 0.02
 hold    = 0.00
@@ -10,7 +11,8 @@ sustain = 0.00
 fade    = 0.00
 release = 1.00
 
-[melody.1]    # Bright Acoustic Piano
+[melody.1]
+caption = "Bright Acoustic Piano"
 volume  = 1.00
 attack  = 0.02
 hold    = 0.00
@@ -19,7 +21,8 @@ sustain = 0.00
 fade    = 0.00
 release = 1.00
 
-[melody.2]    # Electric Grand Piano
+[melody.2]
+caption = "Electric Grand Piano"
 volume  = 1.00
 attack  = 0.02
 hold    = 0.00
@@ -28,7 +31,8 @@ sustain = 0.00
 fade    = 0.00
 release = 1.00
 
-[melody.3]    # Honky-tonk Piano
+[melody.3]
+caption = "Honky-tonk Piano"
 volume  = 1.00
 attack  = 0.02
 hold    = 0.00
@@ -37,7 +41,8 @@ sustain = 0.00
 fade    = 0.00
 release = 1.00
 
-[melody.4]    # Electric Piano 1
+[melody.4]
+caption = "Electric Piano 1"
 volume  = 1.00
 attack  = 0.02
 hold    = 0.00
@@ -46,7 +51,8 @@ sustain = 0.00
 fade    = 0.00
 release = 1.00
 
-[melody.5]    # Electric Piano 2
+[melody.5]
+caption = "Electric Piano 2"
 volume  = 1.00
 attack  = 0.02
 hold    = 0.00
@@ -55,7 +61,8 @@ sustain = 0.00
 fade    = 0.00
 release = 1.00
 
-[melody.6]    # Harpsichord
+[melody.6]
+caption = "Harpsichord"
 volume  = 1.00
 attack  = 0.02
 hold    = 0.00
@@ -64,7 +71,8 @@ sustain = 0.00
 fade    = 0.00
 release = 1.00
 
-[melody.7]    # Clavinet
+[melody.7]
+caption = "Clavinet"
 volume  = 1.00
 attack  = 0.02
 hold    = 0.00
@@ -74,7 +82,8 @@ fade    = 0.00
 release = 0.10
 
 # --- Chromatic Percussion (8-15) ---
-[melody.8]    # Celesta
+[melody.8]
+caption = "Celesta"
 volume  = 1.00
 attack  = 0.02
 hold    = 0.00
@@ -83,7 +92,8 @@ sustain = 0.00
 fade    = 0.00
 release = 1.50
 
-[melody.9]    # Glockenspiel
+[melody.9]
+caption = "Glockenspiel"
 volume  = 1.00
 attack  = 0.02
 hold    = 0.00
@@ -92,7 +102,8 @@ sustain = 0.00
 fade    = 0.00
 release = 2.00
 
-[melody.10]   # Music Box
+[melody.10]
+caption = "Music Box"
 volume  = 1.00
 attack  = 0.02
 hold    = 0.00
@@ -101,7 +112,8 @@ sustain = 0.00
 fade    = 0.00
 release = 2.00
 
-[melody.11]   # Vibraphone
+[melody.11]
+caption = "Vibraphone"
 volume  = 1.00
 attack  = 0.02
 hold    = 0.00
@@ -110,7 +122,8 @@ sustain = 0.00
 fade    = 0.00
 release = 1.00
 
-[melody.12]   # Marimba
+[melody.12]
+caption = "Marimba"
 volume  = 1.00
 attack  = 0.02
 hold    = 0.00
@@ -119,7 +132,8 @@ sustain = 0.00
 fade    = 0.00
 release = 2.00
 
-[melody.13]   # Xylophone
+[melody.13]
+caption = "Xylophone"
 volume  = 1.00
 attack  = 0.02
 hold    = 0.00
@@ -128,7 +142,8 @@ sustain = 0.00
 fade    = 0.00
 release = 2.00
 
-[melody.14]   # Tubular Bells
+[melody.14]
+caption = "Tubular Bells"
 volume  = 1.00
 attack  = 0.02
 hold    = 0.00
@@ -137,7 +152,8 @@ sustain = 0.00
 fade    = 0.00
 release = 5.00
 
-[melody.15]   # Dulcimer
+[melody.15]
+caption = "Dulcimer"
 volume  = 1.00
 attack  = 0.02
 hold    = 0.00

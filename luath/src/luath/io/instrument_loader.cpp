@@ -94,6 +94,7 @@ void InstrumentLoader::loadFile(InstrumentTable& table, const std::filesystem::p
 				auto variant = readEntryVariant(*progTable, fileDefault);
 
 				MelodyParam param;
+				param.caption    = (*progTable)["caption"].value_or(std::string{});
 				param.volume     = (*progTable)["volume"].value_or(1.00f);
 				param.attack     = (*progTable)["attack"].value_or(0.02f);
 				param.hold       = (*progTable)["hold"].value_or(0.00f);
@@ -128,6 +129,7 @@ void InstrumentLoader::loadFile(InstrumentTable& table, const std::filesystem::p
 					variant.bankLSB = static_cast<uint8_t>(*bankLSB);
 
 					MelodyParam param;
+					param.caption    = (*lsbTable)["caption"].value_or(std::string{});
 					param.volume     = (*lsbTable)["volume"].value_or(1.00f);
 					param.attack     = (*lsbTable)["attack"].value_or(0.02f);
 					param.hold       = (*lsbTable)["hold"].value_or(0.00f);

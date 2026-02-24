@@ -44,6 +44,8 @@ enum class InstrumentSystemType : uint8_t
 // メロディ音色パラメータ
 struct MelodyParam
 {
+	std::string caption; // GM1音色名
+
 	float volume   = 1.00f; // 音量調整
 	float attack   = 0.02f; // sec
 	float hold     = 0.00f; // sec
