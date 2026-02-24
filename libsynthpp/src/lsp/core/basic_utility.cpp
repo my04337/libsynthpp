@@ -1,7 +1,7 @@
-﻿// SPDX-FileCopyrightText: 2018 my04337
-// SPDX-License-Identifier: MIT
+// SPDX-FileCopyrightText: 2018 my04337
+// SPDX-License-Identifier: MIT-0
 
-#include <lsp/core/base.hpp>
+#include <lsp/core/basic_utility.hpp>
 
 /// 型名をデマングルした文字列に変換します
 std::string lsp::demangle(const char* mangled_name)
